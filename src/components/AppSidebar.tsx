@@ -21,7 +21,6 @@ import {
   Landmark,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useRole } from "@/hooks/useRole"
 import { usePermissions } from "@/hooks/usePermissions"
 
 interface NavItem {
@@ -46,7 +45,6 @@ const CASHFLOW_ITEMS: NavItem[] = [
 ]
 
 const CRM_PATHS = CRM_ITEMS.map((i) => i.to)
-const CASHFLOW_PATHS = CASHFLOW_ITEMS.map((i) => i.to)
 
 function SidebarLink({
   to,
@@ -118,7 +116,6 @@ function ModuleGroup({
 
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation()
-  const { isOwner } = useRole()
   const { can } = usePermissions()
   const crmActive = CRM_PATHS.some((p) => location.pathname.startsWith(p))
   const cashflowActive = location.pathname.startsWith("/cashflow")

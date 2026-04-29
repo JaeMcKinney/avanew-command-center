@@ -175,8 +175,6 @@ export function resetPermissionsMatrix(): PermissionsMatrix {
   return fresh
 }
 
-type SupabaseClient = { from: (table: string) => unknown }
-
 export async function fetchPermissionsFromDB(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,

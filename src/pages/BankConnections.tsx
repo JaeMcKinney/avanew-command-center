@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
 import {
   Building2,
   RefreshCw,
@@ -8,7 +7,6 @@ import {
   Clock,
   AlertTriangle,
   Trash2,
-  Plus,
   Link,
   Landmark,
   ChevronDown,
@@ -17,13 +15,7 @@ import {
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,7 +79,6 @@ const STATUS_BADGE: Record<string, string> = {
 }
 
 export function BankConnections() {
-  const navigate = useNavigate()
   const [connections, setConnections] = useState<BankConnection[]>([])
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [logs, setLogs] = useState<CashflowSyncLog[]>([])
@@ -95,7 +86,6 @@ export function BankConnections() {
   const [syncing, setSyncing] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<BankConnection | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [showLogsFor, setShowLogsFor] = useState<string | null>(null)
 
   // Mercury connect dialog
   const [mercuryOpen, setMercuryOpen] = useState(false)

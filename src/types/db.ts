@@ -373,6 +373,64 @@ export type Database = {
         Partial<Invitation> & Pick<Invitation, "email" | "role">,
         Partial<Invitation>
       >
+      leads: TableSchema<
+        Lead,
+        Partial<Lead> & Pick<Lead, "first_name">,
+        Partial<Lead>
+      >
+      tasks: TableSchema<
+        Task,
+        Partial<Task> & Pick<Task, "subject">,
+        Partial<Task>
+      >
+      partners: TableSchema<
+        Partner,
+        Partial<Partner> & Pick<Partner, "name">,
+        Partial<Partner>
+      >
+      vendors: TableSchema<
+        Vendor,
+        Partial<Vendor> & Pick<Vendor, "name">,
+        Partial<Vendor>
+      >
+      cashflow_transactions: TableSchema<
+        CashflowTransaction,
+        Partial<CashflowTransaction> &
+          Pick<CashflowTransaction, "type" | "category" | "amount" | "date">,
+        Partial<CashflowTransaction>
+      >
+      bank_connections: TableSchema<
+        BankConnection,
+        Partial<BankConnection> &
+          Pick<BankConnection, "provider" | "institution_name">,
+        Partial<BankConnection>
+      >
+      bank_accounts: TableSchema<
+        BankAccount,
+        Partial<BankAccount> &
+          Pick<BankAccount, "bank_connection_id" | "name" | "type">,
+        Partial<BankAccount>
+      >
+      bank_transactions: TableSchema<
+        BankTransaction,
+        Partial<BankTransaction> &
+          Pick<
+            BankTransaction,
+            "bank_account_id" | "amount" | "date" | "description"
+          >,
+        Partial<BankTransaction>
+      >
+      cashflow_sync_logs: TableSchema<
+        CashflowSyncLog,
+        Partial<CashflowSyncLog> &
+          Pick<CashflowSyncLog, "bank_connection_id" | "status">,
+        Partial<CashflowSyncLog>
+      >
+      role_permissions: TableSchema<
+        { permission_key: string; role: TeamRole; enabled: boolean; updated_at: string },
+        { permission_key: string; role: TeamRole; enabled: boolean; updated_at?: string },
+        Partial<{ permission_key: string; role: TeamRole; enabled: boolean; updated_at: string }>
+      >
     }
     Views: Record<string, never>
     Functions: Record<string, never>

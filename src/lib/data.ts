@@ -1711,7 +1711,6 @@ export async function deleteVendor(id: string): Promise<void> {
 // ───────────────────────────────────────────────────────────────────────────
 
 import type { BankConnection, BankAccount, BankTransaction, CashflowSyncLog, BankProvider, BankTransactionCategory } from "@/types/db"
-import { classifyTransaction } from "@/lib/transaction-classifier"
 
 // ─── Seed helpers ──────────────────────────────────────────────────────────
 

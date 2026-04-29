@@ -207,7 +207,7 @@ export function Reports() {
                       formatter={(v) => typeof v === "number" ? fmtCurrency(v) : String(v)}
                     />
                     <Bar dataKey="value" fill="var(--primary)" radius={[4, 4, 0, 0]} cursor="pointer"
-                      onClick={(data) => drillByStage(data as { name: string; stageId: string })}
+                      onClick={(data) => drillByStage(data as unknown as { name: string; stageId: string })}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -232,7 +232,7 @@ export function Reports() {
                     <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
                     <Tooltip cursor={{ fill: "var(--muted)" }} contentStyle={tooltipStyle} />
                     <Bar dataKey="count" fill="var(--chart-2)" radius={[4, 4, 0, 0]} cursor="pointer"
-                      onClick={(data) => drillByStage(data as { name: string; stageId: string })}
+                      onClick={(data) => drillByStage(data as unknown as { name: string; stageId: string })}
                     />
                   </BarChart>
                 </ResponsiveContainer>

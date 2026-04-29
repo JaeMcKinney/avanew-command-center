@@ -17,7 +17,7 @@ import { getMyProfile, updateMyProfile, type ProfileLite } from "@/lib/data"
 import { useRole } from "@/hooks/useRole"
 
 export function SettingsProfile() {
-  const { role, isOwner, isSuperUser } = useRole()
+  const { role, isSuperUser } = useRole()
   const [profile, setProfile] = useState<ProfileLite | null>(null)
   const [fullName, setFullName] = useState("")
   const [saving, setSaving] = useState(false)

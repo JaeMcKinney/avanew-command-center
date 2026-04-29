@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { RotateCcw, Lock, Check, X, Info } from "lucide-react"
+import { RotateCcw, Lock, Info } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"

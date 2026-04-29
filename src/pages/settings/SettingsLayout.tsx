@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
+import { NavLink, Outlet, useLocation } from "react-router-dom"
 import type { LucideIcon } from "lucide-react"
 import {
   User,
@@ -224,7 +224,6 @@ function SidebarNav({ role, onNavigate }: { role: TeamRole | null; onNavigate?: 
 
 function MobileNav({ role }: { role: TeamRole | null }) {
   const location = useLocation()
-  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 
   const allItems = NAV_GROUPS.flatMap((g) => g.items).filter((i) => canSee(i, role))

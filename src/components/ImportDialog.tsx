@@ -178,15 +178,6 @@ function validateRows(
   refs: RefData
 ): ParsedRow[] {
   const defs = FIELD_DEFS[entity]
-  const companyByName = new Map(
-    refs.companies.map((c) => [c.name.toLowerCase(), c.id])
-  )
-  const contactByName = new Map(
-    refs.contacts.map((c) => [
-      `${c.first_name} ${c.last_name ?? ""}`.trim().toLowerCase(),
-      c.id,
-    ])
-  )
   const stageByName = new Map(
     refs.stages.map((s) => [s.name.toLowerCase(), s.id])
   )
