@@ -1,0 +1,77 @@
+name: React CI/CD Deploy 
+
+on:
+  push:
+    branches:
+      - dev-cicd
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Get Runner Public IP
+        run: echo "RUNNER_IP=$(curl -s https://api.ipify.org)" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Allow SSH Access
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.SECURITY_GROUP_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr $RUNNER_IP/32 > /dev/null 2>&1
+
+      - name: Deploy Application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            APP_DIR="/home/projects/avanew-command-center"
+            BACKUP_DIR="/home/projects/backups/avanew-command-center"
+
+            echo "===== GO TO PROJECT ====="
+            cd $APP_DIR
+
+            echo "===== BACKUP ====="
+            sudo mkdir -p $BACKUP_DIR
+            sudo zip -r $BACKUP_DIR/dist-bkp-$(date +%d%b%y-%H%M).zip dist/ || true
+
+            echo "===== UPDATE CODE ====="
+            sudo git checkout dev-cicd
+            sudo git stash || true
+            sudo git pull origin dev-cicd
+
+            echo "===== INSTALL ====="
+            sudo npm install --force
+
+            echo "===== BUILD ====="
+            sudo npm run build
+
+            echo "===== RELOAD NGINX ====="
+            sudo nginx -t
+            sudo systemctl reload nginx
+
+            echo "===== DEPLOYMENT DONE ====="
+
+      - name: Remove SSH Access
+        if: always()
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.SECURITY_GROUP_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr $RUNNER_IP/32 > /dev/null 2>&1
