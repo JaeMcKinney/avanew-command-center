@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   Crown,
   Briefcase,
-  Eye,
   Mail,
   Target,
   Handshake,
@@ -70,18 +69,8 @@ const ROLE_META: Record<
   },
   admin: {
     label: "Admin",
-    description: "Operations control. Full access to all CRM modules, user management (if permitted), and non-financial notifications and reports. No access to Cashflow, AI Insights, AVE, financial dashboards, or bank integrations.",
+    description: "Operations control. Full access to all CRM modules, user management, system configuration, and non-financial notifications and reports. No access to Cashflow, financial dashboards, or bank integrations.",
     icon: ShieldCheck,
-  },
-  member: {
-    label: "Member",
-    description: "Create and edit contacts, companies, deals, and activities.",
-    icon: Shield,
-  },
-  viewer: {
-    label: "Viewer",
-    description: "Read-only access to all CRM records.",
-    icon: Eye,
   },
   bd: {
     label: "BD",
@@ -95,8 +84,8 @@ const ROLE_META: Record<
   },
 }
 
-const STANDARD_ROLES: TeamRole[] = ["admin", "member", "viewer", "bd", "partner"]
-const ALL_ROLES: TeamRole[] = ["super_user", "owner", "admin", "member", "viewer", "bd", "partner"]
+const STANDARD_ROLES: TeamRole[] = ["admin", "bd", "partner"]
+const ALL_ROLES: TeamRole[] = ["super_user", "owner", "admin", "bd", "partner"]
 
 const ROLE_BADGE_COLORS: Partial<Record<TeamRole, string>> = {
   super_user: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-300",
@@ -121,7 +110,7 @@ export function TeamSection() {
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
-  const [role, setRole] = useState<TeamRole>("member")
+  const [role, setRole] = useState<TeamRole>("admin")
 
   const assignableRoles = isSuperUser ? ALL_ROLES : STANDARD_ROLES
   const [submitting, setSubmitting] = useState(false)
@@ -155,7 +144,7 @@ export function TeamSection() {
       )
       setEmail("")
       setName("")
-      setRole("member")
+      setRole("admin")
       await refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to invite")
@@ -279,7 +268,7 @@ export function TeamSection() {
             </div>
           ) : (
             members.map((m) => {
-              const roleMeta = ROLE_META[m.role] ?? ROLE_META.member
+              const roleMeta = ROLE_META[m.role] ?? ROLE_META.admin
               const RoleIcon = roleMeta.icon
               const display = m.full_name?.trim() || m.email
               const isHighPrivilege = m.role === "super_user" || m.role === "owner"

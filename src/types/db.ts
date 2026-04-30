@@ -1,6 +1,6 @@
 export type ActivityType = "call" | "email" | "note" | "meeting" | "task"
 
-export type TeamRole = "super_user" | "owner" | "admin" | "member" | "viewer" | "bd" | "partner"
+export type TeamRole = "super_user" | "owner" | "admin" | "bd" | "partner"
 
 export type BankProvider = "mercury" | "plaid" | "finicity" | "manual"
 

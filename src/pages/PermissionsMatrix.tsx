@@ -37,8 +37,6 @@ const ROLE_LABELS: Record<string, string> = {
   super_user: "Super User",
   owner: "Owner",
   admin: "Admin",
-  member: "Member",
-  viewer: "Viewer",
   bd: "BD",
   partner: "Partner",
 }
@@ -47,8 +45,6 @@ const ROLE_COLORS: Record<string, string> = {
   super_user: "text-yellow-600 dark:text-yellow-400",
   owner: "text-blue-600 dark:text-blue-400",
   admin: "text-primary",
-  member: "text-muted-foreground",
-  viewer: "text-muted-foreground",
   bd: "text-emerald-600 dark:text-emerald-400",
   partner: "text-purple-600 dark:text-purple-400",
 }
@@ -183,7 +179,7 @@ export function PermissionsMatrix() {
                       <th key={role} className="px-4 py-3 text-center min-w-[100px]">
                         <div className={cn("font-semibold text-xs", ROLE_COLORS[role])}>{ROLE_LABELS[role]}</div>
                         <div className="text-[10px] text-muted-foreground font-normal mt-0.5">
-                          {role === "owner" ? "Financial" : role === "admin" ? "Ops" : role === "member" ? "Standard" : role === "bd" ? "Sales" : role === "partner" ? "External" : "Read"}
+                          {role === "owner" ? "Financial" : role === "admin" ? "Ops" : role === "bd" ? "Sales" : role === "partner" ? "External" : "Read"}
                         </div>
                       </th>
                     ))}

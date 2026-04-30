@@ -7,7 +7,7 @@ import { useRole } from "@/hooks/useRole"
 const NOTIFICATION_TYPES = [
   { type: "Financial alerts", description: "Low balance, large transactions, sync failures", roles: ["owner", "super_user"] },
   { type: "AI Insight alerts", description: "Forecasting updates, anomalies detected", roles: ["owner", "super_user"] },
-  { type: "Operational alerts", description: "CRM activity, task due dates, deal stage changes", roles: ["owner", "super_user", "admin", "member", "viewer", "bd", "partner"] },
+  { type: "Operational alerts", description: "CRM activity, task due dates, deal stage changes", roles: ["owner", "super_user", "admin", "bd", "partner"] },
   { type: "Team alerts", description: "New members, role changes, permission updates", roles: ["owner", "super_user", "admin"] },
   { type: "System alerts", description: "Deployment events, errors, sync health", roles: ["super_user"] },
 ]

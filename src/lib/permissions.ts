@@ -48,7 +48,7 @@ export interface PermissionDef {
 
 export type PermissionsMatrix = Record<PermissionKey, Record<EditableRole, boolean>>
 
-export const EDITABLE_ROLES: EditableRole[] = ["owner", "admin", "member", "viewer", "bd", "partner"]
+export const EDITABLE_ROLES: EditableRole[] = ["owner", "admin", "bd", "partner"]
 
 export const ALL_PERMISSIONS: PermissionDef[] = [
   // CRM
@@ -111,43 +111,43 @@ export const PERMISSION_CATEGORIES = [
   "DevOps",
 ] as const
 
-// Default matrix based on the role specifications
+// Default matrix — admin has access to everything except cashflow/financial data
 export const DEFAULT_MATRIX: PermissionsMatrix = {
-  "crm.view":                          { owner: true,  admin: true,  member: true,  viewer: true,  bd: true,  partner: false },
-  "crm.edit":                          { owner: true,  admin: true,  member: true,  viewer: false, bd: true,  partner: false },
-  "crm.delete":                        { owner: true,  admin: true,  member: false, viewer: false, bd: false, partner: false },
-  "cashflow.view":                     { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "cashflow.transactions":             { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "cashflow.bank_connections":         { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "ai.insights":                       { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "ai.ave":                            { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "ai.forecasting":                    { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "reports.crm":                       { owner: true,  admin: true,  member: false, viewer: false, bd: false, partner: false },
-  "reports.financial":                 { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "notifications.operational":         { owner: true,  admin: true,  member: true,  viewer: false, bd: true,  partner: true  },
-  "notifications.financial":           { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "notifications.ai_insights":         { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "notifications.system":              { owner: false, admin: false, member: false, viewer: false, bd: false, partner: false },
-  "notifications.configure_personal":  { owner: true,  admin: true,  member: true,  viewer: false, bd: true,  partner: true  },
-  "notifications.configure_global":    { owner: false, admin: false, member: false, viewer: false, bd: false, partner: false },
-  "team.view":                         { owner: true,  admin: true,  member: false, viewer: false, bd: false, partner: false },
-  "team.invite":                       { owner: true,  admin: true,  member: false, viewer: false, bd: false, partner: false },
-  "team.remove":                       { owner: true,  admin: true,  member: false, viewer: false, bd: false, partner: false },
-  "team.change_roles":                 { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "settings.profile":                  { owner: true,  admin: true,  member: true,  viewer: true,  bd: true,  partner: true  },
-  "settings.pipeline":                 { owner: true,  admin: true,  member: false, viewer: false, bd: false, partner: false },
-  "settings.bank_integrations":        { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "settings.system":                   { owner: false, admin: false, member: false, viewer: false, bd: false, partner: false },
-  "settings.auth":                     { owner: false, admin: false, member: false, viewer: false, bd: false, partner: false },
-  "security.mfa_personal":             { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "security.login_history":            { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "security.logs":                     { owner: false, admin: false, member: false, viewer: false, bd: false, partner: false },
-  "integrations.bank_view":            { owner: true,  admin: false, member: false, viewer: false, bd: false, partner: false },
-  "integrations.configure":            { owner: false, admin: false, member: false, viewer: false, bd: false, partner: false },
-  "integrations.sync_logs":            { owner: false, admin: false, member: false, viewer: false, bd: false, partner: false },
-  "devops.deployment":                 { owner: false, admin: false, member: false, viewer: false, bd: false, partner: false },
-  "devops.env_vars":                   { owner: false, admin: false, member: false, viewer: false, bd: false, partner: false },
-  "devops.monitoring":                 { owner: false, admin: false, member: false, viewer: false, bd: false, partner: false },
+  "crm.view":                          { owner: true,  admin: true,  bd: true,  partner: false },
+  "crm.edit":                          { owner: true,  admin: true,  bd: true,  partner: false },
+  "crm.delete":                        { owner: true,  admin: true,  bd: false, partner: false },
+  "cashflow.view":                     { owner: true,  admin: false, bd: false, partner: false },
+  "cashflow.transactions":             { owner: true,  admin: false, bd: false, partner: false },
+  "cashflow.bank_connections":         { owner: true,  admin: false, bd: false, partner: false },
+  "ai.insights":                       { owner: true,  admin: false, bd: false, partner: false },
+  "ai.ave":                            { owner: true,  admin: true,  bd: false, partner: false },
+  "ai.forecasting":                    { owner: true,  admin: false, bd: false, partner: false },
+  "reports.crm":                       { owner: true,  admin: true,  bd: false, partner: false },
+  "reports.financial":                 { owner: true,  admin: false, bd: false, partner: false },
+  "notifications.operational":         { owner: true,  admin: true,  bd: true,  partner: true  },
+  "notifications.financial":           { owner: true,  admin: false, bd: false, partner: false },
+  "notifications.ai_insights":         { owner: true,  admin: false, bd: false, partner: false },
+  "notifications.system":              { owner: true,  admin: true,  bd: false, partner: false },
+  "notifications.configure_personal":  { owner: true,  admin: true,  bd: true,  partner: true  },
+  "notifications.configure_global":    { owner: true,  admin: true,  bd: false, partner: false },
+  "team.view":                         { owner: true,  admin: true,  bd: false, partner: false },
+  "team.invite":                       { owner: true,  admin: true,  bd: false, partner: false },
+  "team.remove":                       { owner: true,  admin: true,  bd: false, partner: false },
+  "team.change_roles":                 { owner: true,  admin: true,  bd: false, partner: false },
+  "settings.profile":                  { owner: true,  admin: true,  bd: true,  partner: true  },
+  "settings.pipeline":                 { owner: true,  admin: true,  bd: false, partner: false },
+  "settings.bank_integrations":        { owner: true,  admin: false, bd: false, partner: false },
+  "settings.system":                   { owner: true,  admin: true,  bd: false, partner: false },
+  "settings.auth":                     { owner: true,  admin: true,  bd: false, partner: false },
+  "security.mfa_personal":             { owner: true,  admin: true,  bd: true,  partner: true  },
+  "security.login_history":            { owner: true,  admin: true,  bd: true,  partner: true  },
+  "security.logs":                     { owner: true,  admin: true,  bd: false, partner: false },
+  "integrations.bank_view":            { owner: true,  admin: false, bd: false, partner: false },
+  "integrations.configure":            { owner: true,  admin: true,  bd: false, partner: false },
+  "integrations.sync_logs":            { owner: true,  admin: false, bd: false, partner: false },
+  "devops.deployment":                 { owner: true,  admin: true,  bd: false, partner: false },
+  "devops.env_vars":                   { owner: true,  admin: true,  bd: false, partner: false },
+  "devops.monitoring":                 { owner: true,  admin: true,  bd: false, partner: false },
 }
 
 const STORAGE_KEY = "avanew-crm.permissions"

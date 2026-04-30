@@ -1022,7 +1022,7 @@ function seedTeamMembers(): TeamMember[] {
 }
 
 function roleSortKey(role: TeamRole) {
-  return role === "admin" ? 0 : role === "member" ? 1 : 2
+  return role === "super_user" ? 0 : role === "owner" ? 1 : role === "admin" ? 2 : role === "bd" ? 3 : 4
 }
 
 export async function listTeamMembers(): Promise<TeamMember[]> {
@@ -1054,7 +1054,7 @@ export async function listTeamMembers(): Promise<TeamMember[]> {
     id: p.id as string,
     email: (p.email as string | null) ?? "",
     full_name: (p.full_name as string | null) ?? null,
-    role: ((p.role as TeamRole | null) ?? "member") as TeamRole,
+    role: ((p.role as TeamRole | null) ?? "admin") as TeamRole,
     status: "active",
     created_at: p.created_at as string,
   }))
@@ -1361,13 +1361,13 @@ export async function deleteTask(id: string): Promise<void> {
 export async function getMyRole(): Promise<TeamRole> {
   if (PREVIEW_MODE) return "owner"
   const { data: userData } = await supabase.auth.getUser()
-  if (!userData.user) return "viewer"
+  if (!userData.user) return "partner"
   const { data } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", userData.user.id)
     .maybeSingle()
-  return (data?.role as TeamRole | null) ?? "viewer"
+  return (data?.role as TeamRole | null) ?? "partner"
 }
 
 // ───────────────────────────────────────────────────────────────────────────
