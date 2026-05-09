@@ -107,6 +107,35 @@ function previewOwnerForCreate(inputOwnerId: string | null | undefined): string 
   return ctx.scoping ? ctx.userId : null
 }
 
+// Returns the active "View As" role from localStorage if it scopes data
+// (BD or Partner). Used in production to client-side filter Supabase results
+// when a Super User is simulating a limited role.
+function viewAsScopingRole(): "bd" | "partner" | null {
+  if (typeof localStorage === "undefined") return null
+  const v = localStorage.getItem(VIEW_AS_KEY)
+  return v === "bd" || v === "partner" ? v : null
+}
+
+// Cached auth user id so we don't hit getUser on every list call.
+let cachedUserId: string | null | undefined = undefined
+async function getCurrentUserId(): Promise<string | null> {
+  if (cachedUserId !== undefined) return cachedUserId
+  const { data } = await supabase.auth.getUser()
+  cachedUserId = data.user?.id ?? null
+  return cachedUserId
+}
+
+// Production: when a Super User is "Viewing As" BD/Partner, filter results
+// client-side to only rows owned by the current user. This simulates how a
+// real BD/Partner would see the data (RLS-enforced for actual BD/Partner accounts).
+async function applyViewAsFilter<T extends { owner_id: string | null }>(rows: T[]): Promise<T[]> {
+  if (PREVIEW_MODE) return rows
+  if (!viewAsScopingRole()) return rows
+  const uid = await getCurrentUserId()
+  if (!uid) return rows
+  return rows.filter((r) => r.owner_id === uid)
+}
+
 async function ensureOwnerForCreate(
   inputOwnerId: string | null | undefined
 ): Promise<string | null> {
@@ -114,6 +143,9 @@ async function ensureOwnerForCreate(
   if (inputOwnerId) return inputOwnerId
   const { data } = await supabase.auth.getUser()
   if (!data.user) return null
+  // View-as override: Super User simulating BD/Partner → assign self as owner
+  // so the simulated role can see the record they just created.
+  if (viewAsScopingRole()) return data.user.id
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -353,7 +385,7 @@ export async function listCompanies(): Promise<Company[]> {
     .select("*")
     .order("name", { ascending: true })
   if (error) throw error
-  return data ?? []
+  return await applyViewAsFilter(data ?? [])
 }
 
 export async function createCompany(input: CompanyInput): Promise<Company> {
@@ -531,7 +563,7 @@ export async function listContacts(): Promise<Contact[]> {
     .select("*")
     .order("created_at", { ascending: false })
   if (error) throw error
-  return data ?? []
+  return await applyViewAsFilter(data ?? [])
 }
 
 export async function createContact(input: ContactInput): Promise<Contact> {
@@ -783,7 +815,7 @@ export async function listDeals(): Promise<Deal[]> {
     .select("*")
     .order("position", { ascending: true })
   if (error) throw error
-  return data ?? []
+  return await applyViewAsFilter(data ?? [])
 }
 
 export async function createDeal(input: DealInput): Promise<Deal> {
@@ -936,7 +968,7 @@ export async function listActivities(): Promise<Activity[]> {
     .select("*")
     .order("created_at", { ascending: false })
   if (error) throw error
-  return data ?? []
+  return await applyViewAsFilter(data ?? [])
 }
 
 export async function createActivity(input: ActivityInput): Promise<Activity> {
@@ -1308,7 +1340,7 @@ export async function listLeads(): Promise<Lead[]> {
   }
   const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false })
   if (error) throw error
-  return data ?? []
+  return await applyViewAsFilter(data ?? [])
 }
 
 export async function createLead(input: LeadInput): Promise<Lead> {
@@ -1498,7 +1530,7 @@ export async function listTasks(): Promise<Task[]> {
   }
   const { data, error } = await supabase.from("tasks").select("*").order("created_at", { ascending: false })
   if (error) throw error
-  return data ?? []
+  return await applyViewAsFilter(data ?? [])
 }
 
 export async function createTask(input: TaskInput): Promise<Task> {
