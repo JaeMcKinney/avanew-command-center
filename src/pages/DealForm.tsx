@@ -176,22 +176,6 @@ function pickOrNull(s: string | undefined): string | null {
   return t === "" ? null : t
 }
 
-function pickDefaultOwner(
-  team: TeamMember[],
-  isLimitedRole: boolean,
-  currentUserId: string | undefined
-): string | null {
-  if (isLimitedRole && currentUserId) {
-    const self = team.find((m) => m.id === currentUserId)
-    if (self) return self.id
-  }
-  const fieldTeam = team
-    .filter((m) => m.role === "bd" || m.role === "partner")
-    .sort((a, b) => (a.full_name ?? a.email).localeCompare(b.full_name ?? b.email))
-  if (fieldTeam.length > 0) return fieldTeam[0].id
-  return currentUserId ?? null
-}
-
 function toInput(v: FormValues): DealInput {
   const amount = v.amount?.trim()
   const parsedAmount = amount ? Number(amount) : null
@@ -288,8 +272,7 @@ export function DealForm() {
         setContacts(c)
         setCompanies(co)
         setPartners(p)
-        const activeTeam = t.filter((m) => m.status === "active")
-        setTeam(activeTeam)
+        setTeam(t.filter((m) => m.status === "active"))
 
         if (isEdit) {
           const deal = deals.find((d) => d.id === id)
@@ -313,8 +296,6 @@ export function DealForm() {
           if (companyQuery && co.some((c) => c.id === companyQuery)) {
             defaults.company_id = companyQuery
           }
-          const defaultOwner = pickDefaultOwner(activeTeam, isLimitedRole, user?.id)
-          if (defaultOwner) defaults.owner_id = defaultOwner
           form.reset(defaults)
         }
       } catch (err) {

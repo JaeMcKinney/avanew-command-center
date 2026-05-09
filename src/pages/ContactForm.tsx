@@ -133,22 +133,6 @@ function pickOrNull(s: string | undefined): string | null {
   return t === "" ? null : t
 }
 
-function pickDefaultOwner(
-  team: TeamMember[],
-  isLimitedRole: boolean,
-  currentUserId: string | undefined
-): string | null {
-  if (isLimitedRole && currentUserId) {
-    const self = team.find((m) => m.id === currentUserId)
-    if (self) return self.id
-  }
-  const fieldTeam = team
-    .filter((m) => m.role === "bd" || m.role === "partner")
-    .sort((a, b) => (a.full_name ?? a.email).localeCompare(b.full_name ?? b.email))
-  if (fieldTeam.length > 0) return fieldTeam[0].id
-  return currentUserId ?? null
-}
-
 function toInput(v: FormValues): ContactInput {
   return {
     first_name: v.first_name.trim(),
@@ -244,8 +228,7 @@ export function ContactForm() {
           isEdit ? listContacts() : Promise.resolve([] as Contact[]),
         ])
         if (!alive) return
-        const activeTeam = t.filter((m) => m.status === "active")
-        setTeam(activeTeam)
+        setTeam(t.filter((m) => m.status === "active"))
         setCompanies(co)
 
         if (isEdit && id) {
@@ -257,10 +240,7 @@ export function ContactForm() {
           }
           form.reset(fromContact(contact))
         } else {
-          const defaults = emptyDefaults()
-          const defaultOwner = pickDefaultOwner(activeTeam, isLimitedRole, user?.id)
-          if (defaultOwner) defaults.owner_id = defaultOwner
-          form.reset(defaults)
+          form.reset(emptyDefaults())
         }
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to load")

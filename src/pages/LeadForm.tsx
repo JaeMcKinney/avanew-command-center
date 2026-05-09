@@ -130,27 +130,6 @@ function pickOrNull(s: string | undefined): string | null {
   return t === "" ? null : t
 }
 
-// Default record owner for new records:
-// - BD/Partner creators → themselves
-// - Admin/Owner/Super User creators → first BD/Partner alphabetically (so
-//   newly created records flow to the field team by default)
-// - No BD/Partner exists → fall back to current user
-function pickDefaultOwner(
-  team: TeamMember[],
-  isLimitedRole: boolean,
-  currentUserId: string | undefined
-): string | null {
-  if (isLimitedRole && currentUserId) {
-    const self = team.find((m) => m.id === currentUserId)
-    if (self) return self.id
-  }
-  const fieldTeam = team
-    .filter((m) => m.role === "bd" || m.role === "partner")
-    .sort((a, b) => (a.full_name ?? a.email).localeCompare(b.full_name ?? b.email))
-  if (fieldTeam.length > 0) return fieldTeam[0].id
-  return currentUserId ?? null
-}
-
 function toInput(v: FormValues): LeadInput {
   const revenue = v.annual_revenue?.trim()
   const parsedRevenue = revenue ? Number(revenue) : null
@@ -241,8 +220,7 @@ export function LeadForm() {
           isEdit ? listLeads() : Promise.resolve([] as Lead[]),
         ])
         if (!alive) return
-        const activeTeam = t.filter((m) => m.status === "active")
-        setTeam(activeTeam)
+        setTeam(t.filter((m) => m.status === "active"))
 
         if (isEdit && id) {
           const lead = leads.find((l) => l.id === id)
@@ -254,10 +232,7 @@ export function LeadForm() {
           setCurrentLead(lead)
           form.reset(fromLead(lead))
         } else {
-          const defaults = emptyDefaults()
-          const defaultOwner = pickDefaultOwner(activeTeam, isLimitedRole, user?.id)
-          if (defaultOwner) defaults.owner_id = defaultOwner
-          form.reset(defaults)
+          form.reset(emptyDefaults())
         }
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to load")
