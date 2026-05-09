@@ -1099,7 +1099,7 @@ export async function updateMyProfile(input: {
   const { data: userData } = await supabase.auth.getUser()
   const user = userData.user
   if (!user) throw new Error("Not signed in")
-  const profileUpdate: Record<string, unknown> = { full_name: input.full_name }
+  const profileUpdate: { full_name: string; avatar_url?: string } = { full_name: input.full_name }
   if (input.avatar_url !== undefined) profileUpdate.avatar_url = input.avatar_url
   const { error } = await supabase.from("profiles").update(profileUpdate).eq("id", user.id)
   if (error) throw error

@@ -40,7 +40,6 @@ export function SettingsProfile() {
   const [saving, setSaving] = useState(false)
 
   // password change state
-  const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [changingPw, setChangingPw] = useState(false)
@@ -94,7 +93,6 @@ export function SettingsProfile() {
       const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) throw error
       toast.success("Password updated successfully")
-      setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
     } catch (err) {
