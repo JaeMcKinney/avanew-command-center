@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Menu, LogOut, Sun, Moon } from "lucide-react"
+import { Menu, LogOut, Sun, Moon, Eye, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -14,11 +14,16 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AppSidebar } from "@/components/AppSidebar"
 import { useAuth } from "@/contexts/AuthContext"
 import { useTheme } from "@/lib/theme"
+import { useRole } from "@/hooks/useRole"
+import type { TeamRole } from "@/types/db"
 
 function deriveDisplay(user: ReturnType<typeof useAuth>["user"]) {
   const meta = user?.user_metadata as { full_name?: string } | undefined
@@ -33,11 +38,19 @@ function deriveDisplay(user: ReturnType<typeof useAuth>["user"]) {
   return { fullName, initials }
 }
 
+const VIEW_AS_ROLES: { value: TeamRole; label: string }[] = [
+  { value: "owner", label: "Owner" },
+  { value: "admin", label: "Admin" },
+  { value: "bd", label: "BD" },
+  { value: "partner", label: "Partner" },
+]
+
 export function TopBar() {
   const { user, signOut } = useAuth()
   const { theme, toggle } = useTheme()
   const [open, setOpen] = useState(false)
   const { fullName, initials } = deriveDisplay(user)
+  const { canViewAs, viewAs, setViewAsRole } = useRole()
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-2 border-b bg-background px-4 md:px-6">
@@ -87,6 +100,35 @@ export function TopBar() {
             {user?.email}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          {canViewAs && (
+            <>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Eye className="h-4 w-4" />
+                  View as…
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-44">
+                  <DropdownMenuItem onClick={() => setViewAsRole(null)}>
+                    {!viewAs && <Check className="h-4 w-4" />}
+                    <span className={viewAs ? "ml-6" : ""}>Super User (you)</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {VIEW_AS_ROLES.map((r) => (
+                    <DropdownMenuItem
+                      key={r.value}
+                      onClick={() => setViewAsRole(r.value)}
+                    >
+                      {viewAs === r.value && <Check className="h-4 w-4" />}
+                      <span className={viewAs === r.value ? "" : "ml-6"}>
+                        {r.label}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuItem onClick={signOut}>
             <LogOut className="h-4 w-4" />
             Sign out
