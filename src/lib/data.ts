@@ -70,6 +70,61 @@ function saveMock<T>(table: string, rows: T[]) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// Owner-based scoping
+// BD and Partner roles see only the records they own (owner_id = their id).
+// Admin / Owner / Super User see everything.
+// In production this is enforced by RLS; the client-side filter below is for
+// preview mode only (where there's no real auth).
+// ───────────────────────────────────────────────────────────────────────────
+
+const VIEW_AS_KEY = "avanew-crm.view-as-role"
+
+function previewContext(): { userId: string; role: TeamRole; scoping: boolean } {
+  let viewAs: TeamRole | null = null
+  if (typeof localStorage !== "undefined") {
+    const v = localStorage.getItem(VIEW_AS_KEY)
+    if (v === "owner" || v === "admin" || v === "bd" || v === "partner" || v === "super_user") {
+      viewAs = v
+    }
+  }
+  const role: TeamRole = viewAs ?? "super_user"
+  return {
+    userId: `preview-${role}`,
+    role,
+    scoping: role === "bd" || role === "partner",
+  }
+}
+
+function previewFilterByOwner<T extends { owner_id: string | null }>(rows: T[]): T[] {
+  const ctx = previewContext()
+  if (!ctx.scoping) return rows
+  return rows.filter((r) => r.owner_id === ctx.userId)
+}
+
+function previewOwnerForCreate(inputOwnerId: string | null | undefined): string | null {
+  if (inputOwnerId) return inputOwnerId
+  const ctx = previewContext()
+  return ctx.scoping ? ctx.userId : null
+}
+
+async function ensureOwnerForCreate(
+  inputOwnerId: string | null | undefined
+): Promise<string | null> {
+  if (PREVIEW_MODE) return previewOwnerForCreate(inputOwnerId)
+  if (inputOwnerId) return inputOwnerId
+  const { data } = await supabase.auth.getUser()
+  if (!data.user) return null
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", data.user.id)
+    .maybeSingle()
+  const role = profile?.role as TeamRole | null
+  if (role === "bd" || role === "partner") return data.user.id
+  return null
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Sample data
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -290,7 +345,7 @@ export type CompanyInput = {
 
 export async function listCompanies(): Promise<Company[]> {
   if (PREVIEW_MODE) {
-    const rows = loadMock<Company>("companies", seedCompanies)
+    const rows = previewFilterByOwner(loadMock<Company>("companies", seedCompanies))
     return [...rows].sort((a, b) => a.name.localeCompare(b.name))
   }
   const { data, error } = await supabase
@@ -302,6 +357,9 @@ export async function listCompanies(): Promise<Company[]> {
 }
 
 export async function createCompany(input: CompanyInput): Promise<Company> {
+  const owner_id = await ensureOwnerForCreate(
+    (input as CompanyInput & { owner_id?: string | null }).owner_id
+  )
   if (PREVIEW_MODE) {
     const row: Company = {
       id: newId(),
@@ -309,7 +367,7 @@ export async function createCompany(input: CompanyInput): Promise<Company> {
       domain: input.domain ?? null,
       industry: input.industry ?? null,
       notes: input.notes ?? null,
-      owner_id: null,
+      owner_id,
       phone: input.phone ?? null,
       fax: input.fax ?? null,
       website: input.website ?? null,
@@ -342,7 +400,7 @@ export async function createCompany(input: CompanyInput): Promise<Company> {
   }
   const { data, error } = await supabase
     .from("companies")
-    .insert(input)
+    .insert({ ...input, owner_id })
     .select()
     .single()
   if (error) throw error
@@ -462,7 +520,7 @@ export type ContactInput = {
 
 export async function listContacts(): Promise<Contact[]> {
   if (PREVIEW_MODE) {
-    const rows = loadMock<Contact>("contacts", seedContacts)
+    const rows = previewFilterByOwner(loadMock<Contact>("contacts", seedContacts))
     return [...rows].sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -477,6 +535,9 @@ export async function listContacts(): Promise<Contact[]> {
 }
 
 export async function createContact(input: ContactInput): Promise<Contact> {
+  const owner_id = await ensureOwnerForCreate(
+    (input as ContactInput & { owner_id?: string | null }).owner_id
+  )
   if (PREVIEW_MODE) {
     const row: Contact = {
       id: newId(),
@@ -486,7 +547,7 @@ export async function createContact(input: ContactInput): Promise<Contact> {
       phone: input.phone ?? null,
       title: input.title ?? null,
       company_id: input.company_id ?? null,
-      owner_id: null,
+      owner_id,
       notes: input.notes ?? null,
       mobile: input.mobile ?? null,
       fax: input.fax ?? null,
@@ -520,7 +581,7 @@ export async function createContact(input: ContactInput): Promise<Contact> {
   }
   const { data, error } = await supabase
     .from("contacts")
-    .insert(input)
+    .insert({ ...input, owner_id })
     .select()
     .single()
   if (error) throw error
@@ -715,7 +776,7 @@ export type DealInput = {
 
 export async function listDeals(): Promise<Deal[]> {
   if (PREVIEW_MODE) {
-    return loadMock<Deal>("deals", seedDeals)
+    return previewFilterByOwner(loadMock<Deal>("deals", seedDeals))
   }
   const { data, error } = await supabase
     .from("deals")
@@ -726,6 +787,7 @@ export async function listDeals(): Promise<Deal[]> {
 }
 
 export async function createDeal(input: DealInput): Promise<Deal> {
+  const owner_id = await ensureOwnerForCreate(input.owner_id)
   if (PREVIEW_MODE) {
     const rows = loadMock<Deal>("deals", seedDeals)
     const maxPos = rows
@@ -739,7 +801,7 @@ export async function createDeal(input: DealInput): Promise<Deal> {
       stage_id: input.stage_id,
       contact_id: input.contact_id ?? null,
       company_id: input.company_id ?? null,
-      owner_id: input.owner_id ?? null,
+      owner_id,
       partner_id: input.partner_id ?? null,
       expected_close_date: input.expected_close_date ?? null,
       closed_at: null,
@@ -758,7 +820,7 @@ export async function createDeal(input: DealInput): Promise<Deal> {
   }
   const { data, error } = await supabase
     .from("deals")
-    .insert(input)
+    .insert({ ...input, owner_id })
     .select()
     .single()
   if (error) throw error
@@ -863,7 +925,7 @@ export type ActivityInput = {
 
 export async function listActivities(): Promise<Activity[]> {
   if (PREVIEW_MODE) {
-    const rows = loadMock<Activity>("activities", seedActivities)
+    const rows = previewFilterByOwner(loadMock<Activity>("activities", seedActivities))
     return [...rows].sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -878,6 +940,9 @@ export async function listActivities(): Promise<Activity[]> {
 }
 
 export async function createActivity(input: ActivityInput): Promise<Activity> {
+  const owner_id = await ensureOwnerForCreate(
+    (input as ActivityInput & { owner_id?: string | null }).owner_id
+  )
   if (PREVIEW_MODE) {
     const row: Activity = {
       id: newId(),
@@ -887,7 +952,7 @@ export async function createActivity(input: ActivityInput): Promise<Activity> {
       contact_id: input.contact_id ?? null,
       company_id: input.company_id ?? null,
       deal_id: input.deal_id ?? null,
-      owner_id: null,
+      owner_id,
       due_at: input.due_at ?? null,
       completed_at: input.completed_at ?? null,
       created_at: nowIso(),
@@ -898,7 +963,7 @@ export async function createActivity(input: ActivityInput): Promise<Activity> {
   }
   const { data, error } = await supabase
     .from("activities")
-    .insert(input)
+    .insert({ ...input, owner_id })
     .select()
     .single()
   if (error) throw error
@@ -1214,7 +1279,7 @@ function seedLeads(): Lead[] {
 
 export async function listLeads(): Promise<Lead[]> {
   if (PREVIEW_MODE) {
-    const rows = loadMock<Lead>("leads", seedLeads)
+    const rows = previewFilterByOwner(loadMock<Lead>("leads", seedLeads))
     return [...rows].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
   const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false })
@@ -1223,9 +1288,10 @@ export async function listLeads(): Promise<Lead[]> {
 }
 
 export async function createLead(input: LeadInput): Promise<Lead> {
+  const owner_id = await ensureOwnerForCreate(input.owner_id)
   if (PREVIEW_MODE) {
     const row: Lead = {
-      id: newId(), owner_id: input.owner_id ?? null,
+      id: newId(), owner_id,
       first_name: input.first_name, last_name: input.last_name ?? null,
       company: input.company ?? null, title: input.title ?? null,
       phone: input.phone ?? null, mobile: input.mobile ?? null,
@@ -1242,7 +1308,7 @@ export async function createLead(input: LeadInput): Promise<Lead> {
     saveMock("leads", [row, ...loadMock<Lead>("leads", seedLeads)])
     return row
   }
-  const { data, error } = await supabase.from("leads").insert(input).select().single()
+  const { data, error } = await supabase.from("leads").insert({ ...input, owner_id }).select().single()
   if (error) throw error
   return data
 }
@@ -1403,7 +1469,7 @@ function seedTasks(): Task[] {
 
 export async function listTasks(): Promise<Task[]> {
   if (PREVIEW_MODE) {
-    const rows = loadMock<Task>("tasks", seedTasks)
+    const rows = previewFilterByOwner(loadMock<Task>("tasks", seedTasks))
     return [...rows].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
   const { data, error } = await supabase.from("tasks").select("*").order("created_at", { ascending: false })
@@ -1412,11 +1478,12 @@ export async function listTasks(): Promise<Task[]> {
 }
 
 export async function createTask(input: TaskInput): Promise<Task> {
+  const owner_id = await ensureOwnerForCreate(input.owner_id)
   if (PREVIEW_MODE) {
     const row: Task = {
       id: newId(), subject: input.subject,
       status: input.status ?? "Not Started", priority: input.priority ?? "Normal",
-      owner_id: input.owner_id ?? null, contact_id: input.contact_id ?? null,
+      owner_id, contact_id: input.contact_id ?? null,
       company_id: input.company_id ?? null, deal_id: input.deal_id ?? null,
       lead_id: input.lead_id ?? null, due_date: input.due_date ?? null,
       description: input.description ?? null, completed_at: input.completed_at ?? null,
@@ -1425,7 +1492,7 @@ export async function createTask(input: TaskInput): Promise<Task> {
     saveMock("tasks", [row, ...loadMock<Task>("tasks", seedTasks)])
     return row
   }
-  const { data, error } = await supabase.from("tasks").insert(input).select().single()
+  const { data, error } = await supabase.from("tasks").insert({ ...input, owner_id }).select().single()
   if (error) throw error
   return data
 }
