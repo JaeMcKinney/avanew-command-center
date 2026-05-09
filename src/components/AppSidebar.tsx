@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
+import { useRole } from "@/hooks/useRole"
 
 interface NavItem {
   to: string
@@ -117,6 +118,8 @@ function ModuleGroup({
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation()
   const { can } = usePermissions()
+  const { role } = useRole()
+  const isLimitedRole = role === "bd" || role === "partner"
   const crmActive = CRM_PATHS.some((p) => location.pathname.startsWith(p))
   const cashflowActive = location.pathname.startsWith("/cashflow")
 
@@ -145,18 +148,23 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
         <ModuleGroup label="CRM" icon={Briefcase} items={CRM_ITEMS} defaultOpen={crmActive} onNavigate={onNavigate} />
 
-        <SidebarLink to="/tasks" label="Tasks" icon={CheckSquare} onNavigate={onNavigate} />
+        {!isLimitedRole && (
+          <SidebarLink to="/tasks" label="Tasks" icon={CheckSquare} onNavigate={onNavigate} />
+        )}
 
         {can("cashflow.view") && (
           <ModuleGroup label="Cashflow" icon={TrendingUp} items={CASHFLOW_ITEMS} defaultOpen={cashflowActive} onNavigate={onNavigate} />
         )}
 
-        <div className="pt-2 pb-1 px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/30 font-medium">
-          Relationships
-        </div>
-
-        <SidebarLink to="/partners" label="Partners" icon={Handshake} onNavigate={onNavigate} />
-        <SidebarLink to="/vendors" label="Vendors" icon={Truck} onNavigate={onNavigate} />
+        {!isLimitedRole && (
+          <>
+            <div className="pt-2 pb-1 px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/30 font-medium">
+              Relationships
+            </div>
+            <SidebarLink to="/partners" label="Partners" icon={Handshake} onNavigate={onNavigate} />
+            <SidebarLink to="/vendors" label="Vendors" icon={Truck} onNavigate={onNavigate} />
+          </>
+        )}
 
         <div className="pt-2 pb-1 px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/30 font-medium">
           System

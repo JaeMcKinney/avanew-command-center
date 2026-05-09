@@ -33,6 +33,8 @@ import {
 } from "@/lib/data"
 import type { Company, Contact, TeamMember } from "@/types/db"
 import { cn } from "@/lib/utils"
+import { useRole } from "@/hooks/useRole"
+import { useAuth } from "@/contexts/AuthContext"
 
 const NONE = "__none__"
 
@@ -201,6 +203,9 @@ export function ContactForm() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const isEdit = Boolean(id)
+  const { role } = useRole()
+  const { user } = useAuth()
+  const isLimitedRole = role === "bd" || role === "partner"
 
   const [team, setTeam] = useState<TeamMember[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
@@ -327,7 +332,7 @@ export function ContactForm() {
                           </FormControl>
                           <SelectContent>
                             <SelectItem value={NONE}>Unassigned</SelectItem>
-                            {team.map((m) => (
+                            {(isLimitedRole ? team.filter((m) => m.id === user?.id) : team).map((m) => (
                               <SelectItem key={m.id} value={m.id}>{m.full_name || m.email}</SelectItem>
                             ))}
                           </SelectContent>

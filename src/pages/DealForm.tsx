@@ -59,6 +59,8 @@ import type {
   TeamMember,
 } from "@/types/db"
 import { cn } from "@/lib/utils"
+import { useRole } from "@/hooks/useRole"
+import { useAuth } from "@/contexts/AuthContext"
 
 const NONE = "__none__"
 
@@ -225,6 +227,9 @@ export function DealForm() {
   const stageQuery = searchParams.get("stage") ?? undefined
   const companyQuery = searchParams.get("company") ?? undefined
   const isEdit = Boolean(id)
+  const { role } = useRole()
+  const { user } = useAuth()
+  const isLimitedRole = role === "bd" || role === "partner"
 
   const [stages, setStages] = useState<PipelineStage[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -438,7 +443,7 @@ export function DealForm() {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value={NONE}>Unassigned</SelectItem>
-                              {team.map((m) => (
+                              {(isLimitedRole ? team.filter((m) => m.id === user?.id) : team).map((m) => (
                                 <SelectItem key={m.id} value={m.id}>
                                   {m.full_name || m.email}
                                 </SelectItem>

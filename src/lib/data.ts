@@ -1009,6 +1009,9 @@ export async function deleteActivity(id: string): Promise<void> {
 export type ProfileLite = {
   full_name: string | null
   email: string | null
+  phone: string | null
+  job_title: string | null
+  avatar_url: string | null
 }
 
 export async function getMyProfile(): Promise<ProfileLite> {
@@ -1019,25 +1022,41 @@ export async function getMyProfile(): Promise<ProfileLite> {
     } catch {
       /* ignore */
     }
-    return { full_name: "Preview User", email: "preview@avanew.ai" }
+    return { full_name: "Preview User", email: "preview@avanew.ai", phone: null, job_title: null, avatar_url: null }
   }
   const { data: userData } = await supabase.auth.getUser()
   const user = userData.user
-  if (!user) return { full_name: null, email: null }
+  if (!user) return { full_name: null, email: null, phone: null, job_title: null, avatar_url: null }
+  const meta = user.user_metadata as { full_name?: string; phone?: string; job_title?: string } | undefined
   const { data } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("full_name, avatar_url")
     .eq("id", user.id)
     .maybeSingle()
-  return { full_name: data?.full_name ?? null, email: user.email ?? null }
+  return {
+    full_name: data?.full_name ?? meta?.full_name ?? null,
+    email: user.email ?? null,
+    phone: meta?.phone ?? null,
+    job_title: meta?.job_title ?? null,
+    avatar_url: (data?.avatar_url as string | null) ?? null,
+  }
 }
 
 export async function updateMyProfile(input: {
   full_name: string
+  phone?: string
+  job_title?: string
+  avatar_url?: string
 }): Promise<void> {
   if (PREVIEW_MODE) {
     const cur = await getMyProfile()
-    const next: ProfileLite = { ...cur, full_name: input.full_name }
+    const next: ProfileLite = {
+      ...cur,
+      full_name: input.full_name,
+      phone: input.phone ?? cur.phone,
+      job_title: input.job_title ?? cur.job_title,
+      avatar_url: input.avatar_url ?? cur.avatar_url,
+    }
     try {
       localStorage.setItem("avanew-crm.mock.profile", JSON.stringify(next))
     } catch {
@@ -1048,12 +1067,17 @@ export async function updateMyProfile(input: {
   const { data: userData } = await supabase.auth.getUser()
   const user = userData.user
   if (!user) throw new Error("Not signed in")
-  const { error } = await supabase
-    .from("profiles")
-    .update({ full_name: input.full_name })
-    .eq("id", user.id)
+  const profileUpdate: Record<string, unknown> = { full_name: input.full_name }
+  if (input.avatar_url !== undefined) profileUpdate.avatar_url = input.avatar_url
+  const { error } = await supabase.from("profiles").update(profileUpdate).eq("id", user.id)
   if (error) throw error
-  await supabase.auth.updateUser({ data: { full_name: input.full_name } })
+  await supabase.auth.updateUser({
+    data: {
+      full_name: input.full_name,
+      ...(input.phone !== undefined && { phone: input.phone }),
+      ...(input.job_title !== undefined && { job_title: input.job_title }),
+    },
+  })
 }
 
 // ───────────────────────────────────────────────────────────────────────────

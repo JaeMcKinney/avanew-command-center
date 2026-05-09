@@ -6,27 +6,53 @@ import {
   ShieldCheck,
   Target,
   Handshake,
+  Camera,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Separator } from "@/components/ui/separator"
 import { PageHeader } from "@/components/PageHeader"
 import { getMyProfile, updateMyProfile, type ProfileLite } from "@/lib/data"
 import { useRole } from "@/hooks/useRole"
+import { supabase } from "@/lib/supabase"
+
+function deriveInitials(name: string | null, email: string | null) {
+  const src = name || email || "U"
+  return src
+    .split(/[\s@]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase() ?? "")
+    .join("") || "U"
+}
 
 export function SettingsProfile() {
   const { role, isSuperUser } = useRole()
   const [profile, setProfile] = useState<ProfileLite | null>(null)
   const [fullName, setFullName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [jobTitle, setJobTitle] = useState("")
+  const [avatarUrl, setAvatarUrl] = useState("")
   const [saving, setSaving] = useState(false)
+
+  // password change state
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [changingPw, setChangingPw] = useState(false)
 
   async function refresh() {
     try {
       const p = await getMyProfile()
       setProfile(p)
       setFullName(p.full_name ?? "")
+      setPhone(p.phone ?? "")
+      setJobTitle(p.job_title ?? "")
+      setAvatarUrl(p.avatar_url ?? "")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load profile")
     }
@@ -38,7 +64,12 @@ export function SettingsProfile() {
     e.preventDefault()
     setSaving(true)
     try {
-      await updateMyProfile({ full_name: fullName.trim() })
+      await updateMyProfile({
+        full_name: fullName.trim(),
+        phone: phone.trim() || undefined,
+        job_title: jobTitle.trim() || undefined,
+        avatar_url: avatarUrl.trim() || undefined,
+      })
       toast.success("Profile updated")
       await refresh()
     } catch (err) {
@@ -48,39 +79,149 @@ export function SettingsProfile() {
     }
   }
 
+  async function handlePasswordChange(e: FormEvent) {
+    e.preventDefault()
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match")
+      return
+    }
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters")
+      return
+    }
+    setChangingPw(true)
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) throw error
+      toast.success("Password updated successfully")
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update password")
+    } finally {
+      setChangingPw(false)
+    }
+  }
+
+  const initials = deriveInitials(profile?.full_name ?? null, profile?.email ?? null)
+
   return (
     <div className="max-w-3xl space-y-6">
       <PageHeader
-        title="User Management"
-        description="Manage your profile and view your role permissions."
+        title="My Profile"
+        description="Manage your personal information and account security."
       />
 
+      {/* Profile info */}
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
+          <CardTitle>Profile Information</CardTitle>
           <CardDescription>How you appear inside Avanew Command Center.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSave} className="space-y-4 max-w-sm">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" value={profile?.email ?? ""} disabled readOnly />
+          <form onSubmit={handleSave} className="space-y-5">
+            {/* Avatar */}
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={fullName} />}
+                <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="avatarUrl" className="flex items-center gap-1.5">
+                  <Camera className="h-3.5 w-3.5" />
+                  Profile photo URL
+                </Label>
+                <Input
+                  id="avatarUrl"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  placeholder="https://example.com/photo.jpg"
+                />
+                <p className="text-xs text-muted-foreground">Paste a publicly accessible image URL.</p>
+              </div>
             </div>
+
+            <Separator />
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" value={profile?.email ?? ""} disabled readOnly />
+              </div>
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Input value={role ?? ""} disabled readOnly className="capitalize" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full name</Label>
+                <Input
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="e.g. Jordan Avery"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jobTitle">Job title</Label>
+                <Input
+                  id="jobTitle"
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
+                  placeholder="e.g. Business Development Manager"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 (555) 000-0000"
+                />
+              </div>
+            </div>
+
+            <Button type="submit" disabled={saving}>
+              {saving ? "Saving…" : "Save profile"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Password change */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+          <CardDescription>Update your account password. You'll stay signed in on this device.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordChange} className="space-y-4 max-w-sm">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Display name</Label>
+              <Label htmlFor="newPassword">New password</Label>
               <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g. Jordan Avery"
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
               />
             </div>
             <div className="space-y-2">
-              <Label>Role</Label>
-              <Input value={role ?? ""} disabled readOnly className="capitalize" />
+              <Label htmlFor="confirmPassword">Confirm new password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repeat new password"
+                autoComplete="new-password"
+              />
             </div>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving…" : "Save profile"}
+            <Button type="submit" disabled={changingPw || !newPassword || !confirmPassword}>
+              {changingPw ? "Updating…" : "Update password"}
             </Button>
           </form>
         </CardContent>
@@ -166,10 +307,6 @@ export function SettingsProfile() {
                 </ul>
               </div>
             </div>
-            <div className="rounded-md border border-muted bg-muted/30 p-3 text-xs text-muted-foreground">
-              <p className="font-medium text-foreground mb-1">Restrictions</p>
-              Cannot override system-level permissions, access DevOps or API credential configuration, or modify global authentication policies. Contact your Super User for system-level changes.
-            </div>
           </CardContent>
         </Card>
       )}
@@ -206,10 +343,6 @@ export function SettingsProfile() {
                 </ul>
               </div>
             </div>
-            <div className="rounded-md border border-muted bg-muted/30 p-3 text-xs text-muted-foreground">
-              <p className="font-medium text-foreground mb-1">Not available at this role</p>
-              Cashflow, AI Insights, AVE, financial dashboards, financial reports, and bank integrations are restricted to Owner and above. Authentication policies are set by Super User and cannot be modified.
-            </div>
           </CardContent>
         </Card>
       )}
@@ -231,7 +364,7 @@ export function SettingsProfile() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Access</p>
                 <ul className="space-y-1 text-muted-foreground">
                   <li>Assigned leads, contacts, and deals</li>
-                  <li>Tasks and activities on your records</li>
+                  <li>Activities on your records</li>
                   <li>Personal notification preferences</li>
                   <li>Operational alerts for assigned data</li>
                 </ul>
@@ -241,14 +374,9 @@ export function SettingsProfile() {
                 <ul className="space-y-1 text-muted-foreground">
                   <li>Create and edit assigned CRM records</li>
                   <li>Log calls, emails, meetings, and notes</li>
-                  <li>Manage tasks on your pipeline</li>
                   <li>Update deal stages for assigned deals</li>
                 </ul>
               </div>
-            </div>
-            <div className="rounded-md border border-muted bg-muted/30 p-3 text-xs text-muted-foreground">
-              <p className="font-medium text-foreground mb-1">Not available at this role</p>
-              Cashflow, AI Insights, AVE, financial dashboards, financial reports, team management, pipeline configuration, and records not assigned to you are restricted.
             </div>
           </CardContent>
         </Card>
@@ -283,10 +411,6 @@ export function SettingsProfile() {
                   <li>Configure personal notification channels</li>
                 </ul>
               </div>
-            </div>
-            <div className="rounded-md border border-muted bg-muted/30 p-3 text-xs text-muted-foreground">
-              <p className="font-medium text-foreground mb-1">Not available at this role</p>
-              Internal CRM data, Cashflow, AI Insights, AVE, financial dashboards, reports, team management, pipeline configuration, and system settings are not accessible.
             </div>
           </CardContent>
         </Card>
