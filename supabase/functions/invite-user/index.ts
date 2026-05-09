@@ -25,7 +25,7 @@ import { createClient } from "npm:@supabase/supabase-js@2"
 type InvitePayload = {
   email: string
   full_name?: string | null
-  role: "admin" | "member" | "viewer"
+  role: "super_user" | "owner" | "admin" | "bd" | "partner"
 }
 
 const json = (status: number, body: unknown) =>
@@ -69,8 +69,9 @@ Deno.serve(async (req) => {
     .select("role")
     .eq("id", callerData.user.id)
     .maybeSingle()
-  if (callerProfile?.role !== "admin") {
-    return json(403, { error: "Admins only" })
+  const allowedCallerRoles = ["super_user", "owner", "admin"]
+  if (!allowedCallerRoles.includes(callerProfile?.role ?? "")) {
+    return json(403, { error: "Admin or above required" })
   }
 
   let payload: InvitePayload
@@ -83,8 +84,8 @@ Deno.serve(async (req) => {
   const email = payload.email?.trim().toLowerCase()
   const role = payload.role
   const full_name = payload.full_name?.trim() || null
-  if (!email || !["admin", "member", "viewer"].includes(role)) {
-    return json(400, { error: "email and role are required" })
+  if (!email || !["super_user", "owner", "admin", "bd", "partner"].includes(role)) {
+    return json(400, { error: "email and valid role are required" })
   }
 
   // Record the invitation first so the trigger picks up role + name on signup.
