@@ -17,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { QuickCreateAccountDialog } from "@/components/QuickCreateAccountDialog"
+import { QuickCreateContactDialog } from "@/components/QuickCreateContactDialog"
 import {
   Select,
   SelectContent,
@@ -221,6 +223,7 @@ export function DealForm() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const stageQuery = searchParams.get("stage") ?? undefined
+  const companyQuery = searchParams.get("company") ?? undefined
   const isEdit = Boolean(id)
 
   const [stages, setStages] = useState<PipelineStage[]>([])
@@ -231,6 +234,8 @@ export function DealForm() {
   const [loading, setLoading] = useState(true)
   const [activities, setActivities] = useState<Activity[]>([])
   const [logOpen, setLogOpen] = useState(false)
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false)
+  const [contactDialogOpen, setContactDialogOpen] = useState(false)
   const [logType, setLogType] = useState<ActivityType>("call")
   const [logSubject, setLogSubject] = useState("")
   const [logBody, setLogBody] = useState("")
@@ -280,7 +285,11 @@ export function DealForm() {
               )
           )
         } else {
-          form.reset(emptyDefaults(s, stageQuery))
+          const defaults = emptyDefaults(s, stageQuery)
+          if (companyQuery && co.some((c) => c.id === companyQuery)) {
+            defaults.company_id = companyQuery
+          }
+          form.reset(defaults)
         }
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to load")
@@ -501,24 +510,36 @@ export function DealForm() {
                         <Row
                           label={<RequiredLabel>Account Name</RequiredLabel>}
                         >
-                          <Select
-                            value={field.value ?? NONE}
-                            onValueChange={field.onChange}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select an account" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value={NONE}>—</SelectItem>
-                              {companies.map((c) => (
-                                <SelectItem key={c.id} value={c.id}>
-                                  {c.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex gap-2">
+                            <Select
+                              value={field.value ?? NONE}
+                              onValueChange={field.onChange}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select an account" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value={NONE}>—</SelectItem>
+                                {companies.map((c) => (
+                                  <SelectItem key={c.id} value={c.id}>
+                                    {c.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => setAccountDialogOpen(true)}
+                              aria-label="Create new account"
+                              title="Create new account"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
                           <FormMessage />
                         </Row>
                       )}
@@ -675,24 +696,36 @@ export function DealForm() {
                       name="contact_id"
                       render={({ field }) => (
                         <Row label="Contact Name">
-                          <Select
-                            value={field.value ?? NONE}
-                            onValueChange={field.onChange}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="—" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value={NONE}>—</SelectItem>
-                              {contacts.map((c) => (
-                                <SelectItem key={c.id} value={c.id}>
-                                  {c.first_name} {c.last_name ?? ""}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex gap-2">
+                            <Select
+                              value={field.value ?? NONE}
+                              onValueChange={field.onChange}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="—" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value={NONE}>—</SelectItem>
+                                {contacts.map((c) => (
+                                  <SelectItem key={c.id} value={c.id}>
+                                    {c.first_name} {c.last_name ?? ""}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => setContactDialogOpen(true)}
+                              aria-label="Create new contact"
+                              title="Create new contact"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
                           <FormMessage />
                         </Row>
                       )}
@@ -866,6 +899,36 @@ export function DealForm() {
           </div>
         </form>
       </Form>
+
+      <QuickCreateAccountDialog
+        open={accountDialogOpen}
+        onOpenChange={setAccountDialogOpen}
+        onCreated={(account) => {
+          setCompanies((prev) => [account, ...prev].sort((a, b) => a.name.localeCompare(b.name)))
+          // Defer setValue so the new SelectItem has rendered before the Select
+          // tries to match its value against existing items.
+          setTimeout(() => {
+            form.setValue("company_id", account.id, { shouldValidate: true, shouldDirty: true })
+          }, 0)
+        }}
+      />
+
+      <QuickCreateContactDialog
+        open={contactDialogOpen}
+        onOpenChange={setContactDialogOpen}
+        defaultCompanyId={
+          (() => {
+            const v = form.getValues("company_id")
+            return v && v !== NONE ? v : null
+          })()
+        }
+        onCreated={(contact) => {
+          setContacts((prev) => [contact, ...prev])
+          setTimeout(() => {
+            form.setValue("contact_id", contact.id, { shouldValidate: true, shouldDirty: true })
+          }, 0)
+        }}
+      />
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { Contacts } from "@/pages/Contacts"
 import { ContactForm } from "@/pages/ContactForm"
 import { Companies } from "@/pages/Companies"
 import { AccountForm } from "@/pages/AccountForm"
+import { AccountDetail } from "@/pages/AccountDetail"
 import { Deals } from "@/pages/Deals"
 import { DealForm } from "@/pages/DealForm"
 import { Leads } from "@/pages/Leads"
@@ -67,6 +68,7 @@ function App() {
         <Route path="/companies" element={<Navigate to="/accounts" replace />} />
         <Route path="/accounts" element={<Companies />} />
         <Route path="/accounts/new" element={<AccountForm />} />
+        <Route path="/accounts/:id" element={<AccountDetail />} />
         <Route path="/accounts/:id/edit" element={<AccountForm />} />
 
         <Route path="/deals" element={<Deals />} />

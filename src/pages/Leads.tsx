@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, UserPlus, Search, MoreHorizontal, Pencil, Trash2, Upload } from "lucide-react"
+import { Plus, UserPlus, Search, MoreHorizontal, Pencil, Trash2, Upload, ArrowRightLeft, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -40,6 +40,8 @@ import { PageHeader } from "@/components/PageHeader"
 import { EmptyState } from "@/components/EmptyState"
 import { ImportDialog } from "@/components/ImportDialog"
 import { Pagination } from "@/components/Pagination"
+import { ConvertLeadDialog } from "@/components/ConvertLeadDialog"
+import { Badge } from "@/components/ui/badge"
 import { deleteLead, listLeads } from "@/lib/data"
 import type { Lead } from "@/types/db"
 
@@ -55,6 +57,7 @@ export function Leads() {
   const [pageSize, setPageSize] = useState(25)
   const [confirmDelete, setConfirmDelete] = useState<Lead | null>(null)
   const [importOpen, setImportOpen] = useState(false)
+  const [convertLead, setConvertLead] = useState<Lead | null>(null)
 
   async function refresh() {
     setLoading(true)
@@ -228,13 +231,21 @@ export function Leads() {
               {paged.map((lead) => (
                 <TableRow key={lead.id}>
                   <TableCell className="font-medium">
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/leads/${lead.id}/edit`)}
-                      className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
-                    >
-                      {lead.first_name} {lead.last_name ?? ""}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/leads/${lead.id}/edit`)}
+                        className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
+                      >
+                        {lead.first_name} {lead.last_name ?? ""}
+                      </button>
+                      {lead.converted && (
+                        <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-300">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Converted
+                        </Badge>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground md:hidden">
                       {lead.company}
                       {lead.company && lead.lead_status ? " · " : ""}
@@ -272,6 +283,12 @@ export function Leads() {
                           <Pencil className="h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
+                        {!lead.converted && (
+                          <DropdownMenuItem onClick={() => setConvertLead(lead)}>
+                            <ArrowRightLeft className="h-4 w-4" />
+                            Convert
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           variant="destructive"
                           onClick={() => setConfirmDelete(lead)}
@@ -329,6 +346,13 @@ export function Leads() {
         open={importOpen}
         onOpenChange={setImportOpen}
         onComplete={refresh}
+      />
+
+      <ConvertLeadDialog
+        lead={convertLead}
+        open={Boolean(convertLead)}
+        onOpenChange={(open) => !open && setConvertLead(null)}
+        onConverted={refresh}
       />
     </div>
   )

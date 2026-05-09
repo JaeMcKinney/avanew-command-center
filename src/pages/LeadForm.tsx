@@ -4,9 +4,12 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
+import { ArrowRightLeft, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { ConvertLeadDialog } from "@/components/ConvertLeadDialog"
 import {
   Select,
   SelectContent,
@@ -193,6 +196,8 @@ export function LeadForm() {
 
   const [team, setTeam] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
+  const [currentLead, setCurrentLead] = useState<Lead | null>(null)
+  const [convertOpen, setConvertOpen] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -217,6 +222,7 @@ export function LeadForm() {
             navigate("/leads", { replace: true })
             return
           }
+          setCurrentLead(lead)
           form.reset(fromLead(lead))
         } else {
           form.reset(emptyDefaults())
@@ -271,13 +277,32 @@ export function LeadForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background/90 px-4 py-3 backdrop-blur md:px-6">
-            <h1 className="text-lg font-semibold sm:text-xl">
-              {isEdit ? "Edit Lead" : "Create Lead"}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-semibold sm:text-xl">
+                {isEdit ? "Edit Lead" : "Create Lead"}
+              </h1>
+              {currentLead?.converted && (
+                <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-300">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Converted
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Button type="button" variant="ghost" onClick={() => navigate("/leads")} disabled={submitting}>
                 Cancel
               </Button>
+              {isEdit && currentLead && !currentLead.converted && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setConvertOpen(true)}
+                  disabled={submitting}
+                >
+                  <ArrowRightLeft className="h-4 w-4" />
+                  Convert
+                </Button>
+              )}
               {!isEdit && (
                 <Button type="button" variant="outline" onClick={onSaveAndNew} disabled={submitting}>
                   Save and New
@@ -527,6 +552,17 @@ export function LeadForm() {
           </div>
         </form>
       </Form>
+
+      <ConvertLeadDialog
+        lead={currentLead}
+        open={convertOpen}
+        onOpenChange={setConvertOpen}
+        onConverted={() => {
+          if (currentLead) {
+            setCurrentLead({ ...currentLead, converted: true, lead_status: "Converted" })
+          }
+        }}
+      />
     </div>
   )
 }

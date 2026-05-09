@@ -227,7 +227,7 @@ export function Companies() {
                   <TableCell className="font-medium">
                     <button
                       type="button"
-                      onClick={() => navigate(`/accounts/${c.id}/edit`)}
+                      onClick={() => navigate(`/accounts/${c.id}`)}
                       className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
                     >
                       {c.name}

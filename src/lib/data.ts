@@ -1192,6 +1192,7 @@ export type LeadInput = {
   country?: string | null
   description?: string | null
   owner_id?: string | null
+  converted?: boolean
 }
 
 function seedLeads(): Lead[] {
@@ -1267,6 +1268,104 @@ export async function deleteLead(id: string): Promise<void> {
   }
   const { error } = await supabase.from("leads").delete().eq("id", id)
   if (error) throw error
+}
+
+export type ConvertLeadOptions = {
+  account_name: string
+  create_deal: boolean
+  deal_title?: string
+  deal_amount?: number | null
+  deal_stage_id?: string
+  deal_close_date?: string | null
+}
+
+export type ConvertLeadResult = {
+  company: Company
+  contact: Contact
+  deal: Deal | null
+}
+
+export async function convertLead(
+  lead: Lead,
+  opts: ConvertLeadOptions
+): Promise<ConvertLeadResult> {
+  const company = await createCompany({
+    name: opts.account_name.trim(),
+    industry: lead.industry,
+    website: lead.website,
+    phone: lead.phone,
+    fax: lead.fax,
+    annual_revenue: lead.annual_revenue,
+    employees: lead.no_of_employees,
+    rating: lead.rating,
+    billing_street: lead.street,
+    billing_city: lead.city,
+    billing_state: lead.state,
+    billing_zip: lead.zip_code,
+    billing_country: lead.country,
+    description: lead.description,
+  })
+
+  const contact = await createContact({
+    first_name: lead.first_name,
+    last_name: lead.last_name,
+    email: lead.email,
+    phone: lead.phone,
+    mobile: lead.mobile,
+    title: lead.title,
+    company_id: company.id,
+    lead_source: lead.lead_source,
+    description: lead.description,
+    mailing_street: lead.street,
+    mailing_city: lead.city,
+    mailing_state: lead.state,
+    mailing_zip: lead.zip_code,
+    mailing_country: lead.country,
+  })
+
+  let deal: Deal | null = null
+  if (opts.create_deal && opts.deal_stage_id && opts.deal_title) {
+    deal = await createDeal({
+      title: opts.deal_title.trim(),
+      stage_id: opts.deal_stage_id,
+      company_id: company.id,
+      contact_id: contact.id,
+      owner_id: lead.owner_id,
+      amount: opts.deal_amount ?? null,
+      expected_close_date: opts.deal_close_date ?? null,
+      lead_source: lead.lead_source,
+      probability: 10,
+    })
+  }
+
+  await updateLead(lead.id, {
+    owner_id: lead.owner_id,
+    first_name: lead.first_name,
+    last_name: lead.last_name,
+    title: lead.title,
+    phone: lead.phone,
+    mobile: lead.mobile,
+    lead_source: lead.lead_source,
+    industry: lead.industry,
+    annual_revenue: lead.annual_revenue,
+    email_opt_out: lead.email_opt_out,
+    company: lead.company,
+    email: lead.email,
+    fax: lead.fax,
+    website: lead.website,
+    lead_status: "Converted",
+    no_of_employees: lead.no_of_employees,
+    rating: lead.rating,
+    street: lead.street,
+    city: lead.city,
+    state: lead.state,
+    zip_code: lead.zip_code,
+    country: lead.country,
+    description: lead.description,
+    converted: true,
+  })
+
+  return { company, contact, deal }
 }
 
 // ───────────────────────────────────────────────────────────────────────────
