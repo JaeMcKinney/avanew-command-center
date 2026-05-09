@@ -55,7 +55,9 @@ const LEAD_STATUS_OPTIONS = [
 const RATING_OPTIONS = ["Hot", "Warm", "Cold"] as const
 
 const schema = z.object({
-  owner_id: z.string().optional(),
+  owner_id: z.string().refine((v) => v !== NONE && v.trim().length > 0, {
+    message: "Lead Owner is required",
+  }),
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().optional(),
   title: z.string().optional(),
@@ -126,6 +128,27 @@ function pickOrNull(s: string | undefined): string | null {
   if (!s || s === NONE) return null
   const t = s.trim()
   return t === "" ? null : t
+}
+
+// Default record owner for new records:
+// - BD/Partner creators → themselves
+// - Admin/Owner/Super User creators → first BD/Partner alphabetically (so
+//   newly created records flow to the field team by default)
+// - No BD/Partner exists → fall back to current user
+function pickDefaultOwner(
+  team: TeamMember[],
+  isLimitedRole: boolean,
+  currentUserId: string | undefined
+): string | null {
+  if (isLimitedRole && currentUserId) {
+    const self = team.find((m) => m.id === currentUserId)
+    if (self) return self.id
+  }
+  const fieldTeam = team
+    .filter((m) => m.role === "bd" || m.role === "partner")
+    .sort((a, b) => (a.full_name ?? a.email).localeCompare(b.full_name ?? b.email))
+  if (fieldTeam.length > 0) return fieldTeam[0].id
+  return currentUserId ?? null
 }
 
 function toInput(v: FormValues): LeadInput {
@@ -218,7 +241,8 @@ export function LeadForm() {
           isEdit ? listLeads() : Promise.resolve([] as Lead[]),
         ])
         if (!alive) return
-        setTeam(t.filter((m) => m.status === "active"))
+        const activeTeam = t.filter((m) => m.status === "active")
+        setTeam(activeTeam)
 
         if (isEdit && id) {
           const lead = leads.find((l) => l.id === id)
@@ -230,7 +254,10 @@ export function LeadForm() {
           setCurrentLead(lead)
           form.reset(fromLead(lead))
         } else {
-          form.reset(emptyDefaults())
+          const defaults = emptyDefaults()
+          const defaultOwner = pickDefaultOwner(activeTeam, isLimitedRole, user?.id)
+          if (defaultOwner) defaults.owner_id = defaultOwner
+          form.reset(defaults)
         }
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to load")
@@ -328,13 +355,12 @@ export function LeadForm() {
                   <div className="grid grid-cols-1 gap-x-8 gap-y-5 lg:grid-cols-2">
                     {/* Left column */}
                     <FormField control={form.control} name="owner_id" render={({ field }) => (
-                      <Row label="Lead Owner">
-                        <Select value={field.value ?? NONE} onValueChange={field.onChange}>
+                      <Row label={<RequiredLabel>Lead Owner</RequiredLabel>}>
+                        <Select value={field.value && field.value !== NONE ? field.value : ""} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger className="w-full"><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                            <SelectTrigger className="w-full"><SelectValue placeholder="Select an owner" /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value={NONE}>Unassigned</SelectItem>
                             {(isLimitedRole ? team.filter((m) => m.id === user?.id) : team).map((m) => (
                               <SelectItem key={m.id} value={m.id}>{m.full_name || m.email}</SelectItem>
                             ))}

@@ -52,7 +52,9 @@ const RATING_OPTIONS = ["Hot", "Warm", "Cold"] as const
 const OWNERSHIP_OPTIONS = ["Public", "Private", "Subsidiary", "Other"] as const
 
 const schema = z.object({
-  owner_id: z.string().optional(),
+  owner_id: z.string().refine((v) => v !== NONE && v.trim().length > 0, {
+    message: "Account Owner is required",
+  }),
   name: z.string().min(1, "Account name is required"),
   account_site: z.string().optional(),
   parent_account: z.string().optional(),
@@ -131,6 +133,22 @@ function pickOrNull(s: string | undefined): string | null {
   if (!s || s === NONE) return null
   const t = s.trim()
   return t === "" ? null : t
+}
+
+function pickDefaultOwner(
+  team: TeamMember[],
+  isLimitedRole: boolean,
+  currentUserId: string | undefined
+): string | null {
+  if (isLimitedRole && currentUserId) {
+    const self = team.find((m) => m.id === currentUserId)
+    if (self) return self.id
+  }
+  const fieldTeam = team
+    .filter((m) => m.role === "bd" || m.role === "partner")
+    .sort((a, b) => (a.full_name ?? a.email).localeCompare(b.full_name ?? b.email))
+  if (fieldTeam.length > 0) return fieldTeam[0].id
+  return currentUserId ?? null
 }
 
 function toInput(v: FormValues): CompanyInput {
@@ -226,7 +244,8 @@ export function AccountForm() {
           isEdit ? listCompanies() : Promise.resolve([] as Company[]),
         ])
         if (!alive) return
-        setTeam(t.filter((m) => m.status === "active"))
+        const activeTeam = t.filter((m) => m.status === "active")
+        setTeam(activeTeam)
 
         if (isEdit && id) {
           const company = companies.find((c) => c.id === id)
@@ -237,7 +256,10 @@ export function AccountForm() {
           }
           form.reset(fromCompany(company))
         } else {
-          form.reset(emptyDefaults())
+          const defaults = emptyDefaults()
+          const defaultOwner = pickDefaultOwner(activeTeam, isLimitedRole, user?.id)
+          if (defaultOwner) defaults.owner_id = defaultOwner
+          form.reset(defaults)
         }
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to load")
@@ -325,13 +347,12 @@ export function AccountForm() {
                   <div className="grid grid-cols-1 gap-x-8 gap-y-5 lg:grid-cols-2">
                     {/* Left column */}
                     <FormField control={form.control} name="owner_id" render={({ field }) => (
-                      <Row label="Account Owner">
-                        <Select value={field.value ?? NONE} onValueChange={field.onChange}>
+                      <Row label={<RequiredLabel>Account Owner</RequiredLabel>}>
+                        <Select value={field.value && field.value !== NONE ? field.value : ""} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger className="w-full"><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                            <SelectTrigger className="w-full"><SelectValue placeholder="Select an owner" /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value={NONE}>Unassigned</SelectItem>
                             {(isLimitedRole ? team.filter((m) => m.id === user?.id) : team).map((m) => (
                               <SelectItem key={m.id} value={m.id}>{m.full_name || m.email}</SelectItem>
                             ))}

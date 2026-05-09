@@ -107,7 +107,9 @@ const LEAD_SOURCE_OPTIONS = [
 ] as const
 
 const schema = z.object({
-  owner_id: z.string().optional(),
+  owner_id: z.string().refine((v) => v !== NONE && v.trim().length > 0, {
+    message: "Deal Owner is required",
+  }),
   title: z.string().min(1, "Deal name is required"),
   company_id: z.string().min(1, "Account is required").refine((v) => v !== NONE, {
     message: "Account is required",
@@ -172,6 +174,22 @@ function pickOrNull(s: string | undefined): string | null {
   if (!s || s === NONE) return null
   const t = s.trim()
   return t === "" ? null : t
+}
+
+function pickDefaultOwner(
+  team: TeamMember[],
+  isLimitedRole: boolean,
+  currentUserId: string | undefined
+): string | null {
+  if (isLimitedRole && currentUserId) {
+    const self = team.find((m) => m.id === currentUserId)
+    if (self) return self.id
+  }
+  const fieldTeam = team
+    .filter((m) => m.role === "bd" || m.role === "partner")
+    .sort((a, b) => (a.full_name ?? a.email).localeCompare(b.full_name ?? b.email))
+  if (fieldTeam.length > 0) return fieldTeam[0].id
+  return currentUserId ?? null
 }
 
 function toInput(v: FormValues): DealInput {
@@ -270,7 +288,8 @@ export function DealForm() {
         setContacts(c)
         setCompanies(co)
         setPartners(p)
-        setTeam(t.filter((m) => m.status === "active"))
+        const activeTeam = t.filter((m) => m.status === "active")
+        setTeam(activeTeam)
 
         if (isEdit) {
           const deal = deals.find((d) => d.id === id)
@@ -294,6 +313,8 @@ export function DealForm() {
           if (companyQuery && co.some((c) => c.id === companyQuery)) {
             defaults.company_id = companyQuery
           }
+          const defaultOwner = pickDefaultOwner(activeTeam, isLimitedRole, user?.id)
+          if (defaultOwner) defaults.owner_id = defaultOwner
           form.reset(defaults)
         }
       } catch (err) {
@@ -431,18 +452,17 @@ export function DealForm() {
                       control={form.control}
                       name="owner_id"
                       render={({ field }) => (
-                        <Row label="Deal Owner">
+                        <Row label={<RequiredLabel>Deal Owner</RequiredLabel>}>
                           <Select
-                            value={field.value ?? NONE}
+                            value={field.value && field.value !== NONE ? field.value : ""}
                             onValueChange={field.onChange}
                           >
                             <FormControl>
                               <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Unassigned" />
+                                <SelectValue placeholder="Select an owner" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value={NONE}>Unassigned</SelectItem>
                               {(isLimitedRole ? team.filter((m) => m.id === user?.id) : team).map((m) => (
                                 <SelectItem key={m.id} value={m.id}>
                                   {m.full_name || m.email}
