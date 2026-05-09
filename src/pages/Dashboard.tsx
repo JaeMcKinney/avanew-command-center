@@ -44,6 +44,7 @@ import type {
   Vendor,
 } from "@/types/db"
 import { cn } from "@/lib/utils"
+import { useRole } from "@/hooks/useRole"
 
 const ACTIVITY_ICONS: Record<ActivityType, LucideIcon> = {
   call: Phone,
@@ -139,6 +140,8 @@ function toMonthlyCost(amount: number, frequency: Vendor["cost_frequency"]): num
 
 export function Dashboard() {
   const navigate = useNavigate()
+  const { role } = useRole()
+  const isLimitedRole = role === "bd" || role === "partner"
   const [stages, setStages] = useState<PipelineStage[]>([])
   const [deals, setDeals] = useState<Deal[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -158,9 +161,9 @@ export function Dashboard() {
           listDeals(),
           listContacts(),
           listActivities(),
-          listTasks(),
-          listPartners(),
-          listVendors(),
+          isLimitedRole ? Promise.resolve([]) : listTasks(),
+          isLimitedRole ? Promise.resolve([]) : listPartners(),
+          isLimitedRole ? Promise.resolve([]) : listVendors(),
         ])
         if (!alive) return
         setStages(s)
@@ -275,7 +278,7 @@ export function Dashboard() {
       />
 
       {/* Module sections — 2-col on lg, stacked on mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={cn("grid grid-cols-1 gap-6", !isLimitedRole && "lg:grid-cols-2")}>
 
         {/* CRM module */}
         <ModuleSection icon={Briefcase} label="CRM" href="/deals" color="bg-blue-500">
@@ -392,8 +395,8 @@ export function Dashboard() {
           </div>
         </ModuleSection>
 
-        {/* Right column — Tasks + Relationships stacked */}
-        <div className="space-y-6">
+        {/* Right column — Tasks + Relationships stacked (hidden for BD/Partner) */}
+        {!isLimitedRole && <div className="space-y-6">
           <ModuleSection icon={CheckSquare} label="Tasks" href="/tasks" color="bg-emerald-500">
             <div className="space-y-3">
               {/* Task KPIs */}
@@ -564,7 +567,7 @@ export function Dashboard() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </div>}
       </div>
 
     </div>
