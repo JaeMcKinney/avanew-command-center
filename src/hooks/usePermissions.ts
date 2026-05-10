@@ -15,7 +15,7 @@ import {
 const PREVIEW_MODE = import.meta.env.VITE_PREVIEW_MODE === "true"
 
 export function usePermissions() {
-  const { role } = useRole()
+  const { role, loading, ...rest } = useRole()
   const [matrix, setMatrix] = useState<PermissionsMatrix>(() => loadPermissionsMatrix())
 
   useEffect(() => {
@@ -49,5 +49,5 @@ export function usePermissions() {
     setMatrix(fresh)
   }
 
-  return { can, matrix, toggle, reset }
+  return { can, matrix, toggle, reset, role, loading, ...rest }
 }

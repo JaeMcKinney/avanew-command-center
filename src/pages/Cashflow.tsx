@@ -318,11 +318,11 @@ export function Cashflow() {
             )}
             <Button variant="outline" size="sm" onClick={() => navigate("/cashflow/bank-connections")}>
               <Landmark className="h-4 w-4" />
-              Bank Connections
+              <span className="hidden sm:inline">Bank Connections</span>
             </Button>
-            <Button onClick={() => navigate("/cashflow/transactions/new")}>
+            <Button size="sm" onClick={() => navigate("/cashflow/transactions/new")}>
               <Plus className="h-4 w-4" />
-              New Transaction
+              <span className="hidden sm:inline">New Transaction</span>
             </Button>
           </div>
         }

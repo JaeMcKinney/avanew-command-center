@@ -30,15 +30,18 @@ function writeViewAs(role: TeamRole | null) {
   window.dispatchEvent(new Event(VIEW_AS_EVENT))
 }
 
+let cachedActualRole: TeamRole | null = null
+
 export function useRole() {
   const [actualRole, setActualRole] = useState<TeamRole | null>(
-    PREVIEW_MODE ? "super_user" : null
+    PREVIEW_MODE ? "super_user" : cachedActualRole
   )
-  const [loading, setLoading] = useState(!PREVIEW_MODE)
+  const [loading, setLoading] = useState(!PREVIEW_MODE && cachedActualRole === null)
   const [viewAs, setViewAs] = useState<TeamRole | null>(() => readViewAs())
 
   useEffect(() => {
     if (PREVIEW_MODE) return
+    if (cachedActualRole !== null) return
     let alive = true
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
@@ -52,7 +55,9 @@ export function useRole() {
         .maybeSingle()
         .then(({ data: profile }) => {
           if (alive) {
-            setActualRole((profile?.role as TeamRole | null) ?? null)
+            const role = (profile?.role as TeamRole | null) ?? null
+            cachedActualRole = role
+            setActualRole(role)
             setLoading(false)
           }
         })

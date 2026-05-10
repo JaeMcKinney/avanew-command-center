@@ -495,7 +495,7 @@ export function Dashboard() {
 
             <Card>
               <CardContent className="pt-4 pb-4 px-4">
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {/* Top Partners */}
                   <div>
                     <div className="flex items-center gap-1.5 mb-3">
