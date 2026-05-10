@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Menu, LogOut, Sun, Moon, Eye, Check } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -50,7 +51,15 @@ export function TopBar() {
   const { theme, toggle } = useTheme()
   const [open, setOpen] = useState(false)
   const { fullName, initials } = deriveDisplay(user)
-  const { canViewAs, viewAs, setViewAsRole } = useRole()
+  const { role, canViewAs, viewAs, setViewAsRole } = useRole()
+
+  const ROLE_LABELS: Record<string, string> = {
+    super_user: "Super",
+    owner: "Owner",
+    admin: "Admin",
+    bd: "BD",
+    partner: "Partner",
+  }
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-2 border-b bg-background px-4 md:px-6">
@@ -93,6 +102,11 @@ export function TopBar() {
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <span className="hidden sm:inline text-sm">{fullName}</span>
+            {role && (
+              <Badge variant="secondary" className="hidden sm:inline-flex text-[10px] px-1.5 py-0">
+                {ROLE_LABELS[role] ?? role}
+              </Badge>
+            )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">

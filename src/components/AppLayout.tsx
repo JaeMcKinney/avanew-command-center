@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom"
 import { AppSidebar } from "@/components/AppSidebar"
 import { TopBar } from "@/components/TopBar"
-import { AVE } from "@/components/AVE"
+// import { AVE } from "@/components/AVE"
 import { ViewAsBanner } from "@/components/ViewAsBanner"
 
 export function AppLayout() {
@@ -17,7 +17,7 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
-      <AVE />
+      {/* <AVE /> */}
     </div>
   )
 }
