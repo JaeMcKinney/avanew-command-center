@@ -161,7 +161,7 @@ function fromDeal(d: Deal): FormValues {
     next_step: d.next_step ?? "",
     lead_source: d.lead_source ?? NONE,
     contact_id: d.contact_id ?? NONE,
-    amount: d.amount != null ? String(d.amount) : "",
+    amount: d.amount != null ? d.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "",
     expected_close_date: d.expected_close_date ?? "",
     stage_id: d.stage_id,
     probability: d.probability != null ? String(d.probability) : "",
@@ -177,7 +177,7 @@ function pickOrNull(s: string | undefined): string | null {
 }
 
 function toInput(v: FormValues): DealInput {
-  const amount = v.amount?.trim()
+  const amount = v.amount?.trim().replace(/,/g, "")
   const parsedAmount = amount ? Number(amount) : null
   const probability = v.probability?.trim()
   const parsedProb = probability ? Number(probability) : null
@@ -461,16 +461,33 @@ export function DealForm() {
                       name="amount"
                       render={({ field }) => (
                         <Row label="Amount">
-                          <FormControl>
-                            <Input
-                              type="number"
-                              inputMode="decimal"
-                              step="0.01"
-                              min="0"
-                              placeholder="$"
-                              {...field}
-                            />
-                          </FormControl>
+                          <div className="relative">
+                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                            <FormControl>
+                              <Input
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="0.00"
+                                className="pl-7"
+                                value={field.value}
+                                onFocus={(e) => {
+                                  const raw = e.target.value.replace(/[^0-9.]/g, "")
+                                  if (raw !== e.target.value) field.onChange(raw)
+                                }}
+                                onBlur={(e) => {
+                                  const num = parseFloat(e.target.value.replace(/[^0-9.]/g, ""))
+                                  if (!Number.isNaN(num) && num > 0) {
+                                    field.onChange(num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
+                                  }
+                                  field.onBlur()
+                                }}
+                                onChange={(e) => {
+                                  const v = e.target.value.replace(/[^0-9.,]/g, "")
+                                  field.onChange(v)
+                                }}
+                              />
+                            </FormControl>
+                          </div>
                           <FormMessage />
                         </Row>
                       )}
@@ -796,8 +813,8 @@ export function DealForm() {
                           Log activity
                         </Button>
                       ) : (
-                        <div className="rounded-md border p-4 space-y-3">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="max-w-xl rounded-md border p-4 space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
                             <Select
                               value={logType}
                               onValueChange={(v) => setLogType(v as ActivityType)}
