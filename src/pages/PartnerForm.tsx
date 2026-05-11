@@ -112,7 +112,7 @@ export function PartnerForm() {
       />
       <Card className="max-w-2xl">
         <form onSubmit={handleSubmit}>
-          <CardContent className="pt-6 space-y-5">
+          <CardContent className="pt-6 pb-6 space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2 space-y-1.5">
                 <Label htmlFor="name">Partner Name *</Label>

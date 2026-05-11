@@ -148,4 +148,16 @@
   h1, h2, h3, h4, h5, h6 {
     letter-spacing: -0.01em;
   }
+
+  /* Card containers: thin green border + warm glow on hover */
+  [data-slot="card"] {
+    border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+    transition: box-shadow 200ms ease, border-color 200ms ease;
+  }
+  [data-slot="card"]:hover {
+    border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--primary) 30%, transparent),
+      0 0 24px 2px color-mix(in srgb, var(--primary) 14%, transparent);
+  }
 }

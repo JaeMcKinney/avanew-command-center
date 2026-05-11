@@ -132,7 +132,7 @@ export function TransactionForm() {
       />
       <Card className="max-w-2xl">
         <form onSubmit={handleSubmit}>
-          <CardContent className="pt-6 space-y-5">
+          <CardContent className="pt-6 pb-6 space-y-5">
             {/* Type toggle */}
             <div className="space-y-1.5">
               <Label>Type</Label>
