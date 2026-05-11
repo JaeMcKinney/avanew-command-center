@@ -1229,7 +1229,8 @@ export async function inviteTeamMember(
 
 export async function updateTeamMemberRole(
   id: string,
-  role: TeamRole
+  role: TeamRole,
+  status: TeamMember["status"] = "active"
 ): Promise<void> {
   if (PREVIEW_MODE) {
     const rows = loadMock<TeamMember>("team_members", seedTeamMembers)
@@ -1243,6 +1244,15 @@ export async function updateTeamMemberRole(
     }
     rows[idx] = { ...rows[idx], role }
     saveMock("team_members", rows)
+    return
+  }
+  // Invited users live in invitations, not profiles — update the right table.
+  if (status === "invited") {
+    const { error } = await supabase
+      .from("invitations")
+      .update({ role })
+      .eq("id", id)
+    if (error) throw error
     return
   }
   const { error } = await supabase

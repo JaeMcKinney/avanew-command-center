@@ -156,7 +156,7 @@ export function TeamSection() {
   async function handleRoleChange(member: TeamMember, next: TeamRole) {
     if (member.role === next) return
     try {
-      await updateTeamMemberRole(member.id, next)
+      await updateTeamMemberRole(member.id, next, member.status)
       toast.success(`${member.email} is now ${ROLE_META[next].label}`)
       await refresh()
     } catch (err) {
