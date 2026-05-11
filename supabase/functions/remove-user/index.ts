@@ -50,8 +50,9 @@ Deno.serve(async (req) => {
     .select("role")
     .eq("id", callerData.user.id)
     .maybeSingle()
-  if (callerProfile?.role !== "admin") {
-    return json(403, { error: "Admins only" })
+  const allowedCallerRoles = ["super_user", "owner", "admin"]
+  if (!allowedCallerRoles.includes(callerProfile?.role ?? "")) {
+    return json(403, { error: "Admin or above required" })
   }
 
   let body: { user_id?: string }
