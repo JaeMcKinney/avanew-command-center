@@ -20,7 +20,16 @@ const json = (status: number, body: unknown) =>
   })
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return json(204, null)
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "access-control-allow-origin": "*",
+        "access-control-allow-headers": "authorization, content-type, apikey, x-client-info",
+        "access-control-allow-methods": "POST, OPTIONS",
+      },
+    })
+  }
   if (req.method !== "POST") return json(405, { error: "POST only" })
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")
