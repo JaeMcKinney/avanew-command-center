@@ -61,6 +61,7 @@ import type {
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/useRole"
 import { useAuth } from "@/contexts/AuthContext"
+import { SelectWithOther } from "@/components/SelectWithOther"
 
 const NONE = "__none__"
 
@@ -678,24 +679,12 @@ export function DealForm() {
                       name="lead_source"
                       render={({ field }) => (
                         <Row label="Lead Source">
-                          <Select
+                          <SelectWithOther
+                            options={LEAD_SOURCE_OPTIONS}
                             value={field.value ?? NONE}
-                            onValueChange={field.onChange}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="-None-" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value={NONE}>-None-</SelectItem>
-                              {LEAD_SOURCE_OPTIONS.map((opt) => (
-                                <SelectItem key={opt} value={opt}>
-                                  {opt}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                          />
                           <FormMessage />
                         </Row>
                       )}

@@ -36,6 +36,7 @@ import type { Lead, TeamMember } from "@/types/db"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/useRole"
 import { useAuth } from "@/contexts/AuthContext"
+import { SelectWithOther } from "@/components/SelectWithOther"
 
 const NONE = "__none__"
 
@@ -434,17 +435,12 @@ export function LeadForm() {
 
                     <FormField control={form.control} name="lead_source" render={({ field }) => (
                       <Row label="Lead Source">
-                        <Select value={field.value ?? NONE} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="w-full"><SelectValue placeholder="-None-" /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={NONE}>-None-</SelectItem>
-                            {LEAD_SOURCE_OPTIONS.map((opt) => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <SelectWithOther
+                          options={LEAD_SOURCE_OPTIONS}
+                          value={field.value ?? NONE}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        />
                         <FormMessage />
                       </Row>
                     )} />
@@ -468,17 +464,12 @@ export function LeadForm() {
 
                     <FormField control={form.control} name="industry" render={({ field }) => (
                       <Row label="Industry">
-                        <Select value={field.value ?? NONE} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="w-full"><SelectValue placeholder="-None-" /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={NONE}>-None-</SelectItem>
-                            {INDUSTRY_OPTIONS.map((opt) => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <SelectWithOther
+                          options={INDUSTRY_OPTIONS}
+                          value={field.value ?? NONE}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        />
                         <FormMessage />
                       </Row>
                     )} />

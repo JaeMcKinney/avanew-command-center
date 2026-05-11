@@ -35,6 +35,7 @@ import type { Company, Contact, TeamMember } from "@/types/db"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/useRole"
 import { useAuth } from "@/contexts/AuthContext"
+import { SelectWithOther } from "@/components/SelectWithOther"
 
 const NONE = "__none__"
 
@@ -466,17 +467,12 @@ export function ContactForm() {
 
                     <FormField control={form.control} name="lead_source" render={({ field }) => (
                       <Row label="Lead Source">
-                        <Select value={field.value ?? NONE} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="w-full"><SelectValue placeholder="-None-" /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={NONE}>-None-</SelectItem>
-                            {LEAD_SOURCE_OPTIONS.map((opt) => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <SelectWithOther
+                          options={LEAD_SOURCE_OPTIONS}
+                          value={field.value ?? NONE}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        />
                         <FormMessage />
                       </Row>
                     )} />

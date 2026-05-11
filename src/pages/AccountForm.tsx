@@ -34,6 +34,7 @@ import type { Company, TeamMember } from "@/types/db"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/useRole"
 import { useAuth } from "@/contexts/AuthContext"
+import { SelectWithOther } from "@/components/SelectWithOther"
 
 const NONE = "__none__"
 
@@ -418,51 +419,36 @@ export function AccountForm() {
 
                     <FormField control={form.control} name="account_type" render={({ field }) => (
                       <Row label="Account Type">
-                        <Select value={field.value ?? NONE} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="w-full"><SelectValue placeholder="-None-" /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={NONE}>-None-</SelectItem>
-                            {ACCOUNT_TYPE_OPTIONS.map((opt) => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <SelectWithOther
+                          options={ACCOUNT_TYPE_OPTIONS}
+                          value={field.value ?? NONE}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        />
                         <FormMessage />
                       </Row>
                     )} />
 
                     <FormField control={form.control} name="ownership" render={({ field }) => (
                       <Row label="Ownership">
-                        <Select value={field.value ?? NONE} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="w-full"><SelectValue placeholder="-None-" /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={NONE}>-None-</SelectItem>
-                            {OWNERSHIP_OPTIONS.map((opt) => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <SelectWithOther
+                          options={OWNERSHIP_OPTIONS}
+                          value={field.value ?? NONE}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        />
                         <FormMessage />
                       </Row>
                     )} />
 
                     <FormField control={form.control} name="industry" render={({ field }) => (
                       <Row label="Industry">
-                        <Select value={field.value ?? NONE} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="w-full"><SelectValue placeholder="-None-" /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={NONE}>-None-</SelectItem>
-                            {INDUSTRY_OPTIONS.map((opt) => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <SelectWithOther
+                          options={INDUSTRY_OPTIONS}
+                          value={field.value ?? NONE}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        />
                         <FormMessage />
                       </Row>
                     )} />
