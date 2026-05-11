@@ -144,7 +144,6 @@ export function TeamSection() {
       )
       setEmail("")
       setName("")
-      setRole("admin")
       await refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to invite")
