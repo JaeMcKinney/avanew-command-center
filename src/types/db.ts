@@ -431,10 +431,35 @@ export type Database = {
         { permission_key: string; role: TeamRole; enabled: boolean; updated_at?: string },
         Partial<{ permission_key: string; role: TeamRole; enabled: boolean; updated_at: string }>
       >
+      documents: TableSchema<
+        DocumentRecord,
+        Pick<DocumentRecord, "entity_type" | "entity_id" | "file_name" | "file_size" | "storage_path"> &
+          Partial<Pick<DocumentRecord, "mime_type" | "uploaded_by">>,
+        Partial<DocumentRecord>
+      >
     }
     Views: Record<string, never>
     Functions: Record<string, never>
     Enums: { activity_type: ActivityType; team_role: TeamRole }
     CompositeTypes: Record<string, never>
   }
+}
+
+// ── Documents ────────────────────────────────────────────────────────────────
+
+export type EntityType = "account" | "deal" | "lead" | "task"
+
+export type DocumentRecord = {
+  id: string
+  entity_type: EntityType
+  entity_id: string
+  file_name: string
+  file_size: number
+  mime_type: string | null
+  storage_path: string
+  uploaded_by: string | null
+  created_at: string
+  /** Joined from profiles — populated by listDocuments / uploadDocument */
+  uploader_name?: string | null
+}
 }

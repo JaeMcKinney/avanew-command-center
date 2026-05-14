@@ -16,6 +16,7 @@ import {
   StickyNote,
   CalendarDays,
   CheckSquare,
+  FileText,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -37,6 +38,7 @@ import {
 } from "@/components/ui/table"
 import { EmptyState } from "@/components/EmptyState"
 import { QuickCreateContactDialog } from "@/components/QuickCreateContactDialog"
+import { DocumentsSection } from "@/components/DocumentsSection"
 import {
   listActivities,
   listCompanies,
@@ -291,6 +293,10 @@ export function AccountDetail() {
                 <ActivityIcon className="h-3.5 w-3.5" />
                 Activities ({activities.length})
               </TabsTrigger>
+              <TabsTrigger value="documents">
+                <FileText className="h-3.5 w-3.5" />
+                Documents
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="contacts" className="mt-3">
@@ -413,6 +419,10 @@ export function AccountDetail() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="documents" className="mt-3">
+              <DocumentsSection entityType="account" entityId={company.id} />
             </TabsContent>
 
             <TabsContent value="activities" className="mt-3">

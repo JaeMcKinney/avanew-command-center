@@ -6,6 +6,8 @@ import type {
   Company,
   Contact,
   Deal,
+  DocumentRecord,
+  EntityType,
   Lead,
   Partner,
   PipelineStage,
@@ -2264,4 +2266,104 @@ export async function getPlaidLinkToken(): Promise<string> {
   const { data, error } = await supabase.functions.invoke("plaid-link-token")
   if (error) throw error
   return (data as { link_token: string }).link_token
+}
+
+// ── Storage / Documents ──────────────────────────────────────────────────────
+
+/** Upload a profile avatar; returns the public URL with a cache-bust param. */
+export async function uploadAvatar(userId: string, file: File): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
+  const path = `${userId}/avatar.${ext}`
+  const { error } = await supabase.storage
+    .from("avatars")
+    .upload(path, file, { upsert: true, contentType: file.type })
+  if (error) throw new Error(error.message)
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path)
+  return `${data.publicUrl}?t=${Date.now()}`
+}
+
+/** Fetch all documents attached to an entity, newest first. */
+export async function listDocuments(
+  entityType: EntityType,
+  entityId: string,
+): Promise<DocumentRecord[]> {
+  if (PREVIEW_MODE) return []
+  const { data, error } = await supabase
+    .from("documents")
+    .select("*, uploader:uploaded_by(full_name)")
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .order("created_at", { ascending: false })
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((d) => ({
+    id: d.id,
+    entity_type: d.entity_type as EntityType,
+    entity_id: d.entity_id,
+    file_name: d.file_name,
+    file_size: d.file_size,
+    mime_type: d.mime_type,
+    storage_path: d.storage_path,
+    uploaded_by: d.uploaded_by,
+    created_at: d.created_at,
+    uploader_name:
+      (d.uploader as unknown as { full_name: string | null } | null)
+        ?.full_name ?? null,
+  }))
+}
+
+/** Upload a file to storage and insert a documents metadata row. */
+export async function uploadDocument(
+  entityType: EntityType,
+  entityId: string,
+  file: File,
+  uploadedBy: string,
+): Promise<DocumentRecord> {
+  const safeName = file.name.replace(/[^a-zA-Z0-9._\-()[\] ]/g, "_")
+  const path = `${entityType}/${entityId}/${Date.now()}_${safeName}`
+
+  const { error: storageErr } = await supabase.storage
+    .from("documents")
+    .upload(path, file, { contentType: file.type || "application/octet-stream" })
+  if (storageErr) throw new Error(storageErr.message)
+
+  const { data, error: insertErr } = await supabase
+    .from("documents")
+    .insert({
+      entity_type: entityType,
+      entity_id: entityId,
+      file_name: file.name,
+      file_size: file.size,
+      mime_type: file.type || null,
+      storage_path: path,
+      uploaded_by: uploadedBy,
+    })
+    .select("*, uploader:uploaded_by(full_name)")
+    .single()
+  if (insertErr) throw new Error(insertErr.message)
+  return {
+    ...data,
+    entity_type: data.entity_type as EntityType,
+    uploader_name:
+      (data.uploader as unknown as { full_name: string | null } | null)
+        ?.full_name ?? null,
+  }
+}
+
+/** Delete a document from storage and remove its metadata row. */
+export async function deleteDocument(id: string, storagePath: string): Promise<void> {
+  const { error: storageErr } = await supabase.storage
+    .from("documents")
+    .remove([storagePath])
+  if (storageErr) throw new Error(storageErr.message)
+  const { error } = await supabase.from("documents").delete().eq("id", id)
+  if (error) throw new Error(error.message)
+}
+
+/** Create a 1-hour signed download URL for a private document. */
+export async function getDocumentUrl(storagePath: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from("documents")
+    .createSignedUrl(storagePath, 60 * 60)
+  if (error) throw new Error(error.message)
+  return data.signedUrl
 }

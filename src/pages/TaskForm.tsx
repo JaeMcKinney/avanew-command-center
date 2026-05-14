@@ -35,6 +35,7 @@ import {
 } from "@/lib/data"
 import type { Company, Contact, Deal, Lead, Task, TeamMember } from "@/types/db"
 import { cn } from "@/lib/utils"
+import { DocumentsSection } from "@/components/DocumentsSection"
 
 const NONE = "__none__"
 
@@ -417,6 +418,12 @@ export function TaskForm() {
           </div>
         </form>
       </Form>
+
+      {isEdit && id && (
+        <div className="px-4 py-6 md:px-6 border-t">
+          <DocumentsSection entityType="task" entityId={id} />
+        </div>
+      )}
     </div>
   )
 }

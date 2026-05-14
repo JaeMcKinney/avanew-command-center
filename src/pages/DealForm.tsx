@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { QuickCreateAccountDialog } from "@/components/QuickCreateAccountDialog"
 import { QuickCreateContactDialog } from "@/components/QuickCreateContactDialog"
+import { DocumentsSection } from "@/components/DocumentsSection"
 import {
   Select,
   SelectContent,
@@ -911,6 +912,12 @@ export function DealForm() {
           </div>
         </form>
       </Form>
+
+      {isEdit && id && (
+        <div className="px-4 py-6 md:px-6 border-t">
+          <DocumentsSection entityType="deal" entityId={id} />
+        </div>
+      )}
 
       <QuickCreateAccountDialog
         open={accountDialogOpen}

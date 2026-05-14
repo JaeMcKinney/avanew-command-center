@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ConvertLeadDialog } from "@/components/ConvertLeadDialog"
+import { DocumentsSection } from "@/components/DocumentsSection"
 import {
   Select,
   SelectContent,
@@ -549,6 +550,12 @@ export function LeadForm() {
           </div>
         </form>
       </Form>
+
+      {isEdit && id && (
+        <div className="px-4 py-6 md:px-6 border-t">
+          <DocumentsSection entityType="lead" entityId={id} />
+        </div>
+      )}
 
       <ConvertLeadDialog
         lead={currentLead}

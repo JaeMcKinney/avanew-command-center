@@ -6,19 +6,18 @@ import {
   ShieldCheck,
   Target,
   Handshake,
-  Camera,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { PageHeader } from "@/components/PageHeader"
 import { getMyProfile, updateMyProfile, type ProfileLite } from "@/lib/data"
 import { useRole } from "@/hooks/useRole"
 import { supabase } from "@/lib/supabase"
+import { AvatarUpload } from "@/components/AvatarUpload"
 
 function deriveInitials(name: string | null, email: string | null) {
   const src = name || email || "U"
@@ -121,22 +120,18 @@ export function SettingsProfile() {
           <form onSubmit={handleSave} className="space-y-5">
             {/* Avatar */}
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                {avatarUrl && <AvatarImage src={avatarUrl} alt={fullName} />}
-                <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 space-y-1.5">
-                <Label htmlFor="avatarUrl" className="flex items-center gap-1.5">
-                  <Camera className="h-3.5 w-3.5" />
-                  Profile photo URL
-                </Label>
-                <Input
-                  id="avatarUrl"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/photo.jpg"
-                />
-                <p className="text-xs text-muted-foreground">Paste a publicly accessible image URL.</p>
+              <AvatarUpload
+                currentUrl={avatarUrl || null}
+                initials={initials}
+                onUploaded={(url) => {
+                  setAvatarUrl(url)
+                  void updateMyProfile({ full_name: fullName, avatar_url: url })
+                }}
+              />
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">Profile photo</p>
+                <p>Click your avatar to upload a new photo.</p>
+                <p className="text-xs mt-0.5">JPG, PNG, WebP · Max 5 MB</p>
               </div>
             </div>
 
