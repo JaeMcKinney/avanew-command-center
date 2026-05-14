@@ -42,8 +42,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         setCurrentOrgState(null)
         setCurrentOrg(null)
       }
-    } catch {
-      // ignore — user may not be authenticated yet
+    } catch (err) {
+      console.error("[OrganizationContext] Failed to load orgs:", err)
     } finally {
       setLoading(false)
     }
