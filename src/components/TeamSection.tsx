@@ -110,9 +110,11 @@ export function TeamSection() {
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
-  const [role, setRole] = useState<TeamRole>("admin")
-
   const assignableRoles = isSuperUser ? ALL_ROLES : STANDARD_ROLES
+  const [role, setRole] = useState<TeamRole>(() => {
+    const saved = localStorage.getItem("avanew-crm.invite-role") as TeamRole | null
+    return saved && ALL_ROLES.includes(saved) ? saved : "admin"
+  })
   const [submitting, setSubmitting] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState<TeamMember | null>(null)
 
@@ -227,7 +229,11 @@ export function TeamSection() {
             <Label htmlFor="invite-role">Role</Label>
             <Select
               value={role}
-              onValueChange={(v) => setRole(v as TeamRole)}
+              onValueChange={(v) => {
+                const r = v as TeamRole
+                setRole(r)
+                localStorage.setItem("avanew-crm.invite-role", r)
+              }}
             >
               <SelectTrigger id="invite-role" className="w-full">
                 <SelectValue />
