@@ -358,7 +358,7 @@ export function Dashboard() {
           </ModuleSection>
 
           {/* Recent activity — standalone, same level as Relationships */}
-          <div>
+          <div className="flex-1 flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-6 w-6 rounded grid place-items-center bg-amber-500">
                 <Clock className="h-3.5 w-3.5 text-white" />
@@ -371,7 +371,7 @@ export function Dashboard() {
                 View all <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
-            <Card>
+            <Card className="flex-1">
               <CardContent className="p-0">
                 {loading ? (
                   <div className="px-4 py-4 text-sm text-muted-foreground">Loading…</div>
@@ -489,7 +489,7 @@ export function Dashboard() {
           </ModuleSection>
 
           {/* Relationships widget */}
-          <div>
+          <div className="flex-1 flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-6 w-6 rounded grid place-items-center bg-violet-500">
                 <Handshake className="h-3.5 w-3.5 text-white" />
@@ -514,7 +514,7 @@ export function Dashboard() {
               </div>
             </div>
 
-            <Card>
+            <Card className="flex-1">
               <CardContent className="pt-4 pb-4 px-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {/* Top Partners */}
