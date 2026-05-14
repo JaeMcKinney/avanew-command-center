@@ -9,6 +9,7 @@ import type {
   DocumentRecord,
   EntityType,
   Lead,
+  OrgWithRole,
   Partner,
   PipelineStage,
   Task,
@@ -21,6 +22,25 @@ export const PREVIEW_DATA_MODE =
   import.meta.env.VITE_PREVIEW_MODE === "true"
 
 const PREVIEW_MODE = PREVIEW_DATA_MODE
+
+// ── Organization context ─────────────────────────────────────────────────────
+// Set by OrganizationContext when the user selects their active org.
+// All org-scoped queries filter by this ID automatically.
+let _currentOrgId: string | null = PREVIEW_MODE ? "preview-org" : null
+
+export function setCurrentOrg(orgId: string | null): void {
+  _currentOrgId = orgId
+}
+
+export function getCurrentOrg(): string | null {
+  return _currentOrgId
+}
+
+function requireOrg(): string {
+  if (_currentOrgId) return _currentOrgId
+  if (PREVIEW_MODE) return "preview-org"
+  throw new Error("No organization selected")
+}
 
 const MOCK_DATA_VERSION = "v3"
 ;(() => {
@@ -175,9 +195,9 @@ const COMPANY_EXTRA_NULLS = {
 function seedCompanies(): Company[] {
   const t = nowIso()
   return [
-    { id: "c-acme", name: "Acme Robotics", domain: "acme-robotics.com", industry: "Manufacturing", notes: null, owner_id: null, ...COMPANY_EXTRA_NULLS, created_at: t, updated_at: t },
-    { id: "c-northwind", name: "Northwind Capital", domain: "northwindcap.com", industry: "Finance", notes: null, owner_id: null, ...COMPANY_EXTRA_NULLS, created_at: t, updated_at: t },
-    { id: "c-helix", name: "Helix Bio", domain: "helixbio.io", industry: "Biotech", notes: null, owner_id: null, ...COMPANY_EXTRA_NULLS, created_at: t, updated_at: t },
+    { id: "c-acme", organization_id: "preview-org", name: "Acme Robotics", domain: "acme-robotics.com", industry: "Manufacturing", notes: null, owner_id: null, ...COMPANY_EXTRA_NULLS, created_at: t, updated_at: t },
+    { id: "c-northwind", organization_id: "preview-org", name: "Northwind Capital", domain: "northwindcap.com", industry: "Finance", notes: null, owner_id: null, ...COMPANY_EXTRA_NULLS, created_at: t, updated_at: t },
+    { id: "c-helix", organization_id: "preview-org", name: "Helix Bio", domain: "helixbio.io", industry: "Biotech", notes: null, owner_id: null, ...COMPANY_EXTRA_NULLS, created_at: t, updated_at: t },
   ]
 }
 
@@ -193,22 +213,22 @@ const CONTACT_EXTRA_NULLS = {
 function seedContacts(): Contact[] {
   const t = nowIso()
   return [
-    { id: "ct-maya", first_name: "Maya", last_name: "Reyes", email: "maya.reyes@acme-robotics.com", phone: "+1 415 555 0142", title: "VP of Operations", company_id: "c-acme", owner_id: null, notes: "Met at the Robotics Summit. Interested in pilot program.", ...CONTACT_EXTRA_NULLS, created_at: t, updated_at: t },
-    { id: "ct-jonas", first_name: "Jonas", last_name: "Becker", email: "jonas@northwindcap.com", phone: "+1 212 555 0188", title: "Director, Investments", company_id: "c-northwind", owner_id: null, notes: null, ...CONTACT_EXTRA_NULLS, created_at: t, updated_at: t },
-    { id: "ct-priya", first_name: "Priya", last_name: "Shah", email: "priya.shah@helixbio.io", phone: null, title: "Head of BD", company_id: "c-helix", owner_id: null, notes: "Wants demo of avatar studio next quarter.", ...CONTACT_EXTRA_NULLS, created_at: t, updated_at: t },
+    { id: "ct-maya", organization_id: "preview-org", first_name: "Maya", last_name: "Reyes", email: "maya.reyes@acme-robotics.com", phone: "+1 415 555 0142", title: "VP of Operations", company_id: "c-acme", owner_id: null, notes: "Met at the Robotics Summit. Interested in pilot program.", ...CONTACT_EXTRA_NULLS, created_at: t, updated_at: t },
+    { id: "ct-jonas", organization_id: "preview-org", first_name: "Jonas", last_name: "Becker", email: "jonas@northwindcap.com", phone: "+1 212 555 0188", title: "Director, Investments", company_id: "c-northwind", owner_id: null, notes: null, ...CONTACT_EXTRA_NULLS, created_at: t, updated_at: t },
+    { id: "ct-priya", organization_id: "preview-org", first_name: "Priya", last_name: "Shah", email: "priya.shah@helixbio.io", phone: null, title: "Head of BD", company_id: "c-helix", owner_id: null, notes: "Wants demo of avatar studio next quarter.", ...CONTACT_EXTRA_NULLS, created_at: t, updated_at: t },
   ]
 }
 
 function seedStages(): PipelineStage[] {
   const t = nowIso()
   return [
-    { id: "s-new", name: "New", position: 1, is_won: false, is_lost: false, created_at: t },
-    { id: "s-lead", name: "Lead", position: 2, is_won: false, is_lost: false, created_at: t },
-    { id: "s-qualified", name: "Qualified", position: 3, is_won: false, is_lost: false, created_at: t },
-    { id: "s-proposal", name: "Proposal", position: 4, is_won: false, is_lost: false, created_at: t },
-    { id: "s-negotiation", name: "Negotiation", position: 5, is_won: false, is_lost: false, created_at: t },
-    { id: "s-won", name: "Won", position: 6, is_won: true, is_lost: false, created_at: t },
-    { id: "s-lost", name: "Lost", position: 7, is_won: false, is_lost: true, created_at: t },
+    { id: "s-new", organization_id: "preview-org", name: "New", position: 1, is_won: false, is_lost: false, created_at: t },
+    { id: "s-lead", organization_id: "preview-org", name: "Lead", position: 2, is_won: false, is_lost: false, created_at: t },
+    { id: "s-qualified", organization_id: "preview-org", name: "Qualified", position: 3, is_won: false, is_lost: false, created_at: t },
+    { id: "s-proposal", organization_id: "preview-org", name: "Proposal", position: 4, is_won: false, is_lost: false, created_at: t },
+    { id: "s-negotiation", organization_id: "preview-org", name: "Negotiation", position: 5, is_won: false, is_lost: false, created_at: t },
+    { id: "s-won", organization_id: "preview-org", name: "Won", position: 6, is_won: true, is_lost: false, created_at: t },
+    { id: "s-lost", organization_id: "preview-org", name: "Lost", position: 7, is_won: false, is_lost: true, created_at: t },
   ]
 }
 
@@ -217,6 +237,7 @@ function seedDeals(): Deal[] {
   return [
     {
       id: "d-acme-pilot",
+      organization_id: "preview-org",
       title: "Acme — Avatar Studio pilot",
       amount: 24000,
       currency: "USD",
@@ -239,6 +260,7 @@ function seedDeals(): Deal[] {
     },
     {
       id: "d-northwind-onboarding",
+      organization_id: "preview-org",
       title: "Northwind — Q1 onboarding",
       amount: 48000,
       currency: "USD",
@@ -261,6 +283,7 @@ function seedDeals(): Deal[] {
     },
     {
       id: "d-helix-demo",
+      organization_id: "preview-org",
       title: "Helix Bio — multi-seat license",
       amount: 12000,
       currency: "USD",
@@ -290,6 +313,7 @@ function seedActivities(): Activity[] {
   return [
     {
       id: newId(),
+      organization_id: "preview-org",
       type: "meeting",
       subject: "Discovery call with Maya",
       body: "Walked through the Avatar Studio feature. Maya wants to involve her CTO next.",
@@ -303,6 +327,7 @@ function seedActivities(): Activity[] {
     },
     {
       id: newId(),
+      organization_id: "preview-org",
       type: "email",
       subject: "Sent proposal to Northwind",
       body: "Q1 onboarding proposal — 50 seats, white-glove rollout.",
@@ -316,6 +341,7 @@ function seedActivities(): Activity[] {
     },
     {
       id: newId(),
+      organization_id: "preview-org",
       type: "task",
       subject: "Follow up with Helix Bio",
       body: "Confirm timeline for multi-seat license.",
@@ -329,6 +355,7 @@ function seedActivities(): Activity[] {
     },
     {
       id: newId(),
+      organization_id: "preview-org",
       type: "note",
       subject: "Acme: budget approved",
       body: "Heard from Maya — board approved the pilot budget.",
@@ -385,6 +412,7 @@ export async function listCompanies(): Promise<Company[]> {
   const { data, error } = await supabase
     .from("companies")
     .select("*")
+    .eq("organization_id", requireOrg())
     .order("name", { ascending: true })
   if (error) throw error
   return await applyViewAsFilter(data ?? [])
@@ -397,6 +425,7 @@ export async function createCompany(input: CompanyInput): Promise<Company> {
   if (PREVIEW_MODE) {
     const row: Company = {
       id: newId(),
+      organization_id: "preview-org",
       name: input.name,
       domain: input.domain ?? null,
       industry: input.industry ?? null,
@@ -434,7 +463,7 @@ export async function createCompany(input: CompanyInput): Promise<Company> {
   }
   const { data, error } = await supabase
     .from("companies")
-    .insert({ ...input, owner_id })
+    .insert({ ...input, owner_id, organization_id: requireOrg() })
     .select()
     .single()
   if (error) throw error
@@ -563,6 +592,7 @@ export async function listContacts(): Promise<Contact[]> {
   const { data, error } = await supabase
     .from("contacts")
     .select("*")
+    .eq("organization_id", requireOrg())
     .order("created_at", { ascending: false })
   if (error) throw error
   return await applyViewAsFilter(data ?? [])
@@ -575,6 +605,7 @@ export async function createContact(input: ContactInput): Promise<Contact> {
   if (PREVIEW_MODE) {
     const row: Contact = {
       id: newId(),
+      organization_id: "preview-org",
       first_name: input.first_name,
       last_name: input.last_name ?? null,
       email: input.email ?? null,
@@ -615,7 +646,7 @@ export async function createContact(input: ContactInput): Promise<Contact> {
   }
   const { data, error } = await supabase
     .from("contacts")
-    .insert({ ...input, owner_id })
+    .insert({ ...input, owner_id, organization_id: requireOrg() })
     .select()
     .single()
   if (error) throw error
@@ -683,6 +714,7 @@ export async function listStages(): Promise<PipelineStage[]> {
   const { data, error } = await supabase
     .from("pipeline_stages")
     .select("*")
+    .eq("organization_id", requireOrg())
     .order("position", { ascending: true })
   if (error) throw error
   return data ?? []
@@ -694,6 +726,7 @@ export async function createStage(input: StageInput): Promise<PipelineStage> {
     const maxPos = rows.reduce((m, r) => Math.max(m, r.position), 0)
     const row: PipelineStage = {
       id: newId(),
+      organization_id: "preview-org",
       name: input.name,
       position: maxPos + 1,
       is_won: input.is_won ?? false,
@@ -712,7 +745,7 @@ export async function createStage(input: StageInput): Promise<PipelineStage> {
   const nextPos = (max?.position ?? 0) + 1
   const { data, error } = await supabase
     .from("pipeline_stages")
-    .insert({ ...input, position: nextPos })
+    .insert({ ...input, position: nextPos, organization_id: requireOrg() })
     .select()
     .single()
   if (error) throw error
@@ -815,6 +848,7 @@ export async function listDeals(): Promise<Deal[]> {
   const { data, error } = await supabase
     .from("deals")
     .select("*")
+    .eq("organization_id", requireOrg())
     .order("position", { ascending: true })
   if (error) throw error
   return await applyViewAsFilter(data ?? [])
@@ -829,6 +863,7 @@ export async function createDeal(input: DealInput): Promise<Deal> {
       .reduce((m, d) => Math.max(m, d.position), -1)
     const row: Deal = {
       id: newId(),
+      organization_id: "preview-org",
       title: input.title,
       amount: input.amount ?? null,
       currency: input.currency ?? "USD",
@@ -854,7 +889,7 @@ export async function createDeal(input: DealInput): Promise<Deal> {
   }
   const { data, error } = await supabase
     .from("deals")
-    .insert({ ...input, owner_id })
+    .insert({ ...input, owner_id, organization_id: requireOrg() })
     .select()
     .single()
   if (error) throw error
@@ -968,6 +1003,7 @@ export async function listActivities(): Promise<Activity[]> {
   const { data, error } = await supabase
     .from("activities")
     .select("*")
+    .eq("organization_id", requireOrg())
     .order("created_at", { ascending: false })
   if (error) throw error
   return await applyViewAsFilter(data ?? [])
@@ -980,6 +1016,7 @@ export async function createActivity(input: ActivityInput): Promise<Activity> {
   if (PREVIEW_MODE) {
     const row: Activity = {
       id: newId(),
+      organization_id: "preview-org",
       type: input.type,
       subject: input.subject,
       body: input.body ?? null,
@@ -997,7 +1034,7 @@ export async function createActivity(input: ActivityInput): Promise<Activity> {
   }
   const { data, error } = await supabase
     .from("activities")
-    .insert({ ...input, owner_id })
+    .insert({ ...input, owner_id, organization_id: requireOrg() })
     .select()
     .single()
   if (error) throw error
@@ -1157,36 +1194,40 @@ export async function listTeamMembers(): Promise<TeamMember[]> {
       return a.email.localeCompare(b.email)
     })
   }
-  // Production: read profiles + invitations.
-  // Profiles need a `role` column and an optional `email` mirror; invitations
-  // is a separate table for pending invites. See supabase/schema.sql.
-  const [{ data: profiles, error: pErr }, { data: invites, error: iErr }] =
+  const orgId = requireOrg()
+  const [{ data: members, error: mErr }, { data: invites, error: iErr }] =
     await Promise.all([
       supabase
-        .from("profiles")
-        .select("id, full_name, role, email, created_at")
+        .from("organization_members")
+        .select("user_id, role, created_at, profiles(id, full_name, email)")
+        .eq("organization_id", orgId)
         .order("created_at", { ascending: true }),
       supabase
         .from("invitations")
         .select("id, email, full_name, role, created_at")
+        .eq("organization_id", orgId)
         .order("created_at", { ascending: true }),
     ])
-  if (pErr) throw pErr
+  if (mErr) throw mErr
   if (iErr) throw iErr
-  const active: TeamMember[] = (profiles ?? []).map((p) => ({
-    id: p.id as string,
-    email: (p.email as string | null) ?? "",
-    full_name: (p.full_name as string | null) ?? null,
-    role: ((p.role as TeamRole | null) ?? "admin") as TeamRole,
-    status: "active",
-    created_at: p.created_at as string,
-  }))
+  type OrgMemberRow = { user_id: string; role: string; created_at: string; profiles: { id: string; full_name: string | null; email: string | null } | null }
+  const active: TeamMember[] = ((members ?? []) as unknown as OrgMemberRow[]).map((m) => {
+    const profile = m.profiles
+    return {
+      id: profile?.id ?? m.user_id,
+      email: profile?.email ?? "",
+      full_name: profile?.full_name ?? null,
+      role: m.role as TeamRole,
+      status: "active" as const,
+      created_at: m.created_at,
+    }
+  })
   const pending: TeamMember[] = (invites ?? []).map((i) => ({
     id: i.id as string,
     email: i.email as string,
     full_name: (i.full_name as string | null) ?? null,
     role: i.role as TeamRole,
-    status: "invited",
+    status: "invited" as const,
     created_at: i.created_at as string,
   }))
   return [...active, ...pending].sort((a, b) => {
@@ -1222,7 +1263,7 @@ export async function inviteTeamMember(
   // to call supabase.auth.admin.inviteUserByEmail() and write the role.
   const { data, error } = await supabase.functions.invoke<TeamMember>(
     "invite-user",
-    { body: { email, full_name, role: input.role, redirect_to: `${window.location.origin}/setup-account` } }
+    { body: { email, full_name, role: input.role, organization_id: requireOrg(), redirect_to: `${window.location.origin}/setup-account` } }
   )
   if (error) throw error
   if (!data) throw new Error("Invite returned no data")
@@ -1248,7 +1289,6 @@ export async function updateTeamMemberRole(
     saveMock("team_members", rows)
     return
   }
-  // Invited users live in invitations, not profiles — update the right table.
   if (status === "invited") {
     const { error } = await supabase
       .from("invitations")
@@ -1257,10 +1297,12 @@ export async function updateTeamMemberRole(
     if (error) throw error
     return
   }
+  // Active member: update their role in organization_members
   const { error } = await supabase
-    .from("profiles")
+    .from("organization_members")
     .update({ role })
-    .eq("id", id)
+    .eq("organization_id", requireOrg())
+    .eq("user_id", id)
   if (error) throw error
 }
 
@@ -1332,7 +1374,7 @@ function seedLeads(): Lead[] {
   const t = nowIso()
   return [
     {
-      id: "l-1", owner_id: null, first_name: "Alex", last_name: "Torres",
+      id: "l-1", organization_id: "preview-org", owner_id: null, first_name: "Alex", last_name: "Torres",
       company: "BlueWave Tech", title: "CTO", phone: "+1 650 555 0100",
       mobile: null, email: "alex@bluewave.io", fax: null,
       website: "bluewave.io", lead_source: "Web", lead_status: "New",
@@ -1350,7 +1392,7 @@ export async function listLeads(): Promise<Lead[]> {
     const rows = previewFilterByOwner(loadMock<Lead>("leads", seedLeads))
     return [...rows].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
-  const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false })
+  const { data, error } = await supabase.from("leads").select("*").eq("organization_id", requireOrg()).order("created_at", { ascending: false })
   if (error) throw error
   return await applyViewAsFilter(data ?? [])
 }
@@ -1359,7 +1401,7 @@ export async function createLead(input: LeadInput): Promise<Lead> {
   const owner_id = await ensureOwnerForCreate(input.owner_id)
   if (PREVIEW_MODE) {
     const row: Lead = {
-      id: newId(), owner_id,
+      id: newId(), organization_id: "preview-org", owner_id,
       first_name: input.first_name, last_name: input.last_name ?? null,
       company: input.company ?? null, title: input.title ?? null,
       phone: input.phone ?? null, mobile: input.mobile ?? null,
@@ -1376,7 +1418,7 @@ export async function createLead(input: LeadInput): Promise<Lead> {
     saveMock("leads", [row, ...loadMock<Lead>("leads", seedLeads)])
     return row
   }
-  const { data, error } = await supabase.from("leads").insert({ ...input, owner_id }).select().single()
+  const { data, error } = await supabase.from("leads").insert({ ...input, owner_id, organization_id: requireOrg() }).select().single()
   if (error) throw error
   return data
 }
@@ -1526,7 +1568,7 @@ function seedTasks(): Task[] {
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
   return [
     {
-      id: "tk-1", subject: "Follow up with Acme re: pilot", status: "Not Started",
+      id: "tk-1", organization_id: "preview-org", subject: "Follow up with Acme re: pilot", status: "Not Started",
       priority: "High", owner_id: null, contact_id: "ct-maya", company_id: "c-acme",
       deal_id: "d-acme-pilot", lead_id: null, due_date: tomorrow,
       description: "Check on pilot timeline.", completed_at: null,
@@ -1540,7 +1582,7 @@ export async function listTasks(): Promise<Task[]> {
     const rows = previewFilterByOwner(loadMock<Task>("tasks", seedTasks))
     return [...rows].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
-  const { data, error } = await supabase.from("tasks").select("*").order("created_at", { ascending: false })
+  const { data, error } = await supabase.from("tasks").select("*").eq("organization_id", requireOrg()).order("created_at", { ascending: false })
   if (error) throw error
   return await applyViewAsFilter(data ?? [])
 }
@@ -1549,7 +1591,7 @@ export async function createTask(input: TaskInput): Promise<Task> {
   const owner_id = await ensureOwnerForCreate(input.owner_id)
   if (PREVIEW_MODE) {
     const row: Task = {
-      id: newId(), subject: input.subject,
+      id: newId(), organization_id: "preview-org", subject: input.subject,
       status: input.status ?? "Not Started", priority: input.priority ?? "Normal",
       owner_id, contact_id: input.contact_id ?? null,
       company_id: input.company_id ?? null, deal_id: input.deal_id ?? null,
@@ -1560,7 +1602,7 @@ export async function createTask(input: TaskInput): Promise<Task> {
     saveMock("tasks", [row, ...loadMock<Task>("tasks", seedTasks)])
     return row
   }
-  const { data, error } = await supabase.from("tasks").insert({ ...input, owner_id }).select().single()
+  const { data, error } = await supabase.from("tasks").insert({ ...input, owner_id, organization_id: requireOrg() }).select().single()
   if (error) throw error
   return data
 }
@@ -1643,26 +1685,26 @@ function seedTransactions(): CashflowTransaction[] {
     const mo = String(d.getMonth() + 1).padStart(2, "0")
     const mp = `${y}-${mo}`
 
-    rows.push({ id: `txn-saas-${m}`, type: "income", category: "Services", description: "SaaS subscription revenue", amount: 15000, date: `${mp}-01`, is_recurring: true, recurrence_period: "monthly", partner_id: null, vendor_id: null, reference: `INV-${y}${mo}-001`, created_at: `${mp}-01T00:00:00.000Z`, updated_at: `${mp}-01T00:00:00.000Z` })
-    rows.push({ id: `txn-retainer-${m}`, type: "income", category: "Services", description: "Retainer fee — Acme Robotics", amount: 8000, date: `${mp}-05`, is_recurring: true, recurrence_period: "monthly", partner_id: "partner-acme", vendor_id: null, reference: `RET-${y}${mo}`, created_at: `${mp}-05T00:00:00.000Z`, updated_at: `${mp}-05T00:00:00.000Z` })
-    rows.push({ id: `txn-payroll-${m}`, type: "expense", category: "Payroll", description: "Monthly payroll", amount: 18000, date: `${mp}-28`, is_recurring: true, recurrence_period: "monthly", partner_id: null, vendor_id: null, reference: `PAY-${y}${mo}`, created_at: `${mp}-28T00:00:00.000Z`, updated_at: `${mp}-28T00:00:00.000Z` })
-    rows.push({ id: `txn-aws-${m}`, type: "expense", category: "Infrastructure", description: "AWS cloud services", amount: 2500, date: `${mp}-01`, is_recurring: true, recurrence_period: "monthly", partner_id: null, vendor_id: "vendor-aws", reference: `AWS-${y}${mo}`, created_at: `${mp}-01T00:00:00.000Z`, updated_at: `${mp}-01T00:00:00.000Z` })
-    rows.push({ id: `txn-sw-${m}`, type: "expense", category: "Software", description: "SaaS tools (GitHub, Figma, Slack)", amount: 1200, date: `${mp}-01`, is_recurring: true, recurrence_period: "monthly", partner_id: null, vendor_id: "vendor-github", reference: null, created_at: `${mp}-01T00:00:00.000Z`, updated_at: `${mp}-01T00:00:00.000Z` })
+    rows.push({ id: `txn-saas-${m}`, organization_id: "preview-org", type: "income", category: "Services", description: "SaaS subscription revenue", amount: 15000, date: `${mp}-01`, is_recurring: true, recurrence_period: "monthly", partner_id: null, vendor_id: null, reference: `INV-${y}${mo}-001`, created_at: `${mp}-01T00:00:00.000Z`, updated_at: `${mp}-01T00:00:00.000Z` })
+    rows.push({ id: `txn-retainer-${m}`, organization_id: "preview-org", type: "income", category: "Services", description: "Retainer fee — Acme Robotics", amount: 8000, date: `${mp}-05`, is_recurring: true, recurrence_period: "monthly", partner_id: "partner-acme", vendor_id: null, reference: `RET-${y}${mo}`, created_at: `${mp}-05T00:00:00.000Z`, updated_at: `${mp}-05T00:00:00.000Z` })
+    rows.push({ id: `txn-payroll-${m}`, organization_id: "preview-org", type: "expense", category: "Payroll", description: "Monthly payroll", amount: 18000, date: `${mp}-28`, is_recurring: true, recurrence_period: "monthly", partner_id: null, vendor_id: null, reference: `PAY-${y}${mo}`, created_at: `${mp}-28T00:00:00.000Z`, updated_at: `${mp}-28T00:00:00.000Z` })
+    rows.push({ id: `txn-aws-${m}`, organization_id: "preview-org", type: "expense", category: "Infrastructure", description: "AWS cloud services", amount: 2500, date: `${mp}-01`, is_recurring: true, recurrence_period: "monthly", partner_id: null, vendor_id: "vendor-aws", reference: `AWS-${y}${mo}`, created_at: `${mp}-01T00:00:00.000Z`, updated_at: `${mp}-01T00:00:00.000Z` })
+    rows.push({ id: `txn-sw-${m}`, organization_id: "preview-org", type: "expense", category: "Software", description: "SaaS tools (GitHub, Figma, Slack)", amount: 1200, date: `${mp}-01`, is_recurring: true, recurrence_period: "monthly", partner_id: null, vendor_id: "vendor-github", reference: null, created_at: `${mp}-01T00:00:00.000Z`, updated_at: `${mp}-01T00:00:00.000Z` })
 
     if (m % 3 === 0) {
-      rows.push({ id: `txn-consulting-${m}`, type: "income", category: "Services", description: "Consulting project delivery", amount: 12000, date: `${mp}-15`, is_recurring: false, recurrence_period: null, partner_id: null, vendor_id: null, reference: `PROJ-${y}${mo}`, created_at: `${mp}-15T00:00:00.000Z`, updated_at: `${mp}-15T00:00:00.000Z` })
+      rows.push({ id: `txn-consulting-${m}`, organization_id: "preview-org", type: "income", category: "Services", description: "Consulting project delivery", amount: 12000, date: `${mp}-15`, is_recurring: false, recurrence_period: null, partner_id: null, vendor_id: null, reference: `PROJ-${y}${mo}`, created_at: `${mp}-15T00:00:00.000Z`, updated_at: `${mp}-15T00:00:00.000Z` })
     }
     if (m === 8) {
-      rows.push({ id: "txn-seed", type: "income", category: "Investments", description: "Seed funding round — Northwind Capital", amount: 50000, date: `${mp}-10`, is_recurring: false, recurrence_period: null, partner_id: "partner-northwind", vendor_id: null, reference: "SEED-2024", created_at: `${mp}-10T00:00:00.000Z`, updated_at: `${mp}-10T00:00:00.000Z` })
+      rows.push({ id: "txn-seed", organization_id: "preview-org", type: "income", category: "Investments", description: "Seed funding round — Northwind Capital", amount: 50000, date: `${mp}-10`, is_recurring: false, recurrence_period: null, partner_id: "partner-northwind", vendor_id: null, reference: "SEED-2024", created_at: `${mp}-10T00:00:00.000Z`, updated_at: `${mp}-10T00:00:00.000Z` })
     }
     if (m === 6) {
-      rows.push({ id: "txn-tradeshow", type: "expense", category: "Marketing", description: "Tech Summit sponsorship", amount: 5000, date: `${mp}-10`, is_recurring: false, recurrence_period: null, partner_id: null, vendor_id: null, reference: "MKTG-2024-Q2", created_at: `${mp}-10T00:00:00.000Z`, updated_at: `${mp}-10T00:00:00.000Z` })
+      rows.push({ id: "txn-tradeshow", organization_id: "preview-org", type: "expense", category: "Marketing", description: "Tech Summit sponsorship", amount: 5000, date: `${mp}-10`, is_recurring: false, recurrence_period: null, partner_id: null, vendor_id: null, reference: "MKTG-2024-Q2", created_at: `${mp}-10T00:00:00.000Z`, updated_at: `${mp}-10T00:00:00.000Z` })
     }
     if (m === 4) {
-      rows.push({ id: "txn-equipment", type: "expense", category: "Equipment", description: "Development workstations (3×)", amount: 8400, date: `${mp}-05`, is_recurring: false, recurrence_period: null, partner_id: null, vendor_id: null, reference: "EQUIP-2024", created_at: `${mp}-05T00:00:00.000Z`, updated_at: `${mp}-05T00:00:00.000Z` })
+      rows.push({ id: "txn-equipment", organization_id: "preview-org", type: "expense", category: "Equipment", description: "Development workstations (3×)", amount: 8400, date: `${mp}-05`, is_recurring: false, recurrence_period: null, partner_id: null, vendor_id: null, reference: "EQUIP-2024", created_at: `${mp}-05T00:00:00.000Z`, updated_at: `${mp}-05T00:00:00.000Z` })
     }
     if (m === 2) {
-      rows.push({ id: "txn-legal", type: "expense", category: "Legal", description: "Contract review & IP filing", amount: 3500, date: `${mp}-20`, is_recurring: false, recurrence_period: null, partner_id: null, vendor_id: null, reference: "LEGAL-2024", created_at: `${mp}-20T00:00:00.000Z`, updated_at: `${mp}-20T00:00:00.000Z` })
+      rows.push({ id: "txn-legal", organization_id: "preview-org", type: "expense", category: "Legal", description: "Contract review & IP filing", amount: 3500, date: `${mp}-20`, is_recurring: false, recurrence_period: null, partner_id: null, vendor_id: null, reference: "LEGAL-2024", created_at: `${mp}-20T00:00:00.000Z`, updated_at: `${mp}-20T00:00:00.000Z` })
     }
   }
 
@@ -1690,6 +1732,7 @@ export async function listTransactions(): Promise<CashflowTransaction[]> {
   const { data, error } = await supabase
     .from("cashflow_transactions")
     .select("*")
+    .eq("organization_id", requireOrg())
     .order("date", { ascending: false })
   if (error) throw error
   return data ?? []
@@ -1699,6 +1742,7 @@ export async function createTransaction(input: TransactionInput): Promise<Cashfl
   if (PREVIEW_MODE) {
     const row: CashflowTransaction = {
       id: newId(),
+      organization_id: "preview-org",
       type: input.type,
       category: input.category,
       description: input.description ?? null,
@@ -1718,7 +1762,7 @@ export async function createTransaction(input: TransactionInput): Promise<Cashfl
   }
   const { data, error } = await supabase
     .from("cashflow_transactions")
-    .insert(input)
+    .insert({ ...input, organization_id: requireOrg() })
     .select()
     .single()
   if (error) throw error
@@ -1763,9 +1807,9 @@ export async function deleteTransaction(id: string): Promise<void> {
 function seedPartners(): Partner[] {
   const t = nowIso()
   return [
-    { id: "partner-acme", name: "Acme Partnerships LLC", type: "Strategic", email: "partners@acme-robotics.com", phone: "+1 415 555 0200", website: "acme-robotics.com", agreement_start_date: "2024-01-01", contract_terms: "Annual partnership agreement with co-marketing rights.", revenue_share: "15% revenue share on referred deals", key_contacts: "Maya Reyes (VP Operations)", notes: "Strong relationship, quarterly business reviews.", status: "Active", created_at: t, updated_at: t },
-    { id: "partner-northwind", name: "Northwind Capital", type: "Financial", email: "invest@northwindcap.com", phone: "+1 212 555 0300", website: "northwindcap.com", agreement_start_date: "2024-03-01", contract_terms: "Seed investment agreement, 18-month term.", revenue_share: "Equity stake per investment terms", key_contacts: "Jonas Becker (Director, Investments)", notes: "Seed round investor. Monthly check-ins.", status: "Active", created_at: t, updated_at: t },
-    { id: "partner-bluewave", name: "BlueWave Tech", type: "Reseller", email: "alex@bluewave.io", phone: "+1 650 555 0100", website: "bluewave.io", agreement_start_date: null, contract_terms: null, revenue_share: "20% reseller margin", key_contacts: "Alex Torres (CTO)", notes: "Exploring reseller agreement.", status: "Pending", created_at: t, updated_at: t },
+    { id: "partner-acme", organization_id: "preview-org", name: "Acme Partnerships LLC", type: "Strategic", email: "partners@acme-robotics.com", phone: "+1 415 555 0200", website: "acme-robotics.com", agreement_start_date: "2024-01-01", contract_terms: "Annual partnership agreement with co-marketing rights.", revenue_share: "15% revenue share on referred deals", key_contacts: "Maya Reyes (VP Operations)", notes: "Strong relationship, quarterly business reviews.", status: "Active", created_at: t, updated_at: t },
+    { id: "partner-northwind", organization_id: "preview-org", name: "Northwind Capital", type: "Financial", email: "invest@northwindcap.com", phone: "+1 212 555 0300", website: "northwindcap.com", agreement_start_date: "2024-03-01", contract_terms: "Seed investment agreement, 18-month term.", revenue_share: "Equity stake per investment terms", key_contacts: "Jonas Becker (Director, Investments)", notes: "Seed round investor. Monthly check-ins.", status: "Active", created_at: t, updated_at: t },
+    { id: "partner-bluewave", organization_id: "preview-org", name: "BlueWave Tech", type: "Reseller", email: "alex@bluewave.io", phone: "+1 650 555 0100", website: "bluewave.io", agreement_start_date: null, contract_terms: null, revenue_share: "20% reseller margin", key_contacts: "Alex Torres (CTO)", notes: "Exploring reseller agreement.", status: "Pending", created_at: t, updated_at: t },
   ]
 }
 
@@ -1791,6 +1835,7 @@ export async function listPartners(): Promise<Partner[]> {
   const { data, error } = await supabase
     .from("partners")
     .select("*")
+    .eq("organization_id", requireOrg())
     .order("name", { ascending: true })
   if (error) throw error
   return data ?? []
@@ -1800,6 +1845,7 @@ export async function createPartner(input: PartnerInput): Promise<Partner> {
   if (PREVIEW_MODE) {
     const row: Partner = {
       id: newId(),
+      organization_id: "preview-org",
       name: input.name,
       type: input.type ?? null,
       email: input.email ?? null,
@@ -1817,7 +1863,7 @@ export async function createPartner(input: PartnerInput): Promise<Partner> {
     saveMock("partners", [row, ...loadMock<Partner>("partners", seedPartners)])
     return row
   }
-  const { data, error } = await supabase.from("partners").insert(input).select().single()
+  const { data, error } = await supabase.from("partners").insert({ ...input, organization_id: requireOrg() }).select().single()
   if (error) throw error
   return data
 }
@@ -1852,10 +1898,10 @@ export async function deletePartner(id: string): Promise<void> {
 function seedVendors(): Vendor[] {
   const t = nowIso()
   return [
-    { id: "vendor-aws", name: "Amazon Web Services", service: "Cloud infrastructure & hosting", email: "aws-billing@amazon.com", phone: null, website: "aws.amazon.com", contract_terms: "Pay-as-you-go", payment_terms: "Net 30", cost_structure: "$2,500/month average spend on EC2, RDS, S3", cost_amount: 2500, cost_frequency: "monthly" as const, performance_notes: "99.9% uptime SLA, strong support.", status: "Active", created_at: t, updated_at: t },
-    { id: "vendor-github", name: "GitHub (Microsoft)", service: "Source control & CI/CD platform", email: null, phone: null, website: "github.com", contract_terms: "Annual subscription", payment_terms: "Net 30", cost_structure: "$500/month (Team plan, 25 seats)", cost_amount: 500, cost_frequency: "monthly" as const, performance_notes: "Core tooling, no issues.", status: "Active", created_at: t, updated_at: t },
-    { id: "vendor-figma", name: "Figma", service: "UI/UX design platform", email: null, phone: null, website: "figma.com", contract_terms: "Annual subscription", payment_terms: "Due on Receipt", cost_structure: "$300/month (Organization plan)", cost_amount: 300, cost_frequency: "monthly" as const, performance_notes: null, status: "Active", created_at: t, updated_at: t },
-    { id: "vendor-slack", name: "Slack (Salesforce)", service: "Team communications", email: null, phone: null, website: "slack.com", contract_terms: "Annual subscription", payment_terms: "Net 30", cost_structure: "$400/month (Pro plan, 30 seats)", cost_amount: 400, cost_frequency: "monthly" as const, performance_notes: null, status: "Active", created_at: t, updated_at: t },
+    { id: "vendor-aws", organization_id: "preview-org", name: "Amazon Web Services", service: "Cloud infrastructure & hosting", email: "aws-billing@amazon.com", phone: null, website: "aws.amazon.com", contract_terms: "Pay-as-you-go", payment_terms: "Net 30", cost_structure: "$2,500/month average spend on EC2, RDS, S3", cost_amount: 2500, cost_frequency: "monthly" as const, performance_notes: "99.9% uptime SLA, strong support.", status: "Active", created_at: t, updated_at: t },
+    { id: "vendor-github", organization_id: "preview-org", name: "GitHub (Microsoft)", service: "Source control & CI/CD platform", email: null, phone: null, website: "github.com", contract_terms: "Annual subscription", payment_terms: "Net 30", cost_structure: "$500/month (Team plan, 25 seats)", cost_amount: 500, cost_frequency: "monthly" as const, performance_notes: "Core tooling, no issues.", status: "Active", created_at: t, updated_at: t },
+    { id: "vendor-figma", organization_id: "preview-org", name: "Figma", service: "UI/UX design platform", email: null, phone: null, website: "figma.com", contract_terms: "Annual subscription", payment_terms: "Due on Receipt", cost_structure: "$300/month (Organization plan)", cost_amount: 300, cost_frequency: "monthly" as const, performance_notes: null, status: "Active", created_at: t, updated_at: t },
+    { id: "vendor-slack", organization_id: "preview-org", name: "Slack (Salesforce)", service: "Team communications", email: null, phone: null, website: "slack.com", contract_terms: "Annual subscription", payment_terms: "Net 30", cost_structure: "$400/month (Pro plan, 30 seats)", cost_amount: 400, cost_frequency: "monthly" as const, performance_notes: null, status: "Active", created_at: t, updated_at: t },
   ]
 }
 
@@ -1885,6 +1931,7 @@ export async function listVendors(): Promise<Vendor[]> {
   const { data, error } = await supabase
     .from("vendors")
     .select("*")
+    .eq("organization_id", requireOrg())
     .order("name", { ascending: true })
   if (error) throw error
   return data ?? []
@@ -1894,6 +1941,7 @@ export async function createVendor(input: VendorInput): Promise<Vendor> {
   if (PREVIEW_MODE) {
     const row: Vendor = {
       id: newId(),
+      organization_id: "preview-org",
       name: input.name,
       service: input.service ?? null,
       email: input.email ?? null,
@@ -1912,7 +1960,7 @@ export async function createVendor(input: VendorInput): Promise<Vendor> {
     saveMock("vendors", [row, ...loadMock<Vendor>("vendors", seedVendors)])
     return row
   }
-  const { data, error } = await supabase.from("vendors").insert(input).select().single()
+  const { data, error } = await supabase.from("vendors").insert({ ...input, organization_id: requireOrg() }).select().single()
   if (error) throw error
   return data
 }
@@ -1957,6 +2005,7 @@ function seedBankConnections(): BankConnection[] {
   return [
     {
       id: "bc-mercury",
+      organization_id: "preview-org",
       provider: "mercury" as BankProvider,
       institution_name: "Mercury",
       institution_id: "mercury",
@@ -1974,6 +2023,7 @@ function seedBankAccounts(): BankAccount[] {
   return [
     {
       id: "ba-mercury-checking",
+      organization_id: "preview-org",
       bank_connection_id: "bc-mercury",
       external_account_id: "mercury-checking-ext-001",
       name: "Mercury Checking",
@@ -1990,6 +2040,7 @@ function seedBankAccounts(): BankAccount[] {
     },
     {
       id: "ba-mercury-savings",
+      organization_id: "preview-org",
       bank_connection_id: "bc-mercury",
       external_account_id: "mercury-savings-ext-001",
       name: "Mercury Savings",
@@ -2022,6 +2073,7 @@ function seedBankTransactions(): BankTransaction[] {
     partnerId: string | null = null,
   ): BankTransaction => ({
     id,
+    organization_id: "preview-org",
     bank_connection_id: "bc-mercury",
     bank_account_id: "ba-mercury-checking",
     provider: "mercury" as BankProvider,
@@ -2069,6 +2121,7 @@ function seedSyncLogs(): CashflowSyncLog[] {
   return [
     {
       id: "sl-001",
+      organization_id: "preview-org",
       bank_connection_id: "bc-mercury",
       bank_account_id: "ba-mercury-checking",
       provider: "mercury",
@@ -2082,6 +2135,7 @@ function seedSyncLogs(): CashflowSyncLog[] {
     },
     {
       id: "sl-002",
+      organization_id: "preview-org",
       bank_connection_id: "bc-mercury",
       bank_account_id: "ba-mercury-savings",
       provider: "mercury",
@@ -2095,6 +2149,7 @@ function seedSyncLogs(): CashflowSyncLog[] {
     },
     {
       id: "sl-003",
+      organization_id: "preview-org",
       bank_connection_id: "bc-mercury",
       bank_account_id: null,
       provider: "mercury",
@@ -2113,18 +2168,18 @@ function seedSyncLogs(): CashflowSyncLog[] {
 
 export async function listBankConnections(): Promise<BankConnection[]> {
   if (PREVIEW_MODE) return loadMock<BankConnection>("bank_connections", seedBankConnections)
-  const { data, error } = await supabase.from("bank_connections").select("*").order("created_at", { ascending: false })
+  const { data, error } = await supabase.from("bank_connections").select("*").eq("organization_id", requireOrg()).order("created_at", { ascending: false })
   if (error) throw error
   return data ?? []
 }
 
-export async function createBankConnection(input: Omit<BankConnection, "id" | "created_at" | "updated_at">): Promise<BankConnection> {
+export async function createBankConnection(input: Omit<BankConnection, "id" | "created_at" | "updated_at" | "organization_id">): Promise<BankConnection> {
   if (PREVIEW_MODE) {
-    const row: BankConnection = { id: newId(), ...input, created_at: nowIso(), updated_at: nowIso() }
+    const row: BankConnection = { id: newId(), organization_id: "preview-org", ...input, created_at: nowIso(), updated_at: nowIso() }
     saveMock("bank_connections", [row, ...loadMock<BankConnection>("bank_connections", seedBankConnections)])
     return row
   }
-  const { data, error } = await supabase.from("bank_connections").insert(input).select().single()
+  const { data, error } = await supabase.from("bank_connections").insert({ ...input, organization_id: requireOrg() }).select().single()
   if (error) throw error
   return data
 }
@@ -2161,7 +2216,7 @@ export async function listBankAccounts(connectionId?: string): Promise<BankAccou
     const rows = loadMock<BankAccount>("bank_accounts", seedBankAccounts)
     return connectionId ? rows.filter((r) => r.bank_connection_id === connectionId) : rows
   }
-  const q = supabase.from("bank_accounts").select("*").order("created_at", { ascending: true })
+  const q = supabase.from("bank_accounts").select("*").eq("organization_id", requireOrg()).order("created_at", { ascending: true })
   if (connectionId) q.eq("bank_connection_id", connectionId)
   const { data, error } = await q
   if (error) throw error
@@ -2185,7 +2240,7 @@ export async function listBankTransactions(opts?: { accountId?: string; pending?
     if (opts?.pending !== undefined) rows = rows.filter((r) => r.pending === opts.pending)
     return rows.sort((a, b) => b.date.localeCompare(a.date))
   }
-  let q = supabase.from("bank_transactions").select("*").order("date", { ascending: false })
+  let q = supabase.from("bank_transactions").select("*").eq("organization_id", requireOrg()).order("date", { ascending: false })
   if (opts?.accountId) q = q.eq("bank_account_id", opts.accountId)
   if (opts?.pending !== undefined) q = q.eq("pending", opts.pending)
   const { data, error } = await q
@@ -2214,7 +2269,7 @@ export async function listSyncLogs(connectionId?: string): Promise<CashflowSyncL
     const rows = loadMock<CashflowSyncLog>("cashflow_sync_logs", seedSyncLogs)
     return connectionId ? rows.filter((r) => r.bank_connection_id === connectionId) : rows.sort((a, b) => b.started_at.localeCompare(a.started_at))
   }
-  let q = supabase.from("cashflow_sync_logs").select("*").order("started_at", { ascending: false }).limit(100)
+  let q = supabase.from("cashflow_sync_logs").select("*").eq("organization_id", requireOrg()).order("started_at", { ascending: false }).limit(100)
   if (connectionId) q = q.eq("bank_connection_id", connectionId)
   const { data, error } = await q
   if (error) throw error
@@ -2291,6 +2346,7 @@ export async function listDocuments(
   const { data, error } = await supabase
     .from("documents")
     .select("*")
+    .eq("organization_id", requireOrg())
     .eq("entity_type", entityType)
     .eq("entity_id", entityId)
     .order("created_at", { ascending: false })
@@ -2349,6 +2405,7 @@ export async function uploadDocument(
       mime_type: file.type || null,
       storage_path: path,
       uploaded_by: uploadedBy,
+      organization_id: requireOrg(),
     })
     .select("*")
     .single()
@@ -2394,4 +2451,59 @@ export async function getDocumentUrl(storagePath: string): Promise<string> {
     .createSignedUrl(storagePath, 60 * 60)
   if (error) throw new Error(error.message)
   return data.signedUrl
+}
+
+// ── Organization management ───────────────────────────────────────────────────
+
+/** List all organizations the current user belongs to, with their role in each. */
+export async function listMyOrganizations(): Promise<OrgWithRole[]> {
+  if (PREVIEW_MODE) {
+    return [{ id: "preview-org", name: "Preview Org", slug: "preview", logo_url: null, created_at: new Date().toISOString(), role: "super_user" as const }]
+  }
+  const { data: userData } = await supabase.auth.getUser()
+  if (!userData.user) return []
+  const { data, error } = await supabase
+    .from("organization_members")
+    .select("role, organizations(id, name, slug, logo_url, created_at)")
+    .eq("user_id", userData.user.id)
+  if (error) throw new Error(error.message)
+  type OrgMemberWithOrg = { role: string; organizations: { id: string; name: string; slug: string; logo_url: string | null; created_at: string } | null }
+  return ((data ?? []) as unknown as OrgMemberWithOrg[]).flatMap((row) => {
+    const org = row.organizations
+    if (!org) return []
+    return [{ ...org, role: row.role as import("@/types/db").TeamRole }]
+  })
+}
+
+/** Add a user to an organization with a given role. */
+export async function addOrgMember(orgId: string, userId: string, role: import("@/types/db").TeamRole): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("organization_members")
+    .insert({ organization_id: orgId, user_id: userId, role })
+  if (error) throw new Error(error.message)
+}
+
+/** Update a user's role within the current organization. */
+export async function updateOrgMemberRole(userId: string, role: import("@/types/db").TeamRole): Promise<void> {
+  if (PREVIEW_MODE) return
+  const orgId = requireOrg()
+  const { error } = await supabase
+    .from("organization_members")
+    .update({ role })
+    .eq("organization_id", orgId)
+    .eq("user_id", userId)
+  if (error) throw new Error(error.message)
+}
+
+/** Remove a user from the current organization (does not delete their account). */
+export async function removeOrgMember(userId: string): Promise<void> {
+  if (PREVIEW_MODE) return
+  const orgId = requireOrg()
+  const { error } = await supabase
+    .from("organization_members")
+    .delete()
+    .eq("organization_id", orgId)
+    .eq("user_id", userId)
+  if (error) throw new Error(error.message)
 }

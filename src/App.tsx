@@ -1,12 +1,39 @@
-import { Routes, Route, Navigate } from "react-router-dom"
+import { Routes, Route, Navigate, useLocation } from "react-router-dom"
+import type { ReactNode } from "react"
 import { Login } from "@/pages/auth/Login"
 import { Signup } from "@/pages/auth/Signup"
 import { ForgotPassword } from "@/pages/auth/ForgotPassword"
 import { ResetPassword } from "@/pages/auth/ResetPassword"
 import { SetupAccount } from "@/pages/auth/SetupAccount"
+import { OrgPicker } from "@/pages/OrgPicker"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
 import { RoleGate } from "@/components/RoleGate"
 import { AppLayout } from "@/components/AppLayout"
+import { useOrganization } from "@/contexts/OrganizationContext"
+
+const PREVIEW_MODE = import.meta.env.VITE_PREVIEW_MODE === "true"
+
+/** Redirects to /select-org if no organisation is currently selected. */
+function OrgGate({ children }: { children: ReactNode }) {
+  const { currentOrg, loading } = useOrganization()
+  const location = useLocation()
+
+  if (PREVIEW_MODE) return <>{children}</>
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+        Loading…
+      </div>
+    )
+  }
+
+  if (!currentOrg) {
+    return <Navigate to="/select-org" state={{ from: location }} replace />
+  }
+
+  return <>{children}</>
+}
 import { Dashboard } from "@/pages/Dashboard"
 import { Contacts } from "@/pages/Contacts"
 import { ContactForm } from "@/pages/ContactForm"
@@ -54,9 +81,19 @@ function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/setup-account" element={<SetupAccount />} />
       <Route
+        path="/select-org"
         element={
           <ProtectedRoute>
-            <AppLayout />
+            <OrgPicker />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        element={
+          <ProtectedRoute>
+            <OrgGate>
+              <AppLayout />
+            </OrgGate>
           </ProtectedRoute>
         }
       >

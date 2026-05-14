@@ -22,6 +22,7 @@ export type BankTransactionCategory =
 
 export type BankConnection = {
   id: string
+  organization_id: string
   provider: BankProvider
   institution_name: string
   institution_id: string | null
@@ -34,6 +35,7 @@ export type BankConnection = {
 
 export type BankAccount = {
   id: string
+  organization_id: string
   bank_connection_id: string
   external_account_id: string
   name: string
@@ -51,6 +53,7 @@ export type BankAccount = {
 
 export type BankTransaction = {
   id: string
+  organization_id: string
   bank_connection_id: string
   bank_account_id: string
   provider: BankProvider
@@ -74,6 +77,7 @@ export type BankTransaction = {
 
 export type CashflowSyncLog = {
   id: string
+  organization_id: string
   bank_connection_id: string
   bank_account_id: string | null
   provider: string
@@ -106,6 +110,7 @@ export type Profile = {
 
 export type Invitation = {
   id: string
+  organization_id: string
   email: string
   full_name: string | null
   role: TeamRole
@@ -115,6 +120,7 @@ export type Invitation = {
 
 export type Company = {
   id: string
+  organization_id: string
   name: string
   domain: string | null
   industry: string | null
@@ -149,6 +155,7 @@ export type Company = {
 
 export type Contact = {
   id: string
+  organization_id: string
   first_name: string
   last_name: string | null
   email: string | null
@@ -186,6 +193,7 @@ export type Contact = {
 
 export type Lead = {
   id: string
+  organization_id: string
   owner_id: string | null
   first_name: string
   last_name: string | null
@@ -216,6 +224,7 @@ export type Lead = {
 
 export type Task = {
   id: string
+  organization_id: string
   subject: string
   status: string
   priority: string
@@ -233,6 +242,7 @@ export type Task = {
 
 export type PipelineStage = {
   id: string
+  organization_id: string
   name: string
   position: number
   is_won: boolean
@@ -242,6 +252,7 @@ export type PipelineStage = {
 
 export type Deal = {
   id: string
+  organization_id: string
   title: string
   amount: number | null
   currency: string
@@ -265,6 +276,7 @@ export type Deal = {
 
 export type Activity = {
   id: string
+  organization_id: string
   type: ActivityType
   subject: string
   body: string | null
@@ -279,6 +291,7 @@ export type Activity = {
 
 export type CashflowTransaction = {
   id: string
+  organization_id: string
   type: "income" | "expense"
   category: string
   description: string | null
@@ -295,6 +308,7 @@ export type CashflowTransaction = {
 
 export type Partner = {
   id: string
+  organization_id: string
   name: string
   type: string | null
   email: string | null
@@ -312,6 +326,7 @@ export type Partner = {
 
 export type Vendor = {
   id: string
+  organization_id: string
   name: string
   service: string | null
   email: string | null
@@ -434,6 +449,7 @@ export type Database = {
       documents: TableSchema<
         {
           id: string
+          organization_id: string
           entity_type: string
           entity_id: string
           file_name: string
@@ -444,6 +460,7 @@ export type Database = {
           created_at: string
         },
         {
+          organization_id: string
           entity_type: string
           entity_id: string
           file_name: string
@@ -453,6 +470,7 @@ export type Database = {
           uploaded_by?: string | null
         },
         Partial<{
+          organization_id: string
           entity_type: string
           entity_id: string
           file_name: string
@@ -462,6 +480,16 @@ export type Database = {
           uploaded_by: string | null
         }>
       >
+      organizations: TableSchema<
+        Organization,
+        Pick<Organization, "name" | "slug"> & Partial<Pick<Organization, "logo_url">>,
+        Partial<Organization>
+      >
+      organization_members: TableSchema<
+        OrganizationMember,
+        Pick<OrganizationMember, "organization_id" | "user_id" | "role">,
+        Partial<OrganizationMember>
+      >
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -469,6 +497,27 @@ export type Database = {
     CompositeTypes: Record<string, never>
   }
 }
+
+// ── Organizations ────────────────────────────────────────────────────────────
+
+export type Organization = {
+  id: string
+  name: string
+  slug: string
+  logo_url: string | null
+  created_at: string
+}
+
+export type OrganizationMember = {
+  id: string
+  organization_id: string
+  user_id: string
+  role: TeamRole
+  created_at: string
+}
+
+/** Organization with the current user's role in it — returned by listMyOrganizations */
+export type OrgWithRole = Organization & { role: TeamRole }
 
 // ── Documents ────────────────────────────────────────────────────────────────
 

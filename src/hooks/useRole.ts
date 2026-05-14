@@ -4,7 +4,7 @@ import type { TeamRole } from "@/types/db"
 
 const PREVIEW_MODE = import.meta.env.VITE_PREVIEW_MODE === "true"
 const VIEW_AS_KEY = "avanew-crm.view-as-role"
-
+const ORG_KEY = "avanew-crm.current-org-id"
 const VIEW_AS_EVENT = "avanew-crm:view-as-changed"
 
 function readViewAs(): TeamRole | null {
@@ -30,38 +30,57 @@ function writeViewAs(role: TeamRole | null) {
   window.dispatchEvent(new Event(VIEW_AS_EVENT))
 }
 
-let cachedActualRole: TeamRole | null = null
-
 export function useRole() {
   const [actualRole, setActualRole] = useState<TeamRole | null>(
-    PREVIEW_MODE ? "super_user" : cachedActualRole
+    PREVIEW_MODE ? "super_user" : null
   )
-  const [loading, setLoading] = useState(!PREVIEW_MODE && cachedActualRole === null)
+  const [loading, setLoading] = useState(!PREVIEW_MODE)
   const [viewAs, setViewAs] = useState<TeamRole | null>(() => readViewAs())
 
   useEffect(() => {
     if (PREVIEW_MODE) return
-    if (cachedActualRole !== null) return
     let alive = true
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
+
+    async function fetchRole() {
+      const { data: userData } = await supabase.auth.getUser()
+      if (!userData.user) {
         if (alive) setLoading(false)
         return
       }
-      supabase
+      const userId = userData.user.id
+
+      // 1. Check platform-level super_user first
+      const { data: profile } = await supabase
         .from("profiles")
         .select("role")
-        .eq("id", data.user.id)
+        .eq("id", userId)
         .maybeSingle()
-        .then(({ data: profile }) => {
-          if (alive) {
-            const role = (profile?.role as TeamRole | null) ?? null
-            cachedActualRole = role
-            setActualRole(role)
-            setLoading(false)
-          }
-        })
-    })
+      const platformRole = (profile?.role as TeamRole | null) ?? null
+
+      if (platformRole === "super_user") {
+        if (alive) { setActualRole("super_user"); setLoading(false) }
+        return
+      }
+
+      // 2. Read role from organization_members for the current org
+      const orgId = typeof localStorage !== "undefined" ? localStorage.getItem(ORG_KEY) : null
+      if (!orgId) {
+        if (alive) { setActualRole(platformRole); setLoading(false) }
+        return
+      }
+
+      const { data: member } = await supabase
+        .from("organization_members")
+        .select("role")
+        .eq("organization_id", orgId)
+        .eq("user_id", userId)
+        .maybeSingle()
+
+      const orgRole = (member?.role as TeamRole | null) ?? platformRole
+      if (alive) { setActualRole(orgRole); setLoading(false) }
+    }
+
+    void fetchRole()
     return () => { alive = false }
   }, [])
 

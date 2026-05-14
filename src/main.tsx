@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom"
 import "./index.css"
 import App from "./App.tsx"
 import { AuthProvider } from "@/contexts/AuthContext"
+import { OrganizationProvider } from "@/contexts/OrganizationContext"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 
@@ -11,10 +12,12 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <TooltipProvider>
-          <App />
-          <Toaster richColors closeButton />
-        </TooltipProvider>
+        <OrganizationProvider>
+          <TooltipProvider>
+            <App />
+            <Toaster richColors closeButton />
+          </TooltipProvider>
+        </OrganizationProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>

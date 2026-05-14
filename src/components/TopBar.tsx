@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { Menu, LogOut, Sun, Moon, Eye, Check } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { Menu, LogOut, Sun, Moon, Eye, Check, Building2, ChevronsUpDown } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,6 +25,7 @@ import { AppSidebar } from "@/components/AppSidebar"
 import { useAuth } from "@/contexts/AuthContext"
 import { useTheme } from "@/lib/theme"
 import { useRole } from "@/hooks/useRole"
+import { useOrganization } from "@/contexts/OrganizationContext"
 import { getMyProfile } from "@/lib/data"
 import type { TeamRole } from "@/types/db"
 
@@ -50,10 +52,12 @@ const VIEW_AS_ROLES: { value: TeamRole; label: string }[] = [
 export function TopBar() {
   const { user, signOut } = useAuth()
   const { theme, toggle } = useTheme()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const { fullName, initials } = deriveDisplay(user)
   const { role, canViewAs, viewAs, setViewAsRole } = useRole()
+  const { currentOrg, orgs } = useOrganization()
 
   useEffect(() => {
     getMyProfile()
@@ -90,6 +94,27 @@ export function TopBar() {
 
       <div className="flex-1" />
 
+      {/* Current org display — click to switch if the user has multiple */}
+      {currentOrg && (
+        orgs.length > 1 ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hidden sm:flex items-center gap-1.5 text-muted-foreground text-xs px-2"
+            onClick={() => navigate("/select-org")}
+          >
+            <Building2 className="h-3.5 w-3.5 shrink-0" />
+            <span className="max-w-[120px] truncate">{currentOrg.name}</span>
+            <ChevronsUpDown className="h-3 w-3 shrink-0" />
+          </Button>
+        ) : (
+          <div className="hidden sm:flex items-center gap-1.5 text-muted-foreground text-xs px-2">
+            <Building2 className="h-3.5 w-3.5 shrink-0" />
+            <span className="max-w-[120px] truncate">{currentOrg.name}</span>
+          </div>
+        )
+      )}
+
       <Button
         variant="ghost"
         size="icon"
@@ -122,7 +147,21 @@ export function TopBar() {
           <DropdownMenuLabel className="truncate">
             {user?.email}
           </DropdownMenuLabel>
+          {currentOrg && (
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground truncate pt-0">
+              {currentOrg.name}
+            </DropdownMenuLabel>
+          )}
           <DropdownMenuSeparator />
+          {orgs.length > 1 && (
+            <>
+              <DropdownMenuItem onClick={() => navigate("/select-org")}>
+                <Building2 className="h-4 w-4" />
+                Switch workspace
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           {canViewAs && (
             <>
               <DropdownMenuSub>
