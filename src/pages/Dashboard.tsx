@@ -5,6 +5,8 @@ import {
   TrendingUp,
   Trophy,
   CheckSquare,
+  AlertCircle,
+  CalendarClock,
   Phone,
   Mail,
   CalendarDays,
@@ -200,15 +202,16 @@ export function Dashboard() {
     return { activeDeals, pipelineValue, wonCount }
   }, [deals, stageById])
 
-  const { openTasksCount, overdueCount, upcomingTasks } = useMemo(() => {
+  const { openTasksCount, overdueCount, dueTodayCount, upcomingTasks } = useMemo(() => {
     const today = new Date().toISOString().split("T")[0]
     const open = tasks.filter((t) => t.status !== "Completed")
     const overdueCount = open.filter((t) => t.due_date && t.due_date < today).length
+    const dueTodayCount = open.filter((t) => t.due_date === today).length
     const upcoming = open
       .filter((t) => t.due_date)
       .sort((a, b) => a.due_date!.localeCompare(b.due_date!))
       .slice(0, 6)
-    return { openTasksCount: open.length, overdueCount, upcomingTasks: upcoming }
+    return { openTasksCount: open.length, overdueCount, dueTodayCount, upcomingTasks: upcoming }
   }, [tasks])
 
   const contactById = useMemo(
@@ -400,17 +403,22 @@ export function Dashboard() {
           <ModuleSection icon={CheckSquare} label="Tasks" href="/tasks" color="bg-emerald-500">
             <div className="space-y-3">
               {/* Task KPIs */}
-              <div className="grid grid-cols-2 gap-3">
-                <Card className="px-4 py-3">
-                  <p className="text-xs text-muted-foreground">Open tasks</p>
-                  <p className="text-2xl font-semibold mt-0.5">{loading ? "…" : openTasksCount}</p>
-                </Card>
-                <Card className="px-4 py-3">
-                  <p className="text-xs text-muted-foreground">Overdue</p>
-                  <p className={cn("text-2xl font-semibold mt-0.5", overdueCount > 0 && !loading ? "text-destructive" : "")}>
-                    {loading ? "…" : overdueCount}
-                  </p>
-                </Card>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Open tasks", value: loading ? "…" : String(openTasksCount), icon: CheckSquare, destructive: false },
+                  { label: "Overdue", value: loading ? "…" : String(overdueCount), icon: AlertCircle, destructive: overdueCount > 0 && !loading },
+                  { label: "Due today", value: loading ? "…" : String(dueTodayCount), icon: CalendarClock, destructive: false },
+                ].map(({ label, value, icon: Icon, destructive }) => (
+                  <Link key={label} to="/tasks" className="block group">
+                    <Card className="px-3 py-2.5 transition-all group-hover:ring-1 group-hover:ring-primary/40">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <p className="text-[10px] text-muted-foreground leading-tight">{label}</p>
+                        <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
+                      </div>
+                      <p className={cn("text-lg font-semibold leading-tight truncate", destructive && "text-destructive")}>{value}</p>
+                    </Card>
+                  </Link>
+                ))}
               </div>
 
               {/* Upcoming tasks */}
