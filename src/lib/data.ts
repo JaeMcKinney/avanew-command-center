@@ -2462,16 +2462,29 @@ export async function listMyOrganizations(): Promise<OrgWithRole[]> {
   }
   const { data: userData } = await supabase.auth.getUser()
   if (!userData.user) return []
-  const { data, error } = await supabase
+
+  // 1. Get the user's org memberships
+  const { data: members, error: memErr } = await supabase
     .from("organization_members")
-    .select("role, organizations(id, name, slug, logo_url, created_at)")
+    .select("organization_id, role")
     .eq("user_id", userData.user.id)
-  if (error) throw new Error(error.message)
-  type OrgMemberWithOrg = { role: string; organizations: { id: string; name: string; slug: string; logo_url: string | null; created_at: string } | null }
-  return ((data ?? []) as unknown as OrgMemberWithOrg[]).flatMap((row) => {
-    const org = row.organizations
+  if (memErr) throw new Error(memErr.message)
+  if (!members || members.length === 0) return []
+
+  // 2. Fetch the org details separately (avoids relational-select issues)
+  const orgIds = members.map((m) => m.organization_id)
+  const { data: orgs, error: orgErr } = await supabase
+    .from("organizations")
+    .select("id, name, slug, logo_url, created_at")
+    .in("id", orgIds)
+  if (orgErr) throw new Error(orgErr.message)
+
+  // 3. Merge
+  const orgMap = new Map((orgs ?? []).map((o) => [o.id, o]))
+  return members.flatMap((m) => {
+    const org = orgMap.get(m.organization_id)
     if (!org) return []
-    return [{ ...org, role: row.role as import("@/types/db").TeamRole }]
+    return [{ ...org, role: m.role as import("@/types/db").TeamRole }]
   })
 }
 
