@@ -3,6 +3,7 @@ import { Login } from "@/pages/auth/Login"
 import { Signup } from "@/pages/auth/Signup"
 import { ForgotPassword } from "@/pages/auth/ForgotPassword"
 import { ResetPassword } from "@/pages/auth/ResetPassword"
+import { SetupAccount } from "@/pages/auth/SetupAccount"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
 import { RoleGate } from "@/components/RoleGate"
 import { AppLayout } from "@/components/AppLayout"
@@ -51,6 +52,7 @@ function App() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/setup-account" element={<SetupAccount />} />
       <Route
         element={
           <ProtectedRoute>

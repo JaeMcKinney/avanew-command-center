@@ -26,6 +26,7 @@ type InvitePayload = {
   email: string
   full_name?: string | null
   role: "super_user" | "owner" | "admin" | "bd" | "partner"
+  redirect_to?: string
 }
 
 const json = (status: number, body: unknown) =>
@@ -107,6 +108,7 @@ Deno.serve(async (req) => {
   // Send the magic-link invite (creates the auth.users row).
   const { error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { full_name },
+    options: payload.redirect_to ? { redirectTo: payload.redirect_to } : undefined,
   })
   if (inviteErr) return json(500, { error: inviteErr.message })
 

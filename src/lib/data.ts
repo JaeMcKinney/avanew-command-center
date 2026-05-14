@@ -1220,7 +1220,7 @@ export async function inviteTeamMember(
   // to call supabase.auth.admin.inviteUserByEmail() and write the role.
   const { data, error } = await supabase.functions.invoke<TeamMember>(
     "invite-user",
-    { body: { email, full_name, role: input.role } }
+    { body: { email, full_name, role: input.role, redirect_to: `${window.location.origin}/setup-account` } }
   )
   if (error) throw error
   if (!data) throw new Error("Invite returned no data")
