@@ -286,92 +286,97 @@ export function Dashboard() {
       {/* Module sections — 2-col on lg, stacked on mobile */}
       <div className={cn("grid grid-cols-1 gap-6 items-stretch", !isLimitedRole && "lg:grid-cols-2")}>
 
-        {/* CRM module */}
-        <ModuleSection icon={Briefcase} label="CRM" href="/deals" color="bg-blue-500" className="h-full">
-          <div className="flex flex-col flex-1 gap-3">
-            {/* CRM KPI mini-stats */}
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: "Active deals", value: loading ? "…" : String(activeDeals), icon: TrendingUp },
-                { label: "Pipeline value", value: loading ? "…" : fmtCurrency(pipelineValue), icon: DollarSign },
-                { label: "Won deals", value: loading ? "…" : String(wonCount), icon: Trophy },
-              ].map(({ label, value, icon: Icon }) => (
-                <Link key={label} to="/deals" className="block group">
-                  <Card className="px-3 py-2.5 transition-all group-hover:ring-1 group-hover:ring-primary/40">
-                    <div className="flex items-center justify-between gap-1 mb-1">
-                      <p className="text-[10px] text-muted-foreground leading-tight">{label}</p>
-                      <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
+        {/* Left column — CRM + Recent activity */}
+        <div className="flex flex-col h-full gap-6">
+          <ModuleSection icon={Briefcase} label="CRM" href="/deals" color="bg-blue-500" className="flex-1">
+            <div className="flex flex-col flex-1 gap-3">
+              {/* CRM KPI mini-stats */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Active deals", value: loading ? "…" : String(activeDeals), icon: TrendingUp },
+                  { label: "Pipeline value", value: loading ? "…" : fmtCurrency(pipelineValue), icon: DollarSign },
+                  { label: "Won deals", value: loading ? "…" : String(wonCount), icon: Trophy },
+                ].map(({ label, value, icon: Icon }) => (
+                  <Link key={label} to="/deals" className="block group">
+                    <Card className="px-3 py-2.5 transition-all group-hover:ring-1 group-hover:ring-primary/40">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <p className="text-[10px] text-muted-foreground leading-tight">{label}</p>
+                        <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
+                      </div>
+                      <p className="text-lg font-semibold leading-tight truncate">{value}</p>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Pipeline by stage */}
+              <Card className="flex-1">
+                <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
+                  <CardTitle className="text-sm">Pipeline by stage</CardTitle>
+                  <Link to="/deals" className="text-xs text-muted-foreground hover:text-primary">
+                    Board →
+                  </Link>
+                </CardHeader>
+                <CardContent className="px-4 pb-3">
+                  {loading ? (
+                    <div className="text-sm text-muted-foreground py-4">Loading…</div>
+                  ) : pipelineByStage.length === 0 ? (
+                    <div className="text-sm text-muted-foreground py-2">
+                      No open deals.{" "}
+                      <Link to="/deals/new" className="text-primary underline">Add one</Link>.
                     </div>
-                    <p className="text-lg font-semibold leading-tight truncate">{value}</p>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-
-            {/* Pipeline by stage */}
-            <Card className="flex-1">
-              <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-                <CardTitle className="text-sm">Pipeline by stage</CardTitle>
-                <Link to="/deals" className="text-xs text-muted-foreground hover:text-primary">
-                  Board →
-                </Link>
-              </CardHeader>
-              <CardContent className="px-4 pb-3">
-                {loading ? (
-                  <div className="text-sm text-muted-foreground py-4">Loading…</div>
-                ) : pipelineByStage.length === 0 ? (
-                  <div className="text-sm text-muted-foreground py-2">
-                    No open deals.{" "}
-                    <Link to="/deals/new" className="text-primary underline">Add one</Link>.
-                  </div>
-                ) : (
-                  <ul className="space-y-2">
-                    {pipelineByStage.map(({ stage, count, value }) => (
-                      <li key={stage.id}>
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/deals?stage=${stage.id}`)}
-                          className="w-full text-left group/row"
-                        >
-                          <div className="flex items-center justify-between gap-2 text-sm">
-                            <span className="font-medium truncate group-hover/row:text-primary transition-colors">{stage.name}</span>
-                            <span className="shrink-0 text-muted-foreground text-xs">{count} {count === 1 ? "deal" : "deals"}</span>
-                          </div>
-                          <div className="mt-1 flex items-center gap-2">
-                            <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                              <div
-                                className="h-full rounded-full bg-primary transition-all"
-                                style={{ width: pipelineValue > 0 ? `${(value / pipelineValue) * 100}%` : "0%" }}
-                              />
+                  ) : (
+                    <ul className="space-y-2">
+                      {pipelineByStage.map(({ stage, count, value }) => (
+                        <li key={stage.id}>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/deals?stage=${stage.id}`)}
+                            className="w-full text-left group/row"
+                          >
+                            <div className="flex items-center justify-between gap-2 text-sm">
+                              <span className="font-medium truncate group-hover/row:text-primary transition-colors">{stage.name}</span>
+                              <span className="shrink-0 text-muted-foreground text-xs">{count} {count === 1 ? "deal" : "deals"}</span>
                             </div>
-                            <span className="shrink-0 text-xs font-medium">{fmtCurrency(value)}</span>
-                          </div>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
+                            <div className="mt-1 flex items-center gap-2">
+                              <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-primary transition-all"
+                                  style={{ width: pipelineValue > 0 ? `${(value / pipelineValue) * 100}%` : "0%" }}
+                                />
+                              </div>
+                              <span className="shrink-0 text-xs font-medium">{fmtCurrency(value)}</span>
+                            </div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </ModuleSection>
 
-            {/* Recent activity */}
+          {/* Recent activity — standalone, same level as Relationships */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-6 w-6 rounded grid place-items-center bg-amber-500">
+                <Clock className="h-3.5 w-3.5 text-white" />
+              </div>
+              <h2 className="text-sm font-semibold tracking-tight">Recent activity</h2>
+              <Link
+                to="/activities"
+                className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                View all <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <div className="h-6 w-6 rounded grid place-items-center bg-amber-500">
-                    <Clock className="h-3.5 w-3.5 text-white" />
-                  </div>
-                  Recent activity
-                </CardTitle>
-                <Link to="/activities" className="text-xs text-muted-foreground hover:text-primary">
-                  View all →
-                </Link>
-              </CardHeader>
               <CardContent className="p-0">
                 {loading ? (
-                  <div className="px-4 pb-4 text-sm text-muted-foreground">Loading…</div>
+                  <div className="px-4 py-4 text-sm text-muted-foreground">Loading…</div>
                 ) : recentActivity.length === 0 ? (
-                  <div className="px-4 pb-4 text-sm text-muted-foreground">
+                  <div className="px-4 py-4 text-sm text-muted-foreground">
                     Nothing yet.{" "}
                     <Link to="/activities" className="text-primary underline">Log activity</Link>.
                   </div>
@@ -404,7 +409,7 @@ export function Dashboard() {
               </CardContent>
             </Card>
           </div>
-        </ModuleSection>
+        </div>
 
         {/* Right column — Tasks + Relationships stacked (hidden for BD/Partner) */}
         {!isLimitedRole && <div className="flex flex-col h-full gap-6">
