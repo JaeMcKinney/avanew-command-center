@@ -76,13 +76,14 @@ Deno.serve(async (req) => {
     return json(400, { error: "Can't remove yourself" })
   }
 
-  // Block removing the last admin.
+  // Block removing the last admin — unless the caller is a super_user or owner.
   const { data: target } = await admin
     .from("profiles")
     .select("role")
     .eq("id", userId)
     .maybeSingle()
-  if (target?.role === "admin") {
+  const callerIsSuperPrivilege = ["super_user", "owner"].includes(callerProfile?.role ?? "")
+  if (target?.role === "admin" && !callerIsSuperPrivilege) {
     const { count } = await admin
       .from("profiles")
       .select("id", { count: "exact", head: true })

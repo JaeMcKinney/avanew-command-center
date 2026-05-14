@@ -7,6 +7,7 @@ import {
   CheckSquare,
   AlertCircle,
   CalendarClock,
+  Clock,
   Phone,
   Mail,
   CalendarDays,
@@ -96,15 +97,17 @@ function ModuleSection({
   href,
   color,
   children,
+  className,
 }: {
   icon: LucideIcon
   label: string
   href: string
   color: string
   children: React.ReactNode
+  className?: string
 }) {
   return (
-    <div>
+    <div className={cn("flex flex-col", className)}>
       <div className="flex items-center gap-2 mb-3">
         <div className={cn("h-6 w-6 rounded grid place-items-center", color)}>
           <Icon className="h-3.5 w-3.5 text-white" />
@@ -281,11 +284,11 @@ export function Dashboard() {
       />
 
       {/* Module sections — 2-col on lg, stacked on mobile */}
-      <div className={cn("grid grid-cols-1 gap-6", !isLimitedRole && "lg:grid-cols-2")}>
+      <div className={cn("grid grid-cols-1 gap-6 items-stretch", !isLimitedRole && "lg:grid-cols-2")}>
 
         {/* CRM module */}
-        <ModuleSection icon={Briefcase} label="CRM" href="/deals" color="bg-blue-500">
-          <div className="space-y-3">
+        <ModuleSection icon={Briefcase} label="CRM" href="/deals" color="bg-blue-500" className="h-full">
+          <div className="flex flex-col flex-1 gap-3">
             {/* CRM KPI mini-stats */}
             <div className="grid grid-cols-3 gap-2">
               {[
@@ -306,7 +309,7 @@ export function Dashboard() {
             </div>
 
             {/* Pipeline by stage */}
-            <Card>
+            <Card className="flex-1">
               <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
                 <CardTitle className="text-sm">Pipeline by stage</CardTitle>
                 <Link to="/deals" className="text-xs text-muted-foreground hover:text-primary">
@@ -354,7 +357,12 @@ export function Dashboard() {
             {/* Recent activity */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-                <CardTitle className="text-sm">Recent activity</CardTitle>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <div className="h-6 w-6 rounded grid place-items-center bg-amber-500">
+                    <Clock className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  Recent activity
+                </CardTitle>
                 <Link to="/activities" className="text-xs text-muted-foreground hover:text-primary">
                   View all →
                 </Link>
@@ -399,9 +407,9 @@ export function Dashboard() {
         </ModuleSection>
 
         {/* Right column — Tasks + Relationships stacked (hidden for BD/Partner) */}
-        {!isLimitedRole && <div className="space-y-6">
-          <ModuleSection icon={CheckSquare} label="Tasks" href="/tasks" color="bg-emerald-500">
-            <div className="space-y-3">
+        {!isLimitedRole && <div className="flex flex-col h-full gap-6">
+          <ModuleSection icon={CheckSquare} label="Tasks" href="/tasks" color="bg-emerald-500" className="flex-1">
+            <div className="flex flex-col flex-1 gap-3">
               {/* Task KPIs */}
               <div className="grid grid-cols-3 gap-2">
                 {[
@@ -422,7 +430,7 @@ export function Dashboard() {
               </div>
 
               {/* Upcoming tasks */}
-              <Card>
+              <Card className="flex-1">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
                   <CardTitle className="text-sm">Upcoming tasks</CardTitle>
                   <Link to="/tasks" className="text-xs text-muted-foreground hover:text-primary">

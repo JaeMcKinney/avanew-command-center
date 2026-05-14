@@ -98,19 +98,38 @@ Deno.serve(async (req) => {
     return json(400, { error: "email and valid role are required" })
   }
 
-  // Record the invitation first so the trigger picks up role + name on signup.
+  // Record the invitation so the trigger picks up role + name on signup.
   const { error: invErr } = await admin.from("invitations").upsert(
     { email, full_name, role, invited_by: callerData.user.id },
     { onConflict: "email" }
   )
   if (invErr) return json(500, { error: invErr.message })
 
-  // Send the magic-link invite (creates the auth.users row).
-  const { error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
+  // Send the magic-link invite (creates the auth.users row if new, re-sends if existing).
+  const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { full_name },
     options: payload.redirect_to ? { redirectTo: payload.redirect_to } : undefined,
   })
   if (inviteErr) return json(500, { error: inviteErr.message })
+
+  // If the invited user already has a profile (re-invite case), update their role directly.
+  // The handle_new_user trigger only runs on first signup so won't apply here.
+  // Skip if it would update the caller's own profile.
+  const invitedUserId = inviteData?.user?.id
+  if (invitedUserId && invitedUserId !== callerData.user.id) {
+    const { data: existingProfile } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("id", invitedUserId)
+      .maybeSingle()
+    if (existingProfile?.id) {
+      const { error: profileErr } = await admin
+        .from("profiles")
+        .update({ role })
+        .eq("id", invitedUserId)
+      if (profileErr) return json(500, { error: profileErr.message })
+    }
+  }
 
   return json(200, {
     id: email, // pending invites have no profile id yet — use email as a stable handle
