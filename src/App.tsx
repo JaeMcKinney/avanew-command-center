@@ -109,19 +109,19 @@ function App() {
         <Route path="/settings" element={<SettingsLayout />}>
           <Route index element={<Navigate to="/settings/profile" replace />} />
           <Route path="profile" element={<SettingsProfile />} />
-          <Route path="roles" element={<RoleGate allow={["owner","super_user"]}><SettingsRoles /></RoleGate>} />
-          <Route path="company" element={<RoleGate allow={["owner","super_user","admin"]}><SettingsCompany /></RoleGate>} />
-          <Route path="team" element={<RoleGate allow={["owner","super_user","admin"]}><SettingsTeam /></RoleGate>} />
-          <Route path="pipeline" element={<RoleGate allow={["owner","super_user","admin"]}><SettingsPipeline /></RoleGate>} />
-          <Route path="financial" element={<RoleGate permission="cashflow.bank_connections"><SettingsFinancial /></RoleGate>} />
-          <Route path="partners-vendors" element={<RoleGate allow={["owner","super_user","admin"]}><SettingsPartnersVendors /></RoleGate>} />
-          <Route path="integrations" element={<RoleGate allow={["super_user"]}><SettingsIntegrations /></RoleGate>} />
+          <Route path="roles" element={<RoleGate allow={["super_user","admin"]}><SettingsRoles /></RoleGate>} />
+          <Route path="company" element={<RoleGate allow={["super_user","admin"]}><SettingsCompany /></RoleGate>} />
+          <Route path="team" element={<RoleGate allow={["super_user","admin"]}><SettingsTeam /></RoleGate>} />
+          <Route path="pipeline" element={<RoleGate allow={["super_user","admin"]}><SettingsPipeline /></RoleGate>} />
+          <Route path="financial" element={<RoleGate allow={["super_user","admin"]}><SettingsFinancial /></RoleGate>} />
+          <Route path="partners-vendors" element={<RoleGate allow={["super_user","admin"]}><SettingsPartnersVendors /></RoleGate>} />
+          <Route path="integrations" element={<RoleGate allow={["super_user","admin"]}><SettingsIntegrations /></RoleGate>} />
           <Route path="notifications" element={<SettingsNotifications />} />
-          <Route path="security" element={<RoleGate allow={["owner","super_user"]}><SettingsSecurity /></RoleGate>} />
-          <Route path="audit-logs" element={<RoleGate allow={["owner","super_user"]}><SettingsAuditLogs /></RoleGate>} />
-          <Route path="data" element={<RoleGate allow={["super_user"]}><SettingsData /></RoleGate>} />
-          <Route path="branding" element={<RoleGate allow={["owner","super_user"]}><SettingsBranding /></RoleGate>} />
-          <Route path="system" element={<RoleGate allow={["super_user"]}><SettingsSystem /></RoleGate>} />
+          <Route path="security" element={<RoleGate allow={["super_user","admin"]}><SettingsSecurity /></RoleGate>} />
+          <Route path="audit-logs" element={<RoleGate allow={["super_user","admin"]}><SettingsAuditLogs /></RoleGate>} />
+          <Route path="data" element={<RoleGate allow={["super_user","admin"]}><SettingsData /></RoleGate>} />
+          <Route path="branding" element={<RoleGate allow={["super_user","admin"]}><SettingsBranding /></RoleGate>} />
+          <Route path="system" element={<RoleGate allow={["super_user","admin"]}><SettingsSystem /></RoleGate>} />
         </Route>
 
         <Route path="/permissions" element={<Navigate to="/settings/roles" replace />} />
