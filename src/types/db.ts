@@ -462,4 +462,3 @@ export type DocumentRecord = {
   /** Joined from profiles — populated by listDocuments / uploadDocument */
   uploader_name?: string | null
 }
-}
