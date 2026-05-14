@@ -432,10 +432,35 @@ export type Database = {
         Partial<{ permission_key: string; role: TeamRole; enabled: boolean; updated_at: string }>
       >
       documents: TableSchema<
-        DocumentRecord,
-        Pick<DocumentRecord, "entity_type" | "entity_id" | "file_name" | "file_size" | "storage_path"> &
-          Partial<Pick<DocumentRecord, "mime_type" | "uploaded_by">>,
-        Partial<DocumentRecord>
+        {
+          id: string
+          entity_type: string
+          entity_id: string
+          file_name: string
+          file_size: number
+          mime_type: string | null
+          storage_path: string
+          uploaded_by: string | null
+          created_at: string
+        },
+        {
+          entity_type: string
+          entity_id: string
+          file_name: string
+          file_size: number
+          storage_path: string
+          mime_type?: string | null
+          uploaded_by?: string | null
+        },
+        Partial<{
+          entity_type: string
+          entity_id: string
+          file_name: string
+          file_size: number
+          storage_path: string
+          mime_type: string | null
+          uploaded_by: string | null
+        }>
       >
     }
     Views: Record<string, never>

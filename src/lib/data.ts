@@ -2290,12 +2290,27 @@ export async function listDocuments(
   if (PREVIEW_MODE) return []
   const { data, error } = await supabase
     .from("documents")
-    .select("*, uploader:uploaded_by(full_name)")
+    .select("*")
     .eq("entity_type", entityType)
     .eq("entity_id", entityId)
     .order("created_at", { ascending: false })
   if (error) throw new Error(error.message)
-  return (data ?? []).map((d) => ({
+  const rows = data ?? []
+
+  // Resolve uploader names via a separate profiles lookup
+  const uploaderIds = [...new Set(rows.map((d) => d.uploaded_by).filter((id): id is string => !!id))]
+  const uploaderMap: Record<string, string | null> = {}
+  if (uploaderIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", uploaderIds)
+    for (const p of profiles ?? []) {
+      uploaderMap[p.id] = p.full_name ?? null
+    }
+  }
+
+  return rows.map((d) => ({
     id: d.id,
     entity_type: d.entity_type as EntityType,
     entity_id: d.entity_id,
@@ -2305,9 +2320,7 @@ export async function listDocuments(
     storage_path: d.storage_path,
     uploaded_by: d.uploaded_by,
     created_at: d.created_at,
-    uploader_name:
-      (d.uploader as unknown as { full_name: string | null } | null)
-        ?.full_name ?? null,
+    uploader_name: d.uploaded_by ? (uploaderMap[d.uploaded_by] ?? null) : null,
   }))
 }
 
@@ -2337,15 +2350,30 @@ export async function uploadDocument(
       storage_path: path,
       uploaded_by: uploadedBy,
     })
-    .select("*, uploader:uploaded_by(full_name)")
+    .select("*")
     .single()
-  if (insertErr) throw new Error(insertErr.message)
+  if (insertErr || !data) throw new Error(insertErr?.message ?? "Insert returned no data")
+
+  // Resolve uploader name
+  let uploaderName: string | null = null
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", uploadedBy)
+    .single()
+  if (profile) uploaderName = profile.full_name ?? null
+
   return {
-    ...data,
+    id: data.id,
     entity_type: data.entity_type as EntityType,
-    uploader_name:
-      (data.uploader as unknown as { full_name: string | null } | null)
-        ?.full_name ?? null,
+    entity_id: data.entity_id,
+    file_name: data.file_name,
+    file_size: data.file_size,
+    mime_type: data.mime_type,
+    storage_path: data.storage_path,
+    uploaded_by: data.uploaded_by,
+    created_at: data.created_at,
+    uploader_name: uploaderName,
   }
 }
 
