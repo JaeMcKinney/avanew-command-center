@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
   // Send the magic-link invite (creates the auth.users row if new, re-sends if existing).
   const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { full_name },
-    options: payload.redirect_to ? { redirectTo: payload.redirect_to } : undefined,
+    redirectTo: payload.redirect_to ?? undefined,
   })
   if (inviteErr) return json(500, { error: inviteErr.message })
 
