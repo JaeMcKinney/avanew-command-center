@@ -118,7 +118,7 @@ export const DEFAULT_MATRIX: PermissionsMatrix = {
   "crm.delete":                        { owner: true,  admin: true,  bd: false, partner: false },
   "cashflow.view":                     { owner: true,  admin: false, bd: false, partner: false },
   "cashflow.transactions":             { owner: true,  admin: false, bd: false, partner: false },
-  "cashflow.bank_connections":         { owner: true,  admin: false, bd: false, partner: false },
+  "cashflow.bank_connections":         { owner: false, admin: false, bd: false, partner: false },
   "ai.insights":                       { owner: true,  admin: false, bd: false, partner: false },
   "ai.ave":                            { owner: true,  admin: true,  bd: false, partner: false },
   "ai.forecasting":                    { owner: true,  admin: false, bd: false, partner: false },

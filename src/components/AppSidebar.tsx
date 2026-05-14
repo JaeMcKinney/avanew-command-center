@@ -153,7 +153,13 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         )}
 
         {can("cashflow.view") && (
-          <ModuleGroup label="Cashflow" icon={TrendingUp} items={CASHFLOW_ITEMS} defaultOpen={cashflowActive} onNavigate={onNavigate} />
+          <ModuleGroup
+            label="Cashflow"
+            icon={TrendingUp}
+            items={CASHFLOW_ITEMS.filter((i) => i.to !== "/cashflow/bank-connections" || can("cashflow.bank_connections"))}
+            defaultOpen={cashflowActive}
+            onNavigate={onNavigate}
+          />
         )}
 
         {!isLimitedRole && (
