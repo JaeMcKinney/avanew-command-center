@@ -170,6 +170,7 @@ export function DocumentsSection({ entityType, entityId }: Props) {
             </span>
           )}
           <Button
+            type="button"
             size="sm"
             variant="outline"
             disabled={uploading}

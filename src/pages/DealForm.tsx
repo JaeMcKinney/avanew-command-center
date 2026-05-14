@@ -907,17 +907,14 @@ export function DealForm() {
                     </div>
                   </FormSection>
                 )}
+                {isEdit && id && (
+                  <DocumentsSection entityType="deal" entityId={id} />
+                )}
               </div>
             )}
           </div>
         </form>
       </Form>
-
-      {isEdit && id && (
-        <div className="px-4 py-6 md:px-6 border-t">
-          <DocumentsSection entityType="deal" entityId={id} />
-        </div>
-      )}
 
       <QuickCreateAccountDialog
         open={accountDialogOpen}

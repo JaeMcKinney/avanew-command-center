@@ -413,17 +413,15 @@ export function TaskForm() {
                     </Row>
                   )} />
                 </FormSection>
+
+                {isEdit && id && (
+                  <DocumentsSection entityType="task" entityId={id} />
+                )}
               </div>
             )}
           </div>
         </form>
       </Form>
-
-      {isEdit && id && (
-        <div className="px-4 py-6 md:px-6 border-t">
-          <DocumentsSection entityType="task" entityId={id} />
-        </div>
-      )}
     </div>
   )
 }

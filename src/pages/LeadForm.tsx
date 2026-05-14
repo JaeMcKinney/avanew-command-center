@@ -545,17 +545,15 @@ export function LeadForm() {
                     </Row>
                   )} />
                 </FormSection>
+
+                {isEdit && id && (
+                  <DocumentsSection entityType="lead" entityId={id} />
+                )}
               </div>
             )}
           </div>
         </form>
       </Form>
-
-      {isEdit && id && (
-        <div className="px-4 py-6 md:px-6 border-t">
-          <DocumentsSection entityType="lead" entityId={id} />
-        </div>
-      )}
 
       <ConvertLeadDialog
         lead={currentLead}
