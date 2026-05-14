@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Users, Search, MoreHorizontal, Pencil, Trash2, Upload } from "lucide-react"
+import { Plus, Users, Search, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,7 +38,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { PageHeader } from "@/components/PageHeader"
 import { EmptyState } from "@/components/EmptyState"
-import { ImportDialog } from "@/components/ImportDialog"
 import { Pagination } from "@/components/Pagination"
 import { deleteContact, listCompanies, listContacts } from "@/lib/data"
 import type { Company, Contact } from "@/types/db"
@@ -54,7 +53,6 @@ export function Contacts() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [confirmDelete, setConfirmDelete] = useState<Contact | null>(null)
-  const [importOpen, setImportOpen] = useState(false)
 
   async function refresh() {
     setLoading(true)
@@ -132,10 +130,6 @@ export function Contacts() {
         description="People you sell to."
         actions={
           <>
-            <Button variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="h-4 w-4" />
-              Import
-            </Button>
             <Button onClick={() => navigate("/contacts/new")}>
               <Plus className="h-4 w-4" />
               New contact
@@ -316,12 +310,6 @@ export function Contacts() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <ImportDialog
-        entity="contacts"
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        onComplete={refresh}
-      />
     </div>
   )
 }

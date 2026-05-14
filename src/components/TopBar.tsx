@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Menu, LogOut, Sun, Moon, Eye, Check } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,7 @@ import { AppSidebar } from "@/components/AppSidebar"
 import { useAuth } from "@/contexts/AuthContext"
 import { useTheme } from "@/lib/theme"
 import { useRole } from "@/hooks/useRole"
+import { getMyProfile } from "@/lib/data"
 import type { TeamRole } from "@/types/db"
 
 function deriveDisplay(user: ReturnType<typeof useAuth>["user"]) {
@@ -50,8 +51,15 @@ export function TopBar() {
   const { user, signOut } = useAuth()
   const { theme, toggle } = useTheme()
   const [open, setOpen] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const { fullName, initials } = deriveDisplay(user)
   const { role, canViewAs, viewAs, setViewAsRole } = useRole()
+
+  useEffect(() => {
+    getMyProfile()
+      .then((p) => setAvatarUrl(p.avatar_url ?? null))
+      .catch(() => { /* silently ignore */ })
+  }, [user?.id])
 
   const ROLE_LABELS: Record<string, string> = {
     super_user: "Super",
@@ -99,6 +107,7 @@ export function TopBar() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="gap-2 px-2">
             <Avatar className="h-8 w-8">
+              {avatarUrl && <AvatarImage src={avatarUrl} alt={fullName} />}
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <span className="hidden sm:inline text-sm">{fullName}</span>
