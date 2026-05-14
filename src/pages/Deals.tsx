@@ -25,7 +25,6 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
-  Upload,
   Search,
   LayoutList,
 } from "lucide-react"
@@ -67,7 +66,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 import { PageHeader } from "@/components/PageHeader"
-import { ImportDialog } from "@/components/ImportDialog"
 import { Pagination } from "@/components/Pagination"
 import { StageManager } from "@/components/StageManager"
 import {
@@ -102,7 +100,6 @@ export function Deals() {
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null)
   const [stageManagerOpen, setStageManagerOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<Deal | null>(null)
-  const [importOpen, setImportOpen] = useState(false)
   const [gridSearch, setGridSearch] = useState("")
   const [stageFilter, setStageFilter] = useState(() => searchParams.get("stage") ?? "all")
   const [sortBy, setSortBy] = useState("amount_desc")
@@ -314,10 +311,6 @@ export function Deals() {
         description="Drag deals between stages as they progress."
         actions={
           <>
-            <Button variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="h-4 w-4" />
-              Import
-            </Button>
             <Button
               variant="outline"
               onClick={() => setStageManagerOpen(true)}
@@ -564,12 +557,6 @@ export function Deals() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <ImportDialog
-        entity="deals"
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        onComplete={refresh}
-      />
     </div>
   )
 }

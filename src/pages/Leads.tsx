@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, UserPlus, Search, MoreHorizontal, Pencil, Trash2, Upload, ArrowRightLeft, CheckCircle2 } from "lucide-react"
+import { Plus, UserPlus, Search, MoreHorizontal, Pencil, Trash2, ArrowRightLeft, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,7 +38,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { PageHeader } from "@/components/PageHeader"
 import { EmptyState } from "@/components/EmptyState"
-import { ImportDialog } from "@/components/ImportDialog"
 import { Pagination } from "@/components/Pagination"
 import { ConvertLeadDialog } from "@/components/ConvertLeadDialog"
 import { Badge } from "@/components/ui/badge"
@@ -56,7 +55,6 @@ export function Leads() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [confirmDelete, setConfirmDelete] = useState<Lead | null>(null)
-  const [importOpen, setImportOpen] = useState(false)
   const [convertLead, setConvertLead] = useState<Lead | null>(null)
 
   async function refresh() {
@@ -130,10 +128,6 @@ export function Leads() {
         description="Potential customers not yet in the pipeline."
         actions={
           <>
-            <Button variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="h-4 w-4" />
-              Import
-            </Button>
             <Button onClick={() => navigate("/leads/new")}>
               <Plus className="h-4 w-4" />
               New Lead
@@ -341,12 +335,6 @@ export function Leads() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <ImportDialog
-        entity="leads"
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        onComplete={refresh}
-      />
 
       <ConvertLeadDialog
         lead={convertLead}

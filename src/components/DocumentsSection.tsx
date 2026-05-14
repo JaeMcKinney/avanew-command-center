@@ -4,6 +4,7 @@ import {
   FileText,
   Trash2,
   Download,
+  Eye,
   File,
   FileImage,
   FileSpreadsheet,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/data"
 import type { DocumentRecord, EntityType } from "@/types/db"
 import { supabase } from "@/lib/supabase"
+import { DocumentPreviewDialog } from "@/components/DocumentPreviewDialog"
 
 function fmtBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -83,6 +85,7 @@ export function DocumentsSection({ entityType, entityId }: Props) {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
+  const [previewDoc, setPreviewDoc] = useState<DocumentRecord | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
@@ -246,6 +249,17 @@ export function DocumentsSection({ entityType, entityId }: Props) {
                       <TableCell className="pr-4">
                         <div className="flex items-center justify-end gap-0.5">
                           <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => setPreviewDoc(doc)}
+                            title="Preview"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            type="button"
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7"
@@ -255,6 +269,7 @@ export function DocumentsSection({ entityType, entityId }: Props) {
                             <Download className="h-3.5 w-3.5" />
                           </Button>
                           <Button
+                            type="button"
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7 text-destructive/60 hover:text-destructive"
@@ -285,6 +300,11 @@ export function DocumentsSection({ entityType, entityId }: Props) {
           </>
         )}
       </CardContent>
+
+      <DocumentPreviewDialog
+        doc={previewDoc}
+        onClose={() => setPreviewDoc(null)}
+      />
     </Card>
   )
 }
