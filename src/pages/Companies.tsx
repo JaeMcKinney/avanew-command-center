@@ -8,7 +8,6 @@ import {
   Pencil,
   Trash2,
   ExternalLink,
-  Upload,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -47,7 +46,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { PageHeader } from "@/components/PageHeader"
 import { EmptyState } from "@/components/EmptyState"
-import { ImportDialog } from "@/components/ImportDialog"
 import { Pagination } from "@/components/Pagination"
 import { deleteCompany, listCompanies } from "@/lib/data"
 import type { Company } from "@/types/db"
@@ -62,7 +60,6 @@ export function Companies() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [confirmDelete, setConfirmDelete] = useState<Company | null>(null)
-  const [importOpen, setImportOpen] = useState(false)
 
   async function refresh() {
     setLoading(true)
@@ -135,10 +132,6 @@ export function Companies() {
         description="Organizations and companies in your pipeline."
         actions={
           <>
-            <Button variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="h-4 w-4" />
-              Import
-            </Button>
             <Button onClick={() => navigate("/accounts/new")}>
               <Plus className="h-4 w-4" />
               New account
@@ -321,12 +314,6 @@ export function Companies() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <ImportDialog
-        entity="accounts"
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        onComplete={refresh}
-      />
     </div>
   )
 }
