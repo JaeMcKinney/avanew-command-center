@@ -159,27 +159,27 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-16 items-center border-b border-sidebar-border px-4 gap-2">
+      <div className="flex h-20 items-center justify-center border-b border-sidebar-border px-4">
         {branding?.wordmark && logoSrc ? (
           <img
             src={logoSrc}
             alt={branding.name}
-            className="h-7 w-auto max-w-[160px] object-contain"
+            className="h-12 w-auto max-w-[200px] object-contain"
           />
         ) : branding ? (
-          <>
-            <img src={branding.icon} alt={branding.name} className="h-7 w-7 rounded-md object-cover shrink-0" />
-            <p className="text-sm font-semibold leading-tight truncate">{branding.name}</p>
-          </>
+          <div className="flex flex-col items-center gap-1">
+            <img src={branding.icon} alt={branding.name} className="h-10 w-10 rounded-md object-cover" />
+            <p className="text-xs font-semibold leading-tight truncate">{branding.name}</p>
+          </div>
         ) : (
-          <>
-            <div className="h-7 w-7 rounded-md bg-primary grid place-items-center shrink-0">
-              <span className="text-xs font-bold text-primary-foreground">
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-md bg-primary grid place-items-center shrink-0">
+              <span className="text-sm font-bold text-primary-foreground">
                 {currentOrg?.name?.slice(0, 2).toUpperCase() ?? "AC"}
               </span>
             </div>
             <p className="text-sm font-semibold leading-tight truncate">{currentOrg?.name ?? "Command Center"}</p>
-          </>
+          </div>
         )}
       </div>
 
