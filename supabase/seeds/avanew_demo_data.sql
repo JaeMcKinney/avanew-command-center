@@ -208,7 +208,7 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   -- ── 10. Vendors ─────────────────────────────────────────────────────────────
-  INSERT INTO public.vendors (id, name, service, email, phone, website, status, cost_structure, payment_terms, notes, organization_id) VALUES
+  INSERT INTO public.vendors (id, name, service, email, phone, website, status, cost_structure, payment_terms, performance_notes, organization_id) VALUES
     (v1, 'Amazon Web Services',  'Cloud Infrastructure', 'aws-billing@amazon.com',      '206-900-1001', 'https://aws.amazon.com',     'Active', '$4,200/mo',   'Net 30', 'EC2, RDS, S3. Reserved instances expire Jan 2027.', org_id),
     (v2, 'GitHub (Microsoft)',   'Dev Tools',            'enterprise@github.com',       '415-900-2002', 'https://github.com/enterprise','Active','$500/mo',    'Net 30', 'Team plan, 25 seats.',                              org_id),
     (v3, 'Slack (Salesforce)',   'Team Communication',   'billing@slack.com',           '415-900-3003', 'https://slack.com',          'Active', '$400/mo',     'Net 30', 'Business+ plan, 30 users.',                         org_id),
