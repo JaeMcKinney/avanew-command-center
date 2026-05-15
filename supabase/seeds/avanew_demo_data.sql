@@ -9,8 +9,13 @@ DO $$
 DECLARE
   org_id   uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
-  -- User IDs pulled from real org members (assigned round-robin)
-  u1 uuid; u2 uuid; u3 uuid;
+  -- Real org members (pulled dynamically)
+  u1 uuid; u2 uuid;
+
+  -- Fixed demo user IDs (created by create_demo_users.sql — run that first)
+  u_owner   uuid := 'dddddddd-dddd-dddd-dddd-000000000001'; -- Sarah Mitchell (Owner)
+  u_bd      uuid := 'dddddddd-dddd-dddd-dddd-000000000002'; -- Jordan Hayes   (BD)
+  u_partner uuid := 'dddddddd-dddd-dddd-dddd-000000000003'; -- Alex Rivera    (Partner)
 
   -- Stage IDs
   s_new        uuid;
@@ -77,19 +82,19 @@ DECLARE
 
 BEGIN
 
-  -- ── 1. Grab real user IDs from the org ─────────────────────────────────────
+  -- ── 1. Grab real (non-demo) user IDs from the org ──────────────────────────
   SELECT user_id INTO u1 FROM public.organization_members
-  WHERE organization_id = org_id ORDER BY created_at ASC LIMIT 1;
+  WHERE organization_id = org_id
+    AND user_id NOT IN (u_owner, u_bd, u_partner)
+  ORDER BY created_at ASC LIMIT 1;
 
   SELECT user_id INTO u2 FROM public.organization_members
-  WHERE organization_id = org_id ORDER BY created_at ASC LIMIT 1 OFFSET 1;
+  WHERE organization_id = org_id
+    AND user_id NOT IN (u_owner, u_bd, u_partner)
+  ORDER BY created_at ASC LIMIT 1 OFFSET 1;
 
-  SELECT user_id INTO u3 FROM public.organization_members
-  WHERE organization_id = org_id ORDER BY created_at ASC LIMIT 1 OFFSET 2;
-
-  -- Fall back to u1 if org has fewer than 3 members
+  IF u1 IS NULL THEN RAISE EXCEPTION 'No real org members found — run create_demo_users.sql first, then ensure at least one real user is in the org.'; END IF;
   IF u2 IS NULL THEN u2 := u1; END IF;
-  IF u3 IS NULL THEN u3 := u1; END IF;
 
   -- ── 2. Grab pipeline stage IDs ─────────────────────────────────────────────
   SELECT id INTO s_new         FROM public.pipeline_stages WHERE organization_id = org_id AND name = 'New'         LIMIT 1;
@@ -113,53 +118,53 @@ BEGIN
 
   -- ── 3. Companies ────────────────────────────────────────────────────────────
   INSERT INTO public.companies (id, name, domain, industry, account_type, employees, annual_revenue, website, rating, owner_id, organization_id) VALUES
-    (c_apex,      'Apex Dynamics',       'apexdynamics.io',     'Technology',        'Customer',   320,  8500000,  'https://apexdynamics.io',     'Hot',  u1, org_id),
-    (c_nexgen,    'NexGen Solutions',    'nexgensolutions.com',  'Software',          'Customer',   85,   2200000,  'https://nexgensolutions.com',  'Warm', u2, org_id),
-    (c_stratford, 'Stratford Capital',   'stratfordcap.com',    'Financial Services','Prospect',   50,   15000000, 'https://stratfordcap.com',    'Warm', u1, org_id),
-    (c_blueridge, 'Blue Ridge Health',   'blueridgehealth.org', 'Healthcare',        'Customer',   210,  4100000,  'https://blueridgehealth.org', 'Hot',  u3, org_id),
-    (c_meridian,  'Meridian Logistics',  'meridianlog.com',     'Logistics',         'Prospect',   630,  22000000, 'https://meridianlog.com',     'Warm', u2, org_id),
-    (c_ironclad,  'Ironclad Manufacturing','ironcladmfg.com',   'Manufacturing',     'Customer',   450,  31000000, 'https://ironcladmfg.com',     'Cold', u1, org_id),
-    (c_luminary,  'Luminary Media',      'luminarymedia.co',    'Media',             'Prospect',   40,   900000,   'https://luminarymedia.co',    'Hot',  u3, org_id),
-    (c_coastal,   'Coastal Real Estate', 'coastalrealty.com',   'Real Estate',       'Customer',   95,   6700000,  'https://coastalrealty.com',   'Warm', u2, org_id)
+    (c_apex,      'Apex Dynamics',         'apexdynamics.io',       'Technology',        'Customer', 320,  8500000,  'https://apexdynamics.io',       'Hot',  u_owner,   org_id),
+    (c_nexgen,    'NexGen Solutions',      'nexgensolutions.com',   'Software',          'Customer', 85,   2200000,  'https://nexgensolutions.com',   'Warm', u_bd,      org_id),
+    (c_stratford, 'Stratford Capital',     'stratfordcap.com',      'Financial Services','Prospect', 50,   15000000, 'https://stratfordcap.com',      'Warm', u_owner,   org_id),
+    (c_blueridge, 'Blue Ridge Health',     'blueridgehealth.org',   'Healthcare',        'Customer', 210,  4100000,  'https://blueridgehealth.org',   'Hot',  u_bd,      org_id),
+    (c_meridian,  'Meridian Logistics',    'meridianlog.com',       'Logistics',         'Prospect', 630,  22000000, 'https://meridianlog.com',       'Warm', u1,        org_id),
+    (c_ironclad,  'Ironclad Manufacturing','ironcladmfg.com',       'Manufacturing',     'Customer', 450,  31000000, 'https://ironcladmfg.com',       'Cold', u_owner,   org_id),
+    (c_luminary,  'Luminary Media',        'luminarymedia.co',      'Media',             'Prospect', 40,   900000,   'https://luminarymedia.co',      'Hot',  u_partner, org_id),
+    (c_coastal,   'Coastal Real Estate',   'coastalrealty.com',     'Real Estate',       'Customer', 95,   6700000,  'https://coastalrealty.com',     'Warm', u2,        org_id)
   ON CONFLICT (id) DO NOTHING;
 
   -- ── 4. Contacts ─────────────────────────────────────────────────────────────
   INSERT INTO public.contacts (id, first_name, last_name, email, phone, title, company_id, owner_id, organization_id) VALUES
-    (ct1,  'Rachel',  'Chen',     'rchen@apexdynamics.io',       '415-222-1001', 'CTO',                  c_apex,      u1, org_id),
-    (ct2,  'Marcus',  'Webb',     'mwebb@apexdynamics.io',       '415-222-1002', 'VP of Engineering',    c_apex,      u1, org_id),
-    (ct3,  'Sofia',   'Alvarez',  'salvarez@nexgensolutions.com', '512-333-2001', 'CEO',                  c_nexgen,    u2, org_id),
-    (ct4,  'James',   'Okafor',   'jokafor@nexgensolutions.com',  '512-333-2002', 'Head of Product',      c_nexgen,    u2, org_id),
-    (ct5,  'Diana',   'Park',     'dpark@stratfordcap.com',      '212-444-3001', 'Managing Director',    c_stratford, u1, org_id),
-    (ct6,  'Tyler',   'Nguyen',   'tnguyen@blueridgehealth.org', '303-555-4001', 'Director of IT',       c_blueridge, u3, org_id),
-    (ct7,  'Amara',   'Diallo',   'adiallo@blueridgehealth.org', '303-555-4002', 'COO',                  c_blueridge, u3, org_id),
-    (ct8,  'Kevin',   'Marsh',    'kmarsh@meridianlog.com',      '704-666-5001', 'SVP Operations',       c_meridian,  u2, org_id),
-    (ct9,  'Priya',   'Suresh',   'psuresh@ironcladmfg.com',     '414-777-6001', 'Procurement Manager',  c_ironclad,  u1, org_id),
-    (ct10, 'Leo',     'Fontaine', 'lfontaine@luminarymedia.co',  '323-888-7001', 'Head of Partnerships', c_luminary,  u3, org_id),
-    (ct11, 'Hannah',  'Torres',   'htorres@coastalrealty.com',   '619-999-8001', 'VP of Technology',     c_coastal,   u2, org_id),
-    (ct12, 'Brett',   'Halvorsen','bhalvorsen@stratfordcap.com', '212-444-3002', 'CFO',                  c_stratford, u1, org_id)
+    (ct1,  'Rachel',  'Chen',     'rchen@apexdynamics.io',       '415-222-1001', 'CTO',                  c_apex,      u_owner,   org_id),
+    (ct2,  'Marcus',  'Webb',     'mwebb@apexdynamics.io',       '415-222-1002', 'VP of Engineering',    c_apex,      u_owner,   org_id),
+    (ct3,  'Sofia',   'Alvarez',  'salvarez@nexgensolutions.com', '512-333-2001', 'CEO',                  c_nexgen,    u_bd,      org_id),
+    (ct4,  'James',   'Okafor',   'jokafor@nexgensolutions.com',  '512-333-2002', 'Head of Product',      c_nexgen,    u_bd,      org_id),
+    (ct5,  'Diana',   'Park',     'dpark@stratfordcap.com',      '212-444-3001', 'Managing Director',    c_stratford, u_owner,   org_id),
+    (ct6,  'Tyler',   'Nguyen',   'tnguyen@blueridgehealth.org', '303-555-4001', 'Director of IT',       c_blueridge, u_bd,      org_id),
+    (ct7,  'Amara',   'Diallo',   'adiallo@blueridgehealth.org', '303-555-4002', 'COO',                  c_blueridge, u_bd,      org_id),
+    (ct8,  'Kevin',   'Marsh',    'kmarsh@meridianlog.com',      '704-666-5001', 'SVP Operations',       c_meridian,  u1,        org_id),
+    (ct9,  'Priya',   'Suresh',   'psuresh@ironcladmfg.com',     '414-777-6001', 'Procurement Manager',  c_ironclad,  u_owner,   org_id),
+    (ct10, 'Leo',     'Fontaine', 'lfontaine@luminarymedia.co',  '323-888-7001', 'Head of Partnerships', c_luminary,  u_partner, org_id),
+    (ct11, 'Hannah',  'Torres',   'htorres@coastalrealty.com',   '619-999-8001', 'VP of Technology',     c_coastal,   u2,        org_id),
+    (ct12, 'Brett',   'Halvorsen','bhalvorsen@stratfordcap.com', '212-444-3002', 'CFO',                  c_stratford, u_owner,   org_id)
   ON CONFLICT (id) DO NOTHING;
 
   -- ── 5. Leads ────────────────────────────────────────────────────────────────
   INSERT INTO public.leads (id, first_name, last_name, email, phone, company, title, lead_status, lead_source, industry, annual_revenue, rating, owner_id, organization_id) VALUES
-    (l1, 'Nathan',   'Cross',    'ncross@vertexai.com',      '628-101-0001', 'Vertex AI Labs',     'CEO',               'New',          'Web',          'Technology',   3200000,  'Hot',  u1, org_id),
-    (l2, 'Chloe',    'Brennan',  'cbrennan@pinnaclehr.com',  '720-102-0002', 'Pinnacle HR',        'VP of Sales',       'Contacted',    'Referral',     'HR Tech',      1400000,  'Warm', u2, org_id),
-    (l3, 'Derrick',  'Hammond',  'dhammond@orbitsys.net',    '503-103-0003', 'Orbit Systems',      'Director of IT',    'Qualified',    'Cold Call',    'Software',     5600000,  'Hot',  u1, org_id),
-    (l4, 'Yuki',     'Tanaka',   'ytanaka@solartechco.com',  '858-104-0004', 'SolarTech Co.',      'COO',               'New',          'LinkedIn',     'CleanTech',    8100000,  'Warm', u3, org_id),
-    (l5, 'Megan',    'Flores',   'mflores@bridgepoint.io',   '312-105-0005', 'Bridgepoint Capital','Partner',           'Contacted',    'Conference',   'Finance',      25000000, 'Hot',  u2, org_id)
+    (l1, 'Nathan',   'Cross',    'ncross@vertexai.com',      '628-101-0001', 'Vertex AI Labs',     'CEO',               'New',          'Web',          'Technology',   3200000,  'Hot',  u_bd,      org_id),
+    (l2, 'Chloe',    'Brennan',  'cbrennan@pinnaclehr.com',  '720-102-0002', 'Pinnacle HR',        'VP of Sales',       'Contacted',    'Referral',     'HR Tech',      1400000,  'Warm', u_bd,      org_id),
+    (l3, 'Derrick',  'Hammond',  'dhammond@orbitsys.net',    '503-103-0003', 'Orbit Systems',      'Director of IT',    'Qualified',    'Cold Call',    'Software',     5600000,  'Hot',  u_owner,   org_id),
+    (l4, 'Yuki',     'Tanaka',   'ytanaka@solartechco.com',  '858-104-0004', 'SolarTech Co.',      'COO',               'New',          'LinkedIn',     'CleanTech',    8100000,  'Warm', u_partner, org_id),
+    (l5, 'Megan',    'Flores',   'mflores@bridgepoint.io',   '312-105-0005', 'Bridgepoint Capital','Partner',           'Contacted',    'Conference',   'Finance',      25000000, 'Hot',  u_bd,      org_id)
   ON CONFLICT (id) DO NOTHING;
 
   -- ── 6. Deals ────────────────────────────────────────────────────────────────
   INSERT INTO public.deals (id, title, amount, stage_id, contact_id, company_id, owner_id, expected_close_date, probability, type, lead_source, organization_id) VALUES
-    (d1,  'Apex — Platform License',         48000,  s_proposal,    ct1,  c_apex,      u1, current_date + 14,  60, 'New Business',    'Web',        org_id),
-    (d2,  'Apex — API Integration Expansion',22000,  s_negotiation, ct2,  c_apex,      u1, current_date + 7,   80, 'Expansion',       'Web',        org_id),
-    (d3,  'NexGen — Annual SaaS Contract',   36000,  s_qualified,   ct3,  c_nexgen,    u2, current_date + 30,  40, 'New Business',    'Referral',   org_id),
-    (d4,  'NexGen — Onboarding Package',     8500,   s_won,         ct4,  c_nexgen,    u2, current_date - 10,  100,'Add-on',          'Referral',   org_id),
-    (d5,  'Stratford — Advisory Retainer',   60000,  s_proposal,    ct5,  c_stratford, u1, current_date + 21,  55, 'New Business',    'Cold Call',  org_id),
-    (d6,  'Blue Ridge — HIPAA Compliance Suite',75000,s_lead,       ct6,  c_blueridge, u3, current_date + 45,  25, 'New Business',    'Conference', org_id),
-    (d7,  'Blue Ridge — IT Infrastructure',  18000,  s_qualified,   ct7,  c_blueridge, u3, current_date + 20,  45, 'Expansion',       'Conference', org_id),
-    (d8,  'Meridian — Supply Chain Module',  92000,  s_new,         ct8,  c_meridian,  u2, current_date + 60,  15, 'New Business',    'LinkedIn',   org_id),
-    (d9,  'Luminary — Content Analytics',    14500,  s_negotiation, ct10, c_luminary,  u3, current_date + 5,   85, 'New Business',    'Web',        org_id),
-    (d10, 'Coastal — CRM Migration',         29000,  s_lost,        ct11, c_coastal,   u2, current_date - 30,  0,  'New Business',    'Referral',   org_id)
+    (d1,  'Apex — Platform License',            48000, s_proposal,    ct1,  c_apex,      u_owner,   current_date + 14, 60,  'New Business', 'Web',        org_id),
+    (d2,  'Apex — API Integration Expansion',   22000, s_negotiation, ct2,  c_apex,      u_owner,   current_date + 7,  80,  'Expansion',    'Web',        org_id),
+    (d3,  'NexGen — Annual SaaS Contract',       36000, s_qualified,   ct3,  c_nexgen,    u_bd,      current_date + 30, 40,  'New Business', 'Referral',   org_id),
+    (d4,  'NexGen — Onboarding Package',          8500, s_won,         ct4,  c_nexgen,    u_bd,      current_date - 10, 100, 'Add-on',       'Referral',   org_id),
+    (d5,  'Stratford — Advisory Retainer',       60000, s_proposal,    ct5,  c_stratford, u_owner,   current_date + 21, 55,  'New Business', 'Cold Call',  org_id),
+    (d6,  'Blue Ridge — HIPAA Compliance Suite', 75000, s_lead,        ct6,  c_blueridge, u_bd,      current_date + 45, 25,  'New Business', 'Conference', org_id),
+    (d7,  'Blue Ridge — IT Infrastructure',      18000, s_qualified,   ct7,  c_blueridge, u_bd,      current_date + 20, 45,  'Expansion',    'Conference', org_id),
+    (d8,  'Meridian — Supply Chain Module',      92000, s_new,         ct8,  c_meridian,  u1,        current_date + 60, 15,  'New Business', 'LinkedIn',   org_id),
+    (d9,  'Luminary — Content Analytics',        14500, s_negotiation, ct10, c_luminary,  u_partner, current_date + 5,  85,  'New Business', 'Web',        org_id),
+    (d10, 'Coastal — CRM Migration',             29000, s_lost,        ct11, c_coastal,   u2,        current_date - 30, 0,   'New Business', 'Referral',   org_id)
   ON CONFLICT (id) DO NOTHING;
 
   -- ── 7. Activities ───────────────────────────────────────────────────────────
@@ -170,10 +175,10 @@ BEGIN
     ('call',    'Discovery call — NexGen',                 'Sofia confirmed budget approved for Q3. Moving to proposal stage.',        ct3, c_nexgen,    d3,   u2, now() - interval '7 days',  now() - interval '7 days',  org_id),
     ('email',   'NexGen onboarding confirmation',          'Sent signed contract and onboarding schedule.',                           ct4, c_nexgen,    d4,   u2, now() - interval '12 days', now() - interval '12 days', org_id),
     ('meeting', 'Stratford advisory scope review',         'Aligned on deliverables for Q3 retainer. Legal review in progress.',      ct5, c_stratford, d5,   u1, now() - interval '4 days',  now() - interval '4 days',  org_id),
-    ('call',    'Blue Ridge HIPAA requirement walkthrough','Tyler outlined compliance gaps. Scheduling technical assessment.',         ct6, c_blueridge, d6,   u3, now() + interval '2 days',  NULL,                       org_id),
-    ('email',   'Follow-up: Blue Ridge IT proposal',       'Sent revised quote incorporating server migration scope.',                 ct7, c_blueridge, d7,   u3, now() - interval '1 day',   now() - interval '1 day',   org_id),
+    ('call',    'Blue Ridge HIPAA requirement walkthrough','Tyler outlined compliance gaps. Scheduling technical assessment.',         ct6, c_blueridge, d6,   u_bd, now() + interval '2 days',  NULL,                       org_id),
+    ('email',   'Follow-up: Blue Ridge IT proposal',       'Sent revised quote incorporating server migration scope.',                 ct7, c_blueridge, d7,   u_bd, now() - interval '1 day',   now() - interval '1 day',   org_id),
     ('meeting', 'Meridian intro — supply chain demo',      'Initial walkthrough. Kevin wants to involve their VP of Tech next.',      ct8, c_meridian,  d8,   u2, now() + interval '5 days',  NULL,                       org_id),
-    ('call',    'Luminary final negotiation',              'Leo confirmed 12-month commitment. Working on contract language.',         ct10,c_luminary,  d9,   u3, now() + interval '1 day',   NULL,                       org_id),
+    ('call',    'Luminary final negotiation',              'Leo confirmed 12-month commitment. Working on contract language.',         ct10,c_luminary,  d9,   u_partner, now() + interval '1 day',   NULL,                       org_id),
     ('email',   'Coastal post-mortem debrief',             'Reached out to understand why they went with competitor.',                 ct11,c_coastal,   d10,  u2, now() - interval '25 days', now() - interval '25 days', org_id),
     ('task',    'Prepare QBR slides for Apex',             'Cover usage stats, ROI summary, and expansion opportunities.',            ct1, c_apex,      d1,   u1, now() + interval '7 days',  NULL,                       org_id),
     ('call',    'Check-in with Diana Park',                'Quarterly check-in. Stratford expanding into two new verticals.',         ct5, c_stratford, d5,   u1, now() - interval '6 days',  now() - interval '6 days',  org_id),
@@ -184,10 +189,10 @@ BEGIN
   -- ── 8. Tasks ────────────────────────────────────────────────────────────────
   INSERT INTO public.tasks (subject, status, priority, owner_id, contact_id, deal_id, lead_id, due_date, description, organization_id) VALUES
     ('Send contract redline to Apex',        'In Progress', 'High',   u1, ct1,  d1,   NULL, current_date + 2,  'Legal requested two changes — send updated doc.',          org_id),
-    ('Schedule technical review — Blue Ridge','Not Started','High',   u3, ct6,  d6,   NULL, current_date + 4,  'Needs their IT architect on the call.',                    org_id),
+    ('Schedule technical review — Blue Ridge','Not Started','High',   u_bd, ct6,  d6,   NULL, current_date + 4,  'Needs their IT architect on the call.',                    org_id),
     ('Prepare case study for Stratford',     'Not Started', 'Normal', u1, ct5,  d5,   NULL, current_date + 10, 'Use Apex as reference customer.',                          org_id),
     ('Follow up with Meridian VP of Tech',   'Not Started', 'Normal', u2, ct8,  d8,   NULL, current_date + 3,  'Kevin said he''d make the intro by end of week.',          org_id),
-    ('Luminary — finalize contract',         'In Progress', 'High',   u3, ct10, d9,   NULL, current_date + 1,  'One open clause on data retention — legal to sign off.',   org_id),
+    ('Luminary — finalize contract',         'In Progress', 'High',   u_partner, ct10, d9,   NULL, current_date + 1,  'One open clause on data retention — legal to sign off.',   org_id),
     ('NexGen — send onboarding checklist',   'Completed',   'Normal', u2, ct4,  d4,   NULL, current_date - 8,  'All items sent and acknowledged.',                         org_id),
     ('Research Pinnacle HR decision-maker',  'Not Started', 'Low',    u2, NULL, NULL, l2,   current_date + 7,  'Need to find the right contact before next outreach.',     org_id),
     ('Qualify Orbit Systems lead',           'In Progress', 'High',   u1, NULL, NULL, l3,   current_date + 2,  'Schedule discovery call this week.',                       org_id),
