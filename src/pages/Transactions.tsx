@@ -369,14 +369,14 @@ export function Transactions() {
                         {fmtDate(t.date)}
                         {t.pending && <span className="block text-[10px] text-amber-600 dark:text-amber-400">Pending</span>}
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium max-w-[140px] sm:max-w-none">
                         {isBank ? (
-                          <span className="text-sm">{t.description || t.category}</span>
+                          <span className="text-sm truncate block">{t.description || t.category}</span>
                         ) : (
                           <button
                             type="button"
                             onClick={() => navigate(`/cashflow/transactions/${t.id}/edit`)}
-                            className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors text-sm"
+                            className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors text-sm truncate"
                           >
                             {t.description || t.category}
                           </button>

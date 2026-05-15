@@ -253,7 +253,7 @@ export function TaskForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background/90 px-4 py-3 backdrop-blur md:px-6">
-            <h1 className="text-lg font-semibold sm:text-xl">
+            <h1 className="text-lg font-semibold sm:text-xl whitespace-nowrap">
               {isEdit ? "Edit Task" : "Create Task"}
             </h1>
             <div className="flex items-center gap-2">
@@ -261,7 +261,7 @@ export function TaskForm() {
                 Cancel
               </Button>
               {!isEdit && (
-                <Button type="button" variant="outline" onClick={onSaveAndNew} disabled={submitting}>
+                <Button type="button" variant="outline" onClick={onSaveAndNew} disabled={submitting} className="hidden sm:flex">
                   Save and New
                 </Button>
               )}

@@ -337,7 +337,65 @@ export function Deals() {
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
         >
-          <div className="grid grid-flow-col auto-cols-[minmax(280px,1fr)] gap-4 overflow-x-auto pb-4">
+          {/* Mobile list view — visible only on <md */}
+          <div className="md:hidden space-y-3">
+            {stages.map((stage) => {
+              const stageDeals = dealsByStage.get(stage.id) ?? []
+              return (
+                <div key={stage.id} className="rounded-xl border bg-card overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/40">
+                    <div className="flex items-center gap-2">
+                      {stage.is_won && <Trophy className="h-3.5 w-3.5 text-primary" />}
+                      {stage.is_lost && <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                      <span className="text-sm font-medium">{stage.name}</span>
+                      <Badge variant="secondary">{stageDeals.length}</Badge>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openCreate(stage.id)}
+                      className="text-xs text-primary underline underline-offset-2"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                  {stageDeals.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-4">No deals</p>
+                  ) : (
+                    <div className="divide-y">
+                      {stageDeals.map((deal) => (
+                        <div
+                          key={deal.id}
+                          className="flex items-center justify-between px-4 py-3 gap-3"
+                        >
+                          <div className="min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => openEdit(deal)}
+                              className="text-sm font-medium text-left hover:text-primary hover:underline underline-offset-2 truncate block w-full"
+                            >
+                              {deal.title}
+                            </button>
+                            {(companyName(deal.company_id) || contactName(deal.contact_id)) && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {companyName(deal.company_id) ?? contactName(deal.contact_id)}
+                              </p>
+                            )}
+                          </div>
+                          {deal.amount != null && (
+                            <span className="text-sm font-semibold shrink-0 text-primary">
+                              {fmtCurrency(deal.amount)}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="hidden md:grid grid-flow-col auto-cols-[minmax(280px,1fr)] gap-4 overflow-x-auto pb-4">
             {stages.map((stage) => (
               <KanbanColumn
                 key={stage.id}

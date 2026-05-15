@@ -408,7 +408,7 @@ export function DealForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background/90 px-4 py-3 backdrop-blur md:px-6">
-            <h1 className="text-lg font-semibold sm:text-xl">
+            <h1 className="text-lg font-semibold sm:text-xl whitespace-nowrap">
               {isEdit ? "Edit Deal" : "Create Deal"}
             </h1>
             <div className="flex items-center gap-2">
@@ -426,6 +426,7 @@ export function DealForm() {
                   variant="outline"
                   onClick={onSaveAndNew}
                   disabled={submitting}
+                  className="hidden sm:flex"
                 >
                   Save and New
                 </Button>
