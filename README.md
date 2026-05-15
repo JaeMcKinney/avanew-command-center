@@ -1,119 +1,165 @@
-# Avanew CRM
+# Avanew Command Center
 
-Internal CRM for tracking sales at Avanew. Desktop + mobile friendly.
+A multi-tenant CRM and business operations platform built for Avanew and its portfolio companies. Each organization gets its own isolated workspace with custom branding, role-based access, a full CRM pipeline, cashflow tracking, and team management — all from a single codebase.
 
-**Stack:** Vite · React · TypeScript · Tailwind CSS v4 · shadcn/ui · Supabase (Postgres + Auth)
+---
 
-## Features (v0.1)
+## Features
 
-- Email/password authentication (Supabase Auth)
-- Responsive sidebar layout (drawer on mobile, fixed sidebar on desktop)
-- Dashboard with KPI cards
-- Page shells for Contacts, Companies, Deals (kanban skeleton), Activities, Reports
-- SQL schema with companies, contacts, pipeline stages, deals, activities
+### CRM
+- **Leads** — capture and qualify inbound leads with status, rating, and owner assignment
+- **Contacts** — full contact records linked to accounts
+- **Accounts** — company profiles with associated contacts and deals
+- **Deals** — drag-and-drop Kanban pipeline with customizable stages per org; collapses to a stage-grouped list view on mobile
+- **Activities** — log calls, emails, meetings, and notes against any record
+- **Reports** — pipeline and performance summaries
 
-CRUD wiring is the next iteration — the schema, types, auth, and UI shell are in place.
+### Cashflow
+- **Transactions** — manual income/expense entries with categories, recurring flags, and partner/vendor linking
+- **Bank Connections** — Plaid-powered bank sync; transactions imported automatically with category override support
+- **Dashboard** — income/expense summary, net position, and running balance
 
-## Setup
+### Operations
+- **Tasks** — internal task tracker with due dates, priority, and owner assignment
+- **Partners** — partner relationship management
+- **Vendors** — vendor directory
 
-### 1. Install dependencies
+### Platform
+- **Multi-tenancy** — full data isolation per organization via Supabase Row Level Security; users can belong to multiple orgs and switch workspaces from the top bar
+- **Per-org branding** — each organization displays its own logo in both light and dark mode
+- **Role-based access control** — five roles: `super_user`, `owner`, `admin`, `bd`, `partner`; enforced in both the UI and database RLS policies
+- **Team invites** — email invite flow via Supabase Edge Function; new users are automatically granted org membership on signup; existing Supabase users are added immediately
+- **Document uploads** — attach any file type to deals, leads, tasks, or accounts; preview in-app
+- **Dark / light mode** — OS-aware default, user-overridable, instant switching with no flash
+- **Mobile responsive** — full mobile support including a mobile-optimized pipeline list view
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, TypeScript, Vite |
+| Styling | Tailwind CSS v4, shadcn/ui, Radix UI |
+| Routing | React Router v6 |
+| Forms | React Hook Form + Zod |
+| Drag & Drop | dnd-kit |
+| Charts | Recharts |
+| Backend | Supabase (PostgreSQL, Auth, Storage, Edge Functions) |
+| Bank Sync | Plaid |
+| Deployment | Vercel |
+
+---
+
+## Project Structure
+
+```
+src/
+├── components/       # Shared UI components (AppSidebar, TopBar, DocumentsSection, …)
+├── contexts/         # React contexts — Auth, Organization
+├── hooks/            # Custom hooks — usePermissions, useRole
+├── lib/              # Supabase client, data access layer, theme, utilities
+├── pages/            # Route-level page components
+│   ├── auth/         # Login, SetupAccount
+│   └── settings/     # Profile, team management, permissions matrix
+└── types/            # TypeScript types derived from the DB schema
+
+supabase/
+├── functions/        # Edge Functions — invite-user, plaid-sync, mercury-sync, …
+├── migrations/       # SQL migrations (applied in filename order)
+└── chunks/           # Base schema — tables, RLS policies, triggers
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- A [Supabase](https://supabase.com) project
+- (Optional) Plaid credentials for bank sync
+
+### 1. Clone and install
 
 ```bash
+git clone https://github.com/JaeMcKinney/avanew-command-center.git
+cd avanew-command-center
 npm install
 ```
 
-### 2. Create a Supabase project
+### 2. Configure environment variables
 
-1. Go to [supabase.com](https://supabase.com) and create a new project.
-2. From **Project Settings → API**, copy the **Project URL** and the **anon public** key.
+Create a `.env.local` file at the project root:
 
-### 3. Configure environment
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+### 3. Set up the database
+
+Run the SQL files in order in the Supabase SQL Editor:
+
+1. `supabase/chunks/01-base-tables.sql`
+2. `supabase/chunks/02-crm-tables.sql`
+3. Each file in `supabase/migrations/` in filename order
+
+### 4. Deploy Edge Functions
 
 ```bash
-cp .env.example .env
+supabase functions deploy invite-user --no-verify-jwt
+supabase functions deploy plaid-link-token
+supabase functions deploy plaid-sync
+supabase functions deploy mercury-sync
 ```
 
-Edit `.env` and paste in your values:
+Set required secrets:
 
+```bash
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+supabase secrets set PLAID_CLIENT_ID=...
+supabase secrets set PLAID_SECRET=...
 ```
-VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGc...
-```
 
-### 4. Run the schema
-
-In the Supabase dashboard, open **SQL Editor → New query**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql), and run it. This creates the tables, enums, RLS policies, and seeds the default pipeline stages.
-
-### 5. (Optional) Disable email confirmation for local dev
-
-For faster signup during development: **Authentication → Sign In / Up → Email** → turn off "Confirm email".
-
-### 6. Start the dev server
+### 5. Run locally
 
 ```bash
 npm run dev
 ```
 
-Open the printed URL (usually http://localhost:5173). Sign up to create your first user, then sign in.
+---
 
-## Project structure
+## Multi-Tenancy
 
-```
-src/
-├── App.tsx                  Routes
-├── main.tsx                 Entry — providers (Router, Auth, Tooltip, Toaster)
-├── index.css                Tailwind v4 + shadcn theme tokens
-├── lib/
-│   ├── supabase.ts          Supabase client (typed via Database)
-│   └── utils.ts             cn() helper
-├── types/
-│   └── db.ts                Hand-written DB types (until codegen wired up)
-├── contexts/
-│   └── AuthContext.tsx      Session state + signIn / signUp / signOut
-├── components/
-│   ├── ui/                  shadcn/ui primitives
-│   ├── AppLayout.tsx        Sidebar + topbar shell
-│   ├── AppSidebar.tsx       Nav (shared between desktop sidebar + mobile sheet)
-│   ├── TopBar.tsx           Mobile menu trigger + user dropdown
-│   ├── ProtectedRoute.tsx   Redirects to /login when unauthenticated
-│   ├── PageHeader.tsx
-│   └── EmptyState.tsx
-└── pages/
-    ├── auth/
-    │   ├── Login.tsx
-    │   └── Signup.tsx
-    ├── Dashboard.tsx
-    ├── Contacts.tsx
-    ├── Companies.tsx
-    ├── Deals.tsx
-    ├── Activities.tsx
-    └── Reports.tsx
+Every data table has an `organization_id` column. Supabase RLS policies ensure users can only read and write rows that belong to their organization. Three `SECURITY DEFINER` helper functions (`is_org_member`, `is_org_admin`, `is_super_user`) are used inside policies to prevent infinite recursion that would otherwise occur from self-referential subqueries.
 
-supabase/
-└── schema.sql               Run once in the Supabase SQL Editor
-```
+`super_user` accounts have cross-org visibility and can impersonate any role via the **View as…** menu in the top bar — useful for testing permissions without logging in as a different user.
+
+---
+
+## Roles
+
+| Role | Description |
+|---|---|
+| `super_user` | Platform-wide access across all organizations |
+| `owner` | Full access within their organization |
+| `admin` | Can manage team members and all CRM / cashflow data |
+| `bd` | CRM access only; no tasks, partners, vendors, or cashflow |
+| `partner` | CRM access only; limited to assigned records |
+
+---
 
 ## Scripts
 
 ```bash
-npm run dev      # start Vite dev server
-npm run build    # type-check + production build
-npm run preview  # preview the production build locally
-npm run lint     # run ESLint
+npm run dev       # Vite dev server
+npm run build     # Type-check + production build
+npm run preview   # Preview the production build locally
+npm run lint      # ESLint
 ```
 
-## Roadmap
+---
 
-Next iteration:
+## License
 
-- Contacts / Companies CRUD (list, create, edit, delete)
-- Deal kanban with drag-and-drop (`@dnd-kit`) and stage transitions
-- Activity logging tied to contacts / deals / companies
-- Pipeline reports with `recharts`
-- Supabase types codegen (replace hand-written `src/types/db.ts`)
-
-Later:
-
-- Multi-org workspace (currently a single shared workspace per Supabase project)
-- Email sync, calendar sync
-- Quotes / invoices
+Private — internal use only.
