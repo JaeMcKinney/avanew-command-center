@@ -13,7 +13,7 @@ ALTER TABLE public.invitations
   DROP CONSTRAINT IF EXISTS invitations_email_key;
 
 ALTER TABLE public.invitations
-  ADD CONSTRAINT IF NOT EXISTS invitations_email_org_key
+  ADD CONSTRAINT invitations_email_org_key
   UNIQUE (email, organization_id);
 
 -- ── 2. Rebuild handle_new_user to also write organization_members ─────────────
