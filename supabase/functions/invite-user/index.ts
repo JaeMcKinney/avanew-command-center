@@ -4,9 +4,11 @@
 //   1. Verifies the caller is an admin (reads their JWT from the request).
 //   2. Calls supabase.auth.admin.inviteUserByEmail() — sends the magic-link
 //      invite email and creates the auth.users row.
-//   3. Inserts a row into public.invitations so the new user picks up the
-//      role + name when their profile is auto-created on first sign-in
-//      (the handle_new_user trigger consumes the invitation).
+//   3. Inserts a row into public.invitations (with organization_id) so the
+//      new user picks up role + org membership when their profile is
+//      auto-created on first sign-in (handle_new_user trigger consumes it).
+//   4. For already-existing users (re-invites), directly inserts into
+//      organization_members so they appear in the team list immediately.
 //
 // Deploy:
 //   supabase functions deploy invite-user --no-verify-jwt
@@ -14,11 +16,6 @@
 // Required secrets (set with `supabase secrets set NAME=value`):
 //   - SUPABASE_URL                (auto)
 //   - SUPABASE_SERVICE_ROLE_KEY   (your project's service-role key — keep secret)
-//
-// Why a function and not the React app:
-//   The service-role key bypasses RLS. Putting it in the React bundle would
-//   let any visitor read/write everything in your database. The function runs
-//   on Supabase's edge servers; the key never leaves the server.
 
 import { createClient } from "npm:@supabase/supabase-js@2"
 
@@ -26,6 +23,7 @@ type InvitePayload = {
   email: string
   full_name?: string | null
   role: "super_user" | "owner" | "admin" | "bd" | "partner"
+  organization_id: string
   redirect_to?: string
 }
 
@@ -62,25 +60,22 @@ Deno.serve(async (req) => {
   const callerJwt = authHeader.replace(/^Bearer\s+/i, "")
   if (!callerJwt) return json(401, { error: "Missing bearer token" })
 
-  // Service-role client — used to verify the caller and to write data.
+  // Service-role client — bypasses RLS for admin operations.
   const admin = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
-  // Verify caller and check role
-  const { data: callerData, error: callerErr } = await admin.auth.getUser(
-    callerJwt
-  )
-  if (callerErr || !callerData.user) {
-    return json(401, { error: "Invalid session" })
-  }
+  // Verify caller identity.
+  const { data: callerData, error: callerErr } = await admin.auth.getUser(callerJwt)
+  if (callerErr || !callerData.user) return json(401, { error: "Invalid session" })
+
+  // Verify caller has permission to invite (must be admin+ in their profile).
   const { data: callerProfile } = await admin
     .from("profiles")
     .select("role")
     .eq("id", callerData.user.id)
     .maybeSingle()
-  const allowedCallerRoles = ["super_user", "owner", "admin"]
-  if (!allowedCallerRoles.includes(callerProfile?.role ?? "")) {
+  if (!["super_user", "owner", "admin"].includes(callerProfile?.role ?? "")) {
     return json(403, { error: "Admin or above required" })
   }
 
@@ -94,27 +89,33 @@ Deno.serve(async (req) => {
   const email = payload.email?.trim().toLowerCase()
   const role = payload.role
   const full_name = payload.full_name?.trim() || null
+  const organization_id = payload.organization_id
+
   if (!email || !["super_user", "owner", "admin", "bd", "partner"].includes(role)) {
     return json(400, { error: "email and valid role are required" })
   }
+  if (!organization_id) {
+    return json(400, { error: "organization_id is required" })
+  }
 
-  // Record the invitation so the trigger picks up role + name on signup.
+  // Write the invitation row with organization_id.
+  // onConflict targets the new (email, organization_id) unique constraint.
   const { error: invErr } = await admin.from("invitations").upsert(
-    { email, full_name, role, invited_by: callerData.user.id },
-    { onConflict: "email" }
+    { email, full_name, role, organization_id, invited_by: callerData.user.id },
+    { onConflict: "email,organization_id" }
   )
   if (invErr) return json(500, { error: invErr.message })
 
-  // Send the magic-link invite (creates the auth.users row if new, re-sends if existing).
+  // Send the magic-link invite email.
   const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { full_name },
     redirectTo: payload.redirect_to ?? undefined,
   })
   if (inviteErr) return json(500, { error: inviteErr.message })
 
-  // If the invited user already has a profile (re-invite case), update their role directly.
-  // The handle_new_user trigger only runs on first signup so won't apply here.
-  // Skip if it would update the caller's own profile.
+  // For users who already have a Supabase account (re-invite / existing user):
+  // the handle_new_user trigger won't fire again, so we add them to
+  // organization_members directly and clean up the invitation row.
   const invitedUserId = inviteData?.user?.id
   if (invitedUserId && invitedUserId !== callerData.user.id) {
     const { data: existingProfile } = await admin
@@ -122,12 +123,23 @@ Deno.serve(async (req) => {
       .select("id")
       .eq("id", invitedUserId)
       .maybeSingle()
+
     if (existingProfile?.id) {
-      const { error: profileErr } = await admin
-        .from("profiles")
-        .update({ role })
-        .eq("id", invitedUserId)
-      if (profileErr) return json(500, { error: profileErr.message })
+      // Add directly to org — they're already signed up.
+      const { error: memberErr } = await admin
+        .from("organization_members")
+        .upsert(
+          { organization_id, user_id: invitedUserId, role },
+          { onConflict: "organization_id,user_id" }
+        )
+      if (memberErr) return json(500, { error: memberErr.message })
+
+      // Clean up the invitation since it's been consumed.
+      await admin
+        .from("invitations")
+        .delete()
+        .eq("email", email)
+        .eq("organization_id", organization_id)
     }
   }
 
