@@ -23,6 +23,32 @@ import {
 import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useRole } from "@/hooks/useRole"
+import { useOrganization } from "@/contexts/OrganizationContext"
+import { useTheme } from "@/lib/theme"
+
+// Per-org branding config keyed by slug
+const ORG_BRANDING: Record<string, {
+  logoLight: string   // shown in light mode
+  logoDark: string    // shown in dark mode
+  icon: string        // square icon for fallback
+  name: string
+  wordmark?: boolean  // true = logo is a wordmark (use img), false = use icon + text
+}> = {
+  avanew: {
+    logoLight: "/logos/avanew-logo.svg",
+    logoDark: "/logos/avanew-logo-white.svg",
+    icon: "/logos/avanew-icon.svg",
+    name: "Avanew Command Center",
+    wordmark: true,
+  },
+  divigner: {
+    logoLight: "/logos/divigner-logo.webp",
+    logoDark: "/logos/divigner-logo.webp",
+    icon: "/logos/divigner-icon.webp",
+    name: "Divigner",
+    wordmark: true,
+  },
+}
 
 interface NavItem {
   to: string
@@ -119,24 +145,42 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation()
   const { can } = usePermissions()
   const { role } = useRole()
+  const { currentOrg } = useOrganization()
+  const { theme } = useTheme()
   const isLimitedRole = role === "bd" || role === "partner"
   const crmActive = CRM_PATHS.some((p) => location.pathname.startsWith(p))
   const cashflowActive = location.pathname.startsWith("/cashflow")
 
+  const slug = currentOrg?.slug ?? ""
+  const branding = ORG_BRANDING[slug]
+  const logoSrc = branding
+    ? (theme === "dark" ? branding.logoDark : branding.logoLight)
+    : null
+
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-16 items-center border-b border-sidebar-border px-4 gap-2">
-        <div className="h-7 w-7 rounded-md bg-primary grid place-items-center shrink-0">
-          <span className="text-xs font-bold text-primary-foreground">AC</span>
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold leading-tight truncate">
-            Avanew<span className="text-primary"> Command</span>
-          </p>
-          <p className="text-[10px] text-sidebar-foreground/50 leading-tight tracking-wide uppercase">
-            Center
-          </p>
-        </div>
+        {branding?.wordmark && logoSrc ? (
+          <img
+            src={logoSrc}
+            alt={branding.name}
+            className="h-7 w-auto max-w-[160px] object-contain"
+          />
+        ) : branding ? (
+          <>
+            <img src={branding.icon} alt={branding.name} className="h-7 w-7 rounded-md object-cover shrink-0" />
+            <p className="text-sm font-semibold leading-tight truncate">{branding.name}</p>
+          </>
+        ) : (
+          <>
+            <div className="h-7 w-7 rounded-md bg-primary grid place-items-center shrink-0">
+              <span className="text-xs font-bold text-primary-foreground">
+                {currentOrg?.name?.slice(0, 2).toUpperCase() ?? "AC"}
+              </span>
+            </div>
+            <p className="text-sm font-semibold leading-tight truncate">{currentOrg?.name ?? "Command Center"}</p>
+          </>
+        )}
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
