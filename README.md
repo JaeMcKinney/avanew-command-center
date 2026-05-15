@@ -4,6 +4,27 @@ A multi-tenant CRM and business operations platform built for Avanew and its por
 
 ---
 
+## Screenshots
+
+| Dashboard | Deals Pipeline |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard-dark.png) | ![Deals](docs/screenshots/deals-dark.png) |
+
+| Cashflow | Transactions |
+|---|---|
+| ![Cashflow](docs/screenshots/cashflow-dark.png) | ![Transactions](docs/screenshots/transactions-dark.png) |
+
+<details>
+<summary>Mobile view</summary>
+
+| Dashboard | Deals (list view) |
+|---|---|
+| ![Dashboard mobile](docs/screenshots/dashboard-mobile.png) | ![Deals mobile](docs/screenshots/deals-mobile.png) |
+
+</details>
+
+---
+
 ## Features
 
 ### CRM
