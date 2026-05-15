@@ -1,27 +1,29 @@
-import { useEffect, useState } from "react"
+import { createContext, useContext } from "react"
 
 export type Theme = "light" | "dark"
 
-function getInitialTheme(): Theme {
-  if (typeof document === "undefined") return "light"
-  return document.documentElement.classList.contains("dark") ? "dark" : "light"
+export function getInitialTheme(): Theme {
+  try {
+    const stored = localStorage.getItem("theme")
+    if (stored === "dark" || stored === "light") return stored
+  } catch { /* ignore */ }
+  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 
-export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme)
+// ── Context ───────────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark")
-    try {
-      localStorage.setItem("theme", theme)
-    } catch {
-      /* ignore storage failures (private mode, etc.) */
-    }
-  }, [theme])
+export interface ThemeContextValue {
+  theme: Theme
+  setTheme: (t: Theme) => void
+  toggle: () => void
+}
 
-  return {
-    theme,
-    setTheme: setThemeState,
-    toggle: () => setThemeState((t) => (t === "dark" ? "light" : "dark")),
-  }
+export const ThemeContext = createContext<ThemeContextValue | null>(null)
+
+// ── Hook ──────────────────────────────────────────────────────────────────────
+
+export function useTheme(): ThemeContextValue {
+  const ctx = useContext(ThemeContext)
+  if (!ctx) throw new Error("useTheme must be used within ThemeProvider")
+  return ctx
 }
