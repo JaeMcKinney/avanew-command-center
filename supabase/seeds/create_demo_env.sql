@@ -227,11 +227,11 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   -- ── 7. Vendors ─────────────────────────────────────────────────────────────
-  INSERT INTO public.vendors (id, name, service, email, phone, website, status, cost_amount, cost_frequency, payment_terms, notes, organization_id) VALUES
-    (v_aws,    'Amazon Web Services',  'Cloud Infrastructure', 'aws-billing@amazon.com',         '206-900-1001', 'https://aws.amazon.com',       'Active', 4200,  'monthly',   'Net 30', 'EC2, RDS, S3.',           demo_org),
-    (v_github, 'GitHub (Microsoft)',   'Dev Tools',            'enterprise@github.com',          '415-900-2002', 'https://github.com/enterprise','Active', 500,   'monthly',   'Net 30', 'Team plan, 25 seats.',    demo_org),
-    (v_slack,  'Slack (Salesforce)',   'Team Communication',   'billing@slack.com',              '415-900-3003', 'https://slack.com',            'Active', 400,   'monthly',   'Net 30', 'Business+ plan.',         demo_org),
-    (v_gusto,  'Gusto',                'Payroll & HR',         'support@gusto.com',              '800-900-4004', 'https://gusto.com',            'Active', 18000, 'monthly',   'Net 15', 'Full payroll + benefits.',demo_org)
+  INSERT INTO public.vendors (id, name, service, email, phone, website, status, cost_structure, payment_terms, notes, organization_id) VALUES
+    (v_aws,    'Amazon Web Services',  'Cloud Infrastructure', 'aws-billing@amazon.com',         '206-900-1001', 'https://aws.amazon.com',       'Active', '$4,200/mo',  'Net 30', 'EC2, RDS, S3.',           demo_org),
+    (v_github, 'GitHub (Microsoft)',   'Dev Tools',            'enterprise@github.com',          '415-900-2002', 'https://github.com/enterprise','Active', '$500/mo',    'Net 30', 'Team plan, 25 seats.',    demo_org),
+    (v_slack,  'Slack (Salesforce)',   'Team Communication',   'billing@slack.com',              '415-900-3003', 'https://slack.com',            'Active', '$400/mo',    'Net 30', 'Business+ plan.',         demo_org),
+    (v_gusto,  'Gusto',                'Payroll & HR',         'support@gusto.com',              '800-900-4004', 'https://gusto.com',            'Active', '$18,000/mo', 'Net 15', 'Full payroll + benefits.',demo_org)
   ON CONFLICT (id) DO NOTHING;
 
   -- ── 8. Companies (10) ──────────────────────────────────────────────────────
