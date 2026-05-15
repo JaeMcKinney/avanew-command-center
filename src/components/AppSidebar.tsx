@@ -43,7 +43,7 @@ const ORG_BRANDING: Record<string, {
   },
   divigner: {
     logoLight: "/logos/divigner-logo-light.png",
-    logoDark: "/logos/divigner-logo.webp",
+    logoDark: "/logos/divigner-logo-dark.png",
     icon: "/logos/divigner-icon-clean.png",
     name: "Divigner",
     wordmark: true,
