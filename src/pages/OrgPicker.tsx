@@ -12,6 +12,12 @@ const ROLE_LABEL: Record<string, string> = {
   partner: "Partner",
 }
 
+// Local icon overrides keyed by org slug — takes precedence over logo_url from DB
+const ORG_ICONS: Record<string, string> = {
+  avanew: "/logos/avanew-icon.svg",
+  divigner: "/logos/divigner-icon-clean.png",
+}
+
 export function OrgPicker() {
   const navigate = useNavigate()
   const { orgs, selectOrg, loading } = useOrganization()
@@ -59,17 +65,22 @@ export function OrgPicker() {
                            hover:border-primary/50 hover:bg-accent transition-all
                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {org.logo_url ? (
-                  <img
-                    src={org.logo_url}
-                    alt={org.name}
-                    className="h-10 w-10 rounded-lg object-cover shrink-0"
-                  />
-                ) : (
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                )}
+                {(() => {
+                  const iconSrc = ORG_ICONS[org.slug ?? ""] ?? org.logo_url
+                  return iconSrc ? (
+                    <div className="h-12 w-12 rounded-xl bg-muted/60 flex items-center justify-center shrink-0 overflow-hidden p-1">
+                      <img
+                        src={iconSrc}
+                        alt={org.name}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary grid place-items-center shrink-0">
+                      <Building2 className="h-6 w-6" />
+                    </div>
+                  )
+                })()}
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold truncate">{org.name}</p>
                   <p className="text-xs text-muted-foreground">

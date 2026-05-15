@@ -42,7 +42,7 @@ const ORG_BRANDING: Record<string, {
     wordmark: true,
   },
   divigner: {
-    logoLight: "/logos/divigner-logo.webp",
+    logoLight: "/logos/divigner-logo-light.png",
     logoDark: "/logos/divigner-logo.webp",
     icon: "/logos/divigner-icon-clean.png",
     name: "Divigner",
@@ -159,12 +159,12 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-24 items-center justify-center border-b border-sidebar-border px-3">
+      <div className="flex h-28 items-center justify-center border-b border-sidebar-border px-4">
         {branding?.wordmark && logoSrc ? (
           <img
             src={logoSrc}
             alt={branding.name}
-            className="h-16 w-auto max-w-[220px] object-contain"
+            className="h-20 w-auto max-w-[200px] object-contain"
           />
         ) : branding ? (
           <div className="flex flex-col items-center gap-1">
