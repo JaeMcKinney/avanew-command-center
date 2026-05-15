@@ -153,19 +153,31 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   const slug = currentOrg?.slug ?? ""
   const branding = ORG_BRANDING[slug]
-  const logoSrc = branding
-    ? (theme === "dark" ? branding.logoDark : branding.logoLight)
-    : null
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-28 items-center justify-center border-b border-sidebar-border px-4">
-        {branding?.wordmark && logoSrc ? (
-          <img
-            src={logoSrc}
-            alt={branding.name}
-            className="h-20 w-auto max-w-[200px] object-contain"
-          />
+        {branding?.wordmark ? (
+          // Render BOTH variants always so they're decoded on mount.
+          // Toggle is pure CSS opacity — zero fetch/decode lag on switch.
+          <div className="relative flex h-20 w-full max-w-[200px] items-center justify-center">
+            <img
+              src={branding.logoLight}
+              alt={branding.name}
+              className={cn(
+                "absolute h-20 w-auto max-w-[200px] object-contain transition-opacity duration-150",
+                theme === "light" ? "opacity-100" : "opacity-0"
+              )}
+            />
+            <img
+              src={branding.logoDark}
+              alt={branding.name}
+              className={cn(
+                "absolute h-20 w-auto max-w-[200px] object-contain transition-opacity duration-150",
+                theme === "dark" ? "opacity-100" : "opacity-0"
+              )}
+            />
+          </div>
         ) : branding ? (
           <div className="flex flex-col items-center gap-1">
             <img src={branding.icon} alt={branding.name} className="h-10 w-10 rounded-md object-cover" />
