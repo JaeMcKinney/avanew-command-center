@@ -31,11 +31,14 @@ import {
   listTasks,
   listTeamMembers,
   updateTask,
+  uploadDocument,
   type TaskInput,
 } from "@/lib/data"
+import { supabase } from "@/lib/supabase"
 import type { Company, Contact, Deal, Lead, Task, TeamMember } from "@/types/db"
 import { cn } from "@/lib/utils"
 import { DocumentsSection } from "@/components/DocumentsSection"
+import { DocumentQueueInput } from "@/components/DocumentQueueInput"
 
 const NONE = "__none__"
 
@@ -155,6 +158,7 @@ export function TaskForm() {
   const [deals, setDeals] = useState<Deal[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
+  const [queuedFiles, setQueuedFiles] = useState<File[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -215,7 +219,15 @@ export function TaskForm() {
 
   async function onSubmit(values: FormValues) {
     try {
-      await save(values)
+      const entity = await save(values)
+      if (queuedFiles.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          for (const file of queuedFiles) {
+            await uploadDocument("task", entity.id, file, user.id)
+          }
+        }
+      }
       navigate("/tasks")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save")
@@ -414,6 +426,12 @@ export function TaskForm() {
                   )} />
                 </FormSection>
 
+                {!isEdit && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Documents</h3>
+                    <DocumentQueueInput files={queuedFiles} onChange={setQueuedFiles} />
+                  </div>
+                )}
                 {isEdit && id && (
                   <DocumentsSection entityType="task" entityId={id} />
                 )}

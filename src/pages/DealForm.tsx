@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { QuickCreateAccountDialog } from "@/components/QuickCreateAccountDialog"
 import { QuickCreateContactDialog } from "@/components/QuickCreateContactDialog"
 import { DocumentsSection } from "@/components/DocumentsSection"
+import { DocumentQueueInput } from "@/components/DocumentQueueInput"
 import {
   Select,
   SelectContent,
@@ -47,8 +48,10 @@ import {
   listStages,
   listTeamMembers,
   updateDeal,
+  uploadDocument,
   type DealInput,
 } from "@/lib/data"
+import { supabase } from "@/lib/supabase"
 import type {
   Activity,
   ActivityType,
@@ -250,6 +253,7 @@ export function DealForm() {
   const [logBody, setLogBody] = useState("")
   const [logDate, setLogDate] = useState("")
   const [logSaving, setLogSaving] = useState(false)
+  const [queuedFiles, setQueuedFiles] = useState<File[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -370,7 +374,15 @@ export function DealForm() {
 
   async function onSubmit(values: FormValues) {
     try {
-      await save(values)
+      const entity = await save(values)
+      if (queuedFiles.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          for (const file of queuedFiles) {
+            await uploadDocument("deal", entity.id, file, user.id)
+          }
+        }
+      }
       navigate("/deals")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save")
@@ -906,6 +918,12 @@ export function DealForm() {
                       )}
                     </div>
                   </FormSection>
+                )}
+                {!isEdit && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Documents</h3>
+                    <DocumentQueueInput files={queuedFiles} onChange={setQueuedFiles} />
+                  </div>
                 )}
                 {isEdit && id && (
                   <DocumentsSection entityType="deal" entityId={id} />

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ConvertLeadDialog } from "@/components/ConvertLeadDialog"
 import { DocumentsSection } from "@/components/DocumentsSection"
+import { DocumentQueueInput } from "@/components/DocumentQueueInput"
 import {
   Select,
   SelectContent,
@@ -31,8 +32,10 @@ import {
   listLeads,
   listTeamMembers,
   updateLead,
+  uploadDocument,
   type LeadInput,
 } from "@/lib/data"
+import { supabase } from "@/lib/supabase"
 import type { Lead, TeamMember } from "@/types/db"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/useRole"
@@ -207,6 +210,7 @@ export function LeadForm() {
   const [loading, setLoading] = useState(true)
   const [currentLead, setCurrentLead] = useState<Lead | null>(null)
   const [convertOpen, setConvertOpen] = useState(false)
+  const [queuedFiles, setQueuedFiles] = useState<File[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -260,7 +264,15 @@ export function LeadForm() {
 
   async function onSubmit(values: FormValues) {
     try {
-      await save(values)
+      const entity = await save(values)
+      if (queuedFiles.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          for (const file of queuedFiles) {
+            await uploadDocument("lead", entity.id, file, user.id)
+          }
+        }
+      }
       navigate("/leads")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save")
@@ -546,6 +558,12 @@ export function LeadForm() {
                   )} />
                 </FormSection>
 
+                {!isEdit && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Documents</h3>
+                    <DocumentQueueInput files={queuedFiles} onChange={setQueuedFiles} />
+                  </div>
+                )}
                 {isEdit && id && (
                   <DocumentsSection entityType="lead" entityId={id} />
                 )}

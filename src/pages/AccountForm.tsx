@@ -6,6 +6,8 @@ import { z } from "zod"
 import { toast } from "sonner"
 import { Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DocumentsSection } from "@/components/DocumentsSection"
+import { DocumentQueueInput } from "@/components/DocumentQueueInput"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -28,8 +30,10 @@ import {
   listCompanies,
   listTeamMembers,
   updateCompany,
+  uploadDocument,
   type CompanyInput,
 } from "@/lib/data"
+import { supabase } from "@/lib/supabase"
 import type { Company, TeamMember } from "@/types/db"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/useRole"
@@ -214,6 +218,7 @@ export function AccountForm() {
 
   const [team, setTeam] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
+  const [queuedFiles, setQueuedFiles] = useState<File[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -275,7 +280,15 @@ export function AccountForm() {
 
   async function onSubmit(values: FormValues) {
     try {
-      await save(values)
+      const entity = await save(values)
+      if (queuedFiles.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          for (const file of queuedFiles) {
+            await uploadDocument("account", entity.id, file, user.id)
+          }
+        }
+      }
       navigate("/accounts")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save")
@@ -566,6 +579,16 @@ export function AccountForm() {
                     </Row>
                   )} />
                 </FormSection>
+
+                {!isEdit && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Documents</h3>
+                    <DocumentQueueInput files={queuedFiles} onChange={setQueuedFiles} />
+                  </div>
+                )}
+                {isEdit && id && (
+                  <DocumentsSection entityType="account" entityId={id} />
+                )}
               </div>
             )}
           </div>
