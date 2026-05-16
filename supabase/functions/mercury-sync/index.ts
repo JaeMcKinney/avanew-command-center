@@ -189,7 +189,7 @@ function json(body: unknown, status = 200) {
 
 async function mercuryGet(path: string, apiKey: string): Promise<Response> {
   return fetch(`${MERCURY_BASE}${path}`, {
-    headers: { Authorization: `api-key ${apiKey}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
   })
 }
 
