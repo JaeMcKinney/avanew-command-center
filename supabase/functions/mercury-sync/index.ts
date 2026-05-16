@@ -54,7 +54,16 @@ Deno.serve(async (req: Request) => {
       await markConnectionError(supabase, connection_id, err)
       return json({ error: err }, 502)
     }
-    const accountsData = await accountsRes.json() as { accounts: MercuryAccount[] }
+    const accountsText = await accountsRes.text()
+    let accountsData: { accounts: MercuryAccount[] }
+    try {
+      accountsData = JSON.parse(accountsText)
+    } catch {
+      const preview = accountsText.slice(0, 120).replace(/\s+/g, " ")
+      const err = `Mercury returned non-JSON (bad API key?): ${preview}`
+      await markConnectionError(supabase, connection_id, err)
+      return json({ error: err }, 502)
+    }
 
     for (const account of accountsData.accounts) {
       // Upsert bank_account record
