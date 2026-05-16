@@ -39,21 +39,23 @@
 -- to UNIQUE(name, organization_id) so per-org stages can coexist.
 DO $$
 BEGIN
-  IF EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'pipeline_stages_name_key'
-      AND conrelid = 'public.pipeline_stages'::regclass
-  ) THEN
-    ALTER TABLE public.pipeline_stages DROP CONSTRAINT pipeline_stages_name_key;
-  END IF;
+  IF to_regclass('public.pipeline_stages') IS NOT NULL THEN
+    IF EXISTS (
+      SELECT 1 FROM pg_constraint
+      WHERE conname = 'pipeline_stages_name_key'
+        AND conrelid = to_regclass('public.pipeline_stages')
+    ) THEN
+      ALTER TABLE public.pipeline_stages DROP CONSTRAINT pipeline_stages_name_key;
+    END IF;
 
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'pipeline_stages_name_org_key'
-      AND conrelid = 'public.pipeline_stages'::regclass
-  ) THEN
-    ALTER TABLE public.pipeline_stages
-      ADD CONSTRAINT pipeline_stages_name_org_key UNIQUE (name, organization_id);
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint
+      WHERE conname = 'pipeline_stages_name_org_key'
+        AND conrelid = to_regclass('public.pipeline_stages')
+    ) THEN
+      ALTER TABLE public.pipeline_stages
+        ADD CONSTRAINT pipeline_stages_name_org_key UNIQUE (name, organization_id);
+    END IF;
   END IF;
 END $$;
 
@@ -281,17 +283,17 @@ BEGIN
 
   -- ── 11. Deals (15) ─────────────────────────────────────────────────────────
   INSERT INTO public.deals (id, title, amount, stage_id, contact_id, company_id, owner_id, expected_close_date, probability, type, lead_source, organization_id) VALUES
-    (d1,  'Orion — Platform License',           52000, s_proposal,    ct1,  c1,  u_owner,   current_date + 14,  60,  'New Business', 'Web',        demo_org),
+    (d1,  'Orion — Platform License',           52000, s_prop,        ct1,  c1,  u_owner,   current_date + 14,  60,  'New Business', 'Web',        demo_org),
     (d2,  'Orion — API Integration',            24000, s_neg,         ct2,  c1,  u_owner,   current_date + 7,   80,  'Expansion',    'Web',        demo_org),
     (d3,  'Vertex — Annual SaaS',               38000, s_qual,        ct3,  c2,  u_bd,      current_date + 30,  40,  'New Business', 'Referral',   demo_org),
     (d4,  'Vertex — Onboarding Package',         9500, s_won,         ct4,  c2,  u_bd,      current_date - 10,  100, 'Add-on',       'Referral',   demo_org),
-    (d5,  'Summit — Advisory Retainer',         64000, s_proposal,    ct5,  c3,  u_owner,   current_date + 21,  55,  'New Business', 'Cold Call',  demo_org),
+    (d5,  'Summit — Advisory Retainer',         64000, s_prop,        ct5,  c3,  u_owner,   current_date + 21,  55,  'New Business', 'Cold Call',  demo_org),
     (d6,  'Cascade — HIPAA Compliance Suite',   78000, s_lead,        ct6,  c4,  u_bd,      current_date + 45,  25,  'New Business', 'Conference', demo_org),
     (d7,  'Cascade — IT Infrastructure',        19500, s_qual,        ct7,  c4,  u_bd,      current_date + 20,  45,  'Expansion',    'Conference', demo_org),
     (d8,  'Pioneer — Supply Chain Module',      96000, s_new,         ct8,  c5,  u_owner,   current_date + 60,  15,  'New Business', 'LinkedIn',   demo_org),
     (d9,  'Lumen — Content Analytics',          15500, s_neg,         ct10, c7,  u_partner, current_date + 5,   85,  'New Business', 'Web',        demo_org),
     (d10, 'Beacon — CRM Migration',             31000, s_lost,        ct11, c8,  u_partner, current_date - 30,  0,   'New Business', 'Referral',   demo_org),
-    (d11, 'Helix — Lab Data Platform',          45000, s_proposal,    ct13, c9,  u_bd,      current_date + 12,  65,  'New Business', 'Web',        demo_org),
+    (d11, 'Helix — Lab Data Platform',          45000, s_prop,        ct13, c9,  u_bd,      current_date + 12,  65,  'New Business', 'Web',        demo_org),
     (d12, 'Helix — Quarterly Reporting Add-on',  8000, s_won,         ct14, c9,  u_bd,      current_date - 5,   100, 'Add-on',       'Referral',   demo_org),
     (d13, 'Anchor — Loyalty Pilot',             22000, s_qual,        ct15, c10, u_bd,      current_date + 25,  50,  'New Business', 'LinkedIn',   demo_org),
     (d14, 'Titan — Procurement Automation',     58000, s_lead,        ct9,  c6,  u_owner,   current_date + 55,  20,  'New Business', 'Cold Call',  demo_org),
