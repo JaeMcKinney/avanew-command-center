@@ -143,15 +143,6 @@ export function BankConnections() {
     if (!mercuryKey.trim()) return
     setConnecting(true)
     try {
-      if (!PREVIEW_DATA_MODE) {
-        // In production: pass key to Edge Function to verify & store securely
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mercury-sync`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${mercuryKey}` },
-          body: JSON.stringify({ action: "verify" }),
-        })
-        if (!res.ok) throw new Error("Invalid API key or Mercury is unreachable")
-      }
       await createBankConnection({
         provider: "mercury",
         institution_name: "Mercury",
