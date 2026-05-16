@@ -15,7 +15,7 @@
 import { requireAuth } from "../_shared/auth.ts"
 import { corsHeaders } from "../_shared/cors.ts"
 
-const MERCURY_BASE = "https://app.mercury.com/api/v1"
+const MERCURY_BASE = "https://backend.mercury.com/api/v1"
 const SYNC_DAYS = 90  // how many days back to sync on first run
 
 Deno.serve(async (req: Request) => {
