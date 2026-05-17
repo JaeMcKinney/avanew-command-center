@@ -16,6 +16,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +45,7 @@ import {
   listSyncLogs,
   createBankConnection,
   deleteBankConnection,
+  updateBankAccount,
   triggerMercurySync,
   triggerPlaidSync,
   getPlaidLinkToken,
@@ -80,7 +82,8 @@ const STATUS_BADGE: Record<string, string> = {
 
 export function BankConnections() {
   const [connections, setConnections] = useState<BankConnection[]>([])
-  const [accounts, setAccounts] = useState<BankAccount[]>([])
+  const [accounts, setAccounts] = useState<BankAccount[]>([])        // active only — used for summary
+  const [allAccounts, setAllAccounts] = useState<BankAccount[]>([])  // active + inactive — used for checkboxes
   const [logs, setLogs] = useState<CashflowSyncLog[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState<string | null>(null)
@@ -95,14 +98,44 @@ export function BankConnections() {
   async function refresh() {
     setLoading(true)
     try {
-      const [c, a, l] = await Promise.all([listBankConnections(), listBankAccounts(), listSyncLogs()])
+      const [c, a, all, l] = await Promise.all([
+        listBankConnections(),
+        listBankAccounts(),
+        listBankAccounts(undefined, { includeInactive: true }),
+        listSyncLogs(),
+      ])
       setConnections(c)
       setAccounts(a)
+      setAllAccounts(all)
       setLogs(l)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleToggleAccount(acct: BankAccount) {
+    const newActive = !acct.is_active
+    // Optimistic update
+    setAllAccounts((prev) => prev.map((a) => a.id === acct.id ? { ...a, is_active: newActive } : a))
+    setAccounts((prev) =>
+      newActive
+        ? [...prev, { ...acct, is_active: true }].sort((a, b) => a.name.localeCompare(b.name))
+        : prev.filter((a) => a.id !== acct.id)
+    )
+    try {
+      await updateBankAccount(acct.id, { is_active: newActive })
+      toast.success(newActive ? `${acct.name} added to dashboards` : `${acct.name} hidden from dashboards`)
+    } catch (err) {
+      // Roll back on error
+      setAllAccounts((prev) => prev.map((a) => a.id === acct.id ? { ...a, is_active: acct.is_active } : a))
+      setAccounts((prev) =>
+        acct.is_active
+          ? [...prev, acct].sort((a, b) => a.name.localeCompare(b.name))
+          : prev.filter((a) => a.id !== acct.id)
+      )
+      toast.error(err instanceof Error ? err.message : "Failed to update account")
     }
   }
 
@@ -310,20 +343,32 @@ export function BankConnections() {
                 {/* Expanded: accounts + sync logs */}
                 {isExpanded && (
                   <div className="border-t bg-muted/30 px-4 py-3 space-y-4">
-                    {connAccounts.length > 0 && (
+                    {allAccounts.filter((a) => a.bank_connection_id === conn.id).length > 0 && (
                       <div>
-                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-2">Accounts</p>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Accounts</p>
+                          <p className="text-[10px] text-muted-foreground">Check to show in transactions & dashboards</p>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {connAccounts.map((a) => (
-                            <div key={a.id} className="rounded-md border bg-card px-3 py-2 flex items-center justify-between">
-                              <div>
-                                <p className="text-sm font-medium">{a.name}</p>
+                          {allAccounts.filter((a) => a.bank_connection_id === conn.id).map((a) => (
+                            <div
+                              key={a.id}
+                              className="rounded-md border bg-card px-3 py-2 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                              onClick={() => void handleToggleAccount(a)}
+                            >
+                              <Checkbox
+                                checked={a.is_active}
+                                onCheckedChange={() => void handleToggleAccount(a)}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{a.name}</p>
                                 <p className="text-xs text-muted-foreground capitalize">{a.type}{a.subtype && a.subtype !== a.type ? ` · ${a.subtype}` : ""}</p>
                               </div>
-                              <div className="text-right">
-                                <p className="text-sm font-semibold">{fmtCurrency(a.balance_current ?? 0)}</p>
+                              <div className="text-right shrink-0">
+                                <p className={`text-sm font-semibold ${!a.is_active ? "text-muted-foreground" : ""}`}>{fmtCurrency(a.balance_current ?? 0)}</p>
                                 {a.balance_available != null && a.balance_available !== a.balance_current && (
-                                  <p className="text-[10px] text-muted-foreground">{fmtCurrency(a.balance_available)} available</p>
+                                  <p className="text-[10px] text-muted-foreground">{fmtCurrency(a.balance_available)} avail.</p>
                                 )}
                               </div>
                             </div>

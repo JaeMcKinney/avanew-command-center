@@ -2211,16 +2211,23 @@ export async function deleteBankConnection(id: string): Promise<void> {
 
 // ─── Bank Accounts ──────────────────────────────────────────────────────────
 
-export async function listBankAccounts(connectionId?: string): Promise<BankAccount[]> {
+export async function listBankAccounts(connectionId?: string, { includeInactive = false } = {}): Promise<BankAccount[]> {
   if (PREVIEW_MODE) {
     const rows = loadMock<BankAccount>("bank_accounts", seedBankAccounts)
     return connectionId ? rows.filter((r) => r.bank_connection_id === connectionId) : rows
   }
-  let q = supabase.from("bank_accounts").select("*").eq("organization_id", requireOrg()).eq("is_active", true).order("created_at", { ascending: true })
+  let q = supabase.from("bank_accounts").select("*").eq("organization_id", requireOrg()).order("name", { ascending: true })
+  if (!includeInactive) q = q.eq("is_active", true)
   if (connectionId) q = q.eq("bank_connection_id", connectionId)
   const { data, error } = await q
   if (error) throw error
   return data ?? []
+}
+
+export async function updateBankAccount(id: string, input: { is_active: boolean }): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase.from("bank_accounts").update(input).eq("id", id)
+  if (error) throw error
 }
 
 // ─── Bank Transactions ──────────────────────────────────────────────────────
