@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   Building2,
   RefreshCw,
@@ -222,7 +222,6 @@ export function BankConnections() {
     })
   }
 
-  const accountsForConn = (id: string) => accounts.filter((a) => a.bank_connection_id === id)
   const logsForConn = (id: string) => logs.filter((l) => l.bank_connection_id === id).slice(0, 5)
   const totalBalance = accounts.filter((a) => a.is_active && a.type !== "credit").reduce((s, a) => s + (a.balance_current ?? 0), 0)
 
@@ -286,7 +285,6 @@ export function BankConnections() {
       ) : (
         <div className="space-y-3">
           {connections.map((conn) => {
-            const connAccounts = accountsForConn(conn.id)
             const connLogs = logsForConn(conn.id)
             const isExpanded = expanded.has(conn.id)
             const isSyncing = syncing === conn.id
@@ -359,7 +357,7 @@ export function BankConnections() {
                               <Checkbox
                                 checked={a.is_active}
                                 onCheckedChange={() => void handleToggleAccount(a)}
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
                               />
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium truncate">{a.name}</p>

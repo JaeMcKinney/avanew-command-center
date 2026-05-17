@@ -318,7 +318,6 @@ export function Cashflow() {
   }, [loading, unified, netFlow, expenses, prevExpenses, period, runway, burnRate, expenseByCategory, revenue])
 
   const recentTxns = useMemo(() => unified.slice(0, 8), [unified])
-  const hasBankData = bankTxns.length > 0
 
   const tooltipStyle = { background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }
   const periodLabels: Record<Period, string> = { mtd: "Month to Date", qtd: "Quarter to Date", ytd: "Year to Date" }
