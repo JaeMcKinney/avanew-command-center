@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -28,13 +28,16 @@ import {
 import {
   createCompany,
   listCompanies,
+  listContacts,
+  listDeals,
   listTeamMembers,
   updateCompany,
   uploadDocument,
   type CompanyInput,
 } from "@/lib/data"
 import { supabase } from "@/lib/supabase"
-import type { Company, TeamMember } from "@/types/db"
+import type { Company, Contact, Deal, TeamMember } from "@/types/db"
+import { RelatedRecordsBar, type RelatedRecord } from "@/components/RelatedRecordsBar"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/useRole"
 import { useAuth } from "@/contexts/AuthContext"
@@ -231,6 +234,8 @@ export function AccountForm() {
   const isLimitedRole = role === "bd" || role === "partner"
 
   const [team, setTeam] = useState<TeamMember[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
   const [queuedFiles, setQueuedFiles] = useState<File[]>([])
 
@@ -243,12 +248,16 @@ export function AccountForm() {
     let alive = true
     ;(async () => {
       try {
-        const [t, companies] = await Promise.all([
+        const [t, companies, cts, ds] = await Promise.all([
           listTeamMembers(),
           isEdit ? listCompanies() : Promise.resolve([] as Company[]),
+          isEdit ? listContacts() : Promise.resolve([] as Contact[]),
+          isEdit ? listDeals() : Promise.resolve([] as Deal[]),
         ])
         if (!alive) return
         setTeam(t.filter((m) => m.status === "active"))
+        setContacts(cts)
+        setDeals(ds)
 
         if (isEdit && id) {
           const company = companies.find((c) => c.id === id)
@@ -323,6 +332,26 @@ export function AccountForm() {
 
   const submitting = form.formState.isSubmitting
 
+  const relatedRecords = useMemo<RelatedRecord[]>(() => {
+    if (!isEdit || !id) return []
+    const out: RelatedRecord[] = []
+    contacts
+      .filter((c) => c.company_id === id)
+      .forEach((c) => {
+        const name = [c.first_name, c.last_name].filter(Boolean).join(" ")
+        out.push({ kind: "contact", id: c.id, label: name, sublabel: c.title ?? undefined })
+      })
+    deals
+      .filter((d) => d.company_id === id)
+      .forEach((d) => {
+        const amt = d.amount != null
+          ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(d.amount)
+          : undefined
+        out.push({ kind: "deal", id: d.id, label: d.title, sublabel: amt })
+      })
+    return out
+  }, [isEdit, id, contacts, deals])
+
   return (
     <div className="-m-4 md:-m-6">
       <Form {...form}>
@@ -345,6 +374,8 @@ export function AccountForm() {
               </Button>
             </div>
           </div>
+
+          <RelatedRecordsBar records={relatedRecords} />
 
           <div className="px-4 py-6 md:px-6">
             {loading ? (

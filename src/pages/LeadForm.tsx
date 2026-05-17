@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -37,7 +37,9 @@ import {
   type LeadInput,
 } from "@/lib/data"
 import { supabase } from "@/lib/supabase"
-import type { Lead, TeamMember } from "@/types/db"
+import type { Company, Contact, Deal, Lead, TeamMember } from "@/types/db"
+import { listCompanies, listContacts, listDeals } from "@/lib/data"
+import { RelatedRecordsBar, type RelatedRecord } from "@/components/RelatedRecordsBar"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/useRole"
 import { useAuth } from "@/contexts/AuthContext"
@@ -210,6 +212,9 @@ export function LeadForm() {
   const [team, setTeam] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [currentLead, setCurrentLead] = useState<Lead | null>(null)
+  const [convertedCompany, setConvertedCompany] = useState<Company | null>(null)
+  const [convertedContact, setConvertedContact] = useState<Contact | null>(null)
+  const [convertedDeal, setConvertedDeal] = useState<Deal | null>(null)
   const [convertOpen, setConvertOpen] = useState(false)
   const [queuedFiles, setQueuedFiles] = useState<File[]>([])
 
@@ -238,6 +243,18 @@ export function LeadForm() {
           }
           setCurrentLead(lead)
           form.reset(fromLead(lead))
+          // If this lead has been converted, resolve the related Account / Contact / Deal
+          if (lead.converted) {
+            const [allCompanies, allContacts, allDeals] = await Promise.all([
+              lead.converted_company_id ? listCompanies() : Promise.resolve([] as Company[]),
+              lead.converted_contact_id ? listContacts() : Promise.resolve([] as Contact[]),
+              lead.converted_deal_id    ? listDeals()    : Promise.resolve([] as Deal[]),
+            ])
+            if (!alive) return
+            setConvertedCompany(allCompanies.find((c) => c.id === lead.converted_company_id) ?? null)
+            setConvertedContact(allContacts.find((c) => c.id === lead.converted_contact_id) ?? null)
+            setConvertedDeal(allDeals.find((d) => d.id === lead.converted_deal_id) ?? null)
+          }
         } else {
           form.reset(emptyDefaults())
         }
@@ -294,6 +311,24 @@ export function LeadForm() {
 
   const submitting = form.formState.isSubmitting
 
+  const relatedRecords = useMemo<RelatedRecord[]>(() => {
+    const out: RelatedRecord[] = []
+    if (convertedCompany) {
+      out.push({ kind: "account", id: convertedCompany.id, label: convertedCompany.name })
+    }
+    if (convertedContact) {
+      const name = [convertedContact.first_name, convertedContact.last_name].filter(Boolean).join(" ")
+      out.push({ kind: "contact", id: convertedContact.id, label: name, sublabel: convertedContact.title ?? undefined })
+    }
+    if (convertedDeal) {
+      const amt = convertedDeal.amount != null
+        ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(convertedDeal.amount)
+        : undefined
+      out.push({ kind: "deal", id: convertedDeal.id, label: convertedDeal.title, sublabel: amt })
+    }
+    return out
+  }, [convertedCompany, convertedContact, convertedDeal])
+
   return (
     <div className="-m-4 md:-m-6">
       <Form {...form}>
@@ -335,6 +370,8 @@ export function LeadForm() {
               </Button>
             </div>
           </div>
+
+          <RelatedRecordsBar records={relatedRecords} />
 
           <div className="px-4 py-6 md:px-6">
             {loading ? (

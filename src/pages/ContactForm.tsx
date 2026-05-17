@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -28,11 +28,13 @@ import {
   createContact,
   listCompanies,
   listContacts,
+  listDeals,
   listTeamMembers,
   updateContact,
   type ContactInput,
 } from "@/lib/data"
-import type { Company, Contact, TeamMember } from "@/types/db"
+import type { Company, Contact, Deal, TeamMember } from "@/types/db"
+import { RelatedRecordsBar, type RelatedRecord } from "@/components/RelatedRecordsBar"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/useRole"
 import { useAuth } from "@/contexts/AuthContext"
@@ -223,6 +225,7 @@ export function ContactForm() {
 
   const [team, setTeam] = useState<TeamMember[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
 
   const form = useForm<FormValues>({
@@ -234,14 +237,16 @@ export function ContactForm() {
     let alive = true
     ;(async () => {
       try {
-        const [t, co, contacts] = await Promise.all([
+        const [t, co, contacts, ds] = await Promise.all([
           listTeamMembers(),
           listCompanies(),
           isEdit ? listContacts() : Promise.resolve([] as Contact[]),
+          isEdit ? listDeals() : Promise.resolve([] as Deal[]),
         ])
         if (!alive) return
         setTeam(t.filter((m) => m.status === "active"))
         setCompanies(co)
+        setDeals(ds)
 
         if (isEdit && id) {
           const contact = contacts.find((c) => c.id === id)
@@ -307,6 +312,25 @@ export function ContactForm() {
   }
 
   const submitting = form.formState.isSubmitting
+  const watchCompanyId = form.watch("company_id")
+
+  const relatedRecords = useMemo<RelatedRecord[]>(() => {
+    if (!isEdit || !id) return []
+    const out: RelatedRecord[] = []
+    if (watchCompanyId && watchCompanyId !== NONE) {
+      const co = companies.find((c) => c.id === watchCompanyId)
+      if (co) out.push({ kind: "account", id: co.id, label: co.name })
+    }
+    deals
+      .filter((d) => d.contact_id === id)
+      .forEach((d) => {
+        const amt = d.amount != null
+          ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(d.amount)
+          : undefined
+        out.push({ kind: "deal", id: d.id, label: d.title, sublabel: amt })
+      })
+    return out
+  }, [isEdit, id, watchCompanyId, companies, deals])
 
   return (
     <div className="-m-4 md:-m-6">
@@ -330,6 +354,8 @@ export function ContactForm() {
               </Button>
             </div>
           </div>
+
+          <RelatedRecordsBar records={relatedRecords} />
 
           <div className="px-4 py-6 md:px-6">
             {loading ? (

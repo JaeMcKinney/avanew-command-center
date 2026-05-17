@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { QuickCreateAccountDialog } from "@/components/QuickCreateAccountDialog"
 import { QuickCreateContactDialog } from "@/components/QuickCreateContactDialog"
+import { RelatedRecordsBar, type RelatedRecord } from "@/components/RelatedRecordsBar"
 import { DocumentsSection } from "@/components/DocumentsSection"
 import { DocumentQueueInput } from "@/components/DocumentQueueInput"
 import {
@@ -318,6 +319,25 @@ export function DealForm() {
 
   const watchAmount = form.watch("amount")
   const watchProbability = form.watch("probability")
+  const watchCompanyId = form.watch("company_id")
+  const watchContactId = form.watch("contact_id")
+
+  const relatedRecords = useMemo<RelatedRecord[]>(() => {
+    if (!isEdit) return []
+    const out: RelatedRecord[] = []
+    if (watchCompanyId && watchCompanyId !== NONE) {
+      const co = companies.find((c) => c.id === watchCompanyId)
+      if (co) out.push({ kind: "account", id: co.id, label: co.name })
+    }
+    if (watchContactId && watchContactId !== NONE) {
+      const ct = contacts.find((c) => c.id === watchContactId)
+      if (ct) {
+        const name = [ct.first_name, ct.last_name].filter(Boolean).join(" ")
+        out.push({ kind: "contact", id: ct.id, label: name, sublabel: ct.title ?? undefined })
+      }
+    }
+    return out
+  }, [isEdit, watchCompanyId, watchContactId, companies, contacts])
 
   const expectedRevenue = useMemo(() => {
     const a = Number(watchAmount)
@@ -436,6 +456,8 @@ export function DealForm() {
               </Button>
             </div>
           </div>
+
+          <RelatedRecordsBar records={relatedRecords} />
 
           <div className="px-4 py-6 md:px-6">
             {loading ? (

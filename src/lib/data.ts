@@ -1389,6 +1389,9 @@ export type LeadInput = {
   description?: string | null
   owner_id?: string | null
   converted?: boolean
+  converted_company_id?: string | null
+  converted_contact_id?: string | null
+  converted_deal_id?: string | null
 }
 
 function seedLeads(): Lead[] {
@@ -1403,6 +1406,7 @@ function seedLeads(): Lead[] {
       rating: "Hot", email_opt_out: false,
       street: null, city: null, state: null, zip_code: null, country: null,
       description: "Interested in enterprise plan.", converted: false,
+      converted_company_id: null, converted_contact_id: null, converted_deal_id: null,
       created_at: t, updated_at: t,
     },
   ]
@@ -1434,6 +1438,7 @@ export async function createLead(input: LeadInput): Promise<Lead> {
       street: input.street ?? null, city: input.city ?? null, state: input.state ?? null,
       zip_code: input.zip_code ?? null, country: input.country ?? null,
       description: input.description ?? null, converted: false,
+      converted_company_id: null, converted_contact_id: null, converted_deal_id: null,
       created_at: nowIso(), updated_at: nowIso(),
     }
     saveMock("leads", [row, ...loadMock<Lead>("leads", seedLeads)])
@@ -1560,6 +1565,9 @@ export async function convertLead(
     country: lead.country,
     description: lead.description,
     converted: true,
+    converted_company_id: company.id,
+    converted_contact_id: contact.id,
+    converted_deal_id: deal ? deal.id : null,
   })
 
   return { company, contact, deal }

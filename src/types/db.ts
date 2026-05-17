@@ -225,6 +225,9 @@ export type Lead = {
   country: string | null
   description: string | null
   converted: boolean
+  converted_company_id: string | null
+  converted_contact_id: string | null
+  converted_deal_id: string | null
   created_at: string
   updated_at: string
 }
