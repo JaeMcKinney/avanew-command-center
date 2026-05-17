@@ -247,10 +247,35 @@ export function Cashflow() {
     }
   }, [unified, bounds, prevBounds])
 
-  const cashPosition = useMemo(
-    () => unified.reduce((s, t) => s + (t.type === "income" ? t.amount : -t.amount), 0),
-    [unified]
-  )
+  // Real bank balance: sum of balance_current from Mercury API (authoritative, set on each sync).
+  // Filtered to the selected account when one is chosen; otherwise all active non-credit accounts.
+  const bankBalance = useMemo(() => {
+    const relevant = accountId !== "all"
+      ? accounts.filter((a) => a.id === accountId)
+      : accounts.filter((a) => a.type !== "credit")
+    return relevant.reduce((s, a) => s + (a.balance_current ?? 0), 0)
+  }, [accounts, accountId])
+
+  const balanceLastUpdated = useMemo(() => {
+    const relevant = accountId !== "all"
+      ? accounts.filter((a) => a.id === accountId)
+      : accounts.filter((a) => a.type !== "credit")
+    return relevant.reduce((latest, a) => {
+      if (!a.last_updated) return latest
+      return !latest || a.last_updated > latest ? a.last_updated : latest
+    }, null as string | null)
+  }, [accounts, accountId])
+
+  function fmtBalanceAge(iso: string | null) {
+    if (!iso) return "as of last sync"
+    const diff = Date.now() - new Date(iso).getTime()
+    const min = Math.floor(diff / 60000)
+    if (min < 1) return "just synced"
+    if (min < 60) return `synced ${min}m ago`
+    const h = Math.floor(min / 60)
+    if (h < 24) return `synced ${h}h ago`
+    return `synced ${Math.floor(h / 24)}d ago`
+  }
 
   const burnRate = useMemo(() => {
     const now = new Date()
@@ -258,7 +283,7 @@ export function Cashflow() {
     return unified.filter((t) => t.type === "expense" && months.some((m) => t.date.startsWith(m))).reduce((s, t) => s + t.amount, 0) / 3
   }, [unified])
 
-  const runway = burnRate > 0 ? cashPosition / burnRate : null
+  const runway = burnRate > 0 ? bankBalance / burnRate : null
 
   const monthlyData = useMemo(() => {
     const now = new Date()
@@ -412,7 +437,7 @@ export function Cashflow() {
         <KPICard label="Revenue" value={loading ? "…" : fmtCurrency(revenue)} trend={pctChange(revenue, prevRevenue)} />
         <KPICard label="Expenses" value={loading ? "…" : fmtCurrency(expenses)} trend={pctChange(expenses, prevExpenses)} inv />
         <KPICard label="Net Cash Flow" value={loading ? "…" : fmtCurrency(netFlow)} sub={netFlow >= 0 ? "Positive" : "Negative"} trend={pctChange(netFlow, prevRevenue - prevExpenses)} />
-        <KPICard label="Cash Position" value={loading ? "…" : fmtCurrency(cashPosition)} sub="All time" />
+        <KPICard label="Current Balance" value={loading ? "…" : fmtCurrency(bankBalance)} sub={fmtBalanceAge(balanceLastUpdated)} />
         <KPICard label="Burn Rate" value={loading ? "…" : fmtCurrency(burnRate)} sub="per month" />
         <KPICard label="Runway" value={loading ? "…" : runway != null ? `${runway.toFixed(1)} mo` : "—"} sub={runway != null ? (runway < 3 ? "⚠ Critical" : runway < 6 ? "Low" : "Healthy") : undefined} />
       </div>
