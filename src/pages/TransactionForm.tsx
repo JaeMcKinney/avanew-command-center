@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
@@ -187,12 +188,10 @@ export function TransactionForm() {
             {/* Recurring */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <input
+                <Checkbox
                   id="recurring"
-                  type="checkbox"
                   checked={isRecurring}
-                  onChange={(e) => setIsRecurring(e.target.checked)}
-                  className="h-4 w-4 rounded border accent-primary"
+                  onCheckedChange={(v) => setIsRecurring(v as boolean)}
                 />
                 <Label htmlFor="recurring" className="cursor-pointer">Recurring transaction</Label>
               </div>

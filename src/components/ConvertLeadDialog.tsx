@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { ArrowRightLeft } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -150,11 +151,10 @@ export function ConvertLeadDialog({ lead, open, onOpenChange, onConverted }: Pro
           </div>
 
           <label className="flex items-start gap-2 rounded-md border p-3 cursor-pointer hover:bg-muted/30 transition-colors">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={createDeal}
-              onChange={(e) => setCreateDeal(e.target.checked)}
-              className="h-4 w-4 mt-0.5 cursor-pointer"
+              onCheckedChange={(v) => setCreateDeal(v as boolean)}
+              className="mt-0.5"
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">Also create a Deal</p>

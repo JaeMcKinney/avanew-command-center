@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -327,11 +328,9 @@ export function ActivityDialog({
                   render={({ field }) => (
                     <FormItem className="flex items-end gap-2">
                       <label className="inline-flex items-center gap-2 text-sm font-medium select-none cursor-pointer pb-2.5">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={field.value ?? false}
-                          onChange={(e) => field.onChange(e.target.checked)}
-                          className="h-4 w-4 rounded border-input accent-primary"
+                          onCheckedChange={field.onChange}
                         />
                         Mark completed
                       </label>

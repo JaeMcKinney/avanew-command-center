@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { ArrowRightLeft, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ConvertLeadDialog } from "@/components/ConvertLeadDialog"
@@ -497,11 +498,9 @@ export function LeadForm() {
                     <FormField control={form.control} name="email_opt_out" render={({ field }) => (
                       <Row label="Email Opt Out">
                         <FormControl>
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={field.value ?? false}
-                            onChange={(e) => field.onChange(e.target.checked)}
-                            className="h-4 w-4 cursor-pointer"
+                            onCheckedChange={field.onChange}
                           />
                         </FormControl>
                         <FormMessage />
