@@ -65,10 +65,13 @@ Deno.serve(async (req: Request) => {
       return json({ error: err }, 502)
     }
 
+    const orgId = conn.organization_id
+
     for (const account of accountsData.accounts) {
       // Upsert bank_account record
       await supabase.from("bank_accounts").upsert({
         bank_connection_id: connection_id,
+        organization_id: orgId,
         external_account_id: account.id,
         name: account.name,
         type: account.kind === "checking" ? "checking" : account.kind === "savings" ? "savings" : "other",
@@ -123,6 +126,7 @@ Deno.serve(async (req: Request) => {
           const { error: upsertErr } = await supabase.from("bank_transactions").upsert({
             bank_connection_id: connection_id,
             bank_account_id: dbAccount.id,
+            organization_id: orgId,
             provider: "mercury",
             external_transaction_id: tx.id,
             date: (tx.postedAt ?? tx.estimatedDeliveryDate ?? new Date().toISOString()).slice(0, 10),
