@@ -44,6 +44,7 @@ import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
   deleteTransaction,
+  listBankAccounts,
   listBankTransactions,
   listPartners,
   listTransactions,
@@ -51,7 +52,7 @@ import {
   updateBankTransaction,
 } from "@/lib/data"
 import { BANK_TRANSACTION_CATEGORIES } from "@/lib/transaction-classifier"
-import type { BankTransaction, BankTransactionCategory, CashflowTransaction, Partner, Vendor } from "@/types/db"
+import type { BankAccount, BankTransaction, BankTransactionCategory, CashflowTransaction, Partner, Vendor } from "@/types/db"
 import { cn } from "@/lib/utils"
 
 type SourceFilter = "all" | "manual" | "bank"
@@ -106,6 +107,7 @@ export function Transactions() {
   const navigate = useNavigate()
   const [manualTxns, setManualTxns] = useState<CashflowTransaction[]>([])
   const [bankTxns, setBankTxns] = useState<BankTransaction[]>([])
+  const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [partners, setPartners] = useState<Partner[]>([])
   const [vendors, setVendors] = useState<Vendor[]>([])
   const [loading, setLoading] = useState(true)
@@ -113,25 +115,43 @@ export function Transactions() {
   const [typeFilter, setTypeFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all")
+  const [accountFilter, setAccountFilter] = useState("all")
   const [sortBy, setSortBy] = useState("date_desc")
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [confirmDelete, setConfirmDelete] = useState<CashflowTransaction | null>(null)
   const [savingCategory, setSavingCategory] = useState<string | null>(null)
 
-  async function refresh() {
+  async function refresh(acctId?: string) {
     setLoading(true)
     try {
-      const [manual, bank, p, v] = await Promise.all([
+      const activeAcct = acctId ?? (accountFilter !== "all" ? accountFilter : undefined)
+      const [manual, bank, accts, p, v] = await Promise.all([
         listTransactions(),
-        listBankTransactions(),
+        listBankTransactions({ accountId: activeAcct }),
+        listBankAccounts(),
         listPartners(),
         listVendors(),
       ])
       setManualTxns(manual)
       setBankTxns(bank)
+      setAccounts(accts)
       setPartners(p)
       setVendors(v)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleAccountChange(value: string) {
+    setAccountFilter(value)
+    setPage(1)
+    setLoading(true)
+    try {
+      const bank = await listBankTransactions({ accountId: value !== "all" ? value : undefined })
+      setBankTxns(bank)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load")
     } finally {
@@ -223,7 +243,15 @@ export function Transactions() {
   }, [manualTxns])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { setPage(1) }, [search, typeFilter, categoryFilter, sourceFilter, sortBy])
+  useEffect(() => { setPage(1) }, [search, typeFilter, categoryFilter, sourceFilter, accountFilter, sortBy])
+
+  const bankAccounts = useMemo(() => accounts.filter((a) => a.type !== "credit"), [accounts])
+  const selectedAccount = useMemo(() => accounts.find((a) => a.id === accountFilter) ?? null, [accounts, accountFilter])
+
+  function accountLabel(a: BankAccount) {
+    // Extract last 4 if present in name (e.g. "Mercury Checking ••9036")
+    return `${a.name}${a.institution_name && !a.name.toLowerCase().includes(a.institution_name.toLowerCase()) ? ` · ${a.institution_name}` : ""}`
+  }
 
   const paged = useMemo(() => {
     const start = (page - 1) * pageSize
@@ -267,7 +295,11 @@ export function Transactions() {
     <div>
       <PageHeader
         title="Transactions"
-        description="All cashflow transactions — manual and bank-synced."
+        description={
+          selectedAccount
+            ? `Showing ${selectedAccount.name} · ${selectedAccount.institution_name ?? "Bank"}`
+            : "All cashflow transactions — manual and bank-synced."
+        }
         actions={
           <div className="flex items-center gap-2">
             {hasBankRows && (
@@ -289,6 +321,22 @@ export function Transactions() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input placeholder="Search description, category…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
+        {accounts.length > 0 && (
+          <Select value={accountFilter} onValueChange={handleAccountChange}>
+            <SelectTrigger className="w-[200px]">
+              <Landmark className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <SelectValue placeholder="All accounts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All accounts</SelectItem>
+              {bankAccounts.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  <span className="truncate">{accountLabel(a)}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Select value={sourceFilter} onValueChange={(v) => { setSourceFilter(v as SourceFilter); setCategoryFilter("all") }}>
           <SelectTrigger className="w-[130px]"><SelectValue placeholder="All sources" /></SelectTrigger>
           <SelectContent>
