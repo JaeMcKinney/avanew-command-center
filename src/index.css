@@ -54,22 +54,22 @@
 .dark {
   --background: #0a0e14;
   --foreground: #f1f3ef;
-  --card: #131920;
+  --card: #1b3223;
   --card-foreground: #f1f3ef;
-  --popover: #131920;
+  --popover: #1b3223;
   --popover-foreground: #f1f3ef;
   --primary: #22e59a;
   --primary-foreground: #04221a;
-  --secondary: #192028;
+  --secondary: #192a1e;
   --secondary-foreground: #f1f3ef;
-  --muted: #192028;
+  --muted: #192a1e;
   --muted-foreground: #8b95a0;
-  --accent: #1e2733;
+  --accent: #243d2c;
   --accent-foreground: #f1f3ef;
   --destructive: #ef6a3b;
   --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.12);
-  --input: rgba(255, 255, 255, 0.14);
+  --border: rgba(255, 255, 255, 0.18);
+  --input: rgba(255, 255, 255, 0.38);
   --ring: #22e59a;
 
   --chart-1: #22e59a;
