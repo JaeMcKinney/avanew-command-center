@@ -44,12 +44,12 @@ export function RelatedRecordsBar({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 border-b bg-muted/30 px-4 py-2 md:px-6",
+        "flex flex-wrap items-center gap-2 border-b bg-muted px-4 py-2.5 md:px-6",
         className
       )}
     >
       <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground mr-1">
+      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mr-1">
         Related
       </span>
       {records.map((r) => {
