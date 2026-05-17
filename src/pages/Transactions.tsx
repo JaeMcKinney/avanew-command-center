@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Select,
   SelectContent,
@@ -56,6 +57,7 @@ import type { BankAccount, BankTransaction, BankTransactionCategory, CashflowTra
 import { cn } from "@/lib/utils"
 
 type SourceFilter = "all" | "manual" | "bank"
+type TxPeriod = "all" | "mtd" | "qtd" | "ytd" | "custom"
 
 interface UnifiedRow {
   id: string
@@ -117,6 +119,9 @@ export function Transactions() {
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all")
   const [accountFilter, setAccountFilter] = useState("all")
   const [sortBy, setSortBy] = useState("date_desc")
+  const [period, setPeriod] = useState<TxPeriod>("all")
+  const [customFrom, setCustomFrom] = useState("")
+  const [customTo, setCustomTo] = useState("")
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [confirmDelete, setConfirmDelete] = useState<CashflowTransaction | null>(null)
@@ -164,6 +169,17 @@ export function Transactions() {
   const partnerById = useMemo(() => new Map(partners.map((p) => [p.id, p])), [partners])
   const vendorById = useMemo(() => new Map(vendors.map((v) => [v.id, v])), [vendors])
 
+  const { periodStart, periodEnd } = useMemo(() => {
+    const now = new Date()
+    const y = now.getFullYear(), m = now.getMonth()
+    const today = now.toISOString().slice(0, 10)
+    if (period === "mtd") return { periodStart: `${y}-${String(m + 1).padStart(2, "0")}-01`, periodEnd: today }
+    if (period === "qtd") return { periodStart: new Date(y, Math.floor(m / 3) * 3, 1).toISOString().slice(0, 10), periodEnd: today }
+    if (period === "ytd") return { periodStart: `${y}-01-01`, periodEnd: today }
+    if (period === "custom") return { periodStart: customFrom || null, periodEnd: customTo || null }
+    return { periodStart: null, periodEnd: null }
+  }, [period, customFrom, customTo])
+
   const unified = useMemo<UnifiedRow[]>(() => {
     const fromManual: UnifiedRow[] = manualTxns.map((t) => ({
       id: t.id,
@@ -208,6 +224,8 @@ export function Transactions() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     let result = unified.filter((t) => {
+      if (periodStart && t.date < periodStart) return false
+      if (periodEnd && t.date > periodEnd) return false
       if (sourceFilter !== "all" && t.source !== sourceFilter) return false
       if (typeFilter !== "all" && t.type !== typeFilter) return false
       if (categoryFilter !== "all" && t.category !== categoryFilter) return false
@@ -243,7 +261,7 @@ export function Transactions() {
   }, [manualTxns])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { setPage(1) }, [search, typeFilter, categoryFilter, sourceFilter, accountFilter, sortBy])
+  useEffect(() => { setPage(1) }, [search, typeFilter, categoryFilter, sourceFilter, accountFilter, sortBy, period, customFrom, customTo])
 
   const bankAccounts = useMemo(() => accounts.filter((a) => a.type !== "credit"), [accounts])
   const selectedAccount = useMemo(() => accounts.find((a) => a.id === accountFilter) ?? null, [accounts, accountFilter])
@@ -315,6 +333,35 @@ export function Transactions() {
           </div>
         }
       />
+
+      <div className="flex items-center gap-3 flex-wrap mb-3">
+        <Tabs value={period} onValueChange={(v) => { setPeriod(v as TxPeriod); setPage(1) }}>
+          <TabsList>
+            <TabsTrigger value="all">All time</TabsTrigger>
+            <TabsTrigger value="mtd">MTD</TabsTrigger>
+            <TabsTrigger value="qtd">QTD</TabsTrigger>
+            <TabsTrigger value="ytd">YTD</TabsTrigger>
+            <TabsTrigger value="custom">Custom</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {period === "custom" && (
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              value={customFrom}
+              onChange={(e) => { setCustomFrom(e.target.value); setPage(1) }}
+              className="h-8 w-[140px] text-xs"
+            />
+            <span className="text-xs text-muted-foreground">to</span>
+            <Input
+              type="date"
+              value={customTo}
+              onChange={(e) => { setCustomTo(e.target.value); setPage(1) }}
+              className="h-8 w-[140px] text-xs"
+            />
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="relative flex-1 min-w-[200px] max-w-sm">

@@ -31,6 +31,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -53,7 +54,7 @@ import { listTransactions, listBankTransactions, listBankAccounts } from "@/lib/
 import type { BankAccount, CashflowTransaction, BankTransaction } from "@/types/db"
 import { cn } from "@/lib/utils"
 
-type Period = "mtd" | "qtd" | "ytd"
+type Period = "mtd" | "qtd" | "ytd" | "custom"
 
 interface UnifiedTx {
   id: string
@@ -87,7 +88,8 @@ function monthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
 }
 
-function periodBounds(period: Period) {
+function periodBounds(period: Period, customFrom?: string, customTo?: string) {
+  if (period === "custom") return { start: customFrom ?? "", end: customTo ?? "" }
   const now = new Date()
   const y = now.getFullYear(), m = now.getMonth()
   const today = now.toISOString().slice(0, 10)
@@ -99,7 +101,8 @@ function periodBounds(period: Period) {
   return { start: `${y}-01-01`, end: today }
 }
 
-function prevPeriodBounds(period: Period) {
+function prevPeriodBounds(period: Period): { start: string; end: string } | null {
+  if (period === "custom") return null  // no comparison period for custom ranges
   const now = new Date()
   const y = now.getFullYear(), m = now.getMonth()
   if (period === "mtd") {
@@ -180,6 +183,8 @@ export function Cashflow() {
   const [accountId, setAccountId] = useState("all")
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState<Period>("mtd")
+  const [customFrom, setCustomFrom] = useState("")
+  const [customTo, setCustomTo] = useState("")
 
   async function loadData(acctId: string) {
     setLoading(true)
@@ -225,12 +230,12 @@ export function Cashflow() {
     return [...fromManual, ...fromBank].sort((a, b) => b.date.localeCompare(a.date))
   }, [manualTxns, bankTxns])
 
-  const bounds = useMemo(() => periodBounds(period), [period])
+  const bounds = useMemo(() => periodBounds(period, customFrom, customTo), [period, customFrom, customTo])
   const prevBounds = useMemo(() => prevPeriodBounds(period), [period])
 
   const { revenue, expenses, netFlow, prevRevenue, prevExpenses } = useMemo(() => {
     const cur = unified.filter((t) => inPeriod(t, bounds))
-    const prev = unified.filter((t) => inPeriod(t, prevBounds))
+    const prev = prevBounds ? unified.filter((t) => inPeriod(t, prevBounds)) : []
     const sum = (arr: UnifiedTx[], type: "income" | "expense") =>
       arr.filter((t) => t.type === type).reduce((s, t) => s + t.amount, 0)
     return {
@@ -315,13 +320,13 @@ export function Cashflow() {
     }
 
     return msgs
-  }, [loading, unified, netFlow, expenses, prevExpenses, period, runway, burnRate, expenseByCategory, revenue])
+  }, [loading, unified, netFlow, expenses, prevExpenses, period, customFrom, customTo, runway, burnRate, expenseByCategory, revenue])
 
   const recentTxns = useMemo(() => unified.slice(0, 8), [unified])
 
   const tooltipStyle = { background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }
-  const periodLabels: Record<Period, string> = { mtd: "Month to Date", qtd: "Quarter to Date", ytd: "Year to Date" }
-  const periodShort: Record<Period, string> = { mtd: "vs last month", qtd: "vs last quarter", ytd: "vs last year" }
+  const periodLabels: Record<Period, string> = { mtd: "Month to Date", qtd: "Quarter to Date", ytd: "Year to Date", custom: "Custom Range" }
+  const periodShort: Record<Period, string> = { mtd: "vs last month", qtd: "vs last quarter", ytd: "vs last year", custom: "" }
 
   return (
     <div className="space-y-5">
@@ -374,15 +379,33 @@ export function Cashflow() {
         </div>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
           <TabsList>
             <TabsTrigger value="mtd">MTD</TabsTrigger>
             <TabsTrigger value="qtd">QTD</TabsTrigger>
             <TabsTrigger value="ytd">YTD</TabsTrigger>
+            <TabsTrigger value="custom">Custom</TabsTrigger>
           </TabsList>
         </Tabs>
-        <span className="text-xs text-muted-foreground">{periodShort[period]}</span>
+        {period !== "custom" && <span className="text-xs text-muted-foreground">{periodShort[period]}</span>}
+        {period === "custom" && (
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="h-8 w-[140px] text-xs"
+            />
+            <span className="text-xs text-muted-foreground">to</span>
+            <Input
+              type="date"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="h-8 w-[140px] text-xs"
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

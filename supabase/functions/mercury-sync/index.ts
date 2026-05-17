@@ -67,6 +67,12 @@ Deno.serve(async (req: Request) => {
 
     const orgId = conn.organization_id
 
+    // Build a set of Mercury account names for this org so we can detect
+    // internal credits (e.g. deposit account ••3817 → operational account ••9036)
+    // and classify them as Revenue instead of Transfer.
+    const ownAccountNames = new Set(accountsData.accounts.map((a) => a.name.toLowerCase()))
+    const ownAccountIds = new Set(accountsData.accounts.map((a) => a.id))
+
     for (const account of accountsData.accounts) {
       // Check if this account already exists so we can preserve the user's is_active preference
       const { data: existingAcct } = await supabase
@@ -133,12 +139,24 @@ Deno.serve(async (req: Request) => {
 
         for (const tx of txData.transactions) {
           const amount = tx.kind === "credit" ? Math.abs(tx.amount) : -Math.abs(tx.amount)
-          const category = classifyTransaction({
-            description: tx.note ?? tx.counterpartyName ?? tx.kind,
-            merchant_name: tx.counterpartyName,
-            raw_category: tx.externalMemo,
-            amount,
-          })
+
+          // Detect internal credits: a credit whose counterparty is one of our own
+          // Mercury accounts (e.g. deposit account ••3817 → operational account ••9036).
+          // These represent real revenue deposits, not generic inter-bank transfers.
+          const isInternalCredit =
+            tx.kind === "credit" &&
+            tx.counterpartyName !== null &&
+            (ownAccountNames.has(tx.counterpartyName.toLowerCase()) ||
+              ownAccountIds.has(tx.counterpartyName))
+
+          const category = isInternalCredit
+            ? "Revenue"
+            : classifyTransaction({
+                description: tx.note ?? tx.counterpartyName ?? tx.kind,
+                merchant_name: tx.counterpartyName,
+                raw_category: tx.externalMemo,
+                amount,
+              })
 
           const { error: upsertErr } = await supabase.from("bank_transactions").upsert({
             bank_connection_id: connection_id,
@@ -154,7 +172,8 @@ Deno.serve(async (req: Request) => {
             pending: tx.status !== "sent" && tx.status !== "failed",
             merchant_name: tx.counterpartyName ?? null,
             raw_category: tx.externalMemo ?? null,
-            is_excluded: category === "Transfer",
+            // Exclude generic transfers but never internal credits (deposit → operational)
+            is_excluded: !isInternalCredit && category === "Transfer",
           }, { onConflict: "bank_connection_id,external_transaction_id", ignoreDuplicates: false })
 
           if (upsertErr) {
