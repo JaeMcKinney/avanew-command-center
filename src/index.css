@@ -32,7 +32,7 @@
   --destructive: #c2410c;
   --destructive-foreground: #ffffff;
   --border: #d5d4cf;
-  --input: #d5d4cf;
+  --input: #8d9198;   /* was #d5d4cf — darker so form borders are clearly visible on light bg */
   --ring: #16a574;
 
   --chart-1: #22e59a;

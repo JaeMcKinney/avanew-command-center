@@ -253,7 +253,8 @@ export function Cashflow() {
     const relevant = accountId !== "all"
       ? accounts.filter((a) => a.id === accountId)
       : accounts.filter((a) => a.type !== "credit")
-    return relevant.reduce((s, a) => s + (a.balance_current ?? 0), 0)
+    // balance_available = settled funds (excludes holds/pending); preferred over balance_current
+    return relevant.reduce((s, a) => s + (a.balance_available ?? a.balance_current ?? 0), 0)
   }, [accounts, accountId])
 
   const balanceLastUpdated = useMemo(() => {
@@ -437,7 +438,7 @@ export function Cashflow() {
         <KPICard label="Revenue" value={loading ? "…" : fmtCurrency(revenue)} trend={pctChange(revenue, prevRevenue)} />
         <KPICard label="Expenses" value={loading ? "…" : fmtCurrency(expenses)} trend={pctChange(expenses, prevExpenses)} inv />
         <KPICard label="Net Cash Flow" value={loading ? "…" : fmtCurrency(netFlow)} sub={netFlow >= 0 ? "Positive" : "Negative"} trend={pctChange(netFlow, prevRevenue - prevExpenses)} />
-        <KPICard label="Current Balance" value={loading ? "…" : fmtCurrency(bankBalance)} sub={fmtBalanceAge(balanceLastUpdated)} />
+        <KPICard label="Available Balance" value={loading ? "…" : fmtCurrency(bankBalance)} sub={fmtBalanceAge(balanceLastUpdated)} />
         <KPICard label="Burn Rate" value={loading ? "…" : fmtCurrency(burnRate)} sub="per month" />
         <KPICard label="Runway" value={loading ? "…" : runway != null ? `${runway.toFixed(1)} mo` : "—"} sub={runway != null ? (runway < 3 ? "⚠ Critical" : runway < 6 ? "Low" : "Healthy") : undefined} />
       </div>
