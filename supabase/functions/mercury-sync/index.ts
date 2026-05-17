@@ -68,11 +68,15 @@ Deno.serve(async (req: Request) => {
     const orgId = conn.organization_id
 
     for (const account of accountsData.accounts) {
-      // Upsert bank_account record
-      await supabase.from("bank_accounts").upsert({
-        bank_connection_id: connection_id,
-        organization_id: orgId,
-        external_account_id: account.id,
+      // Check if this account already exists so we can preserve the user's is_active preference
+      const { data: existingAcct } = await supabase
+        .from("bank_accounts")
+        .select("id")
+        .eq("bank_connection_id", connection_id)
+        .eq("external_account_id", account.id)
+        .maybeSingle()
+
+      const accountFields = {
         name: account.name,
         type: account.kind === "checking" ? "checking" : account.kind === "savings" ? "savings" : "other",
         subtype: account.kind,
@@ -80,9 +84,22 @@ Deno.serve(async (req: Request) => {
         balance_available: account.availableBalance,
         currency: account.currencyCode ?? "USD",
         institution_name: "Mercury",
-        is_active: account.status === "active",
         last_updated: new Date().toISOString(),
-      }, { onConflict: "bank_connection_id,external_account_id" })
+      }
+
+      if (existingAcct) {
+        // Update balance/name only — never touch is_active so user checkbox prefs are preserved
+        await supabase.from("bank_accounts").update(accountFields).eq("id", existingAcct.id)
+      } else {
+        // New account — insert with is_active = true by default
+        await supabase.from("bank_accounts").insert({
+          bank_connection_id: connection_id,
+          organization_id: orgId,
+          external_account_id: account.id,
+          is_active: true,
+          ...accountFields,
+        })
+      }
 
       // Determine account ID in our DB
       const { data: dbAccount } = await supabase

@@ -42,8 +42,15 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PageHeader } from "@/components/PageHeader"
-import { listTransactions, listBankTransactions } from "@/lib/data"
-import type { CashflowTransaction, BankTransaction } from "@/types/db"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { listTransactions, listBankTransactions, listBankAccounts } from "@/lib/data"
+import type { BankAccount, CashflowTransaction, BankTransaction } from "@/types/db"
 import { cn } from "@/lib/utils"
 
 type Period = "mtd" | "qtd" | "ytd"
@@ -169,22 +176,36 @@ export function Cashflow() {
   const navigate = useNavigate()
   const [manualTxns, setManualTxns] = useState<CashflowTransaction[]>([])
   const [bankTxns, setBankTxns] = useState<BankTransaction[]>([])
+  const [accounts, setAccounts] = useState<BankAccount[]>([])
+  const [accountId, setAccountId] = useState("all")
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState<Period>("mtd")
 
-  useEffect(() => {
-    let alive = true
-    Promise.all([listTransactions(), listBankTransactions()])
-      .then(([manual, bank]) => {
-        if (alive) {
-          setManualTxns(manual)
-          setBankTxns(bank)
-        }
-      })
-      .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to load"))
-      .finally(() => { if (alive) setLoading(false) })
-    return () => { alive = false }
-  }, [])
+  async function loadData(acctId: string) {
+    setLoading(true)
+    try {
+      const [manual, bank, accts] = await Promise.all([
+        listTransactions(),
+        listBankTransactions({ accountId: acctId !== "all" ? acctId : undefined }),
+        listBankAccounts(),
+      ])
+      setManualTxns(manual)
+      setBankTxns(bank)
+      setAccounts(accts)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { void loadData("all") }, [])
+
+  async function handleAccountChange(value: string) {
+    setAccountId(value)
+    const bank = await listBankTransactions({ accountId: value !== "all" ? value : undefined })
+    setBankTxns(bank)
+  }
 
   const unified = useMemo<UnifiedTx[]>(() => {
     const fromManual: UnifiedTx[] = manualTxns.map((t) => ({
@@ -307,14 +328,26 @@ export function Cashflow() {
     <div className="space-y-5">
       <PageHeader
         title="Cashflow"
-        description="Real-time financial overview — owner restricted."
+        description={
+          accounts.length > 0 && accountId !== "all"
+            ? `Showing ${accounts.find((a) => a.id === accountId)?.name ?? "selected account"}`
+            : "Real-time financial overview — owner restricted."
+        }
         actions={
           <div className="flex items-center gap-2">
-            {hasBankData && (
-              <Badge variant="secondary" className="gap-1.5 text-xs font-normal">
-                <Landmark className="h-3 w-3" />
-                Bank synced
-              </Badge>
+            {accounts.length > 0 && (
+              <Select value={accountId} onValueChange={handleAccountChange}>
+                <SelectTrigger className="w-[200px] h-8 text-xs">
+                  <Landmark className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <SelectValue placeholder="All accounts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All accounts</SelectItem>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id} className="text-xs">{a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
             <Button variant="outline" size="sm" onClick={() => navigate("/cashflow/bank-connections")}>
               <Landmark className="h-4 w-4" />
