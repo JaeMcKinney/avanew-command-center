@@ -148,6 +148,10 @@ export type Company = {
   shipping_state: string | null
   shipping_zip: string | null
   shipping_country: string | null
+  linkedin: string | null
+  instagram: string | null
+  twitter: string | null
+  youtube: string | null
   description: string | null
   created_at: string
   updated_at: string
@@ -168,7 +172,10 @@ export type Contact = {
   fax: string | null
   website: string | null
   secondary_email: string | null
+  linkedin: string | null
   twitter: string | null
+  instagram: string | null
+  youtube: string | null
   skype_id: string | null
   email_opt_out: boolean
   date_of_birth: string | null

@@ -189,7 +189,9 @@ const COMPANY_EXTRA_NULLS = {
   billing_street: null, billing_city: null, billing_state: null,
   billing_zip: null, billing_country: null,
   shipping_street: null, shipping_city: null, shipping_state: null,
-  shipping_zip: null, shipping_country: null, description: null,
+  shipping_zip: null, shipping_country: null,
+  linkedin: null, instagram: null, twitter: null, youtube: null,
+  description: null,
 }
 
 function seedCompanies(): Company[] {
@@ -202,7 +204,8 @@ function seedCompanies(): Company[] {
 }
 
 const CONTACT_EXTRA_NULLS = {
-  mobile: null, fax: null, website: null, secondary_email: null, twitter: null,
+  mobile: null, fax: null, website: null, secondary_email: null,
+  linkedin: null, twitter: null, instagram: null, youtube: null,
   skype_id: null, email_opt_out: false as boolean, date_of_birth: null,
   assistant: null, asst_phone: null, department: null, lead_source: null,
   description: null,
@@ -401,6 +404,10 @@ export type CompanyInput = {
   shipping_state?: string | null
   shipping_zip?: string | null
   shipping_country?: string | null
+  linkedin?: string | null
+  instagram?: string | null
+  twitter?: string | null
+  youtube?: string | null
   description?: string | null
 }
 
@@ -453,6 +460,10 @@ export async function createCompany(input: CompanyInput): Promise<Company> {
       shipping_state: input.shipping_state ?? null,
       shipping_zip: input.shipping_zip ?? null,
       shipping_country: input.shipping_country ?? null,
+      linkedin: input.linkedin ?? null,
+      instagram: input.instagram ?? null,
+      twitter: input.twitter ?? null,
+      youtube: input.youtube ?? null,
       description: input.description ?? null,
       created_at: nowIso(),
       updated_at: nowIso(),
@@ -506,6 +517,10 @@ export async function updateCompany(
       shipping_state: input.shipping_state ?? null,
       shipping_zip: input.shipping_zip ?? null,
       shipping_country: input.shipping_country ?? null,
+      linkedin: input.linkedin ?? null,
+      instagram: input.instagram ?? null,
+      twitter: input.twitter ?? null,
+      youtube: input.youtube ?? null,
       description: input.description ?? null,
       updated_at: nowIso(),
     }
@@ -560,7 +575,10 @@ export type ContactInput = {
   fax?: string | null
   website?: string | null
   secondary_email?: string | null
+  linkedin?: string | null
   twitter?: string | null
+  instagram?: string | null
+  youtube?: string | null
   skype_id?: string | null
   email_opt_out?: boolean
   date_of_birth?: string | null
@@ -618,7 +636,10 @@ export async function createContact(input: ContactInput): Promise<Contact> {
       fax: input.fax ?? null,
       website: input.website ?? null,
       secondary_email: input.secondary_email ?? null,
+      linkedin: input.linkedin ?? null,
       twitter: input.twitter ?? null,
+      instagram: input.instagram ?? null,
+      youtube: input.youtube ?? null,
       skype_id: input.skype_id ?? null,
       email_opt_out: input.email_opt_out ?? false,
       date_of_birth: input.date_of_birth ?? null,

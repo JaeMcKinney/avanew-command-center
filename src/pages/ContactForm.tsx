@@ -63,7 +63,10 @@ const schema = z.object({
   email_opt_out: z.boolean().optional(),
   skype_id: z.string().optional(),
   secondary_email: z.union([z.string().email(), z.literal("")]).optional(),
+  linkedin: z.string().optional(),
   twitter: z.string().optional(),
+  instagram: z.string().optional(),
+  youtube: z.string().optional(),
   fax: z.string().optional(),
   website: z.string().optional(),
   mailing_street: z.string().optional(),
@@ -86,7 +89,8 @@ function emptyDefaults(): FormValues {
     owner_id: NONE, first_name: "", last_name: "", company_id: NONE,
     title: "", phone: "", mobile: "", department: "", lead_source: NONE,
     email: "", assistant: "", date_of_birth: "", asst_phone: "",
-    email_opt_out: false, skype_id: "", secondary_email: "", twitter: "",
+    email_opt_out: false, skype_id: "", secondary_email: "",
+    linkedin: "", twitter: "", instagram: "", youtube: "",
     fax: "", website: "", mailing_street: "", mailing_city: "",
     mailing_state: "", mailing_zip: "", mailing_country: "",
     other_street: "", other_city: "", other_state: "", other_zip: "",
@@ -112,7 +116,10 @@ function fromContact(c: Contact): FormValues {
     email_opt_out: c.email_opt_out,
     skype_id: c.skype_id ?? "",
     secondary_email: c.secondary_email ?? "",
+    linkedin: c.linkedin ?? "",
     twitter: c.twitter ?? "",
+    instagram: c.instagram ?? "",
+    youtube: c.youtube ?? "",
     fax: c.fax ?? "",
     website: c.website ?? "",
     mailing_street: c.mailing_street ?? "",
@@ -152,7 +159,10 @@ function toInput(v: FormValues): ContactInput {
     email_opt_out: v.email_opt_out ?? false,
     skype_id: v.skype_id?.trim() || null,
     secondary_email: v.secondary_email?.trim() || null,
+    linkedin: v.linkedin?.trim() || null,
     twitter: v.twitter?.trim() || null,
+    instagram: v.instagram?.trim() || null,
+    youtube: v.youtube?.trim() || null,
     fax: v.fax?.trim() || null,
     website: v.website?.trim() || null,
     mailing_street: v.mailing_street?.trim() || null,
@@ -429,9 +439,30 @@ export function ContactForm() {
                       </Row>
                     )} />
 
+                    <FormField control={form.control} name="linkedin" render={({ field }) => (
+                      <Row label="LinkedIn">
+                        <FormControl><Input type="url" placeholder="https://www.linkedin.com/in/..." {...field} /></FormControl>
+                        <FormMessage />
+                      </Row>
+                    )} />
+
                     <FormField control={form.control} name="twitter" render={({ field }) => (
-                      <Row label="Twitter">
-                        <FormControl><Input placeholder="@handle" {...field} /></FormControl>
+                      <Row label="Twitter / X">
+                        <FormControl><Input placeholder="@handle or URL" {...field} /></FormControl>
+                        <FormMessage />
+                      </Row>
+                    )} />
+
+                    <FormField control={form.control} name="instagram" render={({ field }) => (
+                      <Row label="Instagram">
+                        <FormControl><Input placeholder="@handle or URL" {...field} /></FormControl>
+                        <FormMessage />
+                      </Row>
+                    )} />
+
+                    <FormField control={form.control} name="youtube" render={({ field }) => (
+                      <Row label="YouTube">
+                        <FormControl><Input type="url" placeholder="https://youtube.com/..." {...field} /></FormControl>
                         <FormMessage />
                       </Row>
                     )} />

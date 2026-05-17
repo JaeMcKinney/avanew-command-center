@@ -85,6 +85,10 @@ const schema = z.object({
   shipping_state: z.string().optional(),
   shipping_zip: z.string().optional(),
   shipping_country: z.string().optional(),
+  linkedin: z.string().optional(),
+  instagram: z.string().optional(),
+  twitter: z.string().optional(),
+  youtube: z.string().optional(),
   description: z.string().optional(),
 })
 
@@ -98,7 +102,9 @@ function emptyDefaults(): FormValues {
     ticker_symbol: "", ownership: NONE, employees: "", sic_code: "",
     billing_street: "", billing_city: "", billing_state: "", billing_zip: "",
     billing_country: "", shipping_street: "", shipping_city: "",
-    shipping_state: "", shipping_zip: "", shipping_country: "", description: "",
+    shipping_state: "", shipping_zip: "", shipping_country: "",
+    linkedin: "", instagram: "", twitter: "", youtube: "",
+    description: "",
   }
 }
 
@@ -130,6 +136,10 @@ function fromCompany(c: Company): FormValues {
     shipping_state: c.shipping_state ?? "",
     shipping_zip: c.shipping_zip ?? "",
     shipping_country: c.shipping_country ?? "",
+    linkedin: c.linkedin ?? "",
+    instagram: c.instagram ?? "",
+    twitter: c.twitter ?? "",
+    youtube: c.youtube ?? "",
     description: c.description ?? "",
   }
 }
@@ -170,6 +180,10 @@ function toInput(v: FormValues): CompanyInput {
     shipping_state: v.shipping_state?.trim() || null,
     shipping_zip: v.shipping_zip?.trim() || null,
     shipping_country: v.shipping_country?.trim() || null,
+    linkedin: v.linkedin?.trim() || null,
+    instagram: v.instagram?.trim() || null,
+    twitter: v.twitter?.trim() || null,
+    youtube: v.youtube?.trim() || null,
     description: v.description?.trim() || null,
   }
 }
@@ -412,6 +426,34 @@ export function AccountForm() {
                     <FormField control={form.control} name="website" render={({ field }) => (
                       <Row label="Website">
                         <FormControl><Input type="url" placeholder="https://" {...field} /></FormControl>
+                        <FormMessage />
+                      </Row>
+                    )} />
+
+                    <FormField control={form.control} name="linkedin" render={({ field }) => (
+                      <Row label="LinkedIn">
+                        <FormControl><Input type="url" placeholder="https://www.linkedin.com/company/..." {...field} /></FormControl>
+                        <FormMessage />
+                      </Row>
+                    )} />
+
+                    <FormField control={form.control} name="instagram" render={({ field }) => (
+                      <Row label="Instagram">
+                        <FormControl><Input placeholder="@handle or URL" {...field} /></FormControl>
+                        <FormMessage />
+                      </Row>
+                    )} />
+
+                    <FormField control={form.control} name="twitter" render={({ field }) => (
+                      <Row label="Twitter / X">
+                        <FormControl><Input placeholder="@handle or URL" {...field} /></FormControl>
+                        <FormMessage />
+                      </Row>
+                    )} />
+
+                    <FormField control={form.control} name="youtube" render={({ field }) => (
+                      <Row label="YouTube">
+                        <FormControl><Input type="url" placeholder="https://youtube.com/..." {...field} /></FormControl>
                         <FormMessage />
                       </Row>
                     )} />
