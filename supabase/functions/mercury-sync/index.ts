@@ -138,13 +138,18 @@ Deno.serve(async (req: Request) => {
         if (!txData.transactions?.length) break
 
         for (const tx of txData.transactions) {
-          const amount = tx.kind === "credit" ? Math.abs(tx.amount) : -Math.abs(tx.amount)
+          // Mercury uses SIGNED amounts: positive = inflow (credit to account),
+          // negative = outflow (debit). The `kind` field is a transaction TYPE
+          // (e.g. "bookTransfer", "externalTransfer", "checkDeposit") — it is NOT
+          // a simple "credit"/"debit" direction indicator, so never use it for sign.
+          const amount = tx.amount
 
-          // Detect internal credits: a credit whose counterparty is one of our own
-          // Mercury accounts (e.g. deposit account ••3817 → operational account ••9036).
-          // These represent real revenue deposits, not generic inter-bank transfers.
+          // Detect internal credits: a POSITIVE amount whose counterparty is one of
+          // our own Mercury accounts (e.g. deposit account ••3817 → operational ••9036).
+          // Mercury shows internal transfers as the same entry in both accounts, both
+          // with a positive amount for the receiver. We classify these as Revenue.
           const isInternalCredit =
-            tx.kind === "credit" &&
+            amount > 0 &&
             tx.counterpartyName !== null &&
             (ownAccountNames.has(tx.counterpartyName.toLowerCase()) ||
               ownAccountIds.has(tx.counterpartyName))
@@ -241,6 +246,8 @@ async function markConnectionError(supabase: any, id: string, msg: string) {
 // Inline classifier (edge functions can't import from src/)
 function classifyTransaction(input: { description: string; merchant_name?: string | null; raw_category?: string | null; amount: number }): string {
   const combined = `${input.description} ${input.merchant_name ?? ""} ${input.raw_category ?? ""}`.toLowerCase()
+  // Mercury-to-Mercury internal transfers (e.g. "Mercury Checking ••5673")
+  if (/mercury (checking|savings)/i.test(combined)) return "Transfer"
   if (/transfer|wire|ach(?! transfer)|zelle|internal/i.test(combined)) return "Transfer"
   if (/payroll|gusto|rippling|adp|paychex|salary|wages/i.test(combined)) return "Payroll"
   if (/irs|state tax|federal tax|estimated tax|quarterly tax|sales tax/i.test(combined)) return "Tax Payment"
@@ -270,8 +277,11 @@ interface MercuryAccount {
 
 interface MercuryTransaction {
   id: string
+  // Signed: positive = inflow (credit to account), negative = outflow (debit)
   amount: number
-  kind: "credit" | "debit"
+  // Transaction TYPE, not direction: "bookTransfer", "externalTransfer",
+  // "checkDeposit", "creditCard", "fee", etc.  Do not use for sign logic.
+  kind: string
   status: "pending" | "sent" | "failed" | "cancelled"
   note: string | null
   counterpartyName: string | null
