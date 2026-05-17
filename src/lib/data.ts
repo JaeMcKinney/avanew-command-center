@@ -2216,8 +2216,8 @@ export async function listBankAccounts(connectionId?: string): Promise<BankAccou
     const rows = loadMock<BankAccount>("bank_accounts", seedBankAccounts)
     return connectionId ? rows.filter((r) => r.bank_connection_id === connectionId) : rows
   }
-  const q = supabase.from("bank_accounts").select("*").eq("organization_id", requireOrg()).order("created_at", { ascending: true })
-  if (connectionId) q.eq("bank_connection_id", connectionId)
+  let q = supabase.from("bank_accounts").select("*").eq("organization_id", requireOrg()).eq("is_active", true).order("created_at", { ascending: true })
+  if (connectionId) q = q.eq("bank_connection_id", connectionId)
   const { data, error } = await q
   if (error) throw error
   return data ?? []
@@ -2240,7 +2240,16 @@ export async function listBankTransactions(opts?: { accountId?: string; pending?
     if (opts?.pending !== undefined) rows = rows.filter((r) => r.pending === opts.pending)
     return rows.sort((a, b) => b.date.localeCompare(a.date))
   }
-  let q = supabase.from("bank_transactions").select("*").eq("organization_id", requireOrg()).order("date", { ascending: false })
+  // Scope to active accounts only so inactive/hidden accounts never appear
+  const { data: activeAccounts } = await supabase
+    .from("bank_accounts")
+    .select("id")
+    .eq("organization_id", requireOrg())
+    .eq("is_active", true)
+  const activeIds = (activeAccounts ?? []).map((a) => a.id)
+  if (activeIds.length === 0) return []
+
+  let q = supabase.from("bank_transactions").select("*").eq("organization_id", requireOrg()).in("bank_account_id", activeIds).order("date", { ascending: false })
   if (opts?.accountId) q = q.eq("bank_account_id", opts.accountId)
   if (opts?.pending !== undefined) q = q.eq("pending", opts.pending)
   const { data, error } = await q
