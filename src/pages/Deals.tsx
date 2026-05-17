@@ -762,7 +762,7 @@ function DealCardSurface({
   return (
     <div
       className={cn(
-        "rounded-md bg-card border p-3 shadow-sm cursor-grab active:cursor-grabbing",
+        "rounded-md bg-card dark:bg-[#1b3223] border p-3 shadow-sm cursor-grab active:cursor-grabbing",
         dragging && "shadow-xl ring-2 ring-primary"
       )}
     >

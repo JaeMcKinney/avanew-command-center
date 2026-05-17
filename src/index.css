@@ -54,13 +54,13 @@
 .dark {
   --background: #0a0e14;
   --foreground: #f1f3ef;
-  --card: #1b3223;
+  --card: #131920;
   --card-foreground: #f1f3ef;
   --popover: #1b3223;
   --popover-foreground: #f1f3ef;
   --primary: #22e59a;
   --primary-foreground: #04221a;
-  --secondary: #192a1e;
+  --secondary: #192028;
   --secondary-foreground: #f1f3ef;
   --muted: #192a1e;
   --muted-foreground: #8b95a0;
