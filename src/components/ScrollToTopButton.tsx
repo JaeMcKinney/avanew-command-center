@@ -3,30 +3,32 @@ import { ArrowUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 /**
- * Fixed scroll-to-top FAB. Pass the actual scroll container element
- * (set via callback ref in AppLayout so the element is available as state
- * and the effect re-runs with the real element instead of null).
+ * Fixed scroll-to-top FAB. Listens to the window scroll (the actual
+ * scroll container on this app — AppLayout's outer div uses min-h-screen,
+ * so the body scrolls, not <main>). Hidden until 300 px scrolled.
  */
-export function ScrollToTopButton({
-  scrollEl,
-}: {
-  scrollEl: HTMLElement | null
-}) {
+export function ScrollToTopButton() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    if (!scrollEl) return
     function onScroll() {
-      setVisible(scrollEl!.scrollTop > 300)
+      const y =
+        window.scrollY ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0
+      setVisible(y > 300)
     }
-    scrollEl.addEventListener("scroll", onScroll, { passive: true })
-    return () => scrollEl.removeEventListener("scroll", onScroll)
-  }, [scrollEl])
+    onScroll() // sync initial state
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   return (
     <button
+      type="button"
       aria-label="Scroll to top"
-      onClick={() => scrollEl?.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       className={cn(
         "fixed bottom-20 right-4 md:right-6 z-50 h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center transition-all duration-200",
         visible
