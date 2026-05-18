@@ -167,6 +167,9 @@ function toInput(v: FormValues): LeadInput {
     zip_code: v.zip_code?.trim() || null,
     country: v.country?.trim() || null,
     description: v.description?.trim() || null,
+    // Auto-clear the converted flag whenever the status is no longer "Converted".
+    // This lets users un-convert a lead simply by changing the status field.
+    ...(v.lead_status?.trim() !== "Converted" ? { converted: false } : {}),
   }
 }
 
