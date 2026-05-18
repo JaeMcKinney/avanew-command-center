@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { useState } from "react"
 import { Outlet } from "react-router-dom"
 import { AppSidebar } from "@/components/AppSidebar"
 import { TopBar } from "@/components/TopBar"
@@ -7,7 +7,8 @@ import { ViewAsBanner } from "@/components/ViewAsBanner"
 import { ScrollToTopButton } from "@/components/ScrollToTopButton"
 
 export function AppLayout() {
-  const mainRef = useRef<HTMLElement>(null)
+  // Callback ref: setting state triggers effects that depend on the element
+  const [mainEl, setMainEl] = useState<HTMLElement | null>(null)
 
   return (
     <div className="flex min-h-screen w-full bg-muted/30">
@@ -17,12 +18,12 @@ export function AppLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <ViewAsBanner />
         <TopBar />
-        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main ref={setMainEl} className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
         </main>
       </div>
       {/* <AVE /> */}
-      <ScrollToTopButton scrollRef={mainRef} />
+      <ScrollToTopButton scrollEl={mainEl} />
     </div>
   )
 }
