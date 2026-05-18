@@ -12,9 +12,13 @@ import {
   FileArchive,
   FileVideo,
   FileAudio,
+  Pencil,
+  Check,
+  X as XIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -29,6 +33,7 @@ import {
   uploadDocument,
   deleteDocument,
   getDocumentUrl,
+  updateDocument,
 } from "@/lib/data"
 import type { DocumentRecord, EntityType } from "@/types/db"
 import { supabase } from "@/lib/supabase"
@@ -86,6 +91,7 @@ export function DocumentsSection({ entityType, entityId }: Props) {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   const [previewDoc, setPreviewDoc] = useState<DocumentRecord | null>(null)
+  const [editingDesc, setEditingDesc] = useState<{ id: string; value: string } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
@@ -125,6 +131,17 @@ export function DocumentsSection({ entityType, entityId }: Props) {
       setUploading(false)
       setUploadProgress(null)
       if (inputRef.current) inputRef.current.value = ""
+    }
+  }
+
+  async function handleSaveDescription(docId: string, description: string) {
+    try {
+      await updateDocument(docId, { description: description.trim() || null })
+      setDocs((prev) => prev.map((d) => d.id === docId ? { ...d, description: description.trim() || null } : d))
+      setEditingDesc(null)
+      toast.success("Description saved")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save description")
     }
   }
 
@@ -230,11 +247,44 @@ export function DocumentsSection({ entityType, entityId }: Props) {
                   return (
                     <TableRow key={doc.id}>
                       <TableCell className="pl-4">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                          <span className="truncate text-sm font-medium max-w-[160px] sm:max-w-[260px] md:max-w-[360px]">
-                            {doc.file_name}
-                          </span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="truncate text-sm font-medium max-w-[160px] sm:max-w-[260px] md:max-w-[360px]">
+                              {doc.file_name}
+                            </span>
+                          </div>
+                          {editingDesc?.id === doc.id ? (
+                            <div className="flex items-center gap-1 mt-1 pl-6">
+                              <Input
+                                className="h-6 text-xs py-0.5"
+                                value={editingDesc.value}
+                                onChange={(e) => setEditingDesc({ id: doc.id, value: e.target.value })}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") void handleSaveDescription(doc.id, editingDesc.value)
+                                  if (e.key === "Escape") setEditingDesc(null)
+                                }}
+                                autoFocus
+                                placeholder="Add description…"
+                              />
+                              <Button
+                                type="button" size="icon" variant="ghost" className="h-6 w-6 shrink-0"
+                                onClick={() => void handleSaveDescription(doc.id, editingDesc.value)}
+                              >
+                                <Check className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                type="button" size="icon" variant="ghost" className="h-6 w-6 shrink-0"
+                                onClick={() => setEditingDesc(null)}
+                              >
+                                <XIcon className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : doc.description ? (
+                            <p className="text-xs text-muted-foreground mt-0.5 pl-6 truncate max-w-[160px] sm:max-w-[260px] md:max-w-[360px]">
+                              {doc.description}
+                            </p>
+                          ) : null}
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
@@ -248,6 +298,13 @@ export function DocumentsSection({ entityType, entityId }: Props) {
                       </TableCell>
                       <TableCell className="pr-4">
                         <div className="flex items-center justify-end gap-0.5">
+                          <Button
+                            type="button" size="icon" variant="ghost" className="h-7 w-7"
+                            onClick={() => setEditingDesc({ id: doc.id, value: doc.description ?? "" })}
+                            title="Edit description"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
                           <Button
                             type="button"
                             size="icon"

@@ -38,7 +38,7 @@ import { supabase } from "@/lib/supabase"
 import type { Company, Contact, Deal, Lead, Task, TeamMember } from "@/types/db"
 import { cn } from "@/lib/utils"
 import { DocumentsSection } from "@/components/DocumentsSection"
-import { DocumentQueueInput } from "@/components/DocumentQueueInput"
+import { DocumentQueueInput, type QueuedFile } from "@/components/DocumentQueueInput"
 
 const NONE = "__none__"
 
@@ -158,7 +158,7 @@ export function TaskForm() {
   const [deals, setDeals] = useState<Deal[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
-  const [queuedFiles, setQueuedFiles] = useState<File[]>([])
+  const [queuedFiles, setQueuedFiles] = useState<QueuedFile[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -223,8 +223,8 @@ export function TaskForm() {
       if (queuedFiles.length > 0) {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          for (const file of queuedFiles) {
-            await uploadDocument("task", entity.id, file, user.id)
+          for (const qf of queuedFiles) {
+            await uploadDocument("task", entity.id, qf.file, user.id, qf.description || null)
           }
         }
       }

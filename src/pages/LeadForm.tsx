@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ConvertLeadDialog } from "@/components/ConvertLeadDialog"
 import { DocumentsSection } from "@/components/DocumentsSection"
-import { DocumentQueueInput } from "@/components/DocumentQueueInput"
+import { DocumentQueueInput, type QueuedFile } from "@/components/DocumentQueueInput"
 import {
   Select,
   SelectContent,
@@ -216,7 +216,7 @@ export function LeadForm() {
   const [convertedContact, setConvertedContact] = useState<Contact | null>(null)
   const [convertedDeal, setConvertedDeal] = useState<Deal | null>(null)
   const [convertOpen, setConvertOpen] = useState(false)
-  const [queuedFiles, setQueuedFiles] = useState<File[]>([])
+  const [queuedFiles, setQueuedFiles] = useState<QueuedFile[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -286,8 +286,8 @@ export function LeadForm() {
       if (queuedFiles.length > 0) {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          for (const file of queuedFiles) {
-            await uploadDocument("lead", entity.id, file, user.id)
+          for (const qf of queuedFiles) {
+            await uploadDocument("lead", entity.id, qf.file, user.id, qf.description || null)
           }
         }
       }

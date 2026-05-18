@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DocumentsSection } from "@/components/DocumentsSection"
-import { DocumentQueueInput } from "@/components/DocumentQueueInput"
+import { DocumentQueueInput, type QueuedFile } from "@/components/DocumentQueueInput"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -237,7 +237,7 @@ export function AccountForm() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
-  const [queuedFiles, setQueuedFiles] = useState<File[]>([])
+  const [queuedFiles, setQueuedFiles] = useState<QueuedFile[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -307,8 +307,8 @@ export function AccountForm() {
       if (queuedFiles.length > 0) {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          for (const file of queuedFiles) {
-            await uploadDocument("account", entity.id, file, user.id)
+          for (const qf of queuedFiles) {
+            await uploadDocument("account", entity.id, qf.file, user.id, qf.description || null)
           }
         }
       }

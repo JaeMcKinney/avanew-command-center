@@ -2421,6 +2421,7 @@ export async function listDocuments(
     storage_path: d.storage_path,
     uploaded_by: d.uploaded_by,
     created_at: d.created_at,
+    description: d.description ?? null,
     uploader_name: d.uploaded_by ? (uploaderMap[d.uploaded_by] ?? null) : null,
   }))
 }
@@ -2431,6 +2432,7 @@ export async function uploadDocument(
   entityId: string,
   file: File,
   uploadedBy: string,
+  description?: string | null,
 ): Promise<DocumentRecord> {
   const safeName = file.name.replace(/[^a-zA-Z0-9._\-()[\] ]/g, "_")
   const path = `${entityType}/${entityId}/${Date.now()}_${safeName}`
@@ -2451,6 +2453,7 @@ export async function uploadDocument(
       storage_path: path,
       uploaded_by: uploadedBy,
       organization_id: requireOrg(),
+      description: description ?? null,
     })
     .select("*")
     .single()
@@ -2475,8 +2478,16 @@ export async function uploadDocument(
     storage_path: data.storage_path,
     uploaded_by: data.uploaded_by,
     created_at: data.created_at,
+    description: data.description ?? null,
     uploader_name: uploaderName,
   }
+}
+
+/** Update mutable fields on a document metadata row. */
+export async function updateDocument(id: string, updates: { description?: string | null }): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase.from("documents").update(updates).eq("id", id)
+  if (error) throw new Error(error.message)
 }
 
 /** Delete a document from storage and remove its metadata row. */

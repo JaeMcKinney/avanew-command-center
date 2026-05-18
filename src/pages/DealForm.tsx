@@ -6,6 +6,7 @@ import { z } from "zod"
 import { toast } from "sonner"
 import {
   Lock,
+  Pencil,
   Plus,
   Trash2,
   Phone,
@@ -17,11 +18,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { ActivityDialog } from "@/components/ActivityDialog"
 import { QuickCreateAccountDialog } from "@/components/QuickCreateAccountDialog"
 import { QuickCreateContactDialog } from "@/components/QuickCreateContactDialog"
 import { RelatedRecordsBar, type RelatedRecord } from "@/components/RelatedRecordsBar"
 import { DocumentsSection } from "@/components/DocumentsSection"
-import { DocumentQueueInput } from "@/components/DocumentQueueInput"
+import { DocumentQueueInput, type QueuedFile } from "@/components/DocumentQueueInput"
 import {
   Select,
   SelectContent,
@@ -254,7 +256,10 @@ export function DealForm() {
   const [logBody, setLogBody] = useState("")
   const [logDate, setLogDate] = useState("")
   const [logSaving, setLogSaving] = useState(false)
-  const [queuedFiles, setQueuedFiles] = useState<File[]>([])
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null)
+  const [activityDialogOpen, setActivityDialogOpen] = useState(false)
+  const [dealsAll, setDealsAll] = useState<Deal[]>([])
+  const [queuedFiles, setQueuedFiles] = useState<QueuedFile[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -280,6 +285,7 @@ export function DealForm() {
         setCompanies(co)
         setPartners(p)
         setTeam(t.filter((m) => m.status === "active"))
+        setDealsAll(deals)
 
         if (isEdit) {
           const deal = deals.find((d) => d.id === id)
@@ -398,8 +404,8 @@ export function DealForm() {
       if (queuedFiles.length > 0) {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          for (const file of queuedFiles) {
-            await uploadDocument("deal", entity.id, file, user.id)
+          for (const qf of queuedFiles) {
+            await uploadDocument("deal", entity.id, qf.file, user.id, qf.description || null)
           }
         }
       }
@@ -931,6 +937,16 @@ export function DealForm() {
                                   type="button"
                                   variant="ghost"
                                   size="icon"
+                                  className="shrink-0 h-7 w-7 text-muted-foreground hover:text-primary"
+                                  onClick={() => { setEditingActivity(a); setActivityDialogOpen(true) }}
+                                  title="Edit"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
                                   className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
                                   onClick={() => handleDeleteActivity(a.id)}
                                 >
@@ -958,6 +974,20 @@ export function DealForm() {
           </div>
         </form>
       </Form>
+
+      <ActivityDialog
+        open={activityDialogOpen}
+        onOpenChange={(open) => { setActivityDialogOpen(open); if (!open) setEditingActivity(null) }}
+        activity={editingActivity}
+        contacts={contacts}
+        companies={companies}
+        deals={dealsAll}
+        onSaved={async () => {
+          if (!id) return
+          const all = await listActivities()
+          setActivities(all.filter((a) => a.deal_id === id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()))
+        }}
+      />
 
       <QuickCreateAccountDialog
         open={accountDialogOpen}

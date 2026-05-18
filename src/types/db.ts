@@ -468,6 +468,7 @@ export type Database = {
           storage_path: string
           uploaded_by: string | null
           created_at: string
+          description: string | null
         },
         {
           organization_id: string
@@ -478,6 +479,7 @@ export type Database = {
           storage_path: string
           mime_type?: string | null
           uploaded_by?: string | null
+          description?: string | null
         },
         Partial<{
           organization_id: string
@@ -488,6 +490,7 @@ export type Database = {
           storage_path: string
           mime_type: string | null
           uploaded_by: string | null
+          description: string | null
         }>
       >
       organizations: TableSchema<
@@ -543,6 +546,7 @@ export type DocumentRecord = {
   storage_path: string
   uploaded_by: string | null
   created_at: string
+  description: string | null
   /** Joined from profiles — populated by listDocuments / uploadDocument */
   uploader_name?: string | null
 }
