@@ -608,6 +608,29 @@ export function LeadForm() {
               </div>
             )}
           </div>
+
+          {/* Bottom save bar */}
+          <div className="sticky bottom-0 z-10 border-t bg-background/90 px-4 py-3 backdrop-blur md:px-6">
+            <div className="flex items-center justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => navigate("/leads")} disabled={submitting}>
+                Cancel
+              </Button>
+              {isEdit && currentLead && !currentLead.converted && (
+                <Button type="button" variant="outline" onClick={() => setConvertOpen(true)} disabled={submitting}>
+                  <ArrowRightLeft className="h-4 w-4" />
+                  Convert
+                </Button>
+              )}
+              {!isEdit && (
+                <Button type="button" variant="outline" onClick={onSaveAndNew} disabled={submitting} className="hidden sm:flex">
+                  Save and New
+                </Button>
+              )}
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
         </form>
       </Form>
 
