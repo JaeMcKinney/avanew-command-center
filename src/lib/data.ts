@@ -1346,16 +1346,21 @@ export async function removeTeamMember(id: string): Promise<void> {
     )
     return
   }
-  // Pending invites: delete from invitations.
-  // Active members: requires admin API → Edge Function.
-  // Try invitations first (it's the safe case); if not found, route to function.
+  // Pending invites: delete from invitations (scoped to org so we don't
+  // accidentally drop an invite that belongs to another org for the same email).
+  const orgId = requireOrg()
   const { count } = await supabase
     .from("invitations")
     .delete({ count: "exact" })
     .eq("id", id)
+    .eq("organization_id", orgId)
   if (count && count > 0) return
+  // Active members: revoke org membership only (Edge Function reassigns this
+  // user's records to the caller and deletes the organization_members row).
+  // The auth user is intentionally preserved so they keep access to any
+  // other orgs they belong to, and password reset still works.
   const { error } = await supabase.functions.invoke("remove-user", {
-    body: { user_id: id },
+    body: { user_id: id, organization_id: orgId },
   })
   if (error) throw error
 }
