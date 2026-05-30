@@ -9,6 +9,7 @@ import {
   XCircle,
   AlertTriangle,
   Plus,
+  Trophy,
   X,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -62,7 +63,7 @@ function ScreenFrame({
   id: string
   title: string
   when: string
-  size?: "desktop" | "mobile"
+  size?: "desktop" | "mobile" | "wide"
   children: React.ReactNode
 }) {
   return (
@@ -74,7 +75,9 @@ function ScreenFrame({
       <div
         className={cn(
           "rounded-lg border bg-card p-6 shadow-sm",
-          size === "desktop" ? "max-w-4xl" : "max-w-md"
+          size === "mobile" && "max-w-md",
+          size === "desktop" && "max-w-4xl",
+          size === "wide" && "max-w-7xl"
         )}
       >
         {children}
@@ -691,10 +694,11 @@ function ScreenR4() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {[
           { label: "Page Views", value: "47" },
           { label: "Total Submissions", value: "3" },
+          { label: "Pipeline value", value: "$18,000" },
           { label: "Active Clients", value: "1" },
           { label: "Lifetime Earnings", value: "$1,050" },
         ].map((s) => (
@@ -817,50 +821,208 @@ function ScreenR5() {
 }
 
 // ---------- R6 RA pipeline read-only ----------
+// Faithfully mirrors the existing Deals page (Pipeline + Totals summary).
+// What the RA actually sees in production: the Deals page, filtered to
+// referred_by_ra_id = self, with all write controls hidden.
+
+type SampleDeal = {
+  id: string
+  title: string
+  company: string
+  contact: string
+  amount: number
+  closeDate?: string
+  intent: "learning" | "interested" | "sold"
+}
+type SampleStage = {
+  id: string
+  name: string
+  isWon?: boolean
+  isLost?: boolean
+  deals: SampleDeal[]
+}
+
+const R6_STAGES: SampleStage[] = [
+  {
+    id: "new",
+    name: "New Deal",
+    deals: [
+      {
+        id: "d1",
+        title: "Acme Health — Concierge",
+        company: "Acme Health",
+        contact: "Aria Petrov",
+        amount: 6000,
+        closeDate: "Jun 17 2026",
+        intent: "sold",
+      },
+    ],
+  },
+  {
+    id: "discovery",
+    name: "Discovery Scheduled",
+    deals: [
+      {
+        id: "d2",
+        title: "Northwind Pharma — Concierge",
+        company: "Northwind Pharma",
+        contact: "Daniel Cho",
+        amount: 6000,
+        closeDate: "Jun 12 2026",
+        intent: "interested",
+      },
+    ],
+  },
+  {
+    id: "proposal",
+    name: "Proposal Sent",
+    deals: [
+      {
+        id: "d3",
+        title: "Quantum Diagnostics — Concierge",
+        company: "Quantum Diagnostics",
+        contact: "Sara Whyte",
+        amount: 6000,
+        closeDate: "May 28 2026",
+        intent: "learning",
+      },
+    ],
+  },
+  { id: "negotiation", name: "Negotiation", deals: [] },
+  {
+    id: "won",
+    name: "Closed Won",
+    isWon: true,
+    deals: [
+      {
+        id: "d4",
+        title: "BlueHorizon Med — Concierge",
+        company: "BlueHorizon Med",
+        contact: "Jin Park",
+        amount: 6000,
+        intent: "sold",
+      },
+    ],
+  },
+  { id: "lost", name: "Closed Lost", isLost: true, deals: [] },
+]
+
+function fmtUSD(n: number) {
+  return `$${n.toLocaleString("en-US")}`
+}
 
 function ScreenR6() {
+  let pipeline = 0
+  let won = 0
+  let lost = 0
+  let total = 0
+  for (const stage of R6_STAGES) {
+    for (const d of stage.deals) {
+      total += 1
+      if (stage.isWon) won += d.amount
+      else if (stage.isLost) lost += d.amount
+      else pipeline += d.amount
+    }
+  }
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between">
-        <div className="space-y-1">
-          <CardTitle>Leads</CardTitle>
-          <CardDescription>Track the status of every prospect you've referred.</CardDescription>
+    <div className="space-y-6">
+      {/* Page header (matches the live Deals page tone) */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">Pipeline</h2>
+          <p className="text-sm text-muted-foreground">
+            Deals from prospects you've referred.
+          </p>
         </div>
-        <Badge variant="outline" className="text-muted-foreground">
-          Filtered: your referrals
-        </Badge>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Company</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Intent</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead className="w-12 text-right"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {PIPELINE.map((p) => (
-                <TableRow key={p.company}>
-                  <TableCell className="font-medium">{p.company}</TableCell>
-                  <TableCell className="text-muted-foreground">{p.contact}</TableCell>
-                  <TableCell>{intentBadge(p.intent)}</TableCell>
-                  <TableCell className="text-muted-foreground">{p.stage}</TableCell>
-                  <TableCell className="text-muted-foreground">{p.date}</TableCell>
-                  <TableCell className="text-right">
-                    <Eye className="ml-auto h-4 w-4 text-muted-foreground" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className="text-muted-foreground">
+            Filtered: your referrals
+          </Badge>
+          <Badge variant="outline" className="text-muted-foreground">
+            Read-only
+          </Badge>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Kanban — same column treatment as Deals.tsx */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {R6_STAGES.map((stage) => {
+          const colTotal = stage.deals.reduce((s, d) => s + d.amount, 0)
+          return (
+            <Card
+              key={stage.id}
+              className="flex min-h-[280px] flex-col gap-0 bg-muted/40 p-0"
+            >
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                  {stage.isWon && (
+                    <Trophy className="h-3.5 w-3.5 text-primary" />
+                  )}
+                  {stage.isLost && (
+                    <XCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                  )}
+                  {stage.name}
+                </CardTitle>
+                <Badge variant="secondary">{stage.deals.length}</Badge>
+              </CardHeader>
+              <div className="px-3 pb-2 text-xs text-muted-foreground">
+                {colTotal > 0 ? fmtUSD(colTotal) : "—"}
+              </div>
+              <div className="flex-1 space-y-2 px-3 pb-3">
+                {stage.deals.map((d) => (
+                  <div
+                    key={d.id}
+                    className="rounded-md border bg-card p-3 shadow-sm dark:bg-[#1b3223]"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="text-sm font-medium leading-tight">
+                        {d.title}
+                      </div>
+                      <Eye className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {d.company} · {d.contact}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="text-sm font-semibold">
+                        {fmtUSD(d.amount)}
+                      </div>
+                      {intentBadge(d.intent)}
+                    </div>
+                    {d.closeDate && (
+                      <div className="mt-1.5 text-xs text-muted-foreground">
+                        Close {d.closeDate}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {stage.deals.length === 0 && (
+                  <div className="py-4 text-center text-xs text-muted-foreground">
+                    No deals
+                  </div>
+                )}
+              </div>
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* Totals summary — identical layout to Deals.tsx */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: "Total deals", value: String(total) },
+          { label: "Pipeline value", value: fmtUSD(pipeline) },
+          { label: "Won value", value: fmtUSD(won) },
+          { label: "Lost value", value: fmtUSD(lost) },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-lg border bg-card px-4 py-3">
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="mt-0.5 text-lg font-semibold">{value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -1163,7 +1325,8 @@ export function RaStoryboard() {
           <ScreenFrame
             id="R6"
             title="RA pipeline (read-only)"
-            when="RA opens the Leads page — filtered to their own referrals, no write actions."
+            when="RA opens the Pipeline page — same Deals UI you already have, filtered to their own referrals, all write controls hidden."
+            size="wide"
           >
             <ScreenR6 />
           </ScreenFrame>
