@@ -71,6 +71,7 @@ import { SettingsAuditLogs } from "@/pages/settings/SettingsAuditLogs"
 import { SettingsData } from "@/pages/settings/SettingsData"
 import { SettingsBranding } from "@/pages/settings/SettingsBranding"
 import { SettingsSystem } from "@/pages/settings/SettingsSystem"
+import { RaStoryboard } from "@/pages/mockups/RaStoryboard"
 
 function App() {
   return (
@@ -162,6 +163,18 @@ function App() {
         </Route>
 
         <Route path="/permissions" element={<Navigate to="/settings/roles" replace />} />
+      </Route>
+      <Route
+        path="/mockups/ra-storyboard"
+        element={
+          <ProtectedRoute>
+            <OrgGate>
+              <AppLayout />
+            </OrgGate>
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<RaStoryboard />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
