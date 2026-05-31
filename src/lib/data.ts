@@ -1703,6 +1703,8 @@ export async function submitRaLead(input: {
   last_name?: string
   email?: string
   phone?: string
+  company?: string
+  website?: string
   message?: string
 }): Promise<{ id: string }> {
   const { data, error } = await supabase.functions.invoke<{ id: string; message: string }>(

@@ -109,6 +109,8 @@ export function SettingsLandingPages() {
             </div>
             <input placeholder="Email" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
             <input placeholder="Phone" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
+            <input placeholder="Company" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
+            <input placeholder="Website" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
             <textarea placeholder="How can we help?" rows="3" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit;resize:vertical"></textarea>
             <button style="padding:10px 14px;background:#0a1a2a;color:#fff;border:0;border-radius:8px;font:inherit;font-weight:600;cursor:pointer">Submit</button>
           </div>

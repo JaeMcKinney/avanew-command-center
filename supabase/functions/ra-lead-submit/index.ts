@@ -19,6 +19,8 @@ type SubmitPayload = {
   last_name?:  string
   email?:      string
   phone?:      string
+  company?:    string
+  website?:    string
   message?:    string
 }
 
@@ -61,6 +63,8 @@ Deno.serve(async (req) => {
   const lastName   = payload.last_name?.trim() ?? ""
   const email      = payload.email?.trim() ?? ""
   const phone      = payload.phone?.trim() ?? ""
+  const company    = payload.company?.trim() ?? ""
+  const website    = payload.website?.trim() ?? ""
   const message    = payload.message?.trim() ?? ""
 
   if (!slug)      return json(400, { error: "slug is required" })
@@ -83,6 +87,8 @@ Deno.serve(async (req) => {
     p_last_name:  lastName || null,
     p_email:      email    || null,
     p_phone:      phone    || null,
+    p_company:    company  || null,
+    p_website:    website  || null,
     p_message:    message  || null,
   })
 

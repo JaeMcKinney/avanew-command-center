@@ -95,6 +95,8 @@ function LeadForm({ slug }: { slug: string }) {
   const [lastName,  setLastName]  = useState("")
   const [email,     setEmail]     = useState("")
   const [phone,     setPhone]     = useState("")
+  const [company,   setCompany]   = useState("")
+  const [website,   setWebsite]   = useState("")
   const [message,   setMessage]   = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -113,6 +115,8 @@ function LeadForm({ slug }: { slug: string }) {
         last_name:  lastName.trim() || undefined,
         email:      email.trim() || undefined,
         phone:      phone.trim() || undefined,
+        company:    company.trim() || undefined,
+        website:    website.trim() || undefined,
         message:    message.trim() || undefined,
       })
       setSubmitted(true)
@@ -179,6 +183,16 @@ function LeadForm({ slug }: { slug: string }) {
       <div className="space-y-1.5">
         <Label htmlFor="lead-phone">Phone</Label>
         <Input id="lead-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="lead-company">Company</Label>
+        <Input id="lead-company" value={company} onChange={(e) => setCompany(e.target.value)} />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="lead-website">Website</Label>
+        <Input id="lead-website" type="url" placeholder="https://" value={website} onChange={(e) => setWebsite(e.target.value)} />
       </div>
 
       <div className="space-y-1.5">

@@ -597,6 +597,8 @@ export type Database = {
           p_last_name?: string | null
           p_email?:     string | null
           p_phone?:     string | null
+          p_company?:   string | null
+          p_website?:   string | null
           p_message?:   string | null
         }
         Returns: string
