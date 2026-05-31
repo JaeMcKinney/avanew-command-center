@@ -11,6 +11,8 @@ import {
   Loader2,
   Check,
   X,
+  Trash2,
+  ClipboardCheck,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -25,6 +27,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Card,
   CardContent,
   CardDescription,
@@ -35,9 +47,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   listRaAssociates,
   inviteRa,
+  revokeRa,
   generateRaSlug,
   checkSlugAvailable,
 } from "@/lib/data"
+import { RaVerificationDialog } from "@/components/RaVerificationDialog"
 import type { RaAssociate, RaStatus } from "@/types/db"
 
 // ── Status display config ────────────────────────────────────────────────────
@@ -121,11 +135,34 @@ export function RaSection() {
   const [dialogOpen, setDialogOpen] = useState(false)
 
   // Dialog form state
-  const [displayName, setDisplayName] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [slug, setSlug] = useState("")
   const [slugState, setSlugState] = useState<SlugState>("idle")
   const [submitting, setSubmitting] = useState(false)
+
+  // Revoke confirmation
+  const [revokeTarget, setRevokeTarget] = useState<RaAssociate | null>(null)
+  const [revoking, setRevoking] = useState(false)
+
+  // Verification review dialog
+  const [reviewTarget, setReviewTarget] = useState<RaAssociate | null>(null)
+
+  async function handleRevoke() {
+    if (!revokeTarget) return
+    setRevoking(true)
+    try {
+      await revokeRa(revokeTarget.id)
+      toast.success(`${revokeTarget.display_name}'s invite has been revoked.`)
+      setRevokeTarget(null)
+      await refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to revoke invite")
+    } finally {
+      setRevoking(false)
+    }
+  }
 
   async function refresh() {
     setLoading(true)
@@ -140,14 +177,15 @@ export function RaSection() {
 
   useEffect(() => { void refresh() }, [])
 
-  // Auto-generate slug from display name
+  // Auto-generate slug from first + last name
   useEffect(() => {
-    if (displayName) {
-      const generated = generateRaSlug(displayName)
+    const full = [firstName, lastName].filter(Boolean).join(" ")
+    if (full) {
+      const generated = generateRaSlug(full)
       setSlug(generated)
       setSlugState("idle")
     }
-  }, [displayName])
+  }, [firstName, lastName])
 
   // Debounced slug availability check
   const checkSlug = useCallback(async (value: string) => {
@@ -164,7 +202,8 @@ export function RaSection() {
   }, [slug, checkSlug])
 
   function resetDialog() {
-    setDisplayName("")
+    setFirstName("")
+    setLastName("")
     setEmail("")
     setSlug("")
     setSlugState("idle")
@@ -176,7 +215,7 @@ export function RaSection() {
     if (slugState === "taken") { toast.error("That slug is already taken — choose another."); return }
     setSubmitting(true)
     try {
-      await inviteRa({ email, display_name: displayName, slug })
+      await inviteRa({ email, first_name: firstName, last_name: lastName, slug })
       toast.success(`Invite sent to ${email}`)
       setDialogOpen(false)
       resetDialog()
@@ -281,6 +320,32 @@ export function RaSection() {
                         ? `Submitted ${formatDate(ra.submitted_at)}`
                         : `Added ${formatDate(ra.created_at)}`}
                     </div>
+
+                    {/* Review button — only for verification status */}
+                    {ra.status === "verification" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 shrink-0 text-xs gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
+                        onClick={() => setReviewTarget(ra)}
+                      >
+                        <ClipboardCheck className="h-3 w-3" />
+                        Review
+                      </Button>
+                    )}
+
+                    {/* Revoke action — hidden for already-terminated/declined */}
+                    {ra.status !== "terminated" && ra.status !== "declined" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => setRevokeTarget(ra)}
+                        title="Revoke invite"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                 )
               })
@@ -289,6 +354,48 @@ export function RaSection() {
         </CardContent>
       </Card>
 
+      {/* ── Revoke confirmation dialog ── */}
+      <AlertDialog open={!!revokeTarget} onOpenChange={(open) => { if (!open) setRevokeTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {revokeTarget && ["pending", "verification", "needs_changes"].includes(revokeTarget.status)
+                ? "Cancel invite?"
+                : "Terminate RA?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {revokeTarget && ["pending", "verification", "needs_changes"].includes(revokeTarget.status)
+                ? <>
+                    The invite link sent to <strong>{revokeTarget.email}</strong> will be permanently invalidated.
+                    {" "}{revokeTarget.display_name} will not be able to complete onboarding.
+                  </>
+                : <>
+                    <strong>{revokeTarget?.display_name}</strong> will be removed from the Referral Associate program.
+                    Their attribution history will be preserved.
+                  </>}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={revoking}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={revoking}
+              onClick={handleRevoke}
+            >
+              {revoking ? <><Loader2 className="h-4 w-4 animate-spin" /> Revoking…</> : "Yes, revoke"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Verification review dialog ── */}
+      <RaVerificationDialog
+        ra={reviewTarget}
+        open={!!reviewTarget}
+        onClose={() => setReviewTarget(null)}
+        onActionComplete={() => { setReviewTarget(null); void refresh() }}
+      />
+
       {/* ── Add RA dialog (Z2) ── */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetDialog() }}>
         <DialogContent className="sm:max-w-md">
@@ -296,18 +403,27 @@ export function RaSection() {
             <DialogTitle>Add Referral Associate</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="ra-name">Display name</Label>
-              <Input
-                id="ra-name"
-                placeholder="Maria Lopez"
-                required
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Shown publicly on their referral landing page.
-              </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="ra-first-name">First name</Label>
+                <Input
+                  id="ra-first-name"
+                  placeholder="Maria"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ra-last-name">Last name</Label>
+                <Input
+                  id="ra-last-name"
+                  placeholder="Lopez"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">
@@ -371,7 +487,7 @@ export function RaSection() {
               </Button>
               <Button
                 type="submit"
-                disabled={submitting || slugState === "taken" || slugState === "checking" || !slug || !email || !displayName}
+                disabled={submitting || slugState === "taken" || slugState === "checking" || !slug || !email || !firstName || !lastName}
               >
                 {submitting ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>

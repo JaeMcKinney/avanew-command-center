@@ -119,7 +119,12 @@ export type RaAssociate = {
   contact_phone: string | null
   contact_email: string | null
   bio: string | null
-  // banking omitted — admin-only, fetched separately
+  // Banking — only populated when the RA is editing their own record
+  // (RLS prevents SELECT by other non-admin users)
+  ach_account_holder: string | null
+  ach_bank_name: string | null
+  ach_routing: string | null
+  ach_account: string | null
   photo_completed: boolean
   contact_completed: boolean
   banking_completed: boolean

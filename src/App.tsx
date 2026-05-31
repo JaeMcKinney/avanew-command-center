@@ -5,6 +5,10 @@ import { Signup } from "@/pages/auth/Signup"
 import { ForgotPassword } from "@/pages/auth/ForgotPassword"
 import { ResetPassword } from "@/pages/auth/ResetPassword"
 import { SetupAccount } from "@/pages/auth/SetupAccount"
+import { RaOnboarding } from "@/pages/onboarding/RaOnboarding"
+import { RaOnboardingSteps } from "@/pages/onboarding/RaOnboardingSteps"
+import { RaPortalGuard } from "@/components/RaPortalGuard"
+import { RaDashboard } from "@/pages/ra/RaDashboard"
 import { OrgPicker } from "@/pages/OrgPicker"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
 import { RoleGate } from "@/components/RoleGate"
@@ -81,6 +85,8 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/setup-account" element={<SetupAccount />} />
+      <Route path="/onboarding" element={<RaOnboarding />} />
+      <Route path="/onboarding/steps" element={<RaOnboardingSteps />} />
       <Route
         path="/select-org"
         element={
@@ -176,6 +182,17 @@ function App() {
       >
         <Route index element={<RaStoryboard />} />
       </Route>
+      {/* RA portal — own Divigner-branded layout, status-gated */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <RaPortalGuard />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/ra/dashboard" element={<RaDashboard />} />
+      </Route>
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

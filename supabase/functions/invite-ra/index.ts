@@ -20,7 +20,8 @@ import { createClient } from "npm:@supabase/supabase-js@2"
 
 type InviteRaPayload = {
   email: string
-  display_name: string
+  first_name: string
+  last_name: string
   slug: string
   organization_id: string
   redirect_to?: string
@@ -88,12 +89,15 @@ Deno.serve(async (req) => {
   }
 
   const email = payload.email?.trim().toLowerCase()
-  const display_name = payload.display_name?.trim()
+  const first_name = payload.first_name?.trim()
+  const last_name = payload.last_name?.trim()
+  const display_name = [first_name, last_name].filter(Boolean).join(" ")
   const slug = payload.slug?.trim().toLowerCase()
   const organization_id = payload.organization_id
 
   if (!email) return json(400, { error: "email is required" })
-  if (!display_name) return json(400, { error: "display_name is required" })
+  if (!first_name) return json(400, { error: "first_name is required" })
+  if (!last_name) return json(400, { error: "last_name is required" })
   if (!slug || !SLUG_RE.test(slug) || slug.length < 2 || slug.length > 60) {
     return json(400, { error: "Slug must be 2–60 lowercase letters, numbers, or hyphens" })
   }
@@ -111,7 +115,7 @@ Deno.serve(async (req) => {
   // synchronously fires the handle_new_user trigger → creates profiles row.
   const redirectTo = payload.redirect_to ?? `${supabaseUrl.replace(".supabase.co", "").replace("https://", "https://")}/onboarding`
   const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: display_name },
+    data: { full_name: display_name, first_name, last_name },
     redirectTo: payload.redirect_to,
   })
   if (inviteErr) return json(500, { error: inviteErr.message })

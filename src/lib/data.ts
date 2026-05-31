@@ -1415,9 +1415,149 @@ export async function listRaAssociates(): Promise<import("@/types/db").RaAssocia
   })
 }
 
+// ── RA self-service data functions ──────────────────────────────────────────
+
+/** Fetch the current user's own RA associate record (includes all fields). */
+export async function getRaAssociate(): Promise<import("@/types/db").RaAssociate | null> {
+  if (PREVIEW_MODE) return null
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data, error } = await supabase
+    .from("ra_associates")
+    .select(`
+      *,
+      profiles!ra_associates_user_id_fkey (
+        email,
+        full_name
+      )
+    `)
+    .eq("user_id", user.id)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  const profile = (data as Record<string, unknown>).profiles as { email: string; full_name: string | null } | null
+  const { profiles: _p, ...rest } = data as Record<string, unknown>
+  return {
+    ...rest,
+    email: profile?.email ?? "",
+    full_name: profile?.full_name ?? null,
+  } as import("@/types/db").RaAssociate
+}
+
+/** Upload a photo file to ra-photos storage and update the RA record. */
+export async function saveRaPhoto(raId: string, file: File): Promise<string> {
+  if (PREVIEW_MODE) throw new Error("Not available in preview mode")
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Not authenticated")
+
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
+  const path = `${user.id}/avatar.${ext}`
+
+  // upsert: overwrite any previous avatar
+  const { error: uploadErr } = await supabase.storage
+    .from("ra-photos")
+    .upload(path, file, { upsert: true, contentType: file.type })
+  if (uploadErr) throw uploadErr
+
+  const { data: { publicUrl } } = supabase.storage
+    .from("ra-photos")
+    .getPublicUrl(path)
+
+  // Bust cache by appending a timestamp query param
+  const photoUrl = `${publicUrl}?t=${Date.now()}`
+
+  const { error: updateErr } = await supabase
+    .from("ra_associates")
+    .update({ photo_url: photoUrl, photo_completed: true })
+    .eq("id", raId)
+  if (updateErr) throw updateErr
+
+  return photoUrl
+}
+
+/** Save contact info and mark that section complete. */
+export async function saveRaContact(raId: string, data: {
+  contact_phone: string
+  contact_email: string
+  bio: string
+}): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("ra_associates")
+    .update({ ...data, contact_completed: true })
+    .eq("id", raId)
+  if (error) throw error
+}
+
+/** Save ACH banking details and mark that section complete.
+ *  These fields are RLS-protected — only admins can SELECT them. */
+export async function saveRaBanking(raId: string, data: {
+  ach_account_holder: string
+  ach_bank_name: string
+  ach_routing: string
+  ach_account: string
+}): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("ra_associates")
+    .update({ ...data, banking_completed: true })
+    .eq("id", raId)
+  if (error) throw error
+}
+
+/** Submit the completed application — moves status to 'verification'. */
+export async function submitRaApplication(raId: string): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("ra_associates")
+    .update({ status: "verification", submitted_at: new Date().toISOString() })
+    .eq("id", raId)
+  if (error) throw error
+}
+
+/** Approve a submitted RA application — moves status to 'active'. */
+export async function approveRa(raId: string): Promise<void> {
+  if (PREVIEW_MODE) return
+  const now = new Date().toISOString()
+  const { error } = await supabase
+    .from("ra_associates")
+    .update({ status: "active", verified_at: now, activated_at: now })
+    .eq("id", raId)
+  if (error) throw error
+}
+
+/** Request changes on a submitted application — moves status to 'needs_changes'. */
+export async function requestRaChanges(raId: string, notes: string): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("ra_associates")
+    .update({ status: "needs_changes", verification_notes: notes.trim() })
+    .eq("id", raId)
+  if (error) throw error
+}
+
+/** Decline a submitted RA application — moves status to 'declined'. */
+export async function declineRa(raId: string): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("ra_associates")
+    .update({ status: "declined" })
+    .eq("id", raId)
+  if (error) throw error
+}
+
+export async function revokeRa(raId: string): Promise<void> {
+  if (PREVIEW_MODE) throw new Error("Not available in preview mode")
+  const { error } = await supabase.functions.invoke("revoke-ra", {
+    body: { ra_id: raId },
+  })
+  if (error) throw error
+}
+
 export async function inviteRa(input: {
   email: string
-  display_name: string
+  first_name: string
+  last_name: string
   slug: string
 }): Promise<import("@/types/db").RaAssociate> {
   if (PREVIEW_MODE) {
@@ -1428,7 +1568,8 @@ export async function inviteRa(input: {
     {
       body: {
         email: input.email,
-        display_name: input.display_name,
+        first_name: input.first_name,
+        last_name: input.last_name,
         slug: input.slug,
         organization_id: requireOrg(),
         redirect_to: `${window.location.origin}/onboarding`,
