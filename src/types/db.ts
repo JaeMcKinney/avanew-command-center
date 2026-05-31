@@ -132,6 +132,7 @@ export type RaAssociate = {
   verification_notes: string | null
   verified_at: string | null
   activated_at: string | null
+  template_id: string | null
   created_at: string
   updated_at: string
   // joined from profiles
@@ -268,6 +269,19 @@ export type Lead = {
   converted_company_id: string | null
   converted_contact_id: string | null
   converted_deal_id: string | null
+  referred_by_ra_id: string | null
+  attribution_expires_at: string | null
+  prospect_intent: "learning" | "interested" | "sold" | null
+  created_at: string
+  updated_at: string
+}
+
+export type RaLandingTemplate = {
+  id: string
+  organization_id: string
+  name: string
+  html: string
+  is_default: boolean
   created_at: string
   updated_at: string
 }
@@ -548,9 +562,50 @@ export type Database = {
         Partial<RaAssociate> & Pick<RaAssociate, "organization_id" | "user_id" | "slug" | "display_name">,
         Partial<RaAssociate>
       >
+      ra_landing_templates: TableSchema<
+        RaLandingTemplate,
+        Partial<RaLandingTemplate> & Pick<RaLandingTemplate, "organization_id" | "name">,
+        Partial<RaLandingTemplate>
+      >
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      get_ra_landing_page: {
+        Args: { p_slug: string }
+        Returns: {
+          slug:          string
+          display_name:  string
+          first_name:    string | null
+          last_name:     string | null
+          photo_url:     string | null
+          contact_phone: string | null
+          contact_email: string | null
+          bio:           string | null
+          is_active:     boolean
+          template_html: string | null
+          template_name: string | null
+        }[]
+      }
+      record_ra_page_view: {
+        Args: { p_slug: string; p_ip_hash?: string | null; p_user_agent?: string | null }
+        Returns: void
+      }
+      record_ra_lead: {
+        Args: {
+          p_slug:       string
+          p_first_name: string
+          p_last_name?: string | null
+          p_email?:     string | null
+          p_phone?:     string | null
+          p_message?:   string | null
+        }
+        Returns: string
+      }
+      get_ra_dashboard_stats: {
+        Args: Record<string, never>
+        Returns: { total_leads: number; active_leads: number; deals_closed: number }[]
+      }
+    }
     Enums: { activity_type: ActivityType; team_role: TeamRole }
     CompositeTypes: Record<string, never>
   }

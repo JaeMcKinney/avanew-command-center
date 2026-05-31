@@ -1582,6 +1582,171 @@ export async function inviteRa(input: {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// RA landing page templates
+// ───────────────────────────────────────────────────────────────────────────
+
+/** List all templates for the current org, default first then by name. */
+export async function listRaLandingTemplates(): Promise<import("@/types/db").RaLandingTemplate[]> {
+  if (PREVIEW_MODE) return []
+  const { data, error } = await supabase
+    .from("ra_landing_templates")
+    .select("*")
+    .eq("organization_id", requireOrg())
+    .order("is_default", { ascending: false })
+    .order("name", { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+/** Create a new template — first one created becomes the default automatically. */
+export async function createRaLandingTemplate(name: string, html: string): Promise<import("@/types/db").RaLandingTemplate> {
+  if (PREVIEW_MODE) throw new Error("Not available in preview mode")
+  const orgId = requireOrg()
+
+  // If no templates exist yet, the new one becomes the default.
+  const { count } = await supabase
+    .from("ra_landing_templates")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", orgId)
+
+  const { data, error } = await supabase
+    .from("ra_landing_templates")
+    .insert({ organization_id: orgId, name, html, is_default: (count ?? 0) === 0 })
+    .select("*")
+    .single()
+  if (error) throw error
+  return data
+}
+
+/** Update a template's name and/or HTML. */
+export async function updateRaLandingTemplate(
+  id: string,
+  patch: { name?: string; html?: string }
+): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("ra_landing_templates")
+    .update(patch)
+    .eq("id", id)
+  if (error) throw error
+}
+
+/** Set a template as the org default. Clears the previous default in a single transaction. */
+export async function setRaLandingTemplateDefault(id: string): Promise<void> {
+  if (PREVIEW_MODE) return
+  const orgId = requireOrg()
+  // Two-step: clear existing default, then set new one. The unique partial
+  // index would block a single UPDATE if multiple rows transiently had is_default=true.
+  const { error: clearErr } = await supabase
+    .from("ra_landing_templates")
+    .update({ is_default: false })
+    .eq("organization_id", orgId)
+    .eq("is_default", true)
+  if (clearErr) throw clearErr
+  const { error: setErr } = await supabase
+    .from("ra_landing_templates")
+    .update({ is_default: true })
+    .eq("id", id)
+  if (setErr) throw setErr
+}
+
+/** Delete a template. RAs assigned to it fall back to the org default via ON DELETE SET NULL. */
+export async function deleteRaLandingTemplate(id: string): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("ra_landing_templates")
+    .delete()
+    .eq("id", id)
+  if (error) throw error
+}
+
+/** Assign a specific template to an RA (or null to revert to org default). */
+export async function setRaTemplate(raId: string, templateId: string | null): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("ra_associates")
+    .update({ template_id: templateId })
+    .eq("id", raId)
+  if (error) throw error
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Public RA landing page (anon access via SECURITY DEFINER RPC)
+// ───────────────────────────────────────────────────────────────────────────
+
+export type RaLandingPageData = {
+  slug:            string
+  display_name:    string
+  first_name:      string | null
+  last_name:       string | null
+  photo_url:       string | null
+  contact_phone:   string | null
+  contact_email:   string | null
+  bio:             string | null
+  is_active:       boolean
+  template_html:   string | null
+  template_name:   string | null
+}
+
+/** Fetch a public RA landing page by slug. Returns null if no RA found. */
+export async function getRaLandingPage(slug: string): Promise<RaLandingPageData | null> {
+  const { data, error } = await supabase.rpc("get_ra_landing_page", { p_slug: slug })
+  if (error) throw error
+  const rows = (data as RaLandingPageData[] | null) ?? []
+  return rows[0] ?? null
+}
+
+/** Submit a lead via the ra-lead-submit edge function (no auth). */
+export async function submitRaLead(input: {
+  slug: string
+  first_name: string
+  last_name?: string
+  email?: string
+  phone?: string
+  message?: string
+}): Promise<{ id: string }> {
+  const { data, error } = await supabase.functions.invoke<{ id: string; message: string }>(
+    "ra-lead-submit",
+    { body: input }
+  )
+  if (error) throw error
+  if (!data) throw new Error("No data returned from ra-lead-submit")
+  return { id: data.id }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// RA dashboard stats (called by logged-in RAs)
+// ───────────────────────────────────────────────────────────────────────────
+
+export type RaDashboardStats = {
+  total_leads:  number
+  active_leads: number
+  deals_closed: number
+}
+
+export async function getRaDashboardStats(): Promise<RaDashboardStats> {
+  if (PREVIEW_MODE) return { total_leads: 0, active_leads: 0, deals_closed: 0 }
+  const { data, error } = await supabase.rpc("get_ra_dashboard_stats")
+  if (error) throw error
+  const row = (data as RaDashboardStats[] | null)?.[0]
+  return row ?? { total_leads: 0, active_leads: 0, deals_closed: 0 }
+}
+
+/** List leads attributed to the current RA (their own pipeline view). */
+export async function listRaLeads(): Promise<import("@/types/db").Lead[]> {
+  if (PREVIEW_MODE) return []
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("referred_by_ra_id", user.id)
+    .order("created_at", { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Leads
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -1628,6 +1793,7 @@ function seedLeads(): Lead[] {
       street: null, city: null, state: null, zip_code: null, country: null,
       description: "Interested in enterprise plan.", converted: false,
       converted_company_id: null, converted_contact_id: null, converted_deal_id: null,
+      referred_by_ra_id: null, attribution_expires_at: null, prospect_intent: null,
       created_at: t, updated_at: t,
     },
   ]
@@ -1660,6 +1826,7 @@ export async function createLead(input: LeadInput): Promise<Lead> {
       zip_code: input.zip_code ?? null, country: input.country ?? null,
       description: input.description ?? null, converted: false,
       converted_company_id: null, converted_contact_id: null, converted_deal_id: null,
+      referred_by_ra_id: null, attribution_expires_at: null, prospect_intent: null,
       created_at: nowIso(), updated_at: nowIso(),
     }
     saveMock("leads", [row, ...loadMock<Lead>("leads", seedLeads)])

@@ -12,7 +12,8 @@ import {
   LogOut,
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
-import { getRaAssociate } from "@/lib/data"
+import { getRaAssociate, getRaDashboardStats, listRaLeads } from "@/lib/data"
+import type { Lead } from "@/types/db"
 import {
   DIVIGNER_LOGO_SRC,
   DIVIGNER_NOISE_SVG,
@@ -64,18 +65,31 @@ export function RaDashboard() {
   const navigate = useNavigate()
   const [ra, setRa] = useState<RaAssociate | null>(null)
   const [copied, setCopied] = useState(false)
-
-  // Day 5: replace with getRaStats(ra.id) once ra_leads table exists
-  const stats: RaStats = {
+  const [stats, setStats] = useState<RaStats>({
     totalLeads: 0,
     activeLeads: 0,
     dealsClosed: 0,
     totalCommission: 0,
     pendingCommission: 0,
-  }
+  })
+  const [leads, setLeads] = useState<Lead[]>([])
 
   useEffect(() => {
     getRaAssociate().then(setRa).catch(() => null)
+    void (async () => {
+      try {
+        const [s, l] = await Promise.all([getRaDashboardStats(), listRaLeads()])
+        setStats((prev) => ({
+          ...prev,
+          totalLeads:  s.total_leads,
+          activeLeads: s.active_leads,
+          dealsClosed: s.deals_closed,
+        }))
+        setLeads(l)
+      } catch {
+        // leave defaults — RA can still see the page
+      }
+    })()
   }, [])
 
   const referralUrl = ra?.slug
@@ -231,34 +245,77 @@ export function RaDashboard() {
           className="rounded-2xl border border-white/10 overflow-hidden"
           style={{ background: DIVIGNER_CARD_BG }}
         >
-          <div className="px-6 py-4 border-b border-white/[.08]">
+          <div className="px-6 py-4 border-b border-white/[.08] flex items-center justify-between">
             <h2
               className="text-white/80 text-sm font-semibold"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Your Pipeline
             </h2>
+            {leads.length > 0 && (
+              <span className="text-white/40 text-xs" style={{ fontFamily: "Manrope, sans-serif" }}>
+                {leads.length} {leads.length === 1 ? "lead" : "leads"}
+              </span>
+            )}
           </div>
-          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div
-              className="h-12 w-12 rounded-xl flex items-center justify-center mb-4"
-              style={{ background: "rgba(52,214,194,.12)" }}
-            >
-              <Inbox className="h-6 w-6 text-[#34D6C2]" />
+          {leads.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+              <div
+                className="h-12 w-12 rounded-xl flex items-center justify-center mb-4"
+                style={{ background: "rgba(52,214,194,.12)" }}
+              >
+                <Inbox className="h-6 w-6 text-[#34D6C2]" />
+              </div>
+              <p
+                className="text-white/60 text-sm font-medium mb-1"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
+                No leads yet
+              </p>
+              <p
+                className="text-white/30 text-sm"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
+                Share your referral link to start tracking leads.
+              </p>
             </div>
-            <p
-              className="text-white/60 text-sm font-medium mb-1"
-              style={{ fontFamily: "Manrope, sans-serif" }}
-            >
-              No leads yet
-            </p>
-            <p
-              className="text-white/30 text-sm"
-              style={{ fontFamily: "Manrope, sans-serif" }}
-            >
-              Share your referral link to start tracking leads.
-            </p>
-          </div>
+          ) : (
+            <div className="divide-y divide-white/[.06]">
+              {leads.map((lead) => (
+                <div
+                  key={lead.id}
+                  className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-white/[.02]"
+                >
+                  <div className="min-w-0">
+                    <p
+                      className="text-white/90 text-sm font-medium truncate"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      {lead.first_name} {lead.last_name ?? ""}
+                    </p>
+                    <p className="text-white/40 text-xs truncate" style={{ fontFamily: "Manrope, sans-serif" }}>
+                      {lead.email ?? lead.phone ?? "—"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span
+                      className="px-2 py-0.5 text-[10px] uppercase tracking-widest rounded-full"
+                      style={{
+                        background: lead.converted ? "rgba(52,214,194,.15)" : "rgba(255,255,255,.05)",
+                        color: lead.converted ? "#34D6C2" : "rgba(255,255,255,.5)",
+                        fontFamily: "Manrope, sans-serif",
+                      }}
+                    >
+                      {lead.converted ? "Closed" : (lead.lead_status ?? "New")}
+                    </span>
+                    <span className="text-white/30 text-xs" style={{ fontFamily: "Manrope, sans-serif" }}>
+                      {new Date(lead.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </main>

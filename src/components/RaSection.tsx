@@ -50,9 +50,11 @@ import {
   revokeRa,
   generateRaSlug,
   checkSlugAvailable,
+  listRaLandingTemplates,
+  setRaTemplate,
 } from "@/lib/data"
 import { RaVerificationDialog } from "@/components/RaVerificationDialog"
-import type { RaAssociate, RaStatus } from "@/types/db"
+import type { RaAssociate, RaStatus, RaLandingTemplate } from "@/types/db"
 
 // ── Status display config ────────────────────────────────────────────────────
 
@@ -130,6 +132,7 @@ type SlugState = "idle" | "checking" | "available" | "taken"
 
 export function RaSection() {
   const [ras, setRas] = useState<RaAssociate[]>([])
+  const [templates, setTemplates] = useState<RaLandingTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<TabFilter>("all")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -167,11 +170,26 @@ export function RaSection() {
   async function refresh() {
     setLoading(true)
     try {
-      setRas(await listRaAssociates())
+      const [raList, tplList] = await Promise.all([
+        listRaAssociates(),
+        listRaLandingTemplates().catch(() => []),
+      ])
+      setRas(raList)
+      setTemplates(tplList)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load RAs")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleTemplateChange(raId: string, templateId: string | null) {
+    try {
+      await setRaTemplate(raId, templateId)
+      toast.success("Template updated")
+      setRas((prev) => prev.map((r) => (r.id === raId ? { ...r, template_id: templateId } : r)))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update template")
     }
   }
 
@@ -320,6 +338,23 @@ export function RaSection() {
                         ? `Submitted ${formatDate(ra.submitted_at)}`
                         : `Added ${formatDate(ra.created_at)}`}
                     </div>
+
+                    {/* Template assignment — only meaningful for active RAs */}
+                    {ra.status === "active" && templates.length > 0 && (
+                      <select
+                        value={ra.template_id ?? ""}
+                        onChange={(e) => handleTemplateChange(ra.id, e.target.value || null)}
+                        className="h-7 shrink-0 text-xs rounded-md border bg-background px-2 max-w-[160px]"
+                        title="Landing page template"
+                      >
+                        <option value="">Org default</option>
+                        {templates.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name}{t.is_default ? " (default)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    )}
 
                     {/* Review button — only for verification status */}
                     {ra.status === "verification" && (

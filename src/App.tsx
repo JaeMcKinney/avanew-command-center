@@ -9,6 +9,8 @@ import { RaOnboarding } from "@/pages/onboarding/RaOnboarding"
 import { RaOnboardingSteps } from "@/pages/onboarding/RaOnboardingSteps"
 import { RaPortalGuard } from "@/components/RaPortalGuard"
 import { RaDashboard } from "@/pages/ra/RaDashboard"
+import { RaLandingPage } from "@/pages/public/RaLandingPage"
+import { SettingsLandingPages } from "@/pages/settings/SettingsLandingPages"
 import { OrgPicker } from "@/pages/OrgPicker"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
 import { RoleGate } from "@/components/RoleGate"
@@ -87,6 +89,7 @@ function App() {
       <Route path="/setup-account" element={<SetupAccount />} />
       <Route path="/onboarding" element={<RaOnboarding />} />
       <Route path="/onboarding/steps" element={<RaOnboardingSteps />} />
+      <Route path="/refer/:slug" element={<RaLandingPage />} />
       <Route
         path="/select-org"
         element={
@@ -159,6 +162,7 @@ function App() {
           <Route path="pipeline" element={<RoleGate allow={["super_user","admin"]}><SettingsPipeline /></RoleGate>} />
           <Route path="financial" element={<RoleGate allow={["super_user","admin"]}><SettingsFinancial /></RoleGate>} />
           <Route path="partners-vendors" element={<RoleGate allow={["super_user","admin"]}><SettingsPartnersVendors /></RoleGate>} />
+          <Route path="landing-pages" element={<RoleGate allow={["super_user","admin"]}><SettingsLandingPages /></RoleGate>} />
           <Route path="integrations" element={<RoleGate allow={["super_user","admin"]}><SettingsIntegrations /></RoleGate>} />
           <Route path="notifications" element={<SettingsNotifications />} />
           <Route path="security" element={<RoleGate allow={["super_user","admin"]}><SettingsSecurity /></RoleGate>} />
