@@ -76,7 +76,7 @@ export function Login() {
           <img
             src={LOGO_SRC}
             alt="Divigner"
-            style={{ height: "44px", width: "auto" }}
+            style={{ height: "132px", width: "auto" }}
           />
         </div>
 
