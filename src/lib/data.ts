@@ -1366,6 +1366,81 @@ export async function removeTeamMember(id: string): Promise<void> {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// Referral Associates
+// ───────────────────────────────────────────────────────────────────────────
+
+export function generateRaSlug(displayName: string): string {
+  return displayName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60)
+    || "ra"
+}
+
+export async function checkSlugAvailable(slug: string): Promise<boolean> {
+  if (PREVIEW_MODE) return true
+  const { data } = await supabase
+    .from("ra_associates")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle()
+  return !data
+}
+
+export async function listRaAssociates(): Promise<import("@/types/db").RaAssociate[]> {
+  if (PREVIEW_MODE) return []
+  const { data, error } = await supabase
+    .from("ra_associates")
+    .select(`
+      *,
+      profiles!ra_associates_user_id_fkey (
+        email,
+        full_name
+      )
+    `)
+    .eq("organization_id", requireOrg())
+    .order("created_at", { ascending: false })
+  if (error) throw error
+  return (data ?? []).map((row: Record<string, unknown>) => {
+    const profile = row.profiles as { email: string; full_name: string | null } | null
+    const { profiles: _p, ...rest } = row
+    return {
+      ...rest,
+      email: profile?.email ?? "",
+      full_name: profile?.full_name ?? null,
+    } as import("@/types/db").RaAssociate
+  })
+}
+
+export async function inviteRa(input: {
+  email: string
+  display_name: string
+  slug: string
+}): Promise<import("@/types/db").RaAssociate> {
+  if (PREVIEW_MODE) {
+    throw new Error("RA invites are not available in preview mode")
+  }
+  const { data, error } = await supabase.functions.invoke<import("@/types/db").RaAssociate>(
+    "invite-ra",
+    {
+      body: {
+        email: input.email,
+        display_name: input.display_name,
+        slug: input.slug,
+        organization_id: requireOrg(),
+        redirect_to: `${window.location.origin}/onboarding`,
+      },
+    }
+  )
+  if (error) throw error
+  if (!data) throw new Error("No data returned from invite-ra")
+  return data
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Leads
 // ───────────────────────────────────────────────────────────────────────────
 

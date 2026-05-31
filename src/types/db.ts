@@ -99,6 +99,41 @@ export type TeamMember = {
   created_at: string
 }
 
+export type RaStatus =
+  | "pending"
+  | "verification"
+  | "needs_changes"
+  | "active"
+  | "suspended"
+  | "declined"
+  | "terminated"
+
+export type RaAssociate = {
+  id: string
+  organization_id: string
+  user_id: string
+  slug: string
+  display_name: string
+  status: RaStatus
+  photo_url: string | null
+  contact_phone: string | null
+  contact_email: string | null
+  bio: string | null
+  // banking omitted — admin-only, fetched separately
+  photo_completed: boolean
+  contact_completed: boolean
+  banking_completed: boolean
+  submitted_at: string | null
+  verification_notes: string | null
+  verified_at: string | null
+  activated_at: string | null
+  created_at: string
+  updated_at: string
+  // joined from profiles
+  email: string
+  full_name: string | null
+}
+
 export type Profile = {
   id: string
   full_name: string | null
