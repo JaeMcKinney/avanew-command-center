@@ -543,6 +543,11 @@ export type Database = {
         Pick<OrganizationMember, "organization_id" | "user_id" | "role">,
         Partial<OrganizationMember>
       >
+      ra_associates: TableSchema<
+        RaAssociate,
+        Partial<RaAssociate> & Pick<RaAssociate, "organization_id" | "user_id" | "slug" | "display_name">,
+        Partial<RaAssociate>
+      >
     }
     Views: Record<string, never>
     Functions: Record<string, never>

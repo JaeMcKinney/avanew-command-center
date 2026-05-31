@@ -16,14 +16,13 @@ export function PhotoStep({ ra, onComplete }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const cardStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,.04)",
+    background: isDragging ? "rgba(52,214,194,.06)" : "rgba(255,255,255,.04)",
     border: `1px solid ${isDragging ? "rgba(52,214,194,.5)" : "rgba(160,190,215,.15)"}`,
     borderRadius: "14px",
     padding: "40px 24px",
     textAlign: "center",
     cursor: "pointer",
     transition: "border-color .2s, background .2s",
-    background: isDragging ? "rgba(52,214,194,.06)" : "rgba(255,255,255,.04)",
   }
 
   async function handleFile(file: File) {
