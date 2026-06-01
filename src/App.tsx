@@ -10,6 +10,7 @@ import { RaOnboardingSteps } from "@/pages/onboarding/RaOnboardingSteps"
 import { RaPortalGuard } from "@/components/RaPortalGuard"
 import { RaDashboard } from "@/pages/ra/RaDashboard"
 import { RaLandingPage } from "@/pages/public/RaLandingPage"
+import { RaDemoPage } from "@/pages/public/RaDemoPage"
 import { SettingsLandingPages } from "@/pages/settings/SettingsLandingPages"
 import { OrgPicker } from "@/pages/OrgPicker"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
@@ -90,6 +91,7 @@ function App() {
       <Route path="/onboarding" element={<RaOnboarding />} />
       <Route path="/onboarding/steps" element={<RaOnboardingSteps />} />
       <Route path="/refer/:slug" element={<RaLandingPage />} />
+      <Route path="/demo/:slug" element={<RaDemoPage />} />
       <Route
         path="/select-org"
         element={

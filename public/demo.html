@@ -1058,8 +1058,10 @@
     });
   });
 
-  /* ── Slug from URL path: /demo/<slug> ── */
+  /* ── Slug from query string (?ra=slug) or path (/demo/<slug>) ── */
   var raSlug = (function(){
+    var q = new URLSearchParams(window.location.search).get('ra');
+    if(q) return q;
     var m = window.location.pathname.match(/\/demo\/([^/?#]+)/);
     return m ? decodeURIComponent(m[1]) : '';
   })();
