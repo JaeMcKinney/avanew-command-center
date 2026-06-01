@@ -303,7 +303,7 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
 <footer>
   <div class="wrap">
     <div class="footer-row">
-      <img class="footer-logo-img" id="footer-logo" alt="Divigner Group">
+      <img class="footer-logo-img" src="${DIVIGNER_LOGO_B64}" alt="Divigner Group">
       <div class="footer-text">
         <a href="https://divigner.com" target="_blank" rel="noopener">divigner.com</a><br>
         7 North Willow Street, Suite 8C, Montclair, NJ 07042
@@ -315,9 +315,6 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
 
 <script>
 (function(){
-  var LOGO = '${DIVIGNER_LOGO_B64}';
-  var fl = document.getElementById('footer-logo');
-  if(fl) fl.src = LOGO;
   document.getElementById('year').textContent = new Date().getFullYear();
 
   /* ── RA avatar: photo with initials fallback ── */
