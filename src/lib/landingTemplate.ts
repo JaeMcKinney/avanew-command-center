@@ -301,7 +301,7 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
 <footer>
   <div class="wrap">
     <div class="footer-row">
-      <img class="footer-logo-img" src="/divigner-logo.svg" alt="Divigner Group">
+      <img class="footer-logo-img" src="https://ai-automation.divigner.com/divigner-logo.svg" alt="Divigner Group">
       <div class="footer-text">
         <a href="https://divigner.com" target="_blank" rel="noopener">divigner.com</a><br>
         7 North Willow Street, Suite 8C, Montclair, NJ 07042
