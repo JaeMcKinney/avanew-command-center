@@ -28,6 +28,7 @@ import {
   STARTER_TEMPLATE,
   renderMergeTags,
   splitFormSlot,
+  isFullPageTemplate,
   type MergeContext,
 } from "@/lib/landingTemplate"
 import type { RaLandingTemplate } from "@/types/db"
@@ -39,6 +40,7 @@ const PREVIEW_CTX: MergeContext = {
   ra_photo:      "https://i.pravatar.cc/240?img=47",
   ra_bio:        "I help founders connect with the right partners for growth.",
   ra_slug:       "maria-lopez",
+  functions_url: "https://example.supabase.co/functions/v1/ra-lead-submit",
 }
 
 type ViewMode = "split" | "code" | "preview"
@@ -98,25 +100,28 @@ export function SettingsLandingPages() {
     if (debounceRef.current) window.clearTimeout(debounceRef.current)
     debounceRef.current = window.setTimeout(() => {
       const rendered = renderMergeTags(html, PREVIEW_CTX)
-      const { before, after } = splitFormSlot(rendered)
-      // In the preview pane we render a fake static form so layout is faithful.
-      const fakeForm = `
-        <div style="border:1px solid #e5e7eb;border-radius:12px;padding:24px;background:#fff;max-width:480px;margin:0 auto;font-family:system-ui,sans-serif">
-          <div style="display:grid;gap:12px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <input placeholder="First name" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
-              <input placeholder="Last name" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
+
+      if (isFullPageTemplate(rendered)) {
+        // Full-page — pass directly; the iframe renders it with scripts
+        setPreviewHtml(rendered)
+      } else {
+        // Partial — inject a static fake form so layout is faithful
+        const { before, after } = splitFormSlot(rendered)
+        const fakeForm = `
+          <div style="border:1px solid #e5e7eb;border-radius:12px;padding:24px;background:#fff;max-width:480px;margin:0 auto;font-family:system-ui,sans-serif">
+            <div style="display:grid;gap:12px">
+              <input placeholder="Full Name" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
+              <input placeholder="Email" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
+              <input placeholder="Phone" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
+              <input placeholder="Business Name" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
+              <input placeholder="Website" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
+              <textarea placeholder="Anything you'd like us to know?" rows="3" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit;resize:vertical"></textarea>
+              <button style="padding:10px 14px;background:#0a1a2a;color:#fff;border:0;border-radius:8px;font:inherit;font-weight:600;cursor:pointer">Submit</button>
             </div>
-            <input placeholder="Email" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
-            <input placeholder="Phone" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
-            <input placeholder="Company" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
-            <input placeholder="Website" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit" />
-            <textarea placeholder="How can we help?" rows="3" style="padding:10px 12px;border:1px solid #d4d4d8;border-radius:8px;font:inherit;resize:vertical"></textarea>
-            <button style="padding:10px 14px;background:#0a1a2a;color:#fff;border:0;border-radius:8px;font:inherit;font-weight:600;cursor:pointer">Submit</button>
           </div>
-        </div>
-      `
-      setPreviewHtml(before + fakeForm + after)
+        `
+        setPreviewHtml(before + fakeForm + after)
+      }
     }, 250)
     return () => { if (debounceRef.current) window.clearTimeout(debounceRef.current) }
   }, [html])

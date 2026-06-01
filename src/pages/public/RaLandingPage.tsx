@@ -10,11 +10,15 @@ import { getRaLandingPage, submitRaLead, type RaLandingPageData } from "@/lib/da
 import {
   renderMergeTags,
   splitFormSlot,
+  isFullPageTemplate,
   BUILTIN_FALLBACK_TEMPLATE,
   type MergeContext,
 } from "@/lib/landingTemplate"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Edge function URL for full-page templates — injected as {{functions_url}} merge tag.
+const FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ra-lead-submit`
 
 export function RaLandingPage() {
   const { slug = "" } = useParams<{ slug: string }>()
@@ -23,7 +27,7 @@ export function RaLandingPage() {
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    document.title = `Referral — Divigner`
+    document.title = "Get Started · Divigner Group"
     void (async () => {
       try {
         const data = await getRaLandingPage(slug)
@@ -31,7 +35,7 @@ export function RaLandingPage() {
           setNotFound(true)
         } else {
           setRa(data)
-          document.title = `${data.display_name} — Divigner Referral`
+          document.title = `${data.display_name} — Divigner Group`
         }
       } catch {
         setNotFound(true)
@@ -45,40 +49,70 @@ export function RaLandingPage() {
     if (!ra) return null
     return {
       ra_first_name: ra.first_name ?? "",
-      ra_last_name:  ra.last_name ?? "",
-      ra_photo:      ra.photo_url ?? "",
-      ra_bio:        ra.bio ?? "",
+      ra_last_name:  ra.last_name  ?? "",
+      ra_photo:      ra.photo_url  ?? "",
+      ra_bio:        ra.bio        ?? "",
       ra_slug:       ra.slug,
+      functions_url: FUNCTIONS_URL,
     }
   }, [ra])
 
-  const { before, after } = useMemo(() => {
-    if (!ctx) return { before: "", after: "" }
-    const template = ra?.template_html?.trim() ? ra.template_html : BUILTIN_FALLBACK_TEMPLATE
-    return splitFormSlot(renderMergeTags(template, ctx))
-  }, [ra, ctx])
+  // Determine which template to render and whether it's full-page
+  const templateHtml = ra?.template_html?.trim() ? ra.template_html : BUILTIN_FALLBACK_TEMPLATE
+  const fullPage     = isFullPageTemplate(templateHtml)
 
+  // Rendered HTML (merge tags replaced) — only computed when ctx is ready
+  const renderedHtml = useMemo(
+    () => (ctx ? renderMergeTags(templateHtml, ctx) : ""),
+    [templateHtml, ctx]
+  )
+
+  // Partial-template split (only used when !fullPage)
+  const { before, after } = useMemo(() => {
+    if (fullPage || !renderedHtml) return { before: "", after: "" }
+    return splitFormSlot(renderedHtml)
+  }, [fullPage, renderedHtml])
+
+  // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="min-h-screen flex items-center justify-center bg-[#091A2D]">
+        <Loader2 className="h-6 w-6 animate-spin text-[#34D6C2]" />
       </div>
     )
   }
 
+  // ── Not found / inactive ─────────────────────────────────────────────────
   if (notFound) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white p-6 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#091A2D] p-6 text-center">
         <div>
-          <h1 className="text-2xl font-semibold mb-2">Referral link not active</h1>
-          <p className="text-sm text-muted-foreground max-w-md">
-            This referral link is either invalid or no longer active. Please check the URL or contact the person who shared it with you.
+          <h1 className="text-2xl font-semibold text-white mb-2">Referral link not active</h1>
+          <p className="text-sm text-white/50 max-w-md">
+            This referral link is either invalid or no longer active. Please check the URL or
+            contact the person who shared it with you.
           </p>
         </div>
       </div>
     )
   }
 
+  // ── Full-page template (has own HTML/CSS/JS) — render in iframe ──────────
+  if (fullPage) {
+    return (
+      <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
+        <iframe
+          srcDoc={renderedHtml}
+          title={ra ? `${ra.display_name} — Divigner Group` : "Divigner Group"}
+          style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+          // allow popups for external links inside the page
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        />
+      </div>
+    )
+  }
+
+  // ── Partial template — React renders content + React form ────────────────
   return (
     <div className="min-h-screen bg-white">
       <div dangerouslySetInnerHTML={{ __html: before }} />
@@ -88,7 +122,7 @@ export function RaLandingPage() {
   )
 }
 
-// ── Lead form ────────────────────────────────────────────────────────────────
+// ── React lead form (used for partial templates only) ─────────────────────
 
 function LeadForm({ slug }: { slug: string }) {
   const [firstName, setFirstName] = useState("")
@@ -99,7 +133,7 @@ function LeadForm({ slug }: { slug: string }) {
   const [website,   setWebsite]   = useState("")
   const [message,   setMessage]   = useState("")
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted,  setSubmitted]  = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -112,12 +146,12 @@ function LeadForm({ slug }: { slug: string }) {
       await submitRaLead({
         slug,
         first_name: firstName.trim(),
-        last_name:  lastName.trim() || undefined,
-        email:      email.trim() || undefined,
-        phone:      phone.trim() || undefined,
-        company:    company.trim() || undefined,
-        website:    website.trim() || undefined,
-        message:    message.trim() || undefined,
+        last_name:  lastName.trim()  || undefined,
+        email:      email.trim()     || undefined,
+        phone:      phone.trim()     || undefined,
+        company:    company.trim()   || undefined,
+        website:    website.trim()   || undefined,
+        message:    message.trim()   || undefined,
       })
       setSubmitted(true)
     } catch (err) {
@@ -129,18 +163,7 @@ function LeadForm({ slug }: { slug: string }) {
 
   if (submitted) {
     return (
-      <div
-        style={{
-          maxWidth: 480,
-          margin: "24px auto",
-          padding: "32px 24px",
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
-          background: "#fff",
-          textAlign: "center",
-          fontFamily: "system-ui, -apple-system, sans-serif",
-        }}
-      >
+      <div style={{ maxWidth: 480, margin: "24px auto", padding: "32px 24px", border: "1px solid #e5e7eb", borderRadius: 12, background: "#fff", textAlign: "center", fontFamily: "system-ui, -apple-system, sans-serif" }}>
         <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto mb-3" />
         <h2 className="text-xl font-semibold mb-1">Thank you!</h2>
         <p className="text-sm text-muted-foreground">
@@ -153,15 +176,7 @@ function LeadForm({ slug }: { slug: string }) {
   return (
     <form
       onSubmit={handleSubmit}
-      style={{
-        maxWidth: 480,
-        margin: "24px auto",
-        padding: "28px 24px",
-        border: "1px solid #e5e7eb",
-        borderRadius: 12,
-        background: "#fff",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-      }}
+      style={{ maxWidth: 480, margin: "24px auto", padding: "28px 24px", border: "1px solid #e5e7eb", borderRadius: 12, background: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}
       className="space-y-3"
     >
       <div className="grid grid-cols-2 gap-3">
@@ -174,36 +189,29 @@ function LeadForm({ slug }: { slug: string }) {
           <Input id="lead-last" value={lastName} onChange={(e) => setLastName(e.target.value)} />
         </div>
       </div>
-
       <div className="space-y-1.5">
         <Label htmlFor="lead-email">Email</Label>
         <Input id="lead-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
-
       <div className="space-y-1.5">
         <Label htmlFor="lead-phone">Phone</Label>
         <Input id="lead-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
       </div>
-
       <div className="space-y-1.5">
         <Label htmlFor="lead-company">Company</Label>
         <Input id="lead-company" value={company} onChange={(e) => setCompany(e.target.value)} />
       </div>
-
       <div className="space-y-1.5">
         <Label htmlFor="lead-website">Website</Label>
         <Input id="lead-website" type="url" placeholder="https://" value={website} onChange={(e) => setWebsite(e.target.value)} />
       </div>
-
       <div className="space-y-1.5">
         <Label htmlFor="lead-message">How can we help? <span className="text-muted-foreground">(optional)</span></Label>
         <Textarea id="lead-message" rows={3} value={message} onChange={(e) => setMessage(e.target.value)} />
       </div>
-
       <Button type="submit" disabled={submitting} className="w-full">
         {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</> : "Submit"}
       </Button>
-
       <p className="text-[11px] text-muted-foreground text-center pt-1">
         Either an email or phone number is required.
       </p>
