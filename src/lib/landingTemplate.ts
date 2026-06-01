@@ -184,7 +184,7 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
   /* ── Footer ── */
   footer{padding:100px 0 48px;border-top:1px solid var(--line-soft);position:relative;z-index:0}
   .footer-row{display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
-  .footer-logo-img{height:42px;width:auto;display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.45))}
+  .footer-logo-img{height:84px;width:auto;display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.45))}
   .footer-text{color:var(--muted-2);font-size:12.5px;line-height:1.75}
   .footer-text a{color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;transition:.2s}
   .footer-text a:hover{color:var(--cyan);border-bottom-color:rgba(52,214,194,.35)}
