@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, UserPlus, Search, MoreHorizontal, Pencil, Trash2, ArrowRightLeft, CheckCircle2 } from "lucide-react"
+import { Plus, UserPlus, Search, MoreHorizontal, Pencil, Trash2, ArrowRightLeft, CheckCircle2, MailX } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -237,6 +237,16 @@ export function Leads() {
                         <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-300">
                           <CheckCircle2 className="h-3 w-3" />
                           Converted
+                        </Badge>
+                      )}
+                      {lead.email_opt_out && (
+                        <Badge
+                          variant="outline"
+                          className="gap-1 text-rose-600 border-rose-300"
+                          title="This lead opted out of marketing communications"
+                        >
+                          <MailX className="h-3 w-3" />
+                          Do Not Email
                         </Badge>
                       )}
                     </div>

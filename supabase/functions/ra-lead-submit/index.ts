@@ -14,14 +14,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2"
 
 type SubmitPayload = {
-  slug:        string
-  first_name:  string
-  last_name?:  string
-  email?:      string
-  phone?:      string
-  company?:    string
-  website?:    string
-  message?:    string
+  slug:               string
+  first_name:         string
+  last_name?:         string
+  email?:             string
+  phone?:             string
+  company?:           string
+  website?:           string
+  message?:           string
+  marketing_consent?: boolean
 }
 
 const CORS_HEADERS: HeadersInit = {
@@ -66,6 +67,7 @@ Deno.serve(async (req) => {
   const company    = payload.company?.trim() ?? ""
   const website    = payload.website?.trim() ?? ""
   const message    = payload.message?.trim() ?? ""
+  const marketingConsent = payload.marketing_consent !== false  // default true
 
   if (!slug)      return json(400, { error: "slug is required" })
   if (!firstName) return json(400, { error: "first_name is required" })
@@ -90,6 +92,7 @@ Deno.serve(async (req) => {
     p_company:    company  || null,
     p_website:    website  || null,
     p_message:    message  || null,
+    p_marketing_consent: marketingConsent,
   })
 
   if (error) {
