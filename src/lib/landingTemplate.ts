@@ -294,7 +294,7 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
       <div class="consent-row" id="consent-row">
         <label class="consent-label">
           <input type="checkbox" id="lead-consent" checked>
-          <span>It's okay to email me about Divigner updates, offers, and helpful resources. You can opt out anytime by emailing <a href="mailto:hello@divigner.com">hello@divigner.com</a> or clicking "unsubscribe" in any email we send. Uncheck this if you'd prefer we only contact you about this inquiry.</span>
+          <span>It's okay to email me about Divigner updates, offers, and helpful resources. You can opt out anytime by emailing <a href="mailto:info@divigner.com">info@divigner.com</a> or clicking "unsubscribe" in any email we send. Uncheck this if you'd prefer we only contact you about this inquiry.</span>
         </label>
       </div>
 
