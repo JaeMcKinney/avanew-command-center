@@ -1148,6 +1148,22 @@
       /* Bio */
       var bioEl = document.getElementById('ra-bio');
       if(bioEl && ra.bio) bioEl.textContent = ra.bio;
+
+      /* Email */
+      if(ra.contact_email){
+        var emailLink = document.getElementById('ra-email');
+        var emailText = document.getElementById('ra-email-text');
+        if(emailLink) emailLink.href = 'mailto:' + ra.contact_email;
+        if(emailText) emailText.textContent = ra.contact_email;
+      }
+
+      /* Phone */
+      if(ra.contact_phone){
+        var phoneLink = document.getElementById('ra-phone');
+        var phoneText = document.getElementById('ra-phone-text');
+        if(phoneLink) phoneLink.href = 'tel:' + ra.contact_phone.replace(/[^+0-9]/g, '');
+        if(phoneText) phoneText.textContent = ra.contact_phone;
+      }
     })
     .catch(function(){ /* keep placeholder */ });
   })();
