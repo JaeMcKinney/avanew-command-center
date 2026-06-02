@@ -27,7 +27,7 @@ export function RaLandingPage() {
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    document.title = "Get Started · Divigner Group"
+    document.title = "Divigner AI Automations"
     void (async () => {
       try {
         const data = await getRaLandingPage(slug)
@@ -35,7 +35,7 @@ export function RaLandingPage() {
           setNotFound(true)
         } else {
           setRa(data)
-          document.title = `${data.display_name} — Divigner Group`
+          document.title = `${data.display_name} · Divigner AI Automations`
         }
       } catch {
         setNotFound(true)
