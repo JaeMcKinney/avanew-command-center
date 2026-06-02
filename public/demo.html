@@ -417,6 +417,49 @@
     .hero{padding:120px 0 50px}
   }
 
+  /* ── Typography hardening: stop orphans / single-word last lines on every screen ── */
+  h1, h2, h3, h4,
+  .sec-title, .form-title, .featured-name, .embed-name, .modal-title,
+  .qr-title, .featured-tagline, .addon-heading, .price .amt,
+  .ra-name, .ra-label, .final-cta h3, .success h2 {
+    text-wrap: balance;
+  }
+  p, .lede, .hero-sub, .form-sub, .ra-bio, .embed-desc,
+  .featured-desc, .featured-foot, .card p, .why-item p, .notis,
+  .price .desc, .addon-note p, .modal-sub, .footer-text,
+  .form-foot, .consent-label, .modal-foot, .cookie-popup-card p {
+    text-wrap: pretty;
+  }
+
+  /* ── Mobile (<520px): CTAs full-width, tighter form-card padding, prevent
+        small buttons from sitting on their own line ── */
+  @media(max-width:520px){
+    .hero-cta-row{flex-direction:column;align-items:stretch}
+    .hero-cta-row .btn-primary,
+    .hero-cta-row .btn-secondary{width:100%;justify-content:center}
+    .featured-cta{width:100%;justify-content:center}
+    .final-cta .btn-primary{width:100%;justify-content:center}
+    .form-grid{gap:14px}
+    .ra-card{padding:32px 22px}
+    .ra-name{font-size:clamp(26px,7vw,32px)}
+    .ra-bio{font-size:14.5px}
+    .featured-name{font-size:clamp(28px,7.5vw,36px)}
+    .featured-tagline{font-size:17px}
+    .featured-desc{font-size:14.5px}
+    .embed-name{font-size:26px}
+    .embed-desc{font-size:14px}
+    .card h3{font-size:16px}
+    .card p{font-size:14px}
+    .why-item h4{font-size:14.5px}
+    .why-item p{font-size:14px}
+    .lede{font-size:16px}
+    .callout p{font-size:18px;line-height:1.5}
+    .price .pk{font-size:11px}
+    .price .desc{font-size:14px}
+    .addon-note p{font-size:14.5px}
+    .price .incl li{font-size:13.5px}
+  }
+
 </style>
 </head>
 <body>
@@ -901,7 +944,7 @@
       <div class="ra-info">
         <div class="ra-label">Referred by</div>
         <h3 class="ra-name" id="ra-name">Jae McKinney</h3>
-        <div class="ra-title" id="ra-title">Founder &amp; Chief AI Strategist · Divigner Group</div>
+        <div class="ra-title" id="ra-title">Founder &amp; Chief AI&nbsp;Strategist · Divigner&nbsp;Group</div>
         <div class="ra-contact">
           <a href="mailto:" id="ra-email">
             <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>

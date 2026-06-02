@@ -202,6 +202,31 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
   .footer-meta{font-size:11.5px;color:var(--muted-2);margin-top:8px;letter-spacing:.04em}
 
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ── Typography hardening: prevent orphans / single-word last lines ── */
+  h1, h2, h3, h4,
+  .form-title, .ra-name, .ra-eyebrow, .success h2 { text-wrap: balance; }
+  p, .form-sub, .ra-bio, .success p, .consent-label, .form-foot { text-wrap: pretty; }
+
+  /* ── Mobile (<520px): readable type, full-width submit, tighter spacing ── */
+  @media(max-width:520px){
+    body{font-size:15.5px}
+    .ra-hero{padding:40px 22px 22px}
+    .ra-avatar,.ra-avatar-initials{width:130px;height:130px}
+    .ra-avatar-initials{font-size:38px}
+    .ra-name{font-size:clamp(28px,7vw,36px)}
+    .ra-bio{font-size:16px;max-width:none}
+    .form-hero{margin:0 auto 24px;padding:0 22px}
+    h1.form-title{font-size:clamp(34px,8vw,46px)}
+    .form-sub{font-size:17px;max-width:none}
+    .field input,.field textarea{font-size:15.5px;padding:13px 14px}
+    .field label{font-size:11.5px}
+    .submit-btn{width:100%;min-width:0;padding:16px 24px}
+    .intent-btn{padding:16px 14px;font-size:12.5px;letter-spacing:.16em}
+    .consent-row{padding:16px 18px}
+    .consent-label{font-size:13px;line-height:1.6}
+    .form-foot{font-size:11.5px}
+  }
 </style>
 </head>
 <body>
