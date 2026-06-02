@@ -79,11 +79,22 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
     --line:rgba(120,214,196,.16); --line-soft:rgba(160,190,215,.12);
     --gold:#C9A86A; --teal:#18B9A6; --teal-bright:#34D6C2; --cyan:#5FE3D2;
     --text:#EAF2F9; --muted:#A2B6C9; --muted-2:#6E8499;
-    --maxw:760px;
+    --maxw:820px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative;min-height:100vh;display:flex;flex-direction:column}
+  body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative;min-height:100vh;display:flex;flex-direction:column;font-size:16px}
+
+  /* ── Decorative orb (behind content) ── */
+  .orb-stage{position:fixed;right:-180px;top:42%;transform:translateY(-50%);width:560px;height:560px;pointer-events:none;z-index:-1;opacity:.6}
+  .orb{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 36% 30%, rgba(150,255,240,.95), rgba(52,214,194,.55) 26%, rgba(20,120,150,.25) 48%, transparent 64%),radial-gradient(circle at 60% 70%, rgba(40,160,200,.45), transparent 55%);filter:blur(2px);animation:float 9s ease-in-out infinite}
+  .orb-ring{position:absolute;inset:60px;border-radius:50%;background:conic-gradient(from 0deg, transparent, rgba(95,227,210,.5), transparent 38%, rgba(201,168,106,.4), transparent 70%);filter:blur(26px);opacity:.7;animation:spin 22s linear infinite}
+  .orb-core{position:absolute;left:50%;top:50%;width:70px;height:70px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 38% 32%, #fff, var(--cyan) 45%, var(--teal) 80%);box-shadow:0 0 80px 20px rgba(52,214,194,.5),0 0 160px 40px rgba(52,214,194,.25);animation:pulse 5s ease-in-out infinite}
+  .orb-halo{position:absolute;inset:-40px;border-radius:50%;border:1px solid rgba(95,227,210,.12);box-shadow:inset 0 0 120px rgba(52,214,194,.2)}
+  @keyframes float{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 18px))}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:1}50%{transform:translate(-50%,-50%) scale(1.12);opacity:.85}}
+  @media(max-width:680px){.orb-stage{width:380px;height:380px;right:-160px;opacity:.5}}
   body::before{content:"";position:fixed;inset:0;z-index:-2;
     background:
       radial-gradient(900px 600px at 78% -5%, rgba(52,214,194,.16), transparent 60%),
@@ -101,32 +112,32 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
   main{flex:1;padding:0;display:flex;flex-direction:column;align-items:center}
 
   /* ── RA hero ── */
-  .ra-hero{text-align:center;padding:52px 32px 28px;max-width:620px;width:100%;margin:0 auto}
-  .ra-avatar{width:110px;height:110px;border-radius:50%;object-fit:cover;margin:0 auto 20px;border:2px solid var(--line);box-shadow:0 0 0 6px rgba(52,214,194,.07),0 20px 50px -10px rgba(0,0,0,.5)}
-  .ra-avatar-initials{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#06101D;margin:0 auto 20px;background:linear-gradient(135deg,#18B9A6,#34D6C2);border:2px solid var(--line);box-shadow:0 0 0 6px rgba(52,214,194,.07),0 20px 50px -10px rgba(0,0,0,.5)}
-  .ra-eyebrow{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:10px}
-  .ra-name{font-family:'Fraunces',serif;font-size:clamp(28px,5vw,42px);font-weight:300;color:var(--text);letter-spacing:-.015em;line-height:1.1}
+  .ra-hero{text-align:center;padding:60px 32px 32px;max-width:680px;width:100%;margin:0 auto;position:relative;z-index:1}
+  .ra-avatar{width:170px;height:170px;border-radius:50%;object-fit:cover;margin:0 auto 24px;border:2px solid var(--line);box-shadow:0 0 0 8px rgba(52,214,194,.08),0 24px 60px -12px rgba(0,0,0,.55)}
+  .ra-avatar-initials{width:170px;height:170px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:700;color:#06101D;margin:0 auto 24px;background:linear-gradient(135deg,#18B9A6,#34D6C2);border:2px solid var(--line);box-shadow:0 0 0 8px rgba(52,214,194,.08),0 24px 60px -12px rgba(0,0,0,.55)}
+  .ra-eyebrow{font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:12px}
+  .ra-name{font-family:'Fraunces',serif;font-size:clamp(34px,6vw,52px);font-weight:300;color:var(--text);letter-spacing:-.015em;line-height:1.1}
 
   /* ── Form hero ── */
-  .form-hero{text-align:center;margin:0 auto 30px;max-width:620px;padding:0 32px}
-  .eyebrow{display:inline-flex;align-items:center;justify-content:center;gap:12px;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:22px}
-  .eyebrow::before,.eyebrow::after{content:"";width:30px;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent)}
-  h1.form-title{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(36px,5.6vw,58px);line-height:1.05;letter-spacing:-.015em;color:var(--text);text-wrap:balance}
+  .form-hero{text-align:center;margin:0 auto 34px;max-width:680px;padding:0 32px;position:relative;z-index:1}
+  .eyebrow{display:inline-flex;align-items:center;justify-content:center;gap:12px;font-size:13px;letter-spacing:.28em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:24px}
+  .eyebrow::before,.eyebrow::after{content:"";width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent)}
+  h1.form-title{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(42px,6.2vw,68px);line-height:1.05;letter-spacing:-.015em;color:var(--text);text-wrap:balance}
   h1.form-title .grad{background:linear-gradient(110deg,var(--cyan),var(--teal-bright) 45%,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:italic;font-weight:400}
-  .form-sub{font-family:'Fraunces',serif;font-style:italic;font-size:18px;color:var(--muted);font-weight:300;margin-top:18px;line-height:1.55;max-width:540px;margin-left:auto;margin-right:auto;text-wrap:pretty}
+  .form-sub{font-family:'Fraunces',serif;font-style:italic;font-size:20px;color:var(--muted);font-weight:300;margin-top:20px;line-height:1.55;max-width:580px;margin-left:auto;margin-right:auto;text-wrap:pretty}
 
   /* ── Form card — floats above footer ── */
-  .form-card{width:100%;max-width:620px;margin:0 auto -70px;position:relative;background:linear-gradient(170deg,rgba(14,39,65,.97),rgba(9,26,45,.97));border:1px solid var(--line);border-radius:24px;padding:42px 40px 36px;box-shadow:0 40px 100px -20px rgba(0,0,0,.75),0 0 0 1px rgba(120,214,196,.06) inset;overflow:hidden;z-index:1}
+  .form-card{width:100%;max-width:680px;margin:0 auto -70px;position:relative;background:linear-gradient(170deg,rgba(14,39,65,.97),rgba(9,26,45,.97));border:1px solid var(--line);border-radius:24px;padding:48px 44px 40px;box-shadow:0 40px 100px -20px rgba(0,0,0,.75),0 0 0 1px rgba(120,214,196,.06) inset;overflow:hidden;z-index:1}
   .form-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan),var(--gold))}
-  @media(max-width:520px){.form-card{padding:28px 20px 24px;border-radius:20px;margin-bottom:-50px}}
+  @media(max-width:520px){.form-card{padding:32px 22px 28px;border-radius:20px;margin-bottom:-50px}}
 
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .form-grid .full{grid-column:1 / -1}
   @media(max-width:520px){.form-grid{grid-template-columns:1fr}}
-  .field{display:flex;flex-direction:column;gap:6px}
-  .field label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);font-weight:700}
-  .field input,.field textarea{font-family:'Manrope';font-size:14.5px;color:var(--text);background:rgba(6,16,29,.55);border:1px solid rgba(120,214,196,.18);border-radius:10px;padding:13px 14px;outline:none;transition:border-color .2s,background .2s,box-shadow .2s;width:100%}
-  .field textarea{resize:vertical;min-height:96px;line-height:1.6}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);font-weight:700}
+  .field input,.field textarea{font-family:'Manrope';font-size:16px;color:var(--text);background:rgba(6,16,29,.55);border:1px solid rgba(120,214,196,.18);border-radius:10px;padding:15px 16px;outline:none;transition:border-color .2s,background .2s,box-shadow .2s;width:100%}
+  .field textarea{resize:vertical;min-height:108px;line-height:1.6}
   .field input::placeholder,.field textarea::placeholder{color:var(--muted-2)}
   .field input:focus,.field textarea:focus{border-color:var(--teal-bright);background:rgba(6,16,29,.75);box-shadow:0 0 0 3px rgba(52,214,194,.12)}
   .field-error{color:#ff7d7d;font-size:11.5px;letter-spacing:.04em;margin-top:2px;display:none}
@@ -135,7 +146,7 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
 
   .intent-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:26px}
   @media(max-width:520px){.intent-row{grid-template-columns:1fr}}
-  .intent-btn{position:relative;padding:16px 18px;border-radius:12px;font-family:'Manrope';font-size:12.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border:1px solid;transition:transform .25s,box-shadow .3s,background .3s,border-color .3s,color .3s;display:flex;align-items:center;justify-content:center;gap:10px}
+  .intent-btn{position:relative;padding:18px 20px;border-radius:12px;font-family:'Manrope';font-size:13.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border:1px solid;transition:transform .25s,box-shadow .3s,background .3s,border-color .3s,color .3s;display:flex;align-items:center;justify-content:center;gap:10px}
   .intent-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .intent-btn.interested{background:rgba(14,39,65,.7);border-color:rgba(120,214,196,.35);color:var(--muted)}
   .intent-btn.interested:hover{background:rgba(24,185,166,.12);border-color:var(--teal-bright);color:var(--text)}
@@ -149,17 +160,17 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
 
   /* ── Submit button ── */
   .submit-row{margin-top:20px;display:flex;justify-content:center}
-  .submit-btn{min-width:200px;padding:15px 36px;background:rgba(14,39,65,.8);border:1px solid rgba(120,214,196,.35);color:var(--text);border-radius:12px;font-family:'Manrope';font-size:12.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:.25s}
+  .submit-btn{min-width:220px;padding:17px 40px;background:rgba(14,39,65,.8);border:1px solid rgba(120,214,196,.35);color:var(--text);border-radius:12px;font-family:'Manrope';font-size:13.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:.25s}
   .submit-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .submit-btn:hover{border-color:var(--teal-bright);background:rgba(24,185,166,.12);color:var(--cyan);transform:translateY(-1px)}
   .submit-btn:disabled{opacity:.5;pointer-events:none}
 
   /* ── RA hero bio ── */
-  .ra-bio{font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--muted);line-height:1.65;max-width:400px;margin:12px auto 0}
+  .ra-bio{font-family:'Fraunces',serif;font-style:italic;font-size:18px;color:var(--muted);line-height:1.65;max-width:480px;margin:14px auto 0}
 
   /* ── Consent / opt-out ── */
-  .consent-row{margin-top:22px;padding:18px 20px;background:rgba(6,16,29,.4);border:1px solid var(--line-soft);border-radius:12px}
-  .consent-label{display:flex;align-items:flex-start;gap:12px;cursor:pointer;font-size:12.5px;color:var(--muted);line-height:1.65}
+  .consent-row{margin-top:24px;padding:20px 22px;background:rgba(6,16,29,.4);border:1px solid var(--line-soft);border-radius:12px}
+  .consent-label{display:flex;align-items:flex-start;gap:12px;cursor:pointer;font-size:13.5px;color:var(--muted);line-height:1.65}
   .consent-label input[type="checkbox"]{width:18px;height:18px;min-width:18px;margin-top:2px;accent-color:var(--teal-bright);cursor:pointer}
   .consent-label a{color:var(--cyan);text-decoration:underline;text-underline-offset:2px}
   .form-foot{margin-top:14px;font-size:11.5px;color:var(--muted-2);text-align:center;letter-spacing:.04em}
@@ -194,6 +205,14 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
 </style>
 </head>
 <body>
+
+<!-- ── Decorative orb (behind everything) ── -->
+<div class="orb-stage" aria-hidden="true">
+  <div class="orb-halo"></div>
+  <div class="orb-ring"></div>
+  <div class="orb"></div>
+  <div class="orb-core"></div>
+</div>
 
 <main>
   <div class="wrap">
