@@ -331,13 +331,10 @@
   /* ── QR code modal ── */
   .qr-modal .modal{max-width:440px;text-align:center}
   .qr-eyebrow{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:12px}
-  .qr-title{font-family:'Fraunces',serif;font-weight:400;font-size:30px;line-height:1.1;color:var(--text);letter-spacing:-.01em;margin-bottom:8px}
+  .qr-title{font-family:'Fraunces',serif;font-weight:400;font-size:30px;line-height:1.1;color:var(--text);letter-spacing:-.01em;margin-bottom:26px}
   .qr-title .grad{background:linear-gradient(110deg,var(--cyan),var(--teal-bright) 50%,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:italic}
-  .qr-sub{color:var(--muted);font-size:14px;line-height:1.65;margin-bottom:24px}
-  .qr-canvas{display:flex;justify-content:center;align-items:center;padding:24px;background:#fff;border-radius:18px;margin:0 auto 18px;width:min(320px,100%);aspect-ratio:1/1}
+  .qr-canvas{display:flex;justify-content:center;align-items:center;padding:24px;background:#fff;border-radius:18px;margin:0 auto;width:min(320px,100%);aspect-ratio:1/1}
   .qr-canvas svg,.qr-canvas img{width:100% !important;height:auto !important;display:block}
-  .qr-url{font-family:'Manrope',sans-serif;font-size:12.5px;color:var(--muted-2);word-break:break-all;padding:10px 14px;background:rgba(6,16,29,.55);border:1px solid var(--line-soft);border-radius:8px;margin-bottom:16px}
-  .qr-foot{font-size:12px;color:var(--muted-2);letter-spacing:.04em;margin-top:6px}
 
   .cookie-popup{position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:16px 24px;background:rgba(9,26,45,.96);border-top:1px solid rgba(120,214,196,.18);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;gap:20px;flex-wrap:wrap;transform:translateY(100%);transition:transform .4s cubic-bezier(.2,.8,.2,1)}
   .cookie-popup.visible{transform:translateY(0)}
@@ -965,12 +962,8 @@
     <button class="modal-close" id="qr-close" aria-label="Close">
       <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
-    <div class="qr-eyebrow">Share this page</div>
     <h3 class="qr-title" id="qr-modal-title">Scan to <span class="grad">open this page.</span></h3>
-    <p class="qr-sub">Have them point their camera at the code. No app, no signup. Instant access to everything you just showed them.</p>
     <div class="qr-canvas" id="qr-canvas" aria-hidden="true"></div>
-    <div class="qr-url" id="qr-url"></div>
-    <p class="qr-foot">Tap outside this window to close.</p>
   </div>
 </div>
 
@@ -1232,7 +1225,6 @@
   /* ── QR code modal ─────────────────────────────────────────────────────── */
   var qrModal      = document.getElementById('qr-modal');
   var qrCanvas     = document.getElementById('qr-canvas');
-  var qrUrlEl      = document.getElementById('qr-url');
   var qrRendered   = false;
 
   function shareUrl(){
@@ -1253,11 +1245,9 @@
       qr.addData(url);
       qr.make();
       qrCanvas.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
-      qrUrlEl.textContent = url;
       qrRendered = true;
     } catch(err){
       qrCanvas.innerHTML = '<div style="color:#06101D;font-family:Manrope;font-size:13px;padding:20px;text-align:center">Couldn\'t generate QR code. Share this link instead:<br><br><strong>' + url + '</strong></div>';
-      qrUrlEl.textContent = url;
     }
   }
 
