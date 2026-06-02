@@ -1085,7 +1085,14 @@
       ? 'https://ai-automation.divigner.com/refer/' + encodeURIComponent(raSlug)
       : 'https://ai-automation.divigner.com';
   }
-  function goToLeadForm(){ window.location.href = leadFormUrl(); }
+  function goToLeadForm(){
+    // If we're inside an iframe (the React /demo/<slug> route renders this
+    // in a full-screen iframe), navigate the TOP window so the address bar
+    // actually updates. Falls back to window.location for direct visits.
+    var target = (window.top && window.top !== window) ? window.top : window;
+    try { target.location.href = leadFormUrl(); }
+    catch (e) { window.location.href = leadFormUrl(); }
+  }
 
   document.getElementById('learn-more-btn').addEventListener('click', function(e){ e.preventDefault(); goToLeadForm(); });
   document.getElementById('mob-learn-more').addEventListener('click', function(){ closeMobMenu(); goToLeadForm(); });
