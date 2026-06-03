@@ -161,6 +161,16 @@
   .embed-placeholder svg{width:46px;height:46px;stroke:var(--cyan);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;margin-bottom:10px;opacity:.7}
   .embed-placeholder-inner{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:14px}
   .embed-placeholder-inner b{font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:15px;color:var(--cyan);letter-spacing:0}
+  .embed-placeholder-clickable{cursor:pointer;transition:background .3s, transform .3s}
+  .embed-placeholder-clickable:hover{background:radial-gradient(ellipse at 50% 40%, rgba(52,214,194,.28), rgba(11,33,56,.5) 60%, rgba(6,16,29,.95) 100%)}
+  .embed-placeholder-clickable:hover svg{opacity:1;transform:scale(1.08);transition:transform .3s, opacity .3s}
+  .embed-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 40%, rgba(52,214,194,.14), rgba(11,33,56,.6) 60%, rgba(6,16,29,.95) 100%);color:var(--cyan);font-family:'Manrope',sans-serif;font-size:13px;letter-spacing:.08em}
+  .embed-loading .spin{width:36px;height:36px;border:2.5px solid rgba(52,214,194,.2);border-top-color:var(--teal-bright);border-radius:50%;animation:embedSpin .8s linear infinite}
+  @keyframes embedSpin{to{transform:rotate(360deg)}}
+  .embed-error{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:18px;background:rgba(6,16,29,.94);color:#ff9e9e;font-family:'Manrope',sans-serif;font-size:13px;text-align:center}
+  .embed-error b{color:var(--text);font-size:14px;font-weight:700;margin-bottom:4px}
+  .embed-error button{margin-top:6px;padding:6px 14px;border-radius:8px;background:rgba(52,214,194,.15);border:1px solid rgba(52,214,194,.45);color:var(--cyan);font-family:inherit;font-size:12px;cursor:pointer;letter-spacing:.06em}
+  .embed-error button:hover{background:rgba(52,214,194,.28)}
 
   /* Card body */
   .embed-body{padding:24px 26px 26px;display:flex;flex-direction:column;gap:10px;flex:1}
@@ -624,12 +634,12 @@
     <div class="embed-grid stagger">
       <!-- Embed 1 -->
       <article class="embed-card">
-        <div class="embed-video">
-          <div class="embed-placeholder">
+        <div class="embed-video" data-tavus-persona="p89d1a8b29c9" data-tavus-replica="re206226de83" data-tavus-name="Victoria">
+          <div class="embed-placeholder embed-placeholder-clickable">
             <div class="embed-placeholder-inner">
               <svg viewBox="0 0 24 24"><polygon points="10 8 16 12 10 16 10 8"/><circle cx="12" cy="12" r="10"/></svg>
               <b>Victoria</b>
-              <span>Avatar embed slot 1</span>
+              <span>Click to start &middot; up to 5 min</span>
             </div>
           </div>
         </div>
@@ -1318,6 +1328,80 @@
 
   // Expose for mobile-menu handler (defined earlier in this same IIFE)
   window.openQrModal = openQrModal;
+
+  /* ── Tavus avatar embed (click placeholder → mint conversation → iframe) ── */
+  var TAVUS_FN_URL = 'https://cbmcyffvsebrxkmxufxx.supabase.co/functions/v1/tavus-start-conversation';
+  var TAVUS_FN_KEY = SUPABASE_KEY_FALLBACK();
+  function SUPABASE_KEY_FALLBACK(){
+    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibWN5ZmZ2c2VicnhrbXh1Znh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjU3MTMsImV4cCI6MjA5MzA0MTcxM30.Uxh5aWShe3YkrBkjjBe8WcP0fqQH-4pp6P8NyqKRt7A';
+  }
+
+  function renderPlaceholder(stage, name){
+    stage.innerHTML =
+      '<div class="embed-placeholder embed-placeholder-clickable">' +
+        '<div class="embed-placeholder-inner">' +
+          '<svg viewBox="0 0 24 24"><polygon points="10 8 16 12 10 16 10 8"/><circle cx="12" cy="12" r="10"/></svg>' +
+          '<b>' + name + '</b>' +
+          '<span>Click to start &middot; up to 5 min</span>' +
+        '</div>' +
+      '</div>';
+    stage.querySelector('.embed-placeholder-clickable').addEventListener('click', function(){
+      startTavusConversation(stage);
+    });
+  }
+
+  function startTavusConversation(stage){
+    var personaId = stage.dataset.tavusPersona;
+    var replicaId = stage.dataset.tavusReplica || '';
+    var name      = stage.dataset.tavusName    || 'Avatar';
+    if(!personaId) return;
+
+    stage.innerHTML = '<div class="embed-loading"><div class="spin"></div><div>Connecting to ' + name + '…</div></div>';
+
+    fetch(TAVUS_FN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': 'Bearer ' + TAVUS_FN_KEY,
+        'apikey':        TAVUS_FN_KEY
+      },
+      body: JSON.stringify({
+        persona_id:        personaId,
+        replica_id:        replicaId || undefined,
+        conversation_name: 'demo:' + name + ':' + (raSlug || 'direct')
+      })
+    })
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, data:d}; }); })
+    .then(function(res){
+      if(!res.ok || !res.data.conversation_url){
+        throw new Error(res.data.error || 'No conversation URL returned');
+      }
+      var iframe = document.createElement('iframe');
+      iframe.src = res.data.conversation_url;
+      iframe.allow = 'camera; microphone; autoplay; display-capture';
+      iframe.setAttribute('allowfullscreen', '');
+      iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;display:block';
+      stage.innerHTML = '';
+      stage.appendChild(iframe);
+    })
+    .catch(function(err){
+      stage.innerHTML =
+        '<div class="embed-error">' +
+          '<b>Couldn\'t connect</b>' +
+          '<div>' + (err && err.message ? err.message : 'Unknown error') + '</div>' +
+          '<button type="button">Try again</button>' +
+        '</div>';
+      stage.querySelector('button').addEventListener('click', function(){
+        renderPlaceholder(stage, name);
+      });
+    });
+  }
+
+  document.querySelectorAll('.embed-video[data-tavus-persona]').forEach(function(stage){
+    var placeholder = stage.querySelector('.embed-placeholder-clickable');
+    if(!placeholder) return;
+    placeholder.addEventListener('click', function(){ startTavusConversation(stage); });
+  });
 })();
 </script>
 
