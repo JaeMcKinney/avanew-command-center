@@ -201,10 +201,11 @@
   .notis:nth-child(1){--accent:var(--teal-bright);--accent-border:rgba(52,214,194,.4);--accent-glow:rgba(52,214,194,.32)}
   .notis:nth-child(2){--accent:var(--gold);--accent-border:rgba(201,168,106,.45);--accent-glow:rgba(201,168,106,.3)}
   .notis:nth-child(3){--accent:#A78BFA;--accent-border:rgba(167,139,250,.45);--accent-glow:rgba(167,139,250,.32)}
-  .notis .not{font-family:'Manrope';font-size:13.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);text-decoration:line-through;text-decoration-thickness:1.5px;font-weight:700;flex:0 0 auto;position:relative;z-index:1}
-  .notis .arrow{color:var(--accent,var(--gold));font-style:italic;font-family:'Fraunces',serif;font-size:24px;position:relative;z-index:1;text-shadow:0 0 12px var(--accent-glow,rgba(201,168,106,.6))}
-  .notis .is{font-family:'Fraunces',serif;font-size:24px;font-style:italic;color:var(--text);font-weight:500;position:relative;z-index:1;letter-spacing:-.005em}
-  @media(max-width:520px){.notis{padding:22px 24px;gap:14px}.notis .not{font-size:12.5px}.notis .arrow,.notis .is{font-size:21px}}
+  .notis .not{font-family:'Manrope';font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);text-decoration:line-through;text-decoration-thickness:1.5px;font-weight:700;flex:0 0 auto;position:relative;z-index:1;white-space:nowrap}
+  .notis .arrow{color:var(--accent,var(--gold));font-style:italic;font-family:'Fraunces',serif;font-size:22px;position:relative;z-index:1;text-shadow:0 0 12px var(--accent-glow,rgba(201,168,106,.6));flex:0 0 auto}
+  .notis .is{font-family:'Fraunces',serif;font-size:22px;font-style:italic;color:var(--text);font-weight:500;position:relative;z-index:1;letter-spacing:-.005em;white-space:nowrap;flex:1 1 auto;min-width:0}
+  @media(max-width:1080px){.notis{padding:24px 22px;gap:14px}.notis .not{font-size:11.5px;letter-spacing:.12em}.notis .arrow,.notis .is{font-size:20px}}
+  @media(max-width:520px){.notis{padding:22px 24px;gap:16px}.notis .not{font-size:12.5px;letter-spacing:.16em}.notis .arrow,.notis .is{font-size:22px}}
 
   /* ── Investment / pricing ── */
   .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch;margin-top:14px}
