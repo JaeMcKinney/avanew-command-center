@@ -220,15 +220,26 @@
   .price.svc .pk{color:var(--text)}
 
   /* ── Investment add-on note (below pricing cards) — prominent treatment ── */
-  .addon-note{position:relative;margin-top:36px;padding:42px 46px;border-radius:24px;background:linear-gradient(160deg,rgba(201,168,106,.18),rgba(14,39,65,.94));border:1px solid rgba(201,168,106,.42);overflow:hidden;box-shadow:0 30px 80px -24px rgba(0,0,0,.65),0 0 70px -22px rgba(201,168,106,.42)}
-  .addon-note::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--gold),#ffe6b0,var(--gold),#ffe6b0,var(--gold));background-size:300% 100%;animation:goldShimmer 3.4s linear infinite}
-  .addon-note::after{content:"";position:absolute;right:-180px;top:-180px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.26),transparent 65%);pointer-events:none;z-index:0;animation:goldHalo 7s ease-in-out infinite}
+  .addon-note{position:relative;margin-top:36px;padding:42px 46px;border-radius:24px;background:linear-gradient(160deg,rgba(201,168,106,.18),rgba(24,185,166,.14) 55%,rgba(14,39,65,.94));border:1px solid rgba(201,168,106,.42);overflow:hidden;box-shadow:0 30px 80px -24px rgba(0,0,0,.65),0 0 70px -22px rgba(201,168,106,.42),0 0 70px -22px rgba(52,214,194,.32)}
+  .addon-note::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--teal-bright),var(--cyan),#ffe6b0,var(--gold),var(--teal-bright));background-size:300% 100%;animation:goldShimmer 3.4s linear infinite}
+  .addon-note::after{content:"";position:absolute;right:-180px;top:-180px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.26),rgba(52,214,194,.18) 45%,transparent 70%);pointer-events:none;z-index:0;animation:goldHalo 7s ease-in-out infinite}
+  .addon-note .addon-glow-teal{content:"";position:absolute;left:-160px;bottom:-160px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(52,214,194,.28),transparent 65%);pointer-events:none;z-index:0;animation:tealHalo 8s ease-in-out infinite}
   @keyframes goldShimmer{0%{background-position:300% 50%}100%{background-position:-300% 50%}}
   @keyframes goldHalo{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
+  @keyframes tealHalo{0%,100%{transform:scale(1);opacity:.75}50%{transform:scale(1.12);opacity:1}}
   .addon-note>*{position:relative;z-index:1}
-  .addon-note .addon-label{display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border-radius:30px;background:rgba(201,168,106,.2);border:1px solid rgba(201,168,106,.5);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#ffe6b0;font-family:'Manrope',sans-serif;font-weight:700;margin-bottom:18px;box-shadow:0 0 0 0 rgba(201,168,106,.55);animation:goldBadgePulse 2.4s ease-in-out infinite}
-  .addon-note .addon-label::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold)}
-  @keyframes goldBadgePulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,106,.55)}50%{box-shadow:0 0 0 12px rgba(201,168,106,0)}}
+  .addon-note .addon-label{position:relative;display:inline-flex;align-items:center;gap:10px;padding:9px 18px;border-radius:30px;background:linear-gradient(120deg,rgba(201,168,106,.35),rgba(52,214,194,.35) 50%,rgba(201,168,106,.35));background-size:220% 100%;border:1px solid rgba(201,168,106,.6);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#fff;font-family:'Manrope',sans-serif;font-weight:800;margin-bottom:18px;box-shadow:0 0 0 0 rgba(201,168,106,.55),0 0 28px -4px rgba(52,214,194,.55);animation:goldBadgePulse 2.4s ease-in-out infinite, badgeColorCycle 6s ease-in-out infinite, badgeShimmer 4s linear infinite}
+  .addon-note .addon-label::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px var(--gold),0 0 0 3px rgba(52,214,194,.35);animation:dotColorCycle 6s ease-in-out infinite}
+  @keyframes goldBadgePulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,106,.55),0 0 28px -4px rgba(52,214,194,.55)}50%{box-shadow:0 0 0 14px rgba(201,168,106,0),0 0 38px -2px rgba(52,214,194,.75)}}
+  @keyframes badgeShimmer{0%{background-position:220% 50%}100%{background-position:-220% 50%}}
+  @keyframes badgeColorCycle{
+    0%,100%{border-color:rgba(201,168,106,.6);color:#fff5d6}
+    50%{border-color:rgba(52,214,194,.7);color:#d6fff7}
+  }
+  @keyframes dotColorCycle{
+    0%,100%{background:var(--gold);box-shadow:0 0 14px var(--gold),0 0 0 3px rgba(52,214,194,.35)}
+    50%{background:var(--teal-bright);box-shadow:0 0 14px var(--teal-bright),0 0 0 3px rgba(201,168,106,.4)}
+  }
   .addon-note h3.addon-heading{font-family:'Fraunces',serif;font-weight:400;font-size:clamp(32px,4.6vw,54px);line-height:1.08;color:var(--text);letter-spacing:-.015em;margin-bottom:20px;text-wrap:balance}
   .addon-note h3.addon-heading .grad-gold{background:linear-gradient(110deg,var(--gold),#ffe6b0 45%,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:italic;font-weight:400}
   .addon-note p{font-family:'Manrope',sans-serif;font-size:16px;line-height:1.75;color:var(--muted);max-width:880px}
@@ -887,6 +898,7 @@
     </div>
 
     <div class="addon-note reveal">
+      <div class="addon-glow-teal" aria-hidden="true"></div>
       <span class="addon-label">Going Further</span>
       <h3 class="addon-heading">Add <span class="grad-gold">custom integrations</span> and agents that do the work.</h3>
       <p>Need more than conversation? <b>Custom integrations</b> are available on a time-and-materials basis: calendar sync with Google or Outlook, hooks into your CRM, ticketing, or internal tools, and connections to Stripe, Zapier, or partner APIs. We can also build <b>custom agents</b> that act on the visitor's behalf: checking availability, booking appointments, pulling a customer record, or pushing a qualified lead straight into your pipeline.</p>
