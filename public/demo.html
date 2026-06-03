@@ -148,13 +148,6 @@
   .embed-card:hover{transform:translateY(-6px);border-color:var(--line);box-shadow:0 26px 60px -22px rgba(0,0,0,.6),0 0 50px -18px rgba(52,214,194,.45)}
 
   /* Mac-style browser chrome */
-  .embed-chrome{display:flex;align-items:center;gap:10px;padding:11px 14px;background:linear-gradient(180deg,rgba(11,33,56,.95),rgba(9,26,45,.7));border-bottom:1px solid var(--line-soft);font-size:11px}
-  .embed-dots{display:flex;gap:6px;flex-shrink:0}
-  .embed-dots span{width:11px;height:11px;border-radius:50%;display:block}
-  .embed-dots span:nth-child(1){background:#ff5f57;box-shadow:0 0 0 .5px rgba(0,0,0,.2)}
-  .embed-dots span:nth-child(2){background:#febc2e;box-shadow:0 0 0 .5px rgba(0,0,0,.2)}
-  .embed-dots span:nth-child(3){background:#28c840;box-shadow:0 0 0 .5px rgba(0,0,0,.2)}
-  .embed-url{flex:1;text-align:right;color:var(--muted);font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:12px}
 
   /* Video / iframe area (16:9) */
   .embed-video{position:relative;width:100%;aspect-ratio:16/9;background:radial-gradient(ellipse at 50% 35%, rgba(95,227,210,.18), rgba(11,33,56,.35) 55%, rgba(6,16,29,.95) 100%);overflow:hidden}
@@ -290,10 +283,23 @@
   .why-item h4{font-family:'Manrope';font-size:15.5px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:.01em}
   .why-item p{color:var(--muted);font-size:14.5px;line-height:1.7}
 
+  /* ── Why proof cards (Section 03, #why) ── */
+  .why-proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:44px}
+  @media(max-width:880px){.why-proof-grid{grid-template-columns:1fr}}
+  .why-proof-card{position:relative;padding:36px 32px;border-radius:22px;background:linear-gradient(165deg,rgba(24,185,166,.13),rgba(14,39,65,.90));border:1px solid rgba(52,214,194,.22);overflow:hidden;transition:transform .45s cubic-bezier(.2,.7,.2,1),border-color .45s,box-shadow .45s}
+  .why-proof-card::before{content:"";position:absolute;left:0;top:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal-bright),var(--gold),transparent)}
+  .why-proof-card::after{content:"";position:absolute;right:-80px;bottom:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(52,214,194,.12),transparent 65%);pointer-events:none}
+  .why-proof-card:hover{transform:translateY(-6px);border-color:rgba(52,214,194,.48);box-shadow:0 26px 60px -22px rgba(0,0,0,.65),0 0 50px -18px rgba(52,214,194,.5)}
+  .why-proof-num{font-family:'Fraunces',serif;font-style:italic;font-size:48px;font-weight:300;line-height:1;color:var(--teal-bright);margin-bottom:18px;opacity:.65}
+  .why-proof-head{font-family:'Manrope',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:12px;letter-spacing:.01em;position:relative;z-index:1;text-wrap:balance}
+  .why-proof-body{color:var(--muted);font-size:15px;line-height:1.78;position:relative;z-index:1;text-wrap:pretty}
+  @media(max-width:520px){.why-proof-card{padding:28px 24px}.why-proof-num{font-size:40px}.why-proof-head{font-size:16.5px}.why-proof-body{font-size:14.5px}}
+
   /* ── RA bio card ── */
   .ra-card{position:relative;display:grid;grid-template-columns:auto 1fr;gap:42px;align-items:center;padding:46px;border-radius:24px;background:linear-gradient(160deg,rgba(24,185,166,.10),rgba(14,39,65,.92));border:1px solid var(--line);overflow:hidden;margin-top:14px}
   .ra-card::after{content:"";position:absolute;right:-120px;top:-120px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(52,214,194,.22),transparent 65%);pointer-events:none}
-  .ra-photo{position:relative;z-index:2;width:200px;height:200px;border-radius:50%;background:linear-gradient(150deg,rgba(52,214,194,.3),rgba(9,26,45,.7));border:2px solid rgba(95,227,210,.35);box-shadow:0 0 0 6px rgba(52,214,194,.08),0 20px 50px -16px rgba(0,0,0,.6);overflow:hidden;display:grid;place-items:center;flex-shrink:0}
+  @keyframes raGlow{0%,100%{box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 20px 50px -16px rgba(0,0,0,.6)}50%{box-shadow:0 0 0 10px rgba(52,214,194,.13),0 0 56px -4px rgba(52,214,194,.52),0 20px 50px -16px rgba(0,0,0,.6)}}
+  .ra-photo{position:relative;z-index:2;width:200px;height:200px;border-radius:50%;background:linear-gradient(150deg,rgba(52,214,194,.3),rgba(9,26,45,.7));border:2px solid rgba(95,227,210,.35);box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 20px 50px -16px rgba(0,0,0,.6);overflow:hidden;display:grid;place-items:center;flex-shrink:0;animation:raGlow 3.8s ease-in-out infinite}
   .ra-photo img{width:100%;height:100%;object-fit:cover}
   .ra-photo .ra-photo-placeholder{font-family:'Fraunces',serif;font-style:italic;color:var(--cyan);font-size:54px;font-weight:400}
   .ra-info{position:relative;z-index:2}
@@ -563,10 +569,6 @@
     <div class="embed-grid stagger">
       <!-- Embed 1 -->
       <article class="embed-card">
-        <div class="embed-chrome">
-          <div class="embed-dots"><span></span><span></span><span></span></div>
-          <div class="embed-url">divigner.com/californiadermatology-com</div>
-        </div>
         <div class="embed-video">
           <div class="embed-placeholder">
             <div class="embed-placeholder-inner">
@@ -588,10 +590,6 @@
 
       <!-- Embed 2 -->
       <article class="embed-card">
-        <div class="embed-chrome">
-          <div class="embed-dots"><span></span><span></span><span></span></div>
-          <div class="embed-url">conquer-t2.com/conquer-ai-community-coach</div>
-        </div>
         <div class="embed-video">
           <div class="embed-placeholder">
             <div class="embed-placeholder-inner">
@@ -613,10 +611,6 @@
 
       <!-- Embed 3 -->
       <article class="embed-card">
-        <div class="embed-chrome">
-          <div class="embed-dots"><span></span><span></span><span></span></div>
-          <div class="embed-url">divigner.com/avatar-three</div>
-        </div>
         <div class="embed-video">
           <div class="embed-placeholder">
             <div class="embed-placeholder-inner">
@@ -636,80 +630,6 @@
         </div>
       </article>
 
-      <!-- Embed 4 -->
-      <article class="embed-card">
-        <div class="embed-chrome">
-          <div class="embed-dots"><span></span><span></span><span></span></div>
-          <div class="embed-url">divigner.com/avatar-four</div>
-        </div>
-        <div class="embed-video">
-          <div class="embed-placeholder">
-            <div class="embed-placeholder-inner">
-              <svg viewBox="0 0 24 24"><polygon points="10 8 16 12 10 16 10 8"/><circle cx="12" cy="12" r="10"/></svg>
-              <b>Avatar 4</b>
-              <span>Avatar embed slot 4</span>
-            </div>
-          </div>
-        </div>
-        <div class="embed-body">
-          <div class="embed-name">Avatar 4</div>
-          <div class="embed-label">Role / Title</div>
-          <p class="embed-desc">Replace this card body with the avatar's name, the role they play on the client's site, and a 2–3 sentence description of who they serve and what they help visitors do.</p>
-          <a href="#" class="embed-link" data-live="4">View the live avatar
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-          </a>
-        </div>
-      </article>
-
-      <!-- Embed 5 -->
-      <article class="embed-card">
-        <div class="embed-chrome">
-          <div class="embed-dots"><span></span><span></span><span></span></div>
-          <div class="embed-url">divigner.com/avatar-five</div>
-        </div>
-        <div class="embed-video">
-          <div class="embed-placeholder">
-            <div class="embed-placeholder-inner">
-              <svg viewBox="0 0 24 24"><polygon points="10 8 16 12 10 16 10 8"/><circle cx="12" cy="12" r="10"/></svg>
-              <b>Avatar 5</b>
-              <span>Avatar embed slot 5</span>
-            </div>
-          </div>
-        </div>
-        <div class="embed-body">
-          <div class="embed-name">Avatar 5</div>
-          <div class="embed-label">Role / Title</div>
-          <p class="embed-desc">Replace this card body with the avatar's name, the role they play on the client's site, and a 2–3 sentence description of who they serve and what they help visitors do.</p>
-          <a href="#" class="embed-link" data-live="5">View the live avatar
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-          </a>
-        </div>
-      </article>
-
-      <!-- Embed 6 -->
-      <article class="embed-card">
-        <div class="embed-chrome">
-          <div class="embed-dots"><span></span><span></span><span></span></div>
-          <div class="embed-url">divigner.com/avatar-six</div>
-        </div>
-        <div class="embed-video">
-          <div class="embed-placeholder">
-            <div class="embed-placeholder-inner">
-              <svg viewBox="0 0 24 24"><polygon points="10 8 16 12 10 16 10 8"/><circle cx="12" cy="12" r="10"/></svg>
-              <b>Avatar 6</b>
-              <span>Avatar embed slot 6</span>
-            </div>
-          </div>
-        </div>
-        <div class="embed-body">
-          <div class="embed-name">Avatar 6</div>
-          <div class="embed-label">Role / Title</div>
-          <p class="embed-desc">Replace this card body with the avatar's name, the role they play on the client's site, and a 2–3 sentence description of who they serve and what they help visitors do.</p>
-          <a href="#" class="embed-link" data-live="6">View the live avatar
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-          </a>
-        </div>
-      </article>
     </div>
 
   </div>
@@ -728,10 +648,6 @@
     <!-- Featured prominent avatar -->
     <div class="featured-avatar reveal">
       <div class="featured-embed">
-        <div class="embed-chrome">
-          <div class="embed-dots"><span></span><span></span><span></span></div>
-          <div class="embed-url">divigner.com/avatar-seven</div>
-        </div>
         <div class="embed-video featured-video">
           <div class="embed-placeholder">
             <div class="embed-placeholder-inner">
@@ -751,6 +667,24 @@
           <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </button>
         <span class="featured-foot">No signup. No form. Voice or text. Faster than booking a call.</span>
+      </div>
+    </div>
+
+    <div class="why-proof-grid stagger">
+      <div class="why-proof-card">
+        <div class="why-proof-num">01</div>
+        <h4 class="why-proof-head">Skip the discovery call</h4>
+        <p class="why-proof-body">She answers the questions you'd normally put on a 30-minute calendar invite: pricing, timelines, what works for your industry, what doesn't. Right now. No form, no wait.</p>
+      </div>
+      <div class="why-proof-card">
+        <div class="why-proof-num">02</div>
+        <h4 class="why-proof-head">You're experiencing the product</h4>
+        <p class="why-proof-body">This isn't a mockup or a screenshare. The avatar above is the same technology your visitors would use on your site. If it answered your question, it will answer theirs.</p>
+      </div>
+      <div class="why-proof-card">
+        <div class="why-proof-num">03</div>
+        <h4 class="why-proof-head">Every conversation is measured</h4>
+        <p class="why-proof-body">Sessions are tagged by intent, summarized by AI, and routed into your CRM. You see which conversations turned into leads — not just sessions.</p>
       </div>
     </div>
 
