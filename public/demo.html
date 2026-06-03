@@ -164,13 +164,58 @@
   .embed-placeholder-clickable{cursor:pointer;transition:background .3s, transform .3s}
   .embed-placeholder-clickable:hover{background:radial-gradient(ellipse at 50% 40%, rgba(52,214,194,.28), rgba(11,33,56,.5) 60%, rgba(6,16,29,.95) 100%)}
   .embed-placeholder-clickable:hover svg{opacity:1;transform:scale(1.08);transition:transform .3s, opacity .3s}
+
+  /* ── Thumbnail-style click-to-launch (replaces in-card iframe) ── */
+  .embed-thumb-btn{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;margin:0;background:#06101D;cursor:pointer;display:block;overflow:hidden;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+  .embed-thumb-btn:hover{transform:scale(1.015)}
+  .embed-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.2,.7,.2,1), filter .4s}
+  .embed-thumb-btn:hover .embed-thumb{transform:scale(1.06);filter:brightness(1.08)}
+  .embed-thumb-overlay{position:absolute;inset:0;background:linear-gradient(180deg, rgba(6,16,29,.18) 0%, rgba(6,16,29,.05) 40%, rgba(6,16,29,.55) 100%);pointer-events:none;transition:opacity .4s}
+  .embed-thumb-btn:hover .embed-thumb-overlay{opacity:.7}
+  .embed-thumb-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;background:rgba(6,16,29,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.45);display:grid;place-items:center;color:#fff;transition:transform .3s cubic-bezier(.2,.7,.2,1), background .3s, border-color .3s, box-shadow .3s;box-shadow:0 12px 30px -10px rgba(0,0,0,.55), 0 0 0 0 rgba(52,214,194,.5);animation:thumbPulse 2.4s ease-in-out infinite}
+  .embed-thumb-play svg{width:30px;height:30px;fill:currentColor;margin-left:4px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+  .embed-thumb-btn:hover .embed-thumb-play{transform:translate(-50%,-50%) scale(1.1);background:linear-gradient(120deg,rgba(52,214,194,.85),rgba(95,227,210,.7));border-color:rgba(255,255,255,.75);box-shadow:0 18px 40px -10px rgba(0,0,0,.7), 0 0 40px -8px rgba(52,214,194,.65);animation:none;color:#06101D}
+  @keyframes thumbPulse{0%,100%{box-shadow:0 12px 30px -10px rgba(0,0,0,.55), 0 0 0 0 rgba(52,214,194,.55)}50%{box-shadow:0 12px 30px -10px rgba(0,0,0,.55), 0 0 0 14px rgba(52,214,194,0)}}
+  .embed-thumb-label{position:absolute;left:20px;bottom:16px;font-family:'Manrope',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.85);text-shadow:0 2px 8px rgba(0,0,0,.6);pointer-events:none;display:flex;align-items:center;gap:8px}
+  .embed-thumb-label::before{content:"";width:7px;height:7px;border-radius:50%;background:#FF3D5A;box-shadow:0 0 10px #FF3D5A;animation:thumbDot 1.2s ease-in-out infinite}
+  @keyframes thumbDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
+
+  /* Fallback when no thumbnail file is present (broken img or missing src) */
+  .embed-thumb-fallback{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:radial-gradient(ellipse at 50% 35%, rgba(52,214,194,.22), rgba(11,33,56,.6) 55%, rgba(6,16,29,.95) 100%);color:var(--muted);font-family:'Manrope',sans-serif;font-size:12px;letter-spacing:.06em}
+  .embed-thumb-fallback b{font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:24px;color:var(--cyan);letter-spacing:-.01em}
+
   .embed-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 40%, rgba(52,214,194,.14), rgba(11,33,56,.6) 60%, rgba(6,16,29,.95) 100%);color:var(--cyan);font-family:'Manrope',sans-serif;font-size:13px;letter-spacing:.08em}
   .embed-loading .spin{width:36px;height:36px;border:2.5px solid rgba(52,214,194,.2);border-top-color:var(--teal-bright);border-radius:50%;animation:embedSpin .8s linear infinite}
   @keyframes embedSpin{to{transform:rotate(360deg)}}
-  .embed-error{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:18px;background:rgba(6,16,29,.94);color:#ff9e9e;font-family:'Manrope',sans-serif;font-size:13px;text-align:center}
+  .embed-error{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:18px;background:rgba(6,16,29,.94);color:#ff9e9e;font-family:'Manrope',sans-serif;font-size:13px;text-align:center;z-index:5}
   .embed-error b{color:var(--text);font-size:14px;font-weight:700;margin-bottom:4px}
   .embed-error button{margin-top:6px;padding:6px 14px;border-radius:8px;background:rgba(52,214,194,.15);border:1px solid rgba(52,214,194,.45);color:var(--cyan);font-family:inherit;font-size:12px;cursor:pointer;letter-spacing:.06em}
   .embed-error button:hover{background:rgba(52,214,194,.28)}
+
+  /* ── Avatar fullscreen modal (blurs background, resizable, mobile-aware) ── */
+  .avatar-modal{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .35s ease}
+  .avatar-modal.open{display:flex;opacity:1}
+  .avatar-modal-backdrop{position:absolute;inset:0;background:rgba(6,16,29,.72);backdrop-filter:blur(18px) saturate(1.1);-webkit-backdrop-filter:blur(18px) saturate(1.1)}
+  /* When modal is open, blur the whole page behind it as well (covers iOS/older browsers) */
+  body.avatar-modal-active > *:not(.avatar-modal){filter:blur(0)}  /* no-op — backdrop layer handles the visual */
+  .avatar-modal-stage{position:relative;width:100%;max-width:880px;aspect-ratio:16/9;border-radius:22px;overflow:hidden;background:#06101D;border:1px solid rgba(120,214,196,.25);box-shadow:0 40px 100px -28px rgba(0,0,0,.85), 0 0 80px -28px rgba(52,214,194,.4);transform:scale(.96);transition:transform .4s cubic-bezier(.2,.7,.2,1), max-width .4s, max-height .4s, aspect-ratio .4s}
+  .avatar-modal.open .avatar-modal-stage{transform:scale(1)}
+  .avatar-modal-stage.size-large{max-width:min(1320px, 96vw);aspect-ratio:auto;height:min(900px, 88vh)}
+  .avatar-modal-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .avatar-modal-frame iframe{width:100%;height:100%;border:0;display:block}
+  .avatar-modal-controls{position:absolute;top:14px;right:14px;display:flex;gap:8px;z-index:5}
+  .avatar-modal-ctrl{width:38px;height:38px;border-radius:50%;border:1px solid rgba(120,214,196,.35);background:rgba(6,16,29,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;cursor:pointer;display:grid;place-items:center;transition:.2s}
+  .avatar-modal-ctrl:hover{border-color:var(--teal-bright);background:rgba(24,185,166,.35);color:var(--cyan)}
+  .avatar-modal-ctrl svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .avatar-modal-ctrl.close:hover{border-color:#ff7d7d;background:rgba(255,125,125,.18);color:#ff7d7d;transform:rotate(90deg)}
+  .avatar-modal-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--cyan);font-family:'Manrope',sans-serif;font-size:13px;letter-spacing:.08em;background:radial-gradient(ellipse at 50% 40%, rgba(52,214,194,.16), rgba(6,16,29,.95) 70%)}
+  .avatar-modal-loading .spin{width:42px;height:42px;border:3px solid rgba(52,214,194,.2);border-top-color:var(--teal-bright);border-radius:50%;animation:embedSpin .8s linear infinite}
+  @media(max-width:780px){
+    .avatar-modal{padding:0}
+    .avatar-modal-stage,.avatar-modal-stage.size-large{max-width:100%;width:100%;height:100vh;aspect-ratio:auto;border-radius:0;border-left:0;border-right:0}
+    .avatar-modal-ctrl.resize{display:none}
+    .avatar-modal-controls{top:max(12px, env(safe-area-inset-top, 12px));right:12px}
+  }
 
   /* Card body */
   .embed-body{padding:24px 26px 26px;display:flex;flex-direction:column;gap:10px;flex:1}
@@ -634,14 +679,19 @@
     <div class="embed-grid stagger">
       <!-- Embed 1 -->
       <article class="embed-card">
-        <div class="embed-video" data-tavus-persona="p89d1a8b29c9" data-tavus-replica="re206226de83" data-tavus-name="Victoria">
-          <div class="embed-placeholder embed-placeholder-clickable">
-            <div class="embed-placeholder-inner">
-              <svg viewBox="0 0 24 24"><polygon points="10 8 16 12 10 16 10 8"/><circle cx="12" cy="12" r="10"/></svg>
+        <div class="embed-video" data-tavus-persona="p89d1a8b29c9" data-tavus-replica="re206226de83" data-tavus-name="Victoria" data-tavus-thumb="/avatars/victoria.jpg">
+          <button type="button" class="embed-thumb-btn" aria-label="Start conversation with Victoria">
+            <img class="embed-thumb" src="/avatars/victoria.jpg" alt="Victoria — Dermatology Patient Concierge" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none">
               <b>Victoria</b>
-              <span>Click to start &middot; up to 5 min</span>
+              <span>Drop a thumbnail at /avatars/victoria.jpg</span>
             </div>
-          </div>
+            <div class="embed-thumb-overlay"></div>
+            <span class="embed-thumb-label">Live · Click to start</span>
+            <span class="embed-thumb-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg>
+            </span>
+          </button>
         </div>
         <div class="embed-body">
           <div class="embed-name">Victoria</div>
@@ -655,14 +705,19 @@
 
       <!-- Embed 2 -->
       <article class="embed-card">
-        <div class="embed-video">
-          <div class="embed-placeholder">
-            <div class="embed-placeholder-inner">
-              <svg viewBox="0 0 24 24"><polygon points="10 8 16 12 10 16 10 8"/><circle cx="12" cy="12" r="10"/></svg>
+        <div class="embed-video" data-tavus-name="Connie" data-tavus-thumb="/avatars/connie.jpg">
+          <button type="button" class="embed-thumb-btn" aria-label="Connie preview">
+            <img class="embed-thumb" src="/avatars/connie.jpg" alt="Connie — Website Navigator" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none">
               <b>Connie</b>
-              <span>Avatar embed slot 2</span>
+              <span>Drop a thumbnail at /avatars/connie.jpg</span>
             </div>
-          </div>
+            <div class="embed-thumb-overlay"></div>
+            <span class="embed-thumb-label">Coming soon</span>
+            <span class="embed-thumb-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg>
+            </span>
+          </button>
         </div>
         <div class="embed-body">
           <div class="embed-name">Connie</div>
@@ -676,14 +731,19 @@
 
       <!-- Embed 3 -->
       <article class="embed-card">
-        <div class="embed-video">
-          <div class="embed-placeholder">
-            <div class="embed-placeholder-inner">
-              <svg viewBox="0 0 24 24"><polygon points="10 8 16 12 10 16 10 8"/><circle cx="12" cy="12" r="10"/></svg>
+        <div class="embed-video" data-tavus-name="Avatar 3" data-tavus-thumb="/avatars/avatar-3.jpg">
+          <button type="button" class="embed-thumb-btn" aria-label="Avatar 3 preview">
+            <img class="embed-thumb" src="/avatars/avatar-3.jpg" alt="Avatar 3" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none">
               <b>Avatar 3</b>
-              <span>Avatar embed slot 3</span>
+              <span>Drop a thumbnail at /avatars/avatar-3.jpg</span>
             </div>
-          </div>
+            <div class="embed-thumb-overlay"></div>
+            <span class="embed-thumb-label">Coming soon</span>
+            <span class="embed-thumb-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg>
+            </span>
+          </button>
         </div>
         <div class="embed-body">
           <div class="embed-name">Avatar 3</div>
@@ -1019,6 +1079,24 @@
   </div>
 </div>
 
+<!-- ── Avatar conversation modal ── -->
+<div class="avatar-modal" id="avatar-modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="avatar-modal-backdrop" id="avatar-modal-backdrop"></div>
+  <div class="avatar-modal-stage" id="avatar-modal-stage">
+    <div class="avatar-modal-frame" id="avatar-modal-frame">
+      <div class="avatar-modal-loading"><div class="spin"></div><div id="avatar-modal-loading-text">Connecting…</div></div>
+    </div>
+    <div class="avatar-modal-controls">
+      <button type="button" class="avatar-modal-ctrl resize" id="avatar-modal-resize" aria-label="Toggle size" title="Toggle size">
+        <svg id="avatar-modal-resize-icon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+      </button>
+      <button type="button" class="avatar-modal-ctrl close" id="avatar-modal-close" aria-label="Close">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- QR code library (pinned). ~5KB, loads lazily on first open if not preloaded. -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
@@ -1329,34 +1407,65 @@
   // Expose for mobile-menu handler (defined earlier in this same IIFE)
   window.openQrModal = openQrModal;
 
-  /* ── Tavus avatar embed (click placeholder → mint conversation → iframe) ── */
-  var TAVUS_FN_URL = 'https://cbmcyffvsebrxkmxufxx.supabase.co/functions/v1/tavus-start-conversation';
-  var TAVUS_FN_KEY = SUPABASE_KEY_FALLBACK();
-  function SUPABASE_KEY_FALLBACK(){
-    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibWN5ZmZ2c2VicnhrbXh1Znh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjU3MTMsImV4cCI6MjA5MzA0MTcxM30.Uxh5aWShe3YkrBkjjBe8WcP0fqQH-4pp6P8NyqKRt7A';
-  }
+  /* ── Tavus avatar modal (thumbnail click → open modal → mint conversation) ── */
+  var TAVUS_FN_URL  = 'https://cbmcyffvsebrxkmxufxx.supabase.co/functions/v1/tavus-start-conversation';
+  var TAVUS_FN_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibWN5ZmZ2c2VicnhrbXh1Znh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjU3MTMsImV4cCI6MjA5MzA0MTcxM30.Uxh5aWShe3YkrBkjjBe8WcP0fqQH-4pp6P8NyqKRt7A';
 
-  function renderPlaceholder(stage, name){
-    stage.innerHTML =
-      '<div class="embed-placeholder embed-placeholder-clickable">' +
-        '<div class="embed-placeholder-inner">' +
-          '<svg viewBox="0 0 24 24"><polygon points="10 8 16 12 10 16 10 8"/><circle cx="12" cy="12" r="10"/></svg>' +
-          '<b>' + name + '</b>' +
-          '<span>Click to start &middot; up to 5 min</span>' +
-        '</div>' +
-      '</div>';
-    stage.querySelector('.embed-placeholder-clickable').addEventListener('click', function(){
-      startTavusConversation(stage);
-    });
+  var avatarModal       = document.getElementById('avatar-modal');
+  var avatarModalStage  = document.getElementById('avatar-modal-stage');
+  var avatarModalFrame  = document.getElementById('avatar-modal-frame');
+  var avatarModalText   = document.getElementById('avatar-modal-loading-text');
+  var avatarModalResize = document.getElementById('avatar-modal-resize');
+  var avatarModalClose  = document.getElementById('avatar-modal-close');
+  var avatarModalBack   = document.getElementById('avatar-modal-backdrop');
+
+  function openAvatarModal(name){
+    avatarModalText.textContent = 'Connecting to ' + name + '…';
+    avatarModalFrame.innerHTML = '<div class="avatar-modal-loading"><div class="spin"></div><div>' + avatarModalText.textContent + '</div></div>';
+    avatarModal.classList.add('open');
+    avatarModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('avatar-modal-active');
+    document.body.style.overflow = 'hidden';
   }
+  function closeAvatarModal(){
+    avatarModal.classList.remove('open');
+    avatarModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('avatar-modal-active');
+    document.body.style.overflow = '';
+    avatarModalStage.classList.remove('size-large');
+    // Empty the frame so the iframe disconnects and any Tavus session ends client-side
+    setTimeout(function(){ avatarModalFrame.innerHTML = ''; }, 350);
+  }
+  avatarModalClose.addEventListener('click', closeAvatarModal);
+  avatarModalBack.addEventListener('click', closeAvatarModal);
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && avatarModal.classList.contains('open')) closeAvatarModal();
+  });
+  avatarModalResize.addEventListener('click', function(){
+    avatarModalStage.classList.toggle('size-large');
+  });
 
   function startTavusConversation(stage){
     var personaId = stage.dataset.tavusPersona;
     var replicaId = stage.dataset.tavusReplica || '';
     var name      = stage.dataset.tavusName    || 'Avatar';
-    if(!personaId) return;
 
-    stage.innerHTML = '<div class="embed-loading"><div class="spin"></div><div>Connecting to ' + name + '…</div></div>';
+    if(!personaId){
+      // No persona wired yet — show a friendly "coming soon" inside the modal
+      openAvatarModal(name);
+      setTimeout(function(){
+        avatarModalFrame.innerHTML =
+          '<div class="embed-error">' +
+            '<b>' + name + ' is coming soon</b>' +
+            '<div>This avatar isn\'t wired up yet. Victoria is live — try her first.</div>' +
+            '<button type="button" id="avatar-modal-back-btn">Close</button>' +
+          '</div>';
+        document.getElementById('avatar-modal-back-btn').addEventListener('click', closeAvatarModal);
+      }, 250);
+      return;
+    }
+
+    openAvatarModal(name);
 
     fetch(TAVUS_FN_URL, {
       method: 'POST',
@@ -1374,33 +1483,32 @@
     .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, data:d}; }); })
     .then(function(res){
       if(!res.ok || !res.data.conversation_url){
-        throw new Error(res.data.error || 'No conversation URL returned');
+        throw new Error((res.data && res.data.error) || 'No conversation URL returned');
       }
       var iframe = document.createElement('iframe');
       iframe.src = res.data.conversation_url;
       iframe.allow = 'camera; microphone; autoplay; display-capture';
       iframe.setAttribute('allowfullscreen', '');
-      iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;display:block';
-      stage.innerHTML = '';
-      stage.appendChild(iframe);
+      avatarModalFrame.innerHTML = '';
+      avatarModalFrame.appendChild(iframe);
     })
     .catch(function(err){
-      stage.innerHTML =
+      avatarModalFrame.innerHTML =
         '<div class="embed-error">' +
           '<b>Couldn\'t connect</b>' +
           '<div>' + (err && err.message ? err.message : 'Unknown error') + '</div>' +
-          '<button type="button">Try again</button>' +
+          '<button type="button" id="avatar-modal-retry">Try again</button>' +
         '</div>';
-      stage.querySelector('button').addEventListener('click', function(){
-        renderPlaceholder(stage, name);
+      document.getElementById('avatar-modal-retry').addEventListener('click', function(){
+        startTavusConversation(stage);
       });
     });
   }
 
-  document.querySelectorAll('.embed-video[data-tavus-persona]').forEach(function(stage){
-    var placeholder = stage.querySelector('.embed-placeholder-clickable');
-    if(!placeholder) return;
-    placeholder.addEventListener('click', function(){ startTavusConversation(stage); });
+  document.querySelectorAll('.embed-video .embed-thumb-btn').forEach(function(btn){
+    var stage = btn.closest('.embed-video');
+    if(!stage) return;
+    btn.addEventListener('click', function(){ startTavusConversation(stage); });
   });
 })();
 </script>
