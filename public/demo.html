@@ -46,8 +46,13 @@
   .navlinks{display:flex;align-items:center;gap:22px}
   .navlinks a{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-decoration:none;font-weight:600;transition:color .25s;white-space:nowrap}
   .navlinks a:hover,.navlinks a.active{color:var(--cyan)}
-  .navlinks a.cta{padding:9px 16px;border:1px solid rgba(52,214,194,.45);border-radius:10px;color:var(--cyan);background:rgba(24,185,166,.12);letter-spacing:.18em;box-shadow:0 0 0 0 rgba(52,214,194,.0);transition:background .25s,border-color .25s,color .25s,box-shadow .35s,transform .25s}
-  .navlinks a.cta:hover{background:linear-gradient(120deg, rgba(52,214,194,.25), rgba(95,227,210,.18));border-color:var(--teal-bright);color:var(--text);box-shadow:0 6px 24px -8px rgba(52,214,194,.55);transform:translateY(-1px)}
+  .navlinks a.cta{position:relative;padding:9px 16px;border:1px solid rgba(52,214,194,.45);border-radius:10px;color:var(--cyan);background:rgba(24,185,166,.12);letter-spacing:.18em;box-shadow:0 0 0 0 rgba(52,214,194,.0);transition:background .25s,border-color .25s,color .25s,box-shadow .35s,transform .25s;animation:ctaGlow 5.5s ease-in-out infinite}
+  .navlinks a.cta:hover{background:linear-gradient(120deg, rgba(52,214,194,.25), rgba(95,227,210,.18));border-color:var(--teal-bright);color:var(--text);box-shadow:0 6px 24px -8px rgba(52,214,194,.55);transform:translateY(-1px);animation:none}
+  @keyframes ctaGlow{
+    0%, 70%, 100%{box-shadow:0 0 0 0 rgba(52,214,194,0);border-color:rgba(52,214,194,.45)}
+    78%{box-shadow:0 0 22px 2px rgba(52,214,194,.55),0 0 0 4px rgba(52,214,194,.18);border-color:var(--teal-bright)}
+    86%{box-shadow:0 0 18px 2px rgba(95,227,210,.4),0 0 0 8px rgba(52,214,194,0);border-color:var(--teal-bright)}
+  }
 
   @media(max-width:1280px){.navlinks{display:none}}
 
@@ -283,17 +288,38 @@
   .why-item h4{font-family:'Manrope';font-size:15.5px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:.01em}
   .why-item p{color:var(--muted);font-size:14.5px;line-height:1.7}
 
+  /* ── Section 03 (#why) — prominent backdrop ── */
+  section#why{position:relative;overflow:hidden}
+  section#why::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(900px 600px at 85% 18%, rgba(52,214,194,.16), transparent 60%),
+      radial-gradient(700px 540px at 8% 78%, rgba(201,168,106,.13), transparent 60%),
+      radial-gradient(1100px 800px at 50% 50%, rgba(24,185,166,.07), transparent 65%);}
+  section#why::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(52,214,194,.35) 20%,rgba(201,168,106,.35) 50%,rgba(52,214,194,.35) 80%,transparent)}
+  section#why .wrap{position:relative;z-index:1}
+  section#why .sec-num{color:var(--cyan);text-shadow:0 0 18px rgba(52,214,194,.5)}
+
   /* ── Why proof cards (Section 03, #why) ── */
-  .why-proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:44px}
+  .why-proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
   @media(max-width:880px){.why-proof-grid{grid-template-columns:1fr}}
-  .why-proof-card{position:relative;padding:36px 32px;border-radius:22px;background:linear-gradient(165deg,rgba(24,185,166,.13),rgba(14,39,65,.90));border:1px solid rgba(52,214,194,.22);overflow:hidden;transition:transform .45s cubic-bezier(.2,.7,.2,1),border-color .45s,box-shadow .45s}
-  .why-proof-card::before{content:"";position:absolute;left:0;top:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal-bright),var(--gold),transparent)}
-  .why-proof-card::after{content:"";position:absolute;right:-80px;bottom:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(52,214,194,.12),transparent 65%);pointer-events:none}
-  .why-proof-card:hover{transform:translateY(-6px);border-color:rgba(52,214,194,.48);box-shadow:0 26px 60px -22px rgba(0,0,0,.65),0 0 50px -18px rgba(52,214,194,.5)}
-  .why-proof-num{font-family:'Fraunces',serif;font-style:italic;font-size:48px;font-weight:300;line-height:1;color:var(--teal-bright);margin-bottom:18px;opacity:.65}
-  .why-proof-head{font-family:'Manrope',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:12px;letter-spacing:.01em;position:relative;z-index:1;text-wrap:balance}
+  .why-proof-card{position:relative;padding:38px 32px 34px;border-radius:22px;background:linear-gradient(165deg,rgba(24,185,166,.16),rgba(14,39,65,.94));border:1px solid rgba(52,214,194,.32);overflow:hidden;transition:transform .45s cubic-bezier(.2,.7,.2,1),border-color .45s,box-shadow .45s;box-shadow:0 18px 50px -22px rgba(0,0,0,.55),0 0 0 1px rgba(52,214,194,.08) inset}
+  .why-proof-card::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal-bright),var(--cyan),var(--gold));background-size:200% 100%;animation:wpcShimmer 5s linear infinite}
+  @keyframes wpcShimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+  .why-proof-card::after{content:"";position:absolute;right:-90px;bottom:-90px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(52,214,194,.18),transparent 65%);pointer-events:none;transition:transform .6s ease}
+  .why-proof-card:hover{transform:translateY(-8px);border-color:rgba(52,214,194,.6);box-shadow:0 30px 70px -22px rgba(0,0,0,.7),0 0 60px -18px rgba(52,214,194,.6)}
+  .why-proof-card:hover::after{transform:scale(1.18)}
+  .why-proof-card:nth-child(2){background:linear-gradient(165deg,rgba(201,168,106,.13),rgba(14,39,65,.94));border-color:rgba(201,168,106,.32)}
+  .why-proof-card:nth-child(2)::after{background:radial-gradient(circle,rgba(201,168,106,.2),transparent 65%)}
+  .why-proof-card:nth-child(2):hover{border-color:rgba(201,168,106,.55);box-shadow:0 30px 70px -22px rgba(0,0,0,.7),0 0 60px -18px rgba(201,168,106,.5)}
+  .why-proof-card:nth-child(2) .why-proof-num{color:var(--gold)}
+  .why-proof-card:nth-child(2) .why-proof-icon{background:linear-gradient(150deg,rgba(201,168,106,.28),rgba(201,168,106,.08));border-color:rgba(201,168,106,.4)}
+  .why-proof-card:nth-child(2) .why-proof-icon svg{stroke:var(--gold)}
+  .why-proof-icon{position:relative;z-index:1;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;margin-bottom:22px;background:linear-gradient(150deg,rgba(52,214,194,.25),rgba(52,214,194,.06));border:1px solid rgba(52,214,194,.4);box-shadow:0 8px 22px -8px rgba(52,214,194,.4)}
+  .why-proof-icon svg{width:26px;height:26px;stroke:var(--teal-bright);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .why-proof-num{position:absolute;top:22px;right:24px;font-family:'Fraunces',serif;font-style:italic;font-size:42px;font-weight:300;line-height:1;color:var(--teal-bright);opacity:.35;z-index:1}
+  .why-proof-head{font-family:'Fraunces',serif;font-size:22px;font-weight:400;color:var(--text);margin-bottom:12px;letter-spacing:-.005em;position:relative;z-index:1;text-wrap:balance;line-height:1.25}
   .why-proof-body{color:var(--muted);font-size:15px;line-height:1.78;position:relative;z-index:1;text-wrap:pretty}
-  @media(max-width:520px){.why-proof-card{padding:28px 24px}.why-proof-num{font-size:40px}.why-proof-head{font-size:16.5px}.why-proof-body{font-size:14.5px}}
+  @media(max-width:520px){.why-proof-card{padding:30px 24px}.why-proof-num{font-size:34px;top:18px;right:20px}.why-proof-head{font-size:20px}.why-proof-body{font-size:14.5px}}
 
   /* ── RA bio card ── */
   .ra-card{position:relative;display:grid;grid-template-columns:auto 1fr;gap:42px;align-items:center;padding:46px;border-radius:24px;background:linear-gradient(160deg,rgba(24,185,166,.10),rgba(14,39,65,.92));border:1px solid var(--line);overflow:hidden;margin-top:14px}
@@ -673,18 +699,27 @@
     <div class="why-proof-grid stagger">
       <div class="why-proof-card">
         <div class="why-proof-num">01</div>
+        <div class="why-proof-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M5 5l-2 2M19 5l2 2"/></svg>
+        </div>
         <h4 class="why-proof-head">Skip the discovery call</h4>
         <p class="why-proof-body">She answers the questions you'd normally put on a 30-minute calendar invite: pricing, timelines, what works for your industry, what doesn't. Right now. No form, no wait.</p>
       </div>
       <div class="why-proof-card">
         <div class="why-proof-num">02</div>
+        <div class="why-proof-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-1.5z"/></svg>
+        </div>
         <h4 class="why-proof-head">You're experiencing the product</h4>
         <p class="why-proof-body">This isn't a mockup or a screenshare. The avatar above is the same technology your visitors would use on your site. If it answered your question, it will answer theirs.</p>
       </div>
       <div class="why-proof-card">
         <div class="why-proof-num">03</div>
+        <div class="why-proof-icon">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
+        </div>
         <h4 class="why-proof-head">Every conversation is measured</h4>
-        <p class="why-proof-body">Sessions are tagged by intent, summarized by AI, and routed into your CRM. You see which conversations turned into leads — not just sessions.</p>
+        <p class="why-proof-body">Sessions are tagged by intent, summarized by AI, and routed into your CRM. You see which conversations turned into leads, not just sessions.</p>
       </div>
     </div>
 
