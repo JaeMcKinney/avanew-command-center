@@ -113,8 +113,11 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
 
   /* ── RA hero ── */
   .ra-hero{text-align:center;padding:60px 32px 32px;max-width:680px;width:100%;margin:0 auto;position:relative;z-index:1}
-  .ra-avatar{width:170px;height:170px;border-radius:50%;object-fit:cover;margin:0 auto 24px;border:2px solid var(--line);box-shadow:0 0 0 8px rgba(52,214,194,.08),0 24px 60px -12px rgba(0,0,0,.55)}
-  .ra-avatar-initials{width:170px;height:170px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:700;color:#06101D;margin:0 auto 24px;background:linear-gradient(135deg,#18B9A6,#34D6C2);border:2px solid var(--line);box-shadow:0 0 0 8px rgba(52,214,194,.08),0 24px 60px -12px rgba(0,0,0,.55)}
+  @keyframes raGlow{0%,100%{box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 24px 60px -12px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 10px rgba(52,214,194,.13),0 0 56px -4px rgba(52,214,194,.52),0 24px 60px -12px rgba(0,0,0,.55)}}
+  .ra-avatar,.ra-avatar-initials{animation:raGlow 3.8s ease-in-out infinite}
+  @media(prefers-reduced-motion:reduce){.ra-avatar,.ra-avatar-initials{animation:none}}
+  .ra-avatar{width:170px;height:170px;border-radius:50%;object-fit:cover;margin:0 auto 24px;border:2px solid var(--line);box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 24px 60px -12px rgba(0,0,0,.55)}
+  .ra-avatar-initials{width:170px;height:170px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:700;color:#06101D;margin:0 auto 24px;background:linear-gradient(135deg,#18B9A6,#34D6C2);border:2px solid var(--line);box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 24px 60px -12px rgba(0,0,0,.55)}
   .ra-eyebrow{font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:12px}
   .ra-name{font-family:'Fraunces',serif;font-size:clamp(34px,6vw,52px);font-weight:300;color:var(--text);letter-spacing:-.015em;line-height:1.1}
 
