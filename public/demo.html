@@ -427,21 +427,23 @@
     .ra-contact{justify-content:center}
   }
 
-  /* ── Partner branding strip (inside RA section) ── */
-  .ra-partner{display:none;position:relative;z-index:2;margin-top:24px;padding:28px 32px;border-radius:16px;background:linear-gradient(160deg,rgba(201,168,106,.08),rgba(14,39,65,.7));border:1px solid rgba(201,168,106,.28);overflow:hidden}
-  .ra-partner::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--gold),var(--teal-bright))}
-  .ra-partner.visible{display:block}
-  .ra-partner-head{display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap}
-  .ra-partner-badge{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700;font-family:'Manrope',sans-serif;white-space:nowrap}
-  .ra-partner-logo{height:40px;width:auto;max-width:200px;object-fit:contain;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))}
-  .ra-partner-name{font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:var(--text);font-style:italic}
-  .ra-partner-link{display:inline-flex;align-items:center;gap:8px;color:var(--cyan);font-size:13.5px;font-weight:600;text-decoration:none;letter-spacing:.02em;transition:gap .25s,color .25s}
-  .ra-partner-link:hover{gap:14px;color:var(--teal-bright)}
-  .ra-partner-link svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  /* ── Partner logo in RA header ── */
+  .ra-partner-logo-top{display:none;height:36px;width:auto;max-width:180px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3));margin-bottom:6px}
+  .ra-partner-logo-top.visible{display:block}
+
+  /* ── Partnership statement (below bio, dual logos) ── */
+  .ra-partnership{display:none;position:relative;z-index:2;margin-top:28px;padding:30px 34px;border-radius:18px;background:linear-gradient(160deg,rgba(201,168,106,.08),rgba(14,39,65,.65));border:1px solid rgba(201,168,106,.28);overflow:hidden}
+  .ra-partnership::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--gold),var(--teal-bright))}
+  .ra-partnership.visible{display:block}
+  .ra-partnership-text{font-family:'Fraunces',serif;font-size:17px;font-weight:300;font-style:italic;color:var(--muted);line-height:1.55;margin-bottom:22px}
+  .ra-partnership-text b{color:var(--text);font-weight:500;font-style:normal}
+  .ra-partnership-logos{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .ra-partnership-logos img{height:34px;width:auto;max-width:160px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))}
+  .ra-partnership-x{font-family:'Fraunces',serif;font-size:16px;color:var(--muted-2);font-style:italic}
   @media(max-width:780px){
-    .ra-partner{text-align:center;padding:24px 20px}
-    .ra-partner-head{justify-content:center}
-    .ra-partner-logo{margin:0 auto}
+    .ra-partnership{text-align:center;padding:24px 20px}
+    .ra-partnership-logos{justify-content:center}
+    .ra-partner-logo-top{margin:0 auto}
   }
 
   /* ── Footer ── */
@@ -1028,36 +1030,38 @@
         <div class="ra-photo-placeholder" id="ra-photo-fallback">RA</div>
       </div>
       <div class="ra-info">
+        <img id="ra-partner-logo-top" class="ra-partner-logo-top" alt="">
         <div class="ra-label">Referred by</div>
         <h3 class="ra-name" id="ra-name">Jae McKinney</h3>
         <div class="ra-title" id="ra-title">Founder &amp; Chief AI&nbsp;Strategist · Divigner&nbsp;Group</div>
         <div class="ra-contact">
-          <a href="mailto:" id="ra-email">
+          <a href="mailto:" id="ra-email" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             <span id="ra-email-text">name@divigner.com</span>
           </a>
-          <a href="tel:" id="ra-phone">
+          <a href="tel:" id="ra-phone" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             <span id="ra-phone-text">(555) 555-0142</span>
           </a>
-          <a href="#" id="ra-linkedin" style="display:none">
+          <a href="#" id="ra-linkedin" target="_blank" rel="noopener" style="display:none">
             <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
             <span id="ra-linkedin-text">LinkedIn</span>
+          </a>
+          <a href="#" id="ra-website" target="_blank" rel="noopener" style="display:none">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span id="ra-website-text">website</span>
           </a>
         </div>
         <p class="ra-bio" id="ra-bio">Short bio goes here. 2–3 sentences about the Referral Associate's background, the kinds of clients they've worked with, and why they're recommending Divigner.</p>
 
-        <!-- Partner branding strip — hidden by default, shown when partner_company_name exists -->
-        <div class="ra-partner" id="ra-partner">
-          <div class="ra-partner-head">
-            <span class="ra-partner-badge">In partnership with</span>
-            <img id="ra-partner-logo" class="ra-partner-logo" alt="" style="display:none">
-            <span class="ra-partner-name" id="ra-partner-name"></span>
+        <!-- Partnership statement — hidden by default, shown when partner_company_name exists -->
+        <div class="ra-partnership" id="ra-partnership">
+          <p class="ra-partnership-text"><b id="ra-partnership-company">Partner</b> has partnered with <b>Divigner Group</b> to offer you this product.</p>
+          <div class="ra-partnership-logos">
+            <img id="ra-partnership-logo-partner" alt="" style="display:none">
+            <span class="ra-partnership-x">×</span>
+            <img src="https://ai-automation.divigner.com/divigner-logo.svg" alt="Divigner Group">
           </div>
-          <a href="#" class="ra-partner-link" id="ra-partner-link" target="_blank" rel="noopener" style="display:none">
-            Visit <span id="ra-partner-link-label"></span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-          </a>
         </div>
       </div>
     </div>
@@ -1375,33 +1379,44 @@
         if(liLink){ liLink.href = ra.linkedin_url; liLink.style.display = ''; }
       }
 
-      /* Partner branding strip */
-      if(ra.partner_company_name){
-        var partnerEl = document.getElementById('ra-partner');
-        if(partnerEl) partnerEl.classList.add('visible');
+      /* Website (in contact row) */
+      if(ra.partner_website){
+        var siteLink = document.getElementById('ra-website');
+        var siteText = document.getElementById('ra-website-text');
+        if(siteLink){
+          var siteHref = ra.partner_website;
+          if(!/^https?:\/\//.test(siteHref)) siteHref = 'https://' + siteHref;
+          siteLink.href = siteHref;
+          siteLink.style.display = '';
+        }
+        if(siteText) siteText.textContent = ra.partner_website.replace(/^https?:\/\//, '');
+      }
 
-        var partnerName = document.getElementById('ra-partner-name');
-        if(partnerName) partnerName.textContent = ra.partner_company_name;
+      /* Partner logo in RA header */
+      if(ra.partner_logo_url){
+        var logoTop = document.getElementById('ra-partner-logo-top');
+        if(logoTop){
+          logoTop.src = ra.partner_logo_url;
+          logoTop.alt = ra.partner_company_name || '';
+          logoTop.classList.add('visible');
+        }
+      }
+
+      /* Partnership statement with dual logos */
+      if(ra.partner_company_name){
+        var partnershipEl = document.getElementById('ra-partnership');
+        if(partnershipEl) partnershipEl.classList.add('visible');
+
+        var companyLabel = document.getElementById('ra-partnership-company');
+        if(companyLabel) companyLabel.textContent = ra.partner_company_name;
 
         if(ra.partner_logo_url){
-          var partnerLogo = document.getElementById('ra-partner-logo');
-          if(partnerLogo){
-            partnerLogo.src = ra.partner_logo_url;
-            partnerLogo.alt = ra.partner_company_name;
-            partnerLogo.style.display = '';
+          var partnerLogoBot = document.getElementById('ra-partnership-logo-partner');
+          if(partnerLogoBot){
+            partnerLogoBot.src = ra.partner_logo_url;
+            partnerLogoBot.alt = ra.partner_company_name;
+            partnerLogoBot.style.display = '';
           }
-        }
-
-        if(ra.partner_website){
-          var partnerLink = document.getElementById('ra-partner-link');
-          var partnerLinkLabel = document.getElementById('ra-partner-link-label');
-          if(partnerLink){
-            var href = ra.partner_website;
-            if(!/^https?:\/\//.test(href)) href = 'https://' + href;
-            partnerLink.href = href;
-            partnerLink.style.display = '';
-          }
-          if(partnerLinkLabel) partnerLinkLabel.textContent = ra.partner_website.replace(/^https?:\/\//, '');
         }
       }
     })
