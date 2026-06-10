@@ -15,7 +15,7 @@
 // Required secrets:
 //   - SUPABASE_URL              (auto)
 //   - SUPABASE_SERVICE_ROLE_KEY (your project's service-role key)
-//   - RESEND_API_KEY            (Resend.com API key for transactional email)
+//   - SENDGRID_API_KEY          (SendGrid API key for transactional email)
 
 import { createClient } from "npm:@supabase/supabase-js@2"
 
@@ -152,7 +152,7 @@ function buildEmailHtml(p: {
 }
 
 async function sendNotificationEmail(
-  resendKey: string,
+  sendgridKey: string,
   prospectEmail: string | null,
   raEmail: string | null,
   emailHtml: string,
@@ -171,23 +171,31 @@ async function sendNotificationEmail(
 
   if (to.length === 0) return
 
+  const personalizations: Record<string, unknown> = {
+    to: to.map((e) => ({ email: e })),
+  }
+  if (cc.length > 0) {
+    personalizations.cc = cc.map((e) => ({ email: e }))
+  }
+
   try {
-    await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${resendKey}`,
+        Authorization: `Bearer ${sendgridKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Divigner Group <notifications@divigner.com>",
-        to,
-        cc: cc.length > 0 ? cc : undefined,
+        personalizations: [personalizations],
+        from: { email: "notifications@divigner.com", name: "Divigner Group" },
         subject: `New Inquiry from ${prospectName} — Divigner Group`,
-        html: emailHtml,
+        content: [{ type: "text/html", value: emailHtml }],
       }),
     })
+    if (!res.ok) {
+      console.error("SendGrid error:", res.status, await res.text())
+    }
   } catch {
-    // Email is best-effort — don't fail the lead submission
     console.error("Failed to send notification email")
   }
 }
@@ -255,8 +263,8 @@ Deno.serve(async (req) => {
   }
 
   // Send notification email (best-effort — never blocks the response)
-  const resendKey = Deno.env.get("RESEND_API_KEY")
-  if (resendKey) {
+  const sendgridKey = Deno.env.get("SENDGRID_API_KEY")
+  if (sendgridKey) {
     const { data: raData } = await admin
       .from("ra_associates")
       .select("contact_email, display_name")
@@ -277,7 +285,7 @@ Deno.serve(async (req) => {
     })
 
     await sendNotificationEmail(
-      resendKey,
+      sendgridKey,
       email || null,
       raData?.contact_email ?? null,
       emailHtml,
