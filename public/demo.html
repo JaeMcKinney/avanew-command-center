@@ -428,21 +428,26 @@
   }
 
   /* ── Partner logo in RA header ── */
-  .ra-partner-logo-top{display:none;height:36px;width:auto;max-width:180px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3));margin-bottom:6px}
+  .ra-partner-logo-top{display:none;height:52px;width:auto;max-width:240px;object-fit:contain;filter:drop-shadow(0 3px 10px rgba(0,0,0,.35));margin:8px 0 12px}
   .ra-partner-logo-top.visible{display:block}
 
   /* ── Partnership statement (below bio, dual logos) ── */
-  .ra-partnership{display:none;position:relative;z-index:2;margin-top:28px;padding:30px 34px;border-radius:18px;background:linear-gradient(160deg,rgba(201,168,106,.08),rgba(14,39,65,.65));border:1px solid rgba(201,168,106,.28);overflow:hidden}
-  .ra-partnership::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--gold),var(--teal-bright))}
+  .ra-partnership{display:none;position:relative;z-index:2;margin-top:32px;padding:44px 48px;border-radius:22px;background:linear-gradient(160deg,rgba(24,185,166,.10),rgba(14,39,65,.92));border:1px solid var(--line);overflow:hidden;text-align:center;box-shadow:0 26px 60px -22px rgba(0,0,0,.55),0 0 50px -22px rgba(52,214,194,.25)}
+  .ra-partnership::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--teal-bright),var(--cyan))}
+  .ra-partnership::after{content:"";position:absolute;right:-140px;top:-140px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.18),transparent 65%);pointer-events:none;z-index:0}
   .ra-partnership.visible{display:block}
-  .ra-partnership-text{font-family:'Fraunces',serif;font-size:17px;font-weight:300;font-style:italic;color:var(--muted);line-height:1.55;margin-bottom:22px}
-  .ra-partnership-text b{color:var(--text);font-weight:500;font-style:normal}
-  .ra-partnership-logos{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
-  .ra-partnership-logos img{height:34px;width:auto;max-width:160px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))}
-  .ra-partnership-x{font-family:'Fraunces',serif;font-size:16px;color:var(--muted-2);font-style:italic}
+  .ra-partnership>*{position:relative;z-index:1}
+  .ra-partnership-text{font-family:'Fraunces',serif;font-size:clamp(22px,3vw,30px);font-weight:400;font-style:italic;color:var(--text);line-height:1.4;margin-bottom:32px;text-wrap:balance}
+  .ra-partnership-text b{color:var(--text);font-weight:600;font-style:normal}
+  .ra-partnership-text .has{color:var(--cyan);font-style:italic}
+  .ra-partnership-text .offer{color:var(--muted);font-style:italic}
+  .ra-partnership-logos{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
+  .ra-partnership-logos img{height:56px;width:auto;max-width:240px;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(0,0,0,.4))}
+  .ra-partnership-x{font-family:'Fraunces',serif;font-size:24px;color:var(--gold);font-style:italic;text-shadow:0 0 14px rgba(201,168,106,.4)}
   @media(max-width:780px){
-    .ra-partnership{text-align:center;padding:24px 20px}
-    .ra-partnership-logos{justify-content:center}
+    .ra-partnership{padding:32px 24px}
+    .ra-partnership-logos img{height:44px;max-width:180px}
+    .ra-partnership-x{font-size:20px}
     .ra-partner-logo-top{margin:0 auto}
   }
 
@@ -1030,9 +1035,9 @@
         <div class="ra-photo-placeholder" id="ra-photo-fallback">RA</div>
       </div>
       <div class="ra-info">
-        <img id="ra-partner-logo-top" class="ra-partner-logo-top" alt="">
         <div class="ra-label">Referred by</div>
         <h3 class="ra-name" id="ra-name">Jae McKinney</h3>
+        <img id="ra-partner-logo-top" class="ra-partner-logo-top" alt="">
         <div class="ra-title" id="ra-title">Founder &amp; Chief AI&nbsp;Strategist · Divigner&nbsp;Group</div>
         <div class="ra-contact">
           <a href="mailto:" id="ra-email" target="_blank" rel="noopener">
@@ -1056,7 +1061,7 @@
 
         <!-- Partnership statement — hidden by default, shown when partner_company_name exists -->
         <div class="ra-partnership" id="ra-partnership">
-          <p class="ra-partnership-text"><b id="ra-partnership-company">Partner</b> has partnered with <b>Divigner Group</b> to offer you this product.</p>
+          <p class="ra-partnership-text"><b id="ra-partnership-company">Partner</b> <span class="has">has partnered with</span> <b>Divigner Group</b> <span class="offer">to offer you this product.</span></p>
           <div class="ra-partnership-logos">
             <img id="ra-partnership-logo-partner" alt="" style="display:none">
             <span class="ra-partnership-x">×</span>
