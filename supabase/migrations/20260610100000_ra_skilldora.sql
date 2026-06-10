@@ -10,7 +10,7 @@ DO $$
 DECLARE
   org_id          uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   skilldora_uid   uuid := 'dddddddd-dddd-dddd-dddd-000000000010';
-  demo_pw         text := crypt('Demo@2026!', gen_salt('bf', 10));
+  demo_pw         text := extensions.crypt('Demo@2026!', extensions.gen_salt('bf', 10));
 BEGIN
 
   -- ── 1. auth.users ─────────────────────────────────────────────────────────
