@@ -166,7 +166,7 @@
   .embed-placeholder-clickable:hover svg{opacity:1;transform:scale(1.08);transition:transform .3s, opacity .3s}
 
   /* ── Thumbnail-style click-to-launch (replaces in-card iframe) ── */
-  .embed-thumb-btn{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;margin:0;background:#06101D;cursor:pointer;display:block;overflow:hidden;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+  .embed-thumb-btn{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;margin:0;background:#06101D;cursor:pointer;display:block;overflow:hidden;transition:transform .5s cubic-bezier(.2,.7,.2,1);text-decoration:none;color:inherit}
   .embed-thumb-btn:hover{transform:scale(1.015)}
   .embed-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.2,.7,.2,1), filter .4s}
   .embed-thumb-btn:hover .embed-thumb{transform:scale(1.06);filter:brightness(1.08)}
@@ -701,79 +701,61 @@
     </div>
 
     <div class="embed-grid stagger">
-      <!-- Embed 1 -->
+      <!-- Embed 1 — Victoria -->
       <article class="embed-card">
-        <div class="embed-video" data-tavus-persona="p89d1a8b29c9" data-tavus-replica="re206226de83" data-tavus-name="Victoria" data-tavus-thumb="/avatars/victoria.jpg">
-          <button type="button" class="embed-thumb-btn" aria-label="Start conversation with Victoria">
-            <img class="embed-thumb" src="/avatars/victoria.jpg" alt="Victoria — Dermatology Patient Concierge" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="embed-thumb-fallback" style="display:none">
-              <b>Victoria</b>
-              <span>Drop a thumbnail at /avatars/victoria.jpg</span>
-            </div>
+        <div class="embed-video">
+          <a href="https://divigner.com/californiadermatology-com/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Victoria's live site">
+            <img class="embed-thumb" src="/avatars/victoria.jpg" alt="Victoria — Patient Concierge" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Victoria</b></div>
             <div class="embed-thumb-overlay"></div>
-            <span class="embed-thumb-label">Live · Click to start</span>
-            <span class="embed-thumb-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg>
-            </span>
-          </button>
+            <span class="embed-thumb-label">Live</span>
+          </a>
         </div>
         <div class="embed-body">
           <div class="embed-name">Victoria</div>
-          <div class="embed-label">Dermatology Patient Concierge</div>
+          <div class="embed-label">Patient Concierge</div>
           <p class="embed-desc">A virtual patient concierge for California Dermatology &amp; Mohs Surgery Specialists. She greets website visitors, explains medical, surgical, and cosmetic dermatology services, and helps patients find the right next step by voice or text, with a clear educational disclaimer and routing of personal medical questions to the practice.</p>
-          <a href="#" class="embed-link" data-live="1">View the live concierge
+          <a href="https://divigner.com/californiadermatology-com/" target="_blank" rel="noopener" class="embed-link">View the live concierge
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
         </div>
       </article>
 
-      <!-- Embed 2 -->
+      <!-- Embed 2 — Zoey -->
       <article class="embed-card">
-        <div class="embed-video" data-tavus-name="Connie" data-tavus-thumb="/avatars/connie.jpg">
-          <button type="button" class="embed-thumb-btn" aria-label="Connie preview">
-            <img class="embed-thumb" src="/avatars/connie.jpg" alt="Connie — Website Navigator" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="embed-thumb-fallback" style="display:none">
-              <b>Connie</b>
-              <span>Drop a thumbnail at /avatars/connie.jpg</span>
-            </div>
+        <div class="embed-video">
+          <a href="https://reviveprivatecare.com/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Zoey's live site">
+            <img class="embed-thumb" src="/avatars/zoey.jpg" alt="Zoey — Patient Concierge" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Zoey</b></div>
             <div class="embed-thumb-overlay"></div>
-            <span class="embed-thumb-label">Coming soon</span>
-            <span class="embed-thumb-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg>
-            </span>
-          </button>
+            <span class="embed-thumb-label">Live</span>
+          </a>
         </div>
         <div class="embed-body">
-          <div class="embed-name">Connie</div>
-          <div class="embed-label">Website Navigator</div>
-          <p class="embed-desc">A conversational website navigator built for the CONQUER (T2I) education platform. She guides visitors through the site and its community resources by voice or text, the same avatar approach applied to patient and community education at scale.</p>
-          <a href="#" class="embed-link" data-live="2">View the live navigator
+          <div class="embed-name">Zoey</div>
+          <div class="embed-label">Patient Concierge</div>
+          <p class="embed-desc">A virtual patient concierge for Revive Private Care. She welcomes visitors, walks them through the practice's personalized approach to private healthcare, and helps patients explore services and connect with the care team by voice or text — always with a warm, professional tone.</p>
+          <a href="https://reviveprivatecare.com/" target="_blank" rel="noopener" class="embed-link">View the live concierge
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
         </div>
       </article>
 
-      <!-- Embed 3 -->
+      <!-- Embed 3 — Zayla -->
       <article class="embed-card">
-        <div class="embed-video" data-tavus-name="Avatar 3" data-tavus-thumb="/avatars/avatar-3.jpg">
-          <button type="button" class="embed-thumb-btn" aria-label="Avatar 3 preview">
-            <img class="embed-thumb" src="/avatars/avatar-3.jpg" alt="Avatar 3" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="embed-thumb-fallback" style="display:none">
-              <b>Avatar 3</b>
-              <span>Drop a thumbnail at /avatars/avatar-3.jpg</span>
-            </div>
+        <div class="embed-video">
+          <a href="https://ohsnj.com" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Zayla's live site">
+            <img class="embed-thumb" src="/avatars/zayla.jpg" alt="Zayla — Patient Concierge" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Zayla</b></div>
             <div class="embed-thumb-overlay"></div>
-            <span class="embed-thumb-label">Coming soon</span>
-            <span class="embed-thumb-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg>
-            </span>
-          </button>
+            <span class="embed-thumb-label">Live</span>
+          </a>
         </div>
         <div class="embed-body">
-          <div class="embed-name">Avatar 3</div>
-          <div class="embed-label">Role / Title</div>
-          <p class="embed-desc">Replace this card body with the avatar's name, the role they play on the client's site, and a 2–3 sentence description of who they serve and what they help visitors do.</p>
-          <a href="#" class="embed-link" data-live="3">View the live avatar
+          <div class="embed-name">Zayla</div>
+          <div class="embed-label">Patient Concierge</div>
+          <p class="embed-desc">A virtual patient concierge for Oral Health Specialists of New Jersey. She greets website visitors, provides information about the practice's oral surgery specialties, and guides patients toward scheduling a consultation by voice or text, with clinical questions routed directly to the care team.</p>
+          <a href="https://ohsnj.com" target="_blank" rel="noopener" class="embed-link">View the live concierge
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
         </div>
@@ -1605,7 +1587,7 @@
     });
   }
 
-  document.querySelectorAll('.embed-video .embed-thumb-btn').forEach(function(btn){
+  document.querySelectorAll('.embed-video button.embed-thumb-btn').forEach(function(btn){
     var stage = btn.closest('.embed-video');
     if(!stage) return;
     btn.addEventListener('click', function(){ startTavusConversation(stage); });
