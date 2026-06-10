@@ -432,7 +432,8 @@
   .ra-partner-logo-top.visible{display:block}
 
   /* ── Partnership statement (below bio, dual logos) ── */
-  .ra-partnership{display:none;position:relative;z-index:2;margin-top:32px;padding:44px 48px;border-radius:22px;background:linear-gradient(160deg,rgba(24,185,166,.10),rgba(14,39,65,.92));border:1px solid var(--line);overflow:hidden;text-align:center;box-shadow:0 26px 60px -22px rgba(0,0,0,.55),0 0 50px -22px rgba(52,214,194,.25)}
+  .ra-partnership{display:none;position:relative;z-index:2;margin-top:32px;padding:44px 48px;border-radius:22px;background:linear-gradient(160deg,rgba(24,185,166,.10),rgba(14,39,65,.92));border:1px solid rgba(201,168,106,.35);overflow:hidden;text-align:center;box-shadow:0 26px 60px -22px rgba(0,0,0,.55),0 0 50px -18px rgba(52,214,194,.3),0 0 80px -10px rgba(201,168,106,.2),inset 0 0 40px -20px rgba(52,214,194,.12);animation:partnershipGlow 4s ease-in-out infinite}
+  @keyframes partnershipGlow{0%,100%{box-shadow:0 26px 60px -22px rgba(0,0,0,.55),0 0 50px -18px rgba(52,214,194,.3),0 0 80px -10px rgba(201,168,106,.2),inset 0 0 40px -20px rgba(52,214,194,.12)}50%{box-shadow:0 26px 60px -22px rgba(0,0,0,.55),0 0 70px -14px rgba(52,214,194,.45),0 0 100px -6px rgba(201,168,106,.3),inset 0 0 50px -18px rgba(52,214,194,.18)}}
   .ra-partnership::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--teal-bright),var(--cyan))}
   .ra-partnership::after{content:"";position:absolute;right:-140px;top:-140px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.18),transparent 65%);pointer-events:none;z-index:0}
   .ra-partnership.visible{display:block}
