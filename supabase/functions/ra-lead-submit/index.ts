@@ -62,8 +62,8 @@ function buildEmailHtml(p: {
   const detailRow = (label: string, value: string) =>
     value
       ? `<tr>
-          <td style="padding:10px 16px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8A9BB0;text-transform:uppercase;letter-spacing:0.08em;vertical-align:top;white-space:nowrap;width:110px">${label}</td>
-          <td style="padding:10px 16px 10px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#E8ECF0;vertical-align:top;word-break:break-word">${value}</td>
+          <td style="padding:10px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8A9BB0;text-transform:uppercase;letter-spacing:0.08em;vertical-align:top;white-space:nowrap;width:90px;border-bottom:1px solid rgba(120,214,196,0.1)">${label}</td>
+          <td style="padding:10px 0 10px 14px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#E8ECF0;vertical-align:top;word-break:break-word;border-bottom:1px solid rgba(120,214,196,0.1)">${value}</td>
         </tr>`
       : ""
 
@@ -79,17 +79,16 @@ function buildEmailHtml(p: {
   table{border-collapse:collapse;mso-table-lspace:0;mso-table-rspace:0}
   img{border:0;height:auto;line-height:100%;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic}
   @media only screen and (max-width:600px){
-    .card{border-radius:0!important}
+    .outer-wrap{padding:0!important}
+    .card{border-radius:0!important;border-left:0!important;border-right:0!important}
     .card-pad{padding-left:20px!important;padding-right:20px!important}
-    .detail-label{display:block!important;width:100%!important;padding-bottom:2px!important}
-    .detail-value{display:block!important;width:100%!important;padding-top:0!important}
   }
 </style>
 </head>
 <body style="margin:0;padding:0;background-color:#06101D">
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#06101D">
-<tr><td align="center" style="padding:32px 16px">
+<tr><td align="center" class="outer-wrap" style="padding:32px 16px">
 
   <!-- Card -->
   <table role="presentation" class="card" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background-color:#0E2741;border:1px solid rgba(201,168,106,0.3);border-radius:16px;overflow:hidden">
@@ -105,7 +104,7 @@ function buildEmailHtml(p: {
     <!-- Heading -->
     <tr><td align="center" class="card-pad" style="padding:0 40px 8px">
       <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;font-style:italic;color:#E8ECF0;line-height:1.3">
-        We&rsquo;ve Received Your Inquiry
+        Submission Received!
       </h1>
     </td></tr>
 
@@ -129,8 +128,8 @@ function buildEmailHtml(p: {
     </td></tr>
 
     <!-- Details table -->
-    <tr><td class="card-pad" style="padding:0 24px 24px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:rgba(6,16,29,0.6);border:1px solid rgba(120,214,196,0.12);border-radius:10px;overflow:hidden">
+    <tr><td class="card-pad" style="padding:0 40px 24px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${detailRow("Name", p.prospectName)}
         ${detailRow("Email", p.prospectEmail)}
         ${detailRow("Phone", p.prospectPhone)}
