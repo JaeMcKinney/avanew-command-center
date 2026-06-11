@@ -112,7 +112,7 @@ function buildEmailHtml(p: {
     <!-- Body text — greeting by first name, no orphans -->
     <tr><td align="center" class="card-pad" style="padding:16px 40px 28px">
       <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.75;color:rgba(232,236,240,0.72);max-width:420px;margin-left:auto;margin-right:auto">
-        Hi ${p.prospectFirstName}, thank you for reaching out. Our team has received your submission and will review it promptly. We will be in touch with you shortly.
+        Hi ${p.prospectFirstName}, thank you for reaching out. We have received your submission and will be in touch soon.
       </p>
     </td></tr>
 
