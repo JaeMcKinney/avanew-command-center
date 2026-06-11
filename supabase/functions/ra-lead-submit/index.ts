@@ -57,6 +57,7 @@ function buildEmailHtml(p: {
   message: string
   raName: string
   raEmail: string
+  slug: string
 }): string {
   const detailRow = (label: string, value: string) =>
     value
@@ -98,7 +99,7 @@ function buildEmailHtml(p: {
 
     <!-- Logo -->
     <tr><td align="center" class="card-pad" style="padding:32px 40px 24px">
-      <img src="https://ai-automation.divigner.com/logos/divigner-logo-light.png" alt="Divigner Group" width="180" height="auto" style="display:block;max-width:180px;height:auto">
+      <img src="https://ai-automation.divigner.com/logos/divigner-logo-dark.png" alt="Divigner Group" width="200" height="auto" style="display:block;max-width:200px;height:auto">
     </td></tr>
 
     <!-- Heading -->
@@ -149,8 +150,7 @@ function buildEmailHtml(p: {
     <tr><td align="center" class="card-pad" style="padding:24px 40px 32px">
       <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(232,236,240,0.4);line-height:1.7">
         Divigner Group &middot; AI Automation Solutions<br>
-        <a href="https://ai-automation.divigner.com" style="color:#34D6C2;text-decoration:none">ai-automation.divigner.com</a><br>
-        <a href="mailto:${p.raEmail}" style="color:rgba(232,236,240,0.4);text-decoration:none">${p.raEmail}</a>
+        <a href="https://ai-automation.divigner.com/demo/${p.slug}" style="color:#34D6C2;text-decoration:none">ai-automation.divigner.com/demo/${p.slug}</a>
       </p>
     </td></tr>
 
@@ -307,6 +307,7 @@ Deno.serve(async (req) => {
       message,
       raName: raData?.display_name ?? "",
       raEmail: raData?.contact_email ?? "",
+      slug,
     })
 
     await sendNotificationEmail(
