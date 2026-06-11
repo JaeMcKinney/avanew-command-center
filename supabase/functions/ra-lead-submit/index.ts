@@ -187,7 +187,7 @@ async function sendNotificationEmail(
       },
       body: JSON.stringify({
         personalizations: [personalizations],
-        from: { email: "notifications@divigner.com", name: "Divigner Group" },
+        from: { email: "zuirrae@divigner.com", name: "Divigner Group" },
         subject: `New Inquiry from ${prospectName} — Divigner Group`,
         content: [{ type: "text/html", value: emailHtml }],
       }),
