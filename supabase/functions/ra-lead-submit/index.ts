@@ -159,10 +159,19 @@ async function sendNotificationEmail(
   prospectName: string,
 ): Promise<void> {
   const to: string[] = []
-  const cc: string[] = [...DIVIGNER_TEAM]
+  const cc: string[] = []
 
   if (prospectEmail) to.push(prospectEmail)
-  if (raEmail && !cc.includes(raEmail)) cc.push(raEmail)
+
+  // Build CC list, excluding any address already in TO
+  const seen = new Set(to.map((e) => e.toLowerCase()))
+  for (const addr of [...DIVIGNER_TEAM, ...(raEmail ? [raEmail] : [])]) {
+    const lower = addr.toLowerCase()
+    if (!seen.has(lower)) {
+      cc.push(addr)
+      seen.add(lower)
+    }
+  }
 
   // If the prospect didn't provide an email, send only to the internal team
   if (to.length === 0) {
@@ -178,6 +187,15 @@ async function sendNotificationEmail(
     personalizations.cc = cc.map((e) => ({ email: e }))
   }
 
+  const payload = {
+    personalizations: [personalizations],
+    from: { email: "zuirrae@divigner.com", name: "Divigner Group" },
+    subject: `New Inquiry from ${prospectName} — Divigner Group`,
+    content: [{ type: "text/html", value: emailHtml }],
+  }
+
+  console.log("SendGrid payload TO:", JSON.stringify(to), "CC:", JSON.stringify(cc))
+
   try {
     const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
@@ -185,18 +203,12 @@ async function sendNotificationEmail(
         Authorization: `Bearer ${sendgridKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        personalizations: [personalizations],
-        from: { email: "zuirrae@divigner.com", name: "Divigner Group" },
-        subject: `New Inquiry from ${prospectName} — Divigner Group`,
-        content: [{ type: "text/html", value: emailHtml }],
-      }),
+      body: JSON.stringify(payload),
     })
-    if (!res.ok) {
-      console.error("SendGrid error:", res.status, await res.text())
-    }
-  } catch {
-    console.error("Failed to send notification email")
+    const body = res.ok ? "(accepted)" : await res.text()
+    console.log("SendGrid response:", res.status, body)
+  } catch (err) {
+    console.error("SendGrid fetch failed:", err)
   }
 }
 
