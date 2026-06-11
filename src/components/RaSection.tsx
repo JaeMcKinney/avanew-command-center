@@ -13,6 +13,7 @@ import {
   X,
   Trash2,
   ClipboardCheck,
+  Inbox,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -52,9 +53,10 @@ import {
   checkSlugAvailable,
   listRaLandingTemplates,
   setRaTemplate,
+  listLeadsForRa,
 } from "@/lib/data"
 import { RaVerificationDialog } from "@/components/RaVerificationDialog"
-import type { RaAssociate, RaStatus, RaLandingTemplate } from "@/types/db"
+import type { RaAssociate, RaStatus, RaLandingTemplate, Lead } from "@/types/db"
 
 // ── Status display config ────────────────────────────────────────────────────
 
@@ -151,6 +153,22 @@ export function RaSection() {
 
   // Verification review dialog
   const [reviewTarget, setReviewTarget] = useState<RaAssociate | null>(null)
+
+  // Per-RA leads drill-down
+  const [leadsTarget, setLeadsTarget] = useState<RaAssociate | null>(null)
+  const [leadsForRa, setLeadsForRa] = useState<Lead[]>([])
+  const [loadingLeads, setLoadingLeads] = useState(false)
+
+  useEffect(() => {
+    if (!leadsTarget) { setLeadsForRa([]); return }
+    let cancelled = false
+    setLoadingLeads(true)
+    listLeadsForRa(leadsTarget.user_id)
+      .then((rows) => { if (!cancelled) setLeadsForRa(rows) })
+      .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to load leads"))
+      .finally(() => { if (!cancelled) setLoadingLeads(false) })
+    return () => { cancelled = true }
+  }, [leadsTarget])
 
   async function handleRevoke() {
     if (!revokeTarget) return
@@ -356,6 +374,20 @@ export function RaSection() {
                       </select>
                     )}
 
+                    {/* View leads — available for any active or in-flight RA */}
+                    {ra.status !== "terminated" && ra.status !== "declined" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 shrink-0 text-xs gap-1.5"
+                        onClick={() => setLeadsTarget(ra)}
+                        title={`View leads referred by ${ra.display_name}`}
+                      >
+                        <Inbox className="h-3 w-3" />
+                        Leads
+                      </Button>
+                    )}
+
                     {/* Review button — only for verification status */}
                     {ra.status === "verification" && (
                       <Button
@@ -422,6 +454,79 @@ export function RaSection() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ── Per-RA leads drill-down ── */}
+      <Dialog open={!!leadsTarget} onOpenChange={(open) => { if (!open) setLeadsTarget(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Inbox className="h-4 w-4 text-muted-foreground" />
+              Leads referred by {leadsTarget?.display_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                Submissions via{" "}
+                <span className="font-mono">/refer/{leadsTarget?.slug}</span>
+              </span>
+              {!loadingLeads && (
+                <span>
+                  {leadsForRa.length} {leadsForRa.length === 1 ? "lead" : "leads"}
+                </span>
+              )}
+            </div>
+            {loadingLeads ? (
+              <div className="p-6 text-sm text-muted-foreground flex items-center gap-2 justify-center">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading…
+              </div>
+            ) : leadsForRa.length === 0 ? (
+              <div className="p-8 text-center text-sm text-muted-foreground border rounded-md">
+                No leads yet for this RA.
+              </div>
+            ) : (
+              <div className="rounded-md border divide-y">
+                {leadsForRa.map((lead) => (
+                  <div key={lead.id} className="p-3 flex items-center gap-3 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium truncate">
+                          {lead.first_name} {lead.last_name ?? ""}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] px-1.5 py-0 ${
+                            lead.converted
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-gray-50 text-gray-600 border-gray-200"
+                          }`}
+                        >
+                          {lead.converted ? "Closed" : (lead.lead_status ?? "New")}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {lead.email ?? lead.phone ?? "—"}
+                        {lead.company && (
+                          <>
+                            <span className="mx-1.5 opacity-40">·</span>
+                            <span>{lead.company}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDate(lead.created_at)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLeadsTarget(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Verification review dialog ── */}
       <RaVerificationDialog

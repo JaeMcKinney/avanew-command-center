@@ -1806,9 +1806,28 @@ export async function listLeads(): Promise<Lead[]> {
     const rows = previewFilterByOwner(loadMock<Lead>("leads", seedLeads))
     return [...rows].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
-  const { data, error } = await supabase.from("leads").select("*").eq("organization_id", requireOrg()).order("created_at", { ascending: false })
+  // Exclude RA-referral leads from the global admin Leads page — those are
+  // shown in the per-RA drill-down inside Settings → Team → Referral Associates.
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("organization_id", requireOrg())
+    .is("referred_by_ra_id", null)
+    .order("created_at", { ascending: false })
   if (error) throw error
   return await applyViewAsFilter(data ?? [])
+}
+
+export async function listLeadsForRa(raUserId: string): Promise<Lead[]> {
+  if (PREVIEW_MODE) return []
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("organization_id", requireOrg())
+    .eq("referred_by_ra_id", raUserId)
+    .order("created_at", { ascending: false })
+  if (error) throw error
+  return data ?? []
 }
 
 export async function createLead(input: LeadInput): Promise<Lead> {
