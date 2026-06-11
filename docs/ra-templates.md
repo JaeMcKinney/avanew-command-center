@@ -142,14 +142,19 @@ Pattern (mirror `supabase/migrations/20260610100000_ra_skilldora.sql`):
 ```sql
 DO $$
 DECLARE
-  org_id   uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  -- IMPORTANT: Company RAs belong in the Divigner org, NOT Avanew.
+  --   Avanew   = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+  --   Divigner = dddddddd-dddd-dddd-dddd-dddddddddddd
+  org_id   uuid := 'dddddddd-dddd-dddd-dddd-dddddddddddd';
   ra_uid   uuid := '<unique-uuid>';
   demo_pw  text := extensions.crypt('<password>', extensions.gen_salt('bf', 10));
 BEGIN
-  -- 1. auth.users        (login credentials, idempotent)
+  -- 1. auth.users        (login credentials, idempotent: look up by email
+  --                       first; reuse existing id if the RA already signed up)
   -- 2. profiles          (role='partner')
-  -- 3. organization_members
-  -- 4. ra_associates     (ra_type='company', all branding fields populated)
+  -- 3. organization_members  (Divigner)
+  -- 4. ra_associates     (ra_type='company', all branding fields populated,
+  --                       organization_id = Divigner)
 END $$;
 ```
 
