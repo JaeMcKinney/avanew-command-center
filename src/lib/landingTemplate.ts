@@ -132,7 +132,7 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
   /* ── Form card — floats above footer ── */
   .form-card{width:100%;max-width:680px;margin:0 auto -70px;position:relative;background:linear-gradient(170deg,rgba(14,39,65,.97),rgba(9,26,45,.97));border:1px solid var(--line);border-radius:24px;padding:48px 44px 40px;box-shadow:0 40px 100px -20px rgba(0,0,0,.75),0 0 0 1px rgba(120,214,196,.06) inset;overflow:hidden;z-index:1}
   .form-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan),var(--gold))}
-  @media(max-width:520px){.form-card{padding:32px 22px 28px;border-radius:20px;margin-bottom:-50px}}
+  @media(max-width:520px){.wrap{padding:0 14px}.form-card{padding:32px 18px 28px;border-radius:20px;margin-bottom:-50px}}
 
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .form-grid .full{grid-column:1 / -1}
