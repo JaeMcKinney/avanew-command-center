@@ -179,7 +179,7 @@ export const BUILTIN_FALLBACK_TEMPLATE = `<!DOCTYPE html>
   .form-foot{margin-top:14px;font-size:11.5px;color:var(--muted-2);text-align:center;letter-spacing:.04em}
 
   /* ── Success state ── */
-  .success{display:none;width:100%;max-width:520px;text-align:center;padding:30px 30px 36px}
+  .success{display:none;width:100%;max-width:520px;text-align:center;padding:30px 30px 36px;margin:0 auto}
   .success.shown{display:block;animation:fadeUp .55s cubic-bezier(.2,.7,.2,1)}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
   .success .check-wrap{width:88px;height:88px;border-radius:50%;background:linear-gradient(160deg,rgba(24,185,166,.22),rgba(14,39,65,.85));border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 24px;box-shadow:0 0 50px -8px rgba(52,214,194,.45)}
