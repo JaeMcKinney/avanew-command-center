@@ -48,6 +48,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const DIVIGNER_TEAM = ["jae@divigner.com", "zuirrae@divigner.com"]
 
 function buildEmailHtml(p: {
+  prospectFirstName: string
   prospectName: string
   prospectEmail: string
   prospectPhone: string
@@ -55,13 +56,13 @@ function buildEmailHtml(p: {
   website: string
   message: string
   raName: string
-  slug: string
+  raEmail: string
 }): string {
   const detailRow = (label: string, value: string) =>
     value
       ? `<tr>
-          <td style="padding:8px 12px;font-family:'Manrope',Helvetica,Arial,sans-serif;font-size:13px;color:#8A9BB0;text-align:right;vertical-align:top;white-space:nowrap">${label}</td>
-          <td style="padding:8px 12px;font-family:'Manrope',Helvetica,Arial,sans-serif;font-size:14px;color:#E8ECF0;vertical-align:top">${value}</td>
+          <td style="padding:10px 16px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8A9BB0;text-transform:uppercase;letter-spacing:0.08em;vertical-align:top;white-space:nowrap;width:110px">${label}</td>
+          <td style="padding:10px 16px 10px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#E8ECF0;vertical-align:top;word-break:break-word">${value}</td>
         </tr>`
       : ""
 
@@ -70,55 +71,65 @@ function buildEmailHtml(p: {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
 <title>Inquiry Received — Divigner</title>
+<style>
+  body{margin:0;padding:0;background-color:#06101D;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
+  table{border-collapse:collapse;mso-table-lspace:0;mso-table-rspace:0}
+  img{border:0;height:auto;line-height:100%;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic}
+  @media only screen and (max-width:600px){
+    .card{border-radius:0!important}
+    .card-pad{padding-left:20px!important;padding-right:20px!important}
+    .detail-label{display:block!important;width:100%!important;padding-bottom:2px!important}
+    .detail-value{display:block!important;width:100%!important;padding-top:0!important}
+  }
+</style>
 </head>
-<body style="margin:0;padding:0;background-color:#06101D;-webkit-text-size-adjust:100%">
+<body style="margin:0;padding:0;background-color:#06101D">
 
-<!-- Outer wrapper -->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#06101D">
-<tr><td align="center" style="padding:40px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#06101D">
+<tr><td align="center" style="padding:32px 16px">
 
   <!-- Card -->
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:linear-gradient(165deg,#0E2741,#091A2D);border:1px solid rgba(201,168,106,0.3);border-radius:16px;overflow:hidden">
+  <table role="presentation" class="card" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background-color:#0E2741;border:1px solid rgba(201,168,106,0.3);border-radius:16px;overflow:hidden">
 
-    <!-- Gold top accent line -->
-    <tr><td style="height:3px;background:linear-gradient(90deg,#C9A86A,#34D6C2,#5FE3D2)"></td></tr>
+    <!-- Gold accent bar -->
+    <tr><td height="3" style="background:linear-gradient(90deg,#C9A86A,#34D6C2,#5FE3D2);font-size:0;line-height:0">&nbsp;</td></tr>
 
     <!-- Logo -->
-    <tr><td align="center" style="padding:36px 32px 24px">
-      <img src="https://ai-automation.divigner.com/divigner-logo.svg" alt="Divigner" width="160" style="display:block;max-width:160px;height:auto">
+    <tr><td align="center" class="card-pad" style="padding:32px 40px 24px">
+      <img src="https://ai-automation.divigner.com/logos/divigner-logo-light.png" alt="Divigner Group" width="180" height="auto" style="display:block;max-width:180px;height:auto">
     </td></tr>
 
     <!-- Heading -->
-    <tr><td align="center" style="padding:0 32px 8px">
-      <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:400;font-style:italic;color:#E8ECF0;line-height:1.3">
-        We've Received Your Inquiry
+    <tr><td align="center" class="card-pad" style="padding:0 40px 8px">
+      <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;font-style:italic;color:#E8ECF0;line-height:1.3">
+        We&rsquo;ve Received Your Inquiry
       </h1>
     </td></tr>
 
-    <!-- Body text -->
-    <tr><td style="padding:12px 32px 28px">
-      <p style="margin:0;font-family:'Manrope',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:rgba(232,236,240,0.7);text-align:center">
-        Thank you for reaching out. Our team has received your submission and will review it promptly.
-        A member of our team will be in touch with you shortly.
+    <!-- Body text — greeting by first name, no orphans -->
+    <tr><td align="center" class="card-pad" style="padding:16px 40px 28px">
+      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.75;color:rgba(232,236,240,0.72);max-width:420px;margin-left:auto;margin-right:auto">
+        Hi ${p.prospectFirstName}, thank you for reaching out. Our team has received your submission and will review it promptly. We will be in touch with you shortly.
       </p>
     </td></tr>
 
     <!-- Divider -->
-    <tr><td style="padding:0 32px">
-      <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,106,0.35),transparent)"></div>
+    <tr><td class="card-pad" style="padding:0 40px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td height="1" style="background:linear-gradient(90deg,transparent,rgba(201,168,106,0.35),transparent);font-size:0;line-height:0">&nbsp;</td></tr></table>
     </td></tr>
 
     <!-- Details heading -->
-    <tr><td style="padding:24px 32px 12px">
-      <p style="margin:0;font-family:'Manrope',Helvetica,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#34D6C2">
+    <tr><td class="card-pad" style="padding:24px 40px 10px">
+      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#34D6C2">
         Submission Details
       </p>
     </td></tr>
 
     <!-- Details table -->
-    <tr><td style="padding:0 20px 28px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:rgba(6,16,29,0.5);border:1px solid rgba(120,214,196,0.12);border-radius:10px;overflow:hidden">
+    <tr><td class="card-pad" style="padding:0 24px 24px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:rgba(6,16,29,0.6);border:1px solid rgba(120,214,196,0.12);border-radius:10px;overflow:hidden">
         ${detailRow("Name", p.prospectName)}
         ${detailRow("Email", p.prospectEmail)}
         ${detailRow("Phone", p.prospectPhone)}
@@ -130,15 +141,16 @@ function buildEmailHtml(p: {
     </td></tr>
 
     <!-- Divider -->
-    <tr><td style="padding:0 32px">
-      <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,106,0.35),transparent)"></div>
+    <tr><td class="card-pad" style="padding:0 40px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td height="1" style="background:linear-gradient(90deg,transparent,rgba(201,168,106,0.35),transparent);font-size:0;line-height:0">&nbsp;</td></tr></table>
     </td></tr>
 
     <!-- Footer -->
-    <tr><td align="center" style="padding:24px 32px 32px">
-      <p style="margin:0;font-family:'Manrope',Helvetica,Arial,sans-serif;font-size:12px;color:rgba(232,236,240,0.35);line-height:1.6">
+    <tr><td align="center" class="card-pad" style="padding:24px 40px 32px">
+      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(232,236,240,0.4);line-height:1.7">
         Divigner Group &middot; AI Automation Solutions<br>
-        <a href="https://ai-automation.divigner.com" style="color:#34D6C2;text-decoration:none">ai-automation.divigner.com</a>
+        <a href="https://ai-automation.divigner.com" style="color:#34D6C2;text-decoration:none">ai-automation.divigner.com</a><br>
+        <a href="mailto:${p.raEmail}" style="color:rgba(232,236,240,0.4);text-decoration:none">${p.raEmail}</a>
       </p>
     </td></tr>
 
@@ -286,6 +298,7 @@ Deno.serve(async (req) => {
     const prospectName = [firstName, lastName].filter(Boolean).join(" ")
 
     const emailHtml = buildEmailHtml({
+      prospectFirstName: firstName,
       prospectName,
       prospectEmail: email,
       prospectPhone: phone,
@@ -293,7 +306,7 @@ Deno.serve(async (req) => {
       website,
       message,
       raName: raData?.display_name ?? "",
-      slug,
+      raEmail: raData?.contact_email ?? "",
     })
 
     await sendNotificationEmail(
