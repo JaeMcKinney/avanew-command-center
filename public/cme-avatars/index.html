@@ -1502,6 +1502,7 @@
 
     var payload = {
       slug:              LEAD_SLUG,
+      source:            'cme',   /* tags the notification email as the CME form */
       first_name:        first,
       last_name:         (f('lead-last').value    || '').trim() || undefined,
       email:             email   || undefined,

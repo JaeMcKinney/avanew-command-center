@@ -29,6 +29,11 @@ type SubmitPayload = {
   website?:           string
   message?:           string
   marketing_consent?: boolean
+  // Which form sent this. "cme" = the CME Interactive Avatars demo page;
+  // absent/empty = a standard /refer/:slug RA landing page.
+  source?:            string
+  // Prospect's self-selected interest level ("exploring" | "ready")
+  prospect_intent?:   string
 }
 
 const CORS_HEADERS: HeadersInit = {
@@ -55,6 +60,9 @@ function buildEmailHtml(p: {
   company: string
   website: string
   message: string
+  intentLabel: string
+  formLabel: string
+  isCme: boolean
   raName: string
   raEmail: string
   slug: string
@@ -130,13 +138,15 @@ function buildEmailHtml(p: {
     <!-- Details table -->
     <tr><td class="card-pad" style="padding:0 40px 24px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${detailRow("Form", p.formLabel)}
         ${detailRow("Name", p.prospectName)}
         ${detailRow("Email", p.prospectEmail)}
         ${detailRow("Phone", p.prospectPhone)}
         ${detailRow("Company", p.company)}
         ${detailRow("Website", p.website)}
+        ${detailRow("Interest", p.intentLabel)}
         ${detailRow("Message", p.message)}
-        ${detailRow("Referred by", p.raName)}
+        ${detailRow("Referred by", p.isCme ? "" : p.raName)}
       </table>
     </td></tr>
 
@@ -149,7 +159,9 @@ function buildEmailHtml(p: {
     <tr><td align="center" class="card-pad" style="padding:24px 40px 32px">
       <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(232,236,240,0.4);line-height:1.7">
         Divigner Group &middot; AI Automation Solutions<br>
-        <a href="https://ai-automation.divigner.com/demo/${p.slug}" style="color:#34D6C2;text-decoration:none">ai-automation.divigner.com/demo/${p.slug}</a>
+        ${p.isCme
+          ? `<a href="https://ai-automation.divigner.com/cme-avatars" style="color:#34D6C2;text-decoration:none">ai-automation.divigner.com/cme-avatars</a>`
+          : `<a href="https://ai-automation.divigner.com/demo/${p.slug}" style="color:#34D6C2;text-decoration:none">ai-automation.divigner.com/demo/${p.slug}</a>`}
       </p>
     </td></tr>
 
@@ -167,7 +179,7 @@ async function sendNotificationEmail(
   prospectEmail: string | null,
   raEmail: string | null,
   emailHtml: string,
-  prospectName: string,
+  subject: string,
 ): Promise<void> {
   const to: string[] = []
   const cc: string[] = []
@@ -201,7 +213,7 @@ async function sendNotificationEmail(
   const payload = {
     personalizations: [personalizations],
     from: { email: "zuirrae@divigner.com", name: "Divigner Group" },
-    subject: `New Inquiry from ${prospectName} — Divigner Group`,
+    subject,
     content: [{ type: "text/html", value: emailHtml }],
   }
 
@@ -251,6 +263,19 @@ Deno.serve(async (req) => {
   const website    = payload.website?.trim() ?? ""
   const message    = payload.message?.trim() ?? ""
   const marketingConsent = payload.marketing_consent !== false
+  const source     = payload.source?.trim().toLowerCase() ?? ""
+  const intentRaw  = payload.prospect_intent?.trim().toLowerCase() ?? ""
+  const isCme      = source === "cme"
+
+  const INTENT_LABELS: Record<string, string> = {
+    exploring:  "Just exploring",
+    ready:      "Ready to start",
+    interested: "Interested",
+    sold:       "Ready to move forward",
+  }
+  const intentLabel = intentRaw
+    ? INTENT_LABELS[intentRaw] ?? intentRaw.charAt(0).toUpperCase() + intentRaw.slice(1)
+    : ""
 
   if (!slug)      return json(400, { error: "slug is required" })
   if (!firstName) return json(400, { error: "first_name is required" })
@@ -304,17 +329,24 @@ Deno.serve(async (req) => {
       company,
       website,
       message,
+      intentLabel,
+      formLabel: isCme ? "CME Interactive Avatars" : "",
+      isCme,
       raName: raData?.display_name ?? "",
       raEmail: raData?.contact_email ?? "",
       slug,
     })
+
+    const subject = isCme
+      ? `CME Form: New Inquiry from ${prospectName} · Divigner Group`
+      : `New Inquiry from ${prospectName} — Divigner Group`
 
     await sendNotificationEmail(
       sendgridKey,
       email || null,
       raData?.contact_email ?? null,
       emailHtml,
-      prospectName,
+      subject,
     )
   }
 
