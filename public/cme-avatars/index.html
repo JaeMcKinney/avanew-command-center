@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <meta name="theme-color" content="#06101D">
 <title>Interactive Avatars for CME · Divigner Group</title>
-<meta name="description" content="Interactive AI avatars for continuing medical education — clinical consultants, synthetic patients, and program concierges, live on CME programs today.">
+<meta name="description" content="Interactive AI avatars for continuing medical education: clinical consultants, synthetic patients, and program concierges, live on CME programs today.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -79,7 +79,7 @@
   .mob-overlay{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .3s}
   .mob-overlay.open{opacity:1;pointer-events:auto}
 
-  /* ── Section dot nav (right side) — works on desktop AND mobile per requirement ── */
+  /* ── Section dot nav (right side) - works on desktop AND mobile per requirement ── */
   .sec-nav{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;align-items:center;gap:10px}
   .sec-nav .nav-arrow{width:34px;height:34px;border-radius:50%;border:1px solid rgba(120,214,196,.25);background:rgba(9,26,45,.85);backdrop-filter:blur(6px);display:grid;place-items:center;cursor:pointer;transition:.15s;color:var(--muted)}
   .sec-nav .nav-arrow:hover,.sec-nav .nav-arrow:active{border-color:rgba(52,214,194,.6);color:var(--cyan);background:rgba(14,39,65,.95)}
@@ -198,7 +198,7 @@
   .avatar-modal.open{display:flex;opacity:1}
   .avatar-modal-backdrop{position:absolute;inset:0;background:rgba(6,16,29,.72);backdrop-filter:blur(18px) saturate(1.1);-webkit-backdrop-filter:blur(18px) saturate(1.1)}
   /* When modal is open, blur the whole page behind it as well (covers iOS/older browsers) */
-  body.avatar-modal-active > *:not(.avatar-modal){filter:blur(0)}  /* no-op — backdrop layer handles the visual */
+  body.avatar-modal-active > *:not(.avatar-modal){filter:blur(0)}  /* no-op - backdrop layer handles the visual */
   .avatar-modal-stage{position:relative;width:100%;max-width:880px;aspect-ratio:16/9;border-radius:22px;overflow:hidden;background:#06101D;border:1px solid rgba(120,214,196,.25);box-shadow:0 40px 100px -28px rgba(0,0,0,.85), 0 0 80px -28px rgba(52,214,194,.4);transform:scale(.96);transition:transform .4s cubic-bezier(.2,.7,.2,1), max-width .4s, max-height .4s, aspect-ratio .4s}
   .avatar-modal.open .avatar-modal-stage{transform:scale(1)}
   .avatar-modal-stage.size-large{max-width:min(1320px, 96vw);aspect-ratio:auto;height:min(900px, 88vh)}
@@ -284,7 +284,7 @@
   .pill.green{background:rgba(52,214,194,.16);color:var(--cyan);border:1px solid rgba(52,214,194,.32)}
   .price.svc .pk{color:var(--text)}
 
-  /* ── Investment add-on note (below pricing cards) — prominent treatment ── */
+  /* ── Investment add-on note (below pricing cards) - prominent treatment ── */
   .addon-note{position:relative;margin-top:36px;padding:42px 46px;border-radius:24px;background:linear-gradient(160deg,rgba(201,168,106,.18),rgba(24,185,166,.14) 55%,rgba(14,39,65,.94));border:1px solid rgba(201,168,106,.42);overflow:hidden;box-shadow:0 30px 80px -24px rgba(0,0,0,.65),0 0 70px -22px rgba(201,168,106,.42),0 0 70px -22px rgba(52,214,194,.32)}
   .addon-note::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--teal-bright),var(--cyan),#ffe6b0,var(--gold),var(--teal-bright));background-size:300% 100%;animation:goldShimmer 3.4s linear infinite}
   .addon-note::after{content:"";position:absolute;right:-180px;top:-180px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.26),rgba(52,214,194,.18) 45%,transparent 70%);pointer-events:none;z-index:0;animation:goldHalo 7s ease-in-out infinite}
@@ -314,7 +314,7 @@
   .addon-tags .a-tag:hover{background:rgba(201,168,106,.18);border-color:rgba(201,168,106,.6);transform:translateY(-1px)}
   @media(max-width:680px){.addon-note{padding:30px 24px}}
 
-  /* ── Featured (prominent) avatar — Interactive Avatar section ── */
+  /* ── Featured (prominent) avatar - Interactive Avatar section ── */
   .featured-avatar{position:relative;display:grid;grid-template-columns:1.15fr 1fr;gap:44px;align-items:stretch;margin-top:14px;margin-bottom:64px;padding:40px;border-radius:28px;background:linear-gradient(160deg,rgba(24,185,166,.14),rgba(14,39,65,.94));border:1px solid var(--line);overflow:hidden;box-shadow:0 30px 80px -28px rgba(0,0,0,.65),0 0 70px -22px rgba(52,214,194,.35)}
   .featured-avatar::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--teal),var(--gold))}
   .featured-avatar::after{content:"";position:absolute;right:-200px;top:-200px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(52,214,194,.32),transparent 60%);pointer-events:none;z-index:0;animation:featuredHalo 6s ease-in-out infinite}
@@ -373,7 +373,7 @@
   .why-item h4{font-family:'Manrope';font-size:15.5px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:.01em}
   .why-item p{color:var(--muted);font-size:14.5px;line-height:1.7}
 
-  /* ── Section 03 (#why) — prominent backdrop ── */
+  /* ── Section 03 (#why) - prominent backdrop ── */
   section#why{position:relative;overflow:hidden}
   section#why::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
     background:
@@ -600,9 +600,60 @@
     .price .incl li{font-size:13.5px}
   }
 
+
+  /* ── Night sky: fixed starfield behind everything, deepens as you scroll ── */
+  .sky{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.4}
+  .stars{position:absolute;inset:0;background-repeat:repeat}
+  .stars.s1{background-image:radial-gradient(1px 1px at 169px 81px, rgba(234,242,249,.6) 50%, transparent 100%),radial-gradient(1px 1px at 41px 424px, rgba(190,215,235,.75) 50%, transparent 100%),radial-gradient(1px 1px at 191px 302px, rgba(234,242,249,.9) 50%, transparent 100%),radial-gradient(1px 1px at 23px 48px, rgba(234,242,249,.6) 50%, transparent 100%),radial-gradient(1px 1px at 39px 127px, rgba(234,242,249,.9) 50%, transparent 100%),radial-gradient(1px 1px at 34px 427px, rgba(190,215,235,.75) 50%, transparent 100%),radial-gradient(1px 1px at 118px 326px, rgba(190,215,235,.75) 50%, transparent 100%),radial-gradient(1px 1px at 299px 303px, rgba(234,242,249,.6) 50%, transparent 100%),radial-gradient(1px 1px at 117px 27px, rgba(190,215,235,.75) 50%, transparent 100%),radial-gradient(1px 1px at 152px 218px, rgba(234,242,249,.9) 50%, transparent 100%);background-size:460px 460px;animation:twinkle 7s ease-in-out infinite alternate}
+  .stars.s2{background-image:radial-gradient(1px 1px at 588px 319px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(1px 1px at 109px 599px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(1px 1px at 385px 103px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(1px 1px at 581px 65px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(2px 2px at 512px 700px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(2px 2px at 325px 480px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(1px 1px at 374px 310px, rgba(234,242,249,.6) 50%, transparent 100%),radial-gradient(2px 2px at 253px 87px, rgba(52,214,194,.65) 50%, transparent 100%);background-size:720px 720px;animation:twinkle 5s ease-in-out 1.4s infinite alternate}
+  .stars.s3{background-image:radial-gradient(3px 3px at 1079px 1017px, rgba(190,215,235,.75) 50%, transparent 100%),radial-gradient(3px 3px at 593px 153px, rgba(234,242,249,.9) 50%, transparent 100%),radial-gradient(3px 3px at 341px 704px, rgba(234,242,249,.6) 50%, transparent 100%),radial-gradient(2px 2px at 867px 84px, rgba(201,168,106,.75) 50%, transparent 100%),radial-gradient(3px 3px at 646px 700px, rgba(201,168,106,.75) 50%, transparent 100%),radial-gradient(2px 2px at 1021px 938px, rgba(234,242,249,.9) 50%, transparent 100%);background-size:1100px 1100px;animation:twinkle 9s ease-in-out 2.6s infinite alternate}
+  @keyframes twinkle{0%{opacity:.45}50%{opacity:1}100%{opacity:.6}}
+  .comet{position:absolute;height:1.5px;border-radius:2px;opacity:0;background:linear-gradient(90deg,rgba(95,227,210,0),rgba(95,227,210,.9) 55%,rgba(255,255,255,.95));filter:drop-shadow(0 0 6px rgba(95,227,210,.7))}
+  .comet.c1{top:14%;left:68%;width:170px;animation:shoot 17s linear 5s infinite}
+  .comet.c2{top:42%;left:24%;width:120px;animation:shoot 23s linear 13s infinite}
+  .comet.c3{top:68%;left:78%;width:140px;animation:shoot 29s linear 21s infinite}
+  @keyframes shoot{0%,93%{opacity:0;transform:rotate(-26deg) translateX(0)}94.5%{opacity:1}100%{opacity:0;transform:rotate(-26deg) translateX(-360px) translateY(10px)}}
+
+  /* ── Section separation: gradient hairlines + per-section ambient glows ── */
+  section{padding:120px 0}
+  @media(max-width:880px){section{padding:84px 0}}
+  #what::after,#avatars::after,#features::after,#about::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(52,214,194,.4) 25%,rgba(201,168,106,.45) 50%,rgba(52,214,194,.4) 75%,transparent)}
+  #what .wrap,#avatars .wrap,#features .wrap,#about .wrap{position:relative;z-index:1}
+  #avatars{overflow:hidden}
+  #avatars::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:
+    radial-gradient(1000px 700px at 92% 4%, rgba(52,214,194,.10), transparent 60%),
+    radial-gradient(900px 700px at 2% 96%, rgba(28,90,140,.22), transparent 55%)}
+  #features{overflow:hidden}
+  #features::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:
+    radial-gradient(900px 650px at 6% 10%, rgba(95,227,210,.07), transparent 60%),
+    radial-gradient(800px 600px at 95% 85%, rgba(167,139,250,.08), transparent 60%)}
+  #about{overflow:hidden}
+  #about::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:
+    radial-gradient(900px 650px at 88% 12%, rgba(201,168,106,.10), transparent 60%),
+    radial-gradient(800px 600px at 8% 90%, rgba(52,214,194,.07), transparent 60%)}
+
+  /* ── Extra gradient accents ── */
+  .embed-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;z-index:2;opacity:.5;background:linear-gradient(90deg,var(--teal-bright),var(--cyan) 40%,var(--gold) 80%,var(--teal-bright));background-size:240% 100%;animation:cardSheen 8s linear infinite;transition:opacity .4s}
+  .embed-card:hover::before{opacity:1}
+  @keyframes cardSheen{0%{background-position:0% 50%}100%{background-position:240% 50%}}
+  .topbar.scrolled{border-image:linear-gradient(90deg,transparent,rgba(52,214,194,.45) 30%,rgba(201,168,106,.45) 70%,transparent) 1}
+  .gold-line{width:84px;background:linear-gradient(90deg,var(--gold),var(--teal-bright) 70%,transparent)}
+  .final-cta{position:relative;overflow:hidden;padding:84px 0 30px}
+  .final-cta::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,106,.45) 30%,rgba(52,214,194,.45) 70%,transparent)}
+  .final-cta::after{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:min(920px,92vw);height:100%;pointer-events:none;background:radial-gradient(ellipse at 50% 0%, rgba(52,214,194,.13), transparent 65%)}
+  .final-cta .wrap{position:relative;z-index:1}
 </style>
 </head>
 <body>
+
+<div class="sky" id="sky" aria-hidden="true">
+  <div class="stars s1"></div>
+  <div class="stars s2"></div>
+  <div class="stars s3"></div>
+  <div class="comet c1"></div>
+  <div class="comet c2"></div>
+  <div class="comet c3"></div>
+</div>
 
 <div class="progress" id="prog"></div>
 
@@ -651,7 +702,7 @@
     <div class="hero-content reveal">
       <span class="eyebrow">Interactive Avatars for Continuing Medical Education</span>
       <h1>The future of medical education <span class="grad">has a face.</span></h1>
-      <p class="hero-sub">Conversational AI personas — clinical consultants, synthetic patients, and program concierges — that turn CME content into dialogue. Trained on your approved content. Live for your learners 24/7.</p>
+      <p class="hero-sub">Clinical consultants, synthetic patients, and program concierges: conversational AI personas that turn CME content into dialogue. Trained on your approved content. Live for your learners 24/7.</p>
       <div class="hero-cta-row">
         <a href="#avatars" class="btn-primary">Meet the avatars
           <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
@@ -680,7 +731,7 @@
     </div>
     <div class="callout reveal">
       <span class="label">The short version</span>
-      <p>A person-shaped presence trained on your approved scientific content, voiced in your program's tone, available to every learner in every time zone. Learners who would have clicked through a slide deck stay, talk, and show you exactly where their knowledge gaps are. Keep scrolling — six of them are below, every one live on a CME program right now.</p>
+      <p>A person-shaped presence trained on your approved scientific content, voiced in your program's tone, available to every learner in every time zone. Learners who would have clicked through a slide deck stay, talk, and show you exactly where their knowledge gaps are. Keep scrolling: six of them are below, every one live on a CME program right now.</p>
     </div>
   </div>
 </section>
@@ -697,14 +748,14 @@
 
     <div class="callout reveal" style="margin-bottom:44px;margin-top:0">
       <span class="label">Before you click through</span>
-      <p>Chrome and Safari work best. Find a quiet spot, allow your microphone when the browser asks, and speak to the avatar as you would a colleague — or just type. When you're done, press “End Call” to close the session.</p>
+      <p>Chrome and Safari work best. Find a quiet spot, allow your microphone when the browser asks, and speak to the avatar as you would a colleague, or just type. When you're done, press “End Call” to close the session.</p>
     </div>
 
     <div class="embed-grid stagger">
       <article class="embed-card">
         <div class="embed-video">
           <a href="https://catalyst-skincancers.com/cscc-4/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Ruby's live program">
-            <img class="embed-thumb" src="/cme-avatars/assets/avatars/ruby.jpg" alt="Ruby — AI Clinical Consultant · cSCC" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/ruby.jpg" alt="Ruby, AI Clinical Consultant · cSCC" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="embed-thumb-fallback" style="display:none"><b>Ruby</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
@@ -713,7 +764,7 @@
         <div class="embed-body">
           <div class="embed-name">Ruby</div>
           <div class="embed-label">AI Clinical Consultant · cSCC</div>
-          <p class="embed-desc">An AI clinical consultant for the Catalyst cutaneous squamous cell carcinoma initiative. Clinicians consult Ruby on risk stratification, immunotherapy, adverse-event awareness, and multidisciplinary care — grounded in clinical guidelines, selected literature, and faculty-developed content.</p>
+          <p class="embed-desc">An AI clinical consultant for the Catalyst cutaneous squamous cell carcinoma initiative. Clinicians consult Ruby on risk stratification, immunotherapy, adverse-event awareness, and multidisciplinary care, grounded in clinical guidelines, selected literature, and faculty-developed content.</p>
           <a href="https://catalyst-skincancers.com/cscc-4/" target="_blank" rel="noopener" class="embed-link">Consult Ruby on the live site
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
@@ -722,7 +773,7 @@
       <article class="embed-card">
         <div class="embed-video">
           <a href="https://preparecognition.com/prepare-digital-assistant/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Dexter's live program">
-            <img class="embed-thumb" src="/cme-avatars/assets/avatars/dexter.jpg" alt="Dexter — Digital Assistant · Cognitive Health" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/dexter.jpg" alt="Dexter, Digital Assistant · Cognitive Health" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="embed-thumb-fallback" style="display:none"><b>Dexter</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
@@ -731,7 +782,7 @@
         <div class="embed-body">
           <div class="embed-name">Dexter</div>
           <div class="embed-label">Digital Assistant · Cognitive Health</div>
-          <p class="embed-desc">The PREPARE digital assistant. Dexter greets visitors, answers questions about cognitive health, and guides learners to evidence-based recommendations and curated resources across the PREPARE site — by voice or text.</p>
+          <p class="embed-desc">The PREPARE digital assistant. Dexter greets visitors, answers questions about cognitive health, and guides learners to evidence-based recommendations and curated resources across the PREPARE site, by voice or text.</p>
           <a href="https://preparecognition.com/prepare-digital-assistant/" target="_blank" rel="noopener" class="embed-link">Talk to Dexter on the live site
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
@@ -740,7 +791,7 @@
       <article class="embed-card">
         <div class="embed-video">
           <a href="https://conquer-t2.com/conquer-ai-community-coach/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Connie's live program">
-            <img class="embed-thumb" src="/cme-avatars/assets/avatars/connie.jpg" alt="Connie — AI Community Coach · Type 2 Inflammation" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/connie.jpg" alt="Connie, AI Community Coach · Type 2 Inflammation" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="embed-thumb-fallback" style="display:none"><b>Connie</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
@@ -749,7 +800,7 @@
         <div class="embed-body">
           <div class="embed-name">Connie</div>
           <div class="embed-label">AI Community Coach · Type 2 Inflammation</div>
-          <p class="embed-desc">The CONQUER T2 community coach and navigator. Connie helps physicians and other healthcare professionals find exactly what they need across the clinical and patient portals — ask her a question and she routes you to the right education in real time.</p>
+          <p class="embed-desc">The CONQUER T2 community coach and navigator. Connie helps physicians and other healthcare professionals find exactly what they need across the clinical and patient portals. Ask her a question and she routes you to the right education in real time.</p>
           <a href="https://conquer-t2.com/conquer-ai-community-coach/" target="_blank" rel="noopener" class="embed-link">Meet Connie on the live site
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
@@ -758,7 +809,7 @@
       <article class="embed-card">
         <div class="embed-video">
           <a href="https://preparecognition.com/synthetic-patient/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Ellie's live program">
-            <img class="embed-thumb" src="/cme-avatars/assets/avatars/ellie.jpg" alt="Ellie — Synthetic Patient · Cognitive Impairment" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/ellie.jpg" alt="Ellie, Synthetic Patient · Cognitive Impairment" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="embed-thumb-fallback" style="display:none"><b>Ellie</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
@@ -767,7 +818,7 @@
         <div class="embed-body">
           <div class="embed-name">Ellie</div>
           <div class="embed-label">Synthetic Patient · Cognitive Impairment</div>
-          <p class="embed-desc">An AI synthetic patient living with mild cognitive impairment. Learners practice their approach to the patient, cognitive assessment, and patient-centered counseling with a patient who listens, responds, and remembers — like the real thing.</p>
+          <p class="embed-desc">An AI synthetic patient living with mild cognitive impairment. Learners practice their approach to the patient, cognitive assessment, and patient-centered counseling with a patient who listens, responds, and remembers, like the real thing.</p>
           <a href="https://preparecognition.com/synthetic-patient/" target="_blank" rel="noopener" class="embed-link">Practice with Ellie on the live site
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
@@ -776,7 +827,7 @@
       <article class="embed-card">
         <div class="embed-video">
           <a href="https://www.medlearninggroup.com/atopic-dermatitis-patient-avatar/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Joe's live program">
-            <img class="embed-thumb" src="/cme-avatars/assets/avatars/joe.jpg" alt="Joe — AI Patient · Atopic Dermatitis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/joe.jpg" alt="Joe, AI Patient · Atopic Dermatitis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="embed-thumb-fallback" style="display:none"><b>Joe</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
@@ -785,7 +836,7 @@
         <div class="embed-body">
           <div class="embed-name">Joe</div>
           <div class="embed-label">AI Patient · Atopic Dermatitis</div>
-          <p class="embed-desc">An AI patient living with atopic dermatitis, built for Med Learning Group. Physicians and clinical learners practice patient-centered communication and shared decision-making around disease control and treatment options — in a safe, simulated environment.</p>
+          <p class="embed-desc">An AI patient living with atopic dermatitis, built for Med Learning Group. Physicians and clinical learners practice patient-centered communication and shared decision-making around disease control and treatment options, all in a safe, simulated environment.</p>
           <a href="https://www.medlearninggroup.com/atopic-dermatitis-patient-avatar/" target="_blank" rel="noopener" class="embed-link">Practice with Joe on the live site
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
@@ -794,7 +845,7 @@
       <article class="embed-card">
         <div class="embed-video">
           <a href="https://www.medlearninggroup.com/mcrpc-patient-avatar-profile/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Steve's live program">
-            <img class="embed-thumb" src="/cme-avatars/assets/avatars/steve.jpg" alt="Steve — AI Patient · mCRPC" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/steve.jpg" alt="Steve, AI Patient · mCRPC" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="embed-thumb-fallback" style="display:none"><b>Steve</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
@@ -827,22 +878,22 @@
       <div class="card"><span class="idx">i</span>
         <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg></div>
         <h3>Scale faculty expertise</h3>
-        <p>Extend the reach of your faculty and content across audiences, geographies, and time zones — without scaling headcount or honoraria.</p>
+        <p>Extend the reach of your faculty and content across audiences, geographies, and time zones, without scaling headcount or honoraria.</p>
       </div>
       <div class="card"><span class="idx">ii</span>
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <h3>Consistent, compliant messaging</h3>
-        <p>Every interaction is grounded in approved content with closed-loop knowledge sources — safeguards that help prevent hallucinations, off-label discussion, and non-compliant responses.</p>
+        <p>Every interaction is grounded in approved content with closed-loop knowledge sources: safeguards that help prevent hallucinations, off-label discussion, and non-compliant responses.</p>
       </div>
       <div class="card"><span class="idx">iii</span>
         <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
         <h3>Personalized learning</h3>
-        <p>Each learner gets answers matched to their questions, interests, and level of expertise — far more engaging than static enduring materials.</p>
+        <p>Each learner gets answers matched to their questions, interests, and level of expertise. Far more engaging than static enduring materials.</p>
       </div>
       <div class="card"><span class="idx">iv</span>
         <div class="ic"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
         <h3>Outcomes data you can report</h3>
-        <p>Conversation analytics reveal knowledge gaps, emerging interests, and engagement trends in real time — evidence you can fold straight into outcomes reporting for supporters.</p>
+        <p>Conversation analytics reveal knowledge gaps, emerging interests, and engagement trends in real time: evidence you can fold straight into outcomes reporting for supporters.</p>
       </div>
       <div class="card"><span class="idx">v</span>
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
@@ -852,7 +903,7 @@
       <div class="card"><span class="idx">vi</span>
         <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
         <h3>Any language, any time zone</h3>
-        <p>Avatars auto-detect and respond in the learner's native language — Spanish, Mandarin, Arabic, and many more. No selector, no configuration. Just conversation.</p>
+        <p>Avatars auto-detect and respond in the learner's native language: Spanish, Mandarin, Arabic, and many more. No selector, no configuration. Just conversation.</p>
       </div>
     </div>
   </div>
@@ -876,12 +927,12 @@
       <div class="card"><span class="idx">ii</span>
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
         <h3>Trained on your content</h3>
-        <p>You state the knowledge base and approved documentation. The avatar answers from your sources — not the open internet.</p>
+        <p>You state the knowledge base and approved documentation. The avatar answers from your sources, not the open internet.</p>
       </div>
       <div class="card"><span class="idx">iii</span>
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
         <h3>Smart routing</h3>
-        <p>Questions outside the avatar's scope are routed to your designee with full transcript context — personal medical questions included.</p>
+        <p>Questions outside the avatar's scope are routed to your designee with full transcript context, personal medical questions included.</p>
       </div>
       <div class="card"><span class="idx">iv</span>
         <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
@@ -896,7 +947,7 @@
       <div class="card"><span class="idx">vi</span>
         <div class="ic"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
         <h3>Analytics &amp; transcripts</h3>
-        <p>Every conversation is logged, summarized, and tagged by intent — so you can see what learners actually ask, activity after activity.</p>
+        <p>Every conversation is logged, summarized, and tagged by intent, so you can see what learners actually ask, activity after activity.</p>
       </div>
     </div>
 
@@ -909,7 +960,7 @@
         <div class="why-num">01</div>
         <div>
           <h4>Controlled knowledge sources</h4>
-          <p>The avatar answers only from approved content. Closed-loop knowledge sources prevent hallucinations and off-label conversation — by design, not by hope.</p>
+          <p>The avatar answers only from approved content. Closed-loop knowledge sources prevent hallucinations and off-label conversation. By design, not by hope.</p>
         </div>
       </div>
       <div class="why-item">
@@ -923,7 +974,7 @@
         <div class="why-num">03</div>
         <div>
           <h4>Escalation pathways</h4>
-          <p>Out-of-scope inquiries — personal medical questions, adverse-event mentions, anything sensitive — are routed to your designated contact with full context.</p>
+          <p>Out-of-scope inquiries (personal medical questions, adverse-event mentions, anything sensitive) are routed to your designated contact with full context.</p>
         </div>
       </div>
       <div class="why-item">
@@ -937,7 +988,7 @@
         <div class="why-num">05</div>
         <div>
           <h4>Conversation logging &amp; analytics</h4>
-          <p>Sessions, engagement, and conversation paths are logged and summarized monthly — the raw material for outcomes reporting and continuous optimization.</p>
+          <p>Sessions, engagement, and conversation paths are logged and summarized monthly: the raw material for outcomes reporting and continuous optimization.</p>
         </div>
       </div>
     </div>
@@ -951,7 +1002,7 @@
       <div class="sec-num">05</div>
       <h2 class="sec-title">About <span class="grad">Divigner Group</span></h2>
       <div class="gold-line"></div>
-      <p class="lede">Every avatar on this page was designed, developed, and deployed by Divigner Group. We build conversational AI experiences for medical education companies, healthcare practices, and consumer brands — on top of the content, faculty, and compliance processes that already work.</p>
+      <p class="lede">Every avatar on this page was designed, developed, and deployed by Divigner Group. We build conversational AI experiences for medical education companies, healthcare practices, and consumer brands, on top of the content, faculty, and compliance processes that already work.</p>
     </div>
     <div class="grid g2 stagger">
       <div class="card">
@@ -962,7 +1013,7 @@
       <div class="card">
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 3v9h9"/></svg></div>
         <h3>Always learning, always on</h3>
-        <p>Your avatar improves with every conversation. We review transcripts monthly, retrain on what learners actually ask, and tighten disclaimers and routing — so the experience keeps getting better without you having to think about it.</p>
+        <p>Your avatar improves with every conversation. We review transcripts monthly, retrain on what learners actually ask, and tighten disclaimers and routing, so the experience keeps getting better without you having to think about it.</p>
       </div>
     </div>
   </div>
@@ -972,7 +1023,7 @@
 <div class="final-cta">
   <div class="wrap">
     <h3>Ready to give your program <span class="grad">a face?</span></h3>
-    <p>Tell us about your next activity — the disease state, the learners, the objectives. We'll scope the avatar, walk through the options, and put a working persona in front of your team in weeks, not quarters.</p>
+    <p>Tell us about your next activity: the disease state, the learners, the objectives. We'll scope the avatar, walk through the options, and put a working persona in front of your team in weeks, not quarters.</p>
     <button type="button" class="btn-primary" id="footer-learn-more">Get in Touch
       <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
     </button>
@@ -997,7 +1048,7 @@
     </button>
     <div class="modal-eyebrow">Divigner Group</div>
     <h3 class="modal-title" id="lead-modal-title">Let's give your program <span class="grad">a face.</span></h3>
-    <p class="modal-sub">Tell us about your activity — the disease state, your learners, your objectives — and Jae McKinney and the Divigner team will follow up personally. Prefer email? Reach us directly at <a href="mailto:jae@divigner.com" style="color:var(--cyan)">jae@divigner.com</a>.</p>
+    <p class="modal-sub">Tell us about your activity (the disease state, your learners, your objectives) and Jae McKinney and the Divigner team will follow up personally. Prefer email? Reach us directly at <a href="mailto:jae@divigner.com" style="color:var(--cyan)">jae@divigner.com</a>.</p>
     <form id="lead-form" novalidate>
       <div class="form-grid">
         <div class="field">
@@ -1180,7 +1231,7 @@
   document.getElementById('mob-close').addEventListener('click', closeMobMenu);
   document.getElementById('mob-overlay').addEventListener('click', closeMobMenu);
 
-  /* ── Section dot nav (right side) — visible on desktop AND mobile ── */
+  /* ── Section dot nav (right side) - visible on desktop AND mobile ── */
   var nav = document.createElement('nav');
   nav.className = 'sec-nav';
   nav.setAttribute('aria-label','Section navigation');
@@ -1264,7 +1315,7 @@
     hideConsent();
   });
 
-  /* Embed-card "View the live ___" stubs — until real avatar URLs are wired, route to the lead form. */
+  /* Embed-card "View the live ___" stubs - until real avatar URLs are wired, route to the lead form. */
   document.querySelectorAll('.embed-link').forEach(function(a){
     a.addEventListener('click', function(e){
       var href = a.getAttribute('href');
@@ -1317,13 +1368,13 @@
     var name      = stage.dataset.tavusName    || 'Avatar';
 
     if(!personaId){
-      // No persona wired yet — show a friendly "coming soon" inside the modal
+      // No persona wired yet - show a friendly "coming soon" inside the modal
       openAvatarModal(name);
       setTimeout(function(){
         avatarModalFrame.innerHTML =
           '<div class="embed-error">' +
             '<b>' + name + ' is coming soon</b>' +
-            '<div>This avatar isn\'t wired up yet. Victoria is live — try her first.</div>' +
+            '<div>This avatar isn\'t wired up yet. Victoria is live - try her first.</div>' +
             '<button type="button" id="avatar-modal-back-btn">Close</button>' +
           '</div>';
         document.getElementById('avatar-modal-back-btn').addEventListener('click', closeAvatarModal);
@@ -1477,9 +1528,22 @@
     .catch(function(err){
       submitBtn.disabled = false;
       submitBtn.innerHTML = SUBMIT_HTML;
-      if(errBox){ errBox.textContent = (err && err.message) ? err.message : 'Something went wrong — please try again.'; errBox.style.display = 'block'; }
+      if(errBox){ errBox.textContent = (err && err.message) ? err.message : 'Something went wrong. Please try again.'; errBox.style.display = 'block'; }
     });
   });
+})();
+</script>
+<script>
+(function(){
+  /* Night sky deepens as you travel down the page */
+  var sky = document.getElementById('sky');
+  if(!sky) return;
+  function update(){
+    var o = Math.min(1, 0.4 + (window.scrollY / 1600) * 0.6);
+    sky.style.opacity = o.toFixed(3);
+  }
+  window.addEventListener('scroll', update, {passive:true});
+  update();
 })();
 </script>
 </body>
