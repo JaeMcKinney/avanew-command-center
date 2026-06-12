@@ -277,8 +277,8 @@ Deno.serve(async (req) => {
   const INTENT_LABELS: Record<string, string> = {
     exploring:  "Just exploring",
     ready:      "Ready to start",
-    interested: "Interested",
-    sold:       "Ready to move forward",
+    interested: "I'm Interested",
+    sold:       "I'm Sold",
   }
   const intentLabel = intentRaw
     ? INTENT_LABELS[intentRaw] ?? intentRaw.charAt(0).toUpperCase() + intentRaw.slice(1)
@@ -346,7 +346,7 @@ Deno.serve(async (req) => {
 
     const subject = isCme
       ? `CME Form: New Inquiry from ${prospectName} · Divigner Group`
-      : `New Inquiry from ${prospectName} — Divigner Group`
+      : `New RA Inquiry from ${prospectName}${intentLabel ? ` — ${intentLabel}` : ""} — Divigner Group`
 
     await sendNotificationEmail(
       sendgridKey,
