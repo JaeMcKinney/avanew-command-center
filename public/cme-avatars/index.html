@@ -617,7 +617,8 @@
   /* ── Section separation: gradient hairlines + per-section ambient glows ── */
   section{padding:120px 0}
   @media(max-width:880px){section{padding:84px 0}}
-  #what::after,#avatars::after,#features::after,#about::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(52,214,194,.4) 25%,rgba(201,168,106,.45) 50%,rgba(52,214,194,.4) 75%,transparent)}
+  #what::after,#avatars::after,#features::after,#about::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(52,214,194,.13) 25%,rgba(201,168,106,.15) 50%,rgba(52,214,194,.13) 75%,transparent)}
+  section#why::after{background:linear-gradient(90deg,transparent,rgba(52,214,194,.12) 20%,rgba(201,168,106,.12) 50%,rgba(52,214,194,.12) 80%,transparent)}
   #what .wrap,#avatars .wrap,#features .wrap,#about .wrap{position:relative;z-index:1}
   #avatars{overflow:hidden}
   #avatars::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:
@@ -639,7 +640,7 @@
   .topbar.scrolled{border-image:linear-gradient(90deg,transparent,rgba(52,214,194,.45) 30%,rgba(201,168,106,.45) 70%,transparent) 1}
   .gold-line{width:84px;background:linear-gradient(90deg,var(--gold),var(--teal-bright) 70%,transparent)}
   .final-cta{position:relative;overflow:hidden;padding:84px 0 30px}
-  .final-cta::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,106,.45) 30%,rgba(52,214,194,.45) 70%,transparent)}
+  .final-cta::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,106,.15) 30%,rgba(52,214,194,.15) 70%,transparent)}
   .final-cta::after{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:min(920px,92vw);height:100%;pointer-events:none;background:radial-gradient(ellipse at 50% 0%, rgba(52,214,194,.13), transparent 65%)}
   .final-cta .wrap{position:relative;z-index:1}
 </style>
