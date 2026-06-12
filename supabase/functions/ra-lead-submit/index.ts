@@ -52,6 +52,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const DIVIGNER_TEAM = ["jae@divigner.com", "zuirrae@divigner.com"]
 
+// CME form notifications go to (and come from) Jae only.
+const CME_TEAM = ["jae@divigner.com"]
+const CME_FROM = { email: "jae@divigner.com", name: "Divigner Group" }
+const RA_FROM  = { email: "zuirrae@divigner.com", name: "Divigner Group" }
+
 function buildEmailHtml(p: {
   prospectFirstName: string
   prospectName: string
@@ -180,7 +185,9 @@ async function sendNotificationEmail(
   raEmail: string | null,
   emailHtml: string,
   subject: string,
+  isCme: boolean,
 ): Promise<void> {
+  const team = isCme ? CME_TEAM : DIVIGNER_TEAM
   const to: string[] = []
   const cc: string[] = []
 
@@ -188,7 +195,7 @@ async function sendNotificationEmail(
 
   // Build CC list, excluding any address already in TO
   const seen = new Set(to.map((e) => e.toLowerCase()))
-  for (const addr of [...DIVIGNER_TEAM, ...(raEmail ? [raEmail] : [])]) {
+  for (const addr of [...team, ...(raEmail ? [raEmail] : [])]) {
     const lower = addr.toLowerCase()
     if (!seen.has(lower)) {
       cc.push(addr)
@@ -212,7 +219,7 @@ async function sendNotificationEmail(
 
   const payload = {
     personalizations: [personalizations],
-    from: { email: "zuirrae@divigner.com", name: "Divigner Group" },
+    from: isCme ? CME_FROM : RA_FROM,
     subject,
     content: [{ type: "text/html", value: emailHtml }],
   }
@@ -347,6 +354,7 @@ Deno.serve(async (req) => {
       raData?.contact_email ?? null,
       emailHtml,
       subject,
+      isCme,
     )
   }
 
