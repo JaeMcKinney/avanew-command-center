@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/cme-avatars/a2ai", "destination": "/cme-avatars/a2ai/index.html" },
+    { "source": "/cme-avatars/a2ai/", "destination": "/cme-avatars/a2ai/index.html" },
     { "source": "/cme-avatars", "destination": "/cme-avatars/index.html" },
     { "source": "/cme-avatars/", "destination": "/cme-avatars/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }

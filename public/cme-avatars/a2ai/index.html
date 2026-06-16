@@ -928,7 +928,7 @@
         From the avatar to the platform it lives on, we build the full&nbsp;experience.
       </p>
       <p style="margin:14px auto 0">
-        <a href="#" class="portal-cta" style="font-family:'Manrope',sans-serif;font-size:16.5px;color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,168,106,.35);transition:border-color .3s" onmouseover="this.style.borderColor='rgba(201,168,106,.7)'" onmouseout="this.style.borderColor='rgba(201,168,106,.35)'" onclick="event.preventDefault();if(window.openLeadModal)window.openLeadModal()">Let's talk about&nbsp;yours&nbsp;→</a>
+        <a href="https://ai-automation.divigner.com/refer/a2ai" class="portal-cta" style="font-family:'Manrope',sans-serif;font-size:16.5px;color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,168,106,.35);transition:border-color .3s" onmouseover="this.style.borderColor='rgba(201,168,106,.7)'" onmouseout="this.style.borderColor='rgba(201,168,106,.35)'">Let's talk about&nbsp;yours&nbsp;→</a>
       </p>
     </div>
 
@@ -1088,6 +1088,56 @@
     </div>
   </div>
 </section>
+<section id="ra">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-num">06</div>
+      <h2 class="sec-title">Your <span class="grad">Referral Associate</span></h2>
+      <div class="gold-line"></div>
+      <p class="lede">You were referred to Divigner by the Referral Associate below. They're your direct line. Reach out any time with questions, or use the form to get started and they'll be notified automatically.</p>
+    </div>
+    <div class="ra-card reveal" data-ra-slug="">
+      <div class="ra-photo">
+        <img id="ra-photo" alt="" style="display:none">
+        <div class="ra-photo-placeholder" id="ra-photo-fallback">RA</div>
+      </div>
+      <div class="ra-info">
+        <div class="ra-label">Referred by</div>
+        <h3 class="ra-name" id="ra-name">Jae McKinney</h3>
+        <img id="ra-partner-logo-top" class="ra-partner-logo-top" alt="">
+        <div class="ra-title" id="ra-title">Founder &amp; Chief AI&nbsp;Strategist · Divigner&nbsp;Group</div>
+        <div class="ra-contact">
+          <a href="mailto:" id="ra-email" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span id="ra-email-text">name@divigner.com</span>
+          </a>
+          <a href="tel:" id="ra-phone" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span id="ra-phone-text">(555) 555-0142</span>
+          </a>
+          <a href="#" id="ra-linkedin" target="_blank" rel="noopener" style="display:none">
+            <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            <span id="ra-linkedin-text">LinkedIn</span>
+          </a>
+          <a href="#" id="ra-website" target="_blank" rel="noopener" style="display:none">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span id="ra-website-text">website</span>
+          </a>
+        </div>
+        <p class="ra-bio" id="ra-bio">Short bio goes here. 2–3 sentences about the Referral Associate's background, the kinds of clients they've worked with, and why they're recommending Divigner.</p>
+
+        <!-- Partnership statement - hidden by default, shown when partner_company_name exists -->
+        <div class="ra-partnership" id="ra-partnership">
+          <p class="ra-partnership-text"><b id="ra-partnership-company">Partner</b> <span class="has">has partnered with</span> <b>Divigner</b> <span class="offer">to offer you this product.</span></p>
+          <div class="ra-partnership-logos">
+            <img id="ra-partnership-logo-partner" alt="" style="display:none">
+            <img src="https://ai-automation.divigner.com/divigner-logo.svg" alt="Divigner">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- ── Final CTA ── -->
 <div class="final-cta">
@@ -1097,83 +1147,6 @@
     <button type="button" class="btn-primary" id="footer-learn-more">Get in Touch
       <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
     </button>
-  </div>
-</div>
-
-<!-- ── Get-in-Touch lead modal ── -->
-<style>
-/* Intent buttons are toggles: both neutral by default, bright teal fill only when selected.
-   #lead-modal id-scoping out-specifies the base template's always-lit .intent-btn.sold rule. */
-#lead-modal .intent-btn{background:rgba(14,39,65,.7);border-color:rgba(120,214,196,.35);color:var(--cyan);box-shadow:none}
-#lead-modal .intent-btn:hover{background:rgba(24,185,166,.18);border-color:var(--teal-bright);color:var(--text);transform:translateY(-2px);box-shadow:0 14px 30px -10px rgba(52,214,194,.4)}
-#lead-modal .intent-btn.selected{background:linear-gradient(120deg,var(--teal-bright),var(--cyan));color:#06101D;border-color:var(--cyan);box-shadow:0 10px 28px -10px rgba(52,214,194,.55)}
-#lead-modal .intent-btn.selected:hover{color:#06101D;transform:translateY(-2px);box-shadow:0 18px 44px -10px rgba(52,214,194,.75)}
-.modal-overlay textarea:focus{border-color:var(--teal-bright);background:rgba(6,16,29,.75);box-shadow:0 0 0 3px rgba(52,214,194,.12)}
-</style>
-<div class="modal-overlay" id="lead-modal" role="dialog" aria-modal="true" aria-labelledby="lead-modal-title" aria-hidden="true">
-  <div class="modal">
-    <button class="modal-close" id="lead-close" aria-label="Close">
-      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <div class="modal-eyebrow">Divigner Group</div>
-    <h3 class="modal-title" id="lead-modal-title">Let's give your program <span class="grad">a face.</span></h3>
-    <p class="modal-sub">Tell us about your activity or your practice (your audience, your objectives, what you'd want the avatar to do) and Jae McKinney and the Divigner team will follow up personally. Prefer email? Reach us directly at <a href="mailto:jae@divigner.com" style="color:var(--cyan)">jae@divigner.com</a>.</p>
-    <form id="lead-form" novalidate>
-      <div class="form-grid">
-        <div class="field">
-          <label for="lead-first">First name *</label>
-          <input id="lead-first" type="text" autocomplete="given-name" required>
-          <div class="field-error">Please enter your first name</div>
-        </div>
-        <div class="field">
-          <label for="lead-last">Last name</label>
-          <input id="lead-last" type="text" autocomplete="family-name">
-        </div>
-        <div class="field">
-          <label for="lead-email">Email</label>
-          <input id="lead-email" type="email" autocomplete="email">
-          <div class="field-error">Enter a valid email, or provide a phone number</div>
-        </div>
-        <div class="field">
-          <label for="lead-phone">Phone</label>
-          <input id="lead-phone" type="tel" autocomplete="tel">
-          <div class="field-error">Provide a phone number or an email</div>
-        </div>
-        <div class="field full">
-          <label for="lead-company">Company / Organization</label>
-          <input id="lead-company" type="text" autocomplete="organization">
-        </div>
-        <div class="field full">
-          <label for="lead-website">Website</label>
-          <input id="lead-website" type="url" placeholder="https://">
-          <div class="field-error">Enter a valid URL</div>
-        </div>
-        <div class="field full">
-          <label for="lead-message">How can we help? <span style="color:var(--muted-2)">(optional)</span></label>
-          <textarea id="lead-message" rows="3" placeholder="Tell us about the program, activity, or disease state you have in mind…" style="font-family:'Manrope',sans-serif;font-size:14.5px;color:var(--text);background:rgba(6,16,29,.55);border:1px solid rgba(120,214,196,.18);border-radius:10px;padding:12px 14px;outline:none;resize:vertical;min-height:84px;width:100%"></textarea>
-        </div>
-      </div>
-      <div class="intent-row">
-        <button type="button" class="intent-btn interested" data-intent="exploring">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Just exploring
-        </button>
-        <button type="button" class="intent-btn sold" data-intent="ready">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          Ready to start
-        </button>
-      </div>
-      <div id="lead-form-error" style="display:none;color:#ff7d7d;font-size:12.5px;text-align:center;margin-top:14px"></div>
-      <button type="submit" class="btn-primary" id="lead-submit" style="width:100%;justify-content:center;margin-top:18px">Send to Divigner
-        <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-      </button>
-      <p class="modal-foot">Either an email or phone number is required. By submitting, you agree the Divigner team may contact you about the products shown.</p>
-    </form>
-    <div class="modal-success">
-      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <h3>Thank you!</h3>
-      <p>We've received your message. Jae and the Divigner team will be in touch shortly.</p>
-    </div>
   </div>
 </div>
 <!-- ── Footer ── -->
@@ -1237,7 +1210,8 @@
     {id:'avatars',  num:'02', label:'Live Avatars'},
     {id:'why',      num:'03', label:'Why Invest'},
     {id:'features', num:'04', label:'Features & Compliance'},
-    {id:'about',    num:'05', label:'About Divigner'}
+    {id:'about',    num:'05', label:'About Divigner'},
+    {id:'ra',       num:'06', label:'Referral Associate'}
   ];
 
   /* ── Progress bar + topbar scroll state ── */
@@ -1349,15 +1323,22 @@
   });
 
   /* ── Slug from query string (?ra=slug) or path (/demo/<slug>) ── */
-  var raSlug = (function(){
-    var q = new URLSearchParams(window.location.search).get('ra');
-    if(q) return q;
-    var m = window.location.pathname.match(/\/demo\/([^/?#]+)/);
-    return m ? decodeURIComponent(m[1]) : '';
-  })();
+  var raSlug = 'a2ai';
 
-  /* ── All "Get in Touch" CTAs open the lead-capture modal. ── */
-  function goToLeadForm(){ if(window.openLeadModal){ window.openLeadModal(); } }
+  /* ── Lead form lives on ai-automation.divigner.com. All CTAs navigate there. ── */
+  function leadFormUrl(){
+    return raSlug
+      ? 'https://ai-automation.divigner.com/refer/' + encodeURIComponent(raSlug)
+      : 'https://ai-automation.divigner.com';
+  }
+  function goToLeadForm(){
+    // If we're inside an iframe (the React /demo/<slug> route renders this
+    // in a full-screen iframe), navigate the TOP window so the address bar
+    // actually updates. Falls back to window.location for direct visits.
+    var target = (window.top && window.top !== window) ? window.top : window;
+    try { target.location.href = leadFormUrl(); }
+    catch (e) { window.location.href = leadFormUrl(); }
+  }
 
   document.getElementById('learn-more-btn').addEventListener('click', function(e){ e.preventDefault(); goToLeadForm(); });
   document.getElementById('mob-learn-more').addEventListener('click', function(){ closeMobMenu(); goToLeadForm(); });
@@ -1367,6 +1348,122 @@
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape') closeMobMenu();
   });
+
+  /* ── RA hydration from path slug ── */
+  (function hydrateRA(){
+    if(!raSlug) return;
+    document.querySelector('.ra-card').dataset.raSlug = raSlug;
+
+    var SUPABASE_URL = 'https://cbmcyffvsebrxkmxufxx.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibWN5ZmZ2c2VicnhrbXh1Znh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjU3MTMsImV4cCI6MjA5MzA0MTcxM30.Uxh5aWShe3YkrBkjjBe8WcP0fqQH-4pp6P8NyqKRt7A';
+
+    fetch(SUPABASE_URL + '/rest/v1/rpc/get_ra_landing_page', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ p_slug: raSlug })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      var ra = Array.isArray(rows) ? rows[0] : rows;
+      if(!ra) return;
+
+      /* Name */
+      var fullName = [ra.first_name, ra.last_name].filter(Boolean).join(' ') || ra.display_name || raSlug;
+      var nameEl = document.getElementById('ra-name');
+      if(nameEl) nameEl.textContent = fullName;
+
+      /* Photo */
+      var photoEl = document.getElementById('ra-photo');
+      var fallbackEl = document.getElementById('ra-photo-fallback');
+      if(ra.photo_url && photoEl){
+        photoEl.src = ra.photo_url;
+        photoEl.alt = fullName;
+        photoEl.style.display = 'block';
+        if(fallbackEl) fallbackEl.style.display = 'none';
+      } else if(fallbackEl){
+        var initials = [ra.first_name, ra.last_name].filter(Boolean).map(function(w){ return w.charAt(0).toUpperCase(); }).join('') || '?';
+        fallbackEl.textContent = initials;
+      }
+
+      /* Title */
+      var titleEl = document.getElementById('ra-title');
+      if(titleEl && ra.ra_title) titleEl.innerHTML = ra.ra_title;
+
+      /* Bio */
+      var bioEl = document.getElementById('ra-bio');
+      if(bioEl && ra.bio) bioEl.textContent = ra.bio;
+
+      /* Email */
+      if(ra.contact_email){
+        var emailLink = document.getElementById('ra-email');
+        var emailText = document.getElementById('ra-email-text');
+        if(emailLink) emailLink.href = 'mailto:' + ra.contact_email;
+        if(emailText) emailText.textContent = ra.contact_email;
+      } else {
+        var emailEl = document.getElementById('ra-email');
+        if(emailEl) emailEl.style.display = 'none';
+      }
+
+      /* Phone */
+      if(ra.contact_phone){
+        var phoneLink = document.getElementById('ra-phone');
+        var phoneText = document.getElementById('ra-phone-text');
+        if(phoneLink) phoneLink.href = 'tel:' + ra.contact_phone.replace(/[^+0-9]/g, '');
+        if(phoneText) phoneText.textContent = ra.contact_phone;
+      } else {
+        var phoneEl = document.getElementById('ra-phone');
+        if(phoneEl) phoneEl.style.display = 'none';
+      }
+
+      /* LinkedIn */
+      if(ra.linkedin_url){
+        var liLink = document.getElementById('ra-linkedin');
+        if(liLink){ liLink.href = ra.linkedin_url; liLink.style.display = ''; }
+      }
+
+      /* Website (in contact row) */
+      if(ra.partner_website){
+        var siteLink = document.getElementById('ra-website');
+        var siteText = document.getElementById('ra-website-text');
+        if(siteLink){
+          var siteHref = ra.partner_website;
+          if(!/^https?:\/\//.test(siteHref)) siteHref = 'https://' + siteHref;
+          siteLink.href = siteHref;
+          siteLink.style.display = '';
+        }
+        if(siteText) siteText.textContent = ra.partner_website.replace(/^https?:\/\//, '');
+      }
+
+      /* Partner logo in RA header */
+      if(ra.partner_logo_url){
+        var logoTop = document.getElementById('ra-partner-logo-top');
+        if(logoTop){
+          logoTop.src = ra.partner_logo_url;
+          logoTop.alt = ra.partner_company_name || '';
+          logoTop.classList.add('visible');
+        }
+      }
+
+      /* Partnership statement with dual logos */
+      if(ra.partner_company_name){
+        var partnershipEl = document.getElementById('ra-partnership');
+        if(partnershipEl) partnershipEl.classList.add('visible');
+
+        var companyLabel = document.getElementById('ra-partnership-company');
+        if(companyLabel) companyLabel.textContent = ra.partner_company_name;
+
+        if(ra.partner_logo_url){
+          var partnerLogoBot = document.getElementById('ra-partnership-logo-partner');
+          if(partnerLogoBot){
+            partnerLogoBot.src = ra.partner_logo_url;
+            partnerLogoBot.alt = ra.partner_company_name;
+            partnerLogoBot.style.display = '';
+          }
+        }
+      }
+    })
+    .catch(function(){ /* keep placeholder */ });
+  })();
 
   /* ── Communications consent overlay ── */
   var cookiePopup = document.getElementById('cookie-popup');
@@ -1499,110 +1596,6 @@
 })();
 </script>
 
-<script>
-(function(){
-  var LEAD_FN   = 'https://cbmcyffvsebrxkmxufxx.supabase.co/functions/v1/ra-lead-submit';
-  var LEAD_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibWN5ZmZ2c2VicnhrbXh1Znh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjU3MTMsImV4cCI6MjA5MzA0MTcxM30.Uxh5aWShe3YkrBkjjBe8WcP0fqQH-4pp6P8NyqKRt7A';
-  var LEAD_SLUG = 'jae';   /* routes the notification email to jae@divigner.com via the existing SendGrid pipeline */
-
-  var overlay = document.getElementById('lead-modal');
-  if(!overlay) return;
-  var modal     = overlay.querySelector('.modal');
-  var form      = document.getElementById('lead-form');
-  var submitBtn = document.getElementById('lead-submit');
-  var SUBMIT_HTML = submitBtn.innerHTML;
-  var errBox    = document.getElementById('lead-form-error');
-  var intentVal = '';
-  var EMAIL_RE  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  function openLeadModal(){
-    overlay.classList.add('open');
-    overlay.setAttribute('aria-hidden','false');
-    document.body.style.overflow = 'hidden';
-    setTimeout(function(){ var f=document.getElementById('lead-first'); if(f) f.focus(); }, 120);
-  }
-  function closeLeadModal(){
-    overlay.classList.remove('open');
-    overlay.setAttribute('aria-hidden','true');
-    document.body.style.overflow = '';
-  }
-  window.openLeadModal = openLeadModal;
-
-  document.getElementById('lead-close').addEventListener('click', closeLeadModal);
-  overlay.addEventListener('click', function(e){ if(e.target === overlay) closeLeadModal(); });
-  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('open')) closeLeadModal(); });
-
-  form.querySelectorAll('.intent-btn').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      intentVal = (intentVal === btn.dataset.intent) ? '' : btn.dataset.intent;
-      form.querySelectorAll('.intent-btn').forEach(function(b){
-        b.classList.toggle('selected', intentVal !== '' && b.dataset.intent === intentVal);
-      });
-    });
-  });
-
-  function f(id){ return document.getElementById(id); }
-  function mark(id, bad){ var el=f(id); if(el) el.closest('.field').classList.toggle('invalid', !!bad); }
-
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    if(errBox){ errBox.style.display='none'; }
-    var first   = (f('lead-first').value   || '').trim();
-    var email   = (f('lead-email').value   || '').trim();
-    var phone   = (f('lead-phone').value   || '').trim();
-    var website = (f('lead-website').value || '').trim();
-
-    var ok = true;
-    mark('lead-first', !first); if(!first) ok = false;
-    var emailBad = email && !EMAIL_RE.test(email);
-    var contactMissing = !email && !phone;
-    mark('lead-email', emailBad || contactMissing);
-    mark('lead-phone', contactMissing);
-    if(emailBad || contactMissing) ok = false;
-    if(website){
-      try { new URL(/^https?:\/\//.test(website) ? website : 'https://' + website); mark('lead-website', false); }
-      catch(_) { mark('lead-website', true); ok = false; }
-    }
-    if(!ok) return;
-
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = 'Sending…';
-
-    var payload = {
-      slug:              LEAD_SLUG,
-      source:            'cme',   /* tags the notification email as the CME form */
-      first_name:        first,
-      last_name:         (f('lead-last').value    || '').trim() || undefined,
-      email:             email   || undefined,
-      phone:             phone   || undefined,
-      company:           (f('lead-company').value || '').trim() || undefined,
-      website:           website || undefined,
-      message:           (f('lead-message').value || '').trim() || undefined,
-      prospect_intent:   intentVal || undefined,
-      marketing_consent: true
-    };
-
-    fetch(LEAD_FN, {
-      method:  'POST',
-      headers: { 'Content-Type':'application/json', 'apikey': LEAD_KEY, 'Authorization': 'Bearer ' + LEAD_KEY },
-      body:    JSON.stringify(payload)
-    })
-    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, data:d}; }); })
-    .then(function(res){
-      if(res.ok && res.data && res.data.id){
-        modal.classList.add('success-state');
-      } else {
-        throw new Error((res.data && res.data.error) || 'Submission failed');
-      }
-    })
-    .catch(function(err){
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = SUBMIT_HTML;
-      if(errBox){ errBox.textContent = (err && err.message) ? err.message : 'Something went wrong. Please try again.'; errBox.style.display = 'block'; }
-    });
-  });
-})();
-</script>
 <script>
 (function(){
   /* Night sky deepens as you travel down the page */
