@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { supabase } from "@/lib/supabase"
+import { getRaPortalRedirect } from "@/lib/data"
 
 export function SetupAccount() {
   const navigate = useNavigate()
@@ -63,7 +64,8 @@ export function SetupAccount() {
       return
     }
     toast.success("Account set up — welcome to Avanew!")
-    navigate("/dashboard", { replace: true })
+    const raPath = await getRaPortalRedirect().catch(() => null)
+    navigate(raPath ?? "/dashboard", { replace: true })
   }
 
   if (!ready) {

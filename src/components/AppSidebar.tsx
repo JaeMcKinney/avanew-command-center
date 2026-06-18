@@ -147,7 +147,10 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { role } = useRole()
   const { currentOrg } = useOrganization()
   const { theme } = useTheme()
-  const isLimitedRole = role === "bd" || role === "partner"
+  // Referral Associates never belong in the staff CRM (AppLayout bounces them
+  // out), but if one briefly renders here, hide the Relationship module + Tasks.
+  const isRa = role != null && (role as string) === "referral_associate"
+  const isLimitedRole = role === "bd" || role === "partner" || isRa
   const crmActive = CRM_PATHS.some((p) => location.pathname.startsWith(p))
   const cashflowActive = location.pathname.startsWith("/cashflow")
 

@@ -1445,6 +1445,51 @@ export async function getRaAssociate(): Promise<import("@/types/db").RaAssociate
   } as import("@/types/db").RaAssociate
 }
 
+/**
+ * Determines whether the signed-in user belongs in the RA portal rather than
+ * the staff CRM. Returns the path to send them to ("/ra/dashboard") or null if
+ * they are a staff user (super_user / owner / admin / bd / partner).
+ *
+ * Keyed off profiles.role === "referral_associate" — the authoritative signal
+ * set by the invite-ra edge function — NOT merely "has an ra_associates row".
+ * This is critical: a staff member (e.g. the super_user) may ALSO hold an RA
+ * profile for their own /refer/:slug page, and must keep full CRM access.
+ */
+// Hard staff allowlist — these accounts are ALWAYS treated as staff, regardless
+// of profiles.role. Safety net so a stale/unapplied role migration can never
+// trap a known platform operator in the RA portal (e.g. jae is super_user AND
+// holds an RA profile for /refer/jae).
+const STAFF_EMAIL_ALLOWLIST = new Set(["jae@divigner.com"])
+
+export async function getRaPortalRedirect(): Promise<string | null> {
+  if (PREVIEW_MODE) return null // preview demos the CRM as super_user
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  if (user.email && STAFF_EMAIL_ALLOWLIST.has(user.email.trim().toLowerCase())) return null
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle()
+  return (profile?.role ?? "") === "referral_associate" ? "/ra/dashboard" : null
+}
+
+/** Best-effort RA lifecycle email (approved / declined / changes). Never throws. */
+async function notifyRaStatus(
+  raId: string,
+  kind: "approved" | "declined" | "changes_requested",
+  notes?: string,
+): Promise<void> {
+  if (PREVIEW_MODE) return
+  try {
+    await supabase.functions.invoke("notify-ra-status", {
+      body: { ra_associate_id: raId, kind, notes: notes ?? null },
+    })
+  } catch {
+    // Notification is non-blocking — the status change already succeeded.
+  }
+}
+
 /** Upload a photo file to ra-photos storage and update the RA record. */
 export async function saveRaPhoto(raId: string, file: File): Promise<string> {
   if (PREVIEW_MODE) throw new Error("Not available in preview mode")
@@ -1525,16 +1570,19 @@ export async function approveRa(raId: string): Promise<void> {
     .update({ status: "active", verified_at: now, activated_at: now })
     .eq("id", raId)
   if (error) throw error
+  await notifyRaStatus(raId, "approved")
 }
 
 /** Request changes on a submitted application — moves status to 'needs_changes'. */
 export async function requestRaChanges(raId: string, notes: string): Promise<void> {
   if (PREVIEW_MODE) return
+  const trimmed = notes.trim()
   const { error } = await supabase
     .from("ra_associates")
-    .update({ status: "needs_changes", verification_notes: notes.trim() })
+    .update({ status: "needs_changes", verification_notes: trimmed })
     .eq("id", raId)
   if (error) throw error
+  await notifyRaStatus(raId, "changes_requested", trimmed)
 }
 
 /** Decline a submitted RA application — moves status to 'declined'. */
@@ -1545,6 +1593,7 @@ export async function declineRa(raId: string): Promise<void> {
     .update({ status: "declined" })
     .eq("id", raId)
   if (error) throw error
+  await notifyRaStatus(raId, "declined")
 }
 
 export async function revokeRa(raId: string): Promise<void> {
@@ -3471,6 +3520,13 @@ export async function updateRaStatus(
     .update(patch)
     .eq("id", raId)
   if (error) throw error
+
+  // Fire the matching RA lifecycle notification (best-effort).
+  if (patch.status === "active") await notifyRaStatus(raId, "approved")
+  else if (patch.status === "declined") await notifyRaStatus(raId, "declined")
+  else if (patch.status === "needs_changes") {
+    await notifyRaStatus(raId, "changes_requested", patch.verification_notes ?? undefined)
+  }
 }
 
 /** Fetch a single RA by slug. Preview-aware. */
