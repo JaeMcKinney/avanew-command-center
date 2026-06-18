@@ -73,6 +73,17 @@ export function SettingsRA() {
   }, [list])
 
   async function quickApprove(ra: RaAssociate) {
+    // Compliance gate: an RA can't be paid without a signed agreement + W-9 on
+    // file, so never activate an incomplete application from the quick menu —
+    // send the admin to the full Review page to finish the checklist.
+    const complete =
+      ra.agreement_completed && ra.w9_completed &&
+      ra.photo_completed && ra.contact_completed && ra.banking_completed
+    if (!complete) {
+      toast.info(`${ra.display_name}'s onboarding is incomplete — review before activating`)
+      navigate(`/settings/ra/${ra.slug}/review`)
+      return
+    }
     try {
       await updateRaStatus(ra.id, {
         status: "active",
