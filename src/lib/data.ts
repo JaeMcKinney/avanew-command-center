@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase"
+import { calcOneTimeCommission, calcRecurringCommissionPerMonth } from "@/lib/commissions"
 import type {
   Activity,
   ActivityType,
@@ -1391,7 +1392,7 @@ export async function checkSlugAvailable(slug: string): Promise<boolean> {
 }
 
 export async function listRaAssociates(): Promise<import("@/types/db").RaAssociate[]> {
-  if (PREVIEW_MODE) return []
+  if (PREVIEW_MODE) return listPreviewRaAssociates()
   const { data, error } = await supabase
     .from("ra_associates")
     .select(`
@@ -1419,7 +1420,7 @@ export async function listRaAssociates(): Promise<import("@/types/db").RaAssocia
 
 /** Fetch the current user's own RA associate record (includes all fields). */
 export async function getRaAssociate(): Promise<import("@/types/db").RaAssociate | null> {
-  if (PREVIEW_MODE) return null
+  if (PREVIEW_MODE) return getPreviewRaAssociate()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
   const { data, error } = await supabase
@@ -1560,9 +1561,7 @@ export async function inviteRa(input: {
   last_name: string
   slug: string
 }): Promise<import("@/types/db").RaAssociate> {
-  if (PREVIEW_MODE) {
-    throw new Error("RA invites are not available in preview mode")
-  }
+  if (PREVIEW_MODE) return invitePreviewRa(input)
   const { data, error } = await supabase.functions.invoke<import("@/types/db").RaAssociate>(
     "invite-ra",
     {
@@ -2984,4 +2983,1088 @@ export async function removeOrgMember(userId: string): Promise<void> {
     .eq("organization_id", orgId)
     .eq("user_id", userId)
   if (error) throw new Error(error.message)
+}
+
+// ── RA Program / Commission Config ───────────────────────────────────────────
+// Stored per-organization. In preview mode → localStorage. In real mode →
+// `ra_program_settings` table (added in PR-3 migration). Until that ships,
+// real mode also falls back to localStorage so the UI works end-to-end.
+
+const COMMISSION_CONFIG_KEY = "avanew-crm.ra.commission-config"
+
+export const DEFAULT_COMMISSION_CONFIG: import("@/types/db").CommissionConfig = {
+  one_time_mode: "flat",
+  one_time_value: 1000,
+  implementation_fee: 6000,
+  recurring_mode: "flat",
+  recurring_value: 50,
+  monthly_service_fee: 600,
+  recurring_duration: { kind: "indefinite" },
+  attribution_window_days: 30,
+  annual_minimum_referrals: 4,
+  checkin_interval_days: 90,
+  checkin_warning_days: 90,
+  checkin_suspension_days: 150,
+  agreement_version: "v1.0",
+  updated_at: new Date(0).toISOString(),
+}
+
+function readCommissionConfigLocal(): import("@/types/db").CommissionConfig {
+  if (typeof localStorage === "undefined") return DEFAULT_COMMISSION_CONFIG
+  try {
+    const raw = localStorage.getItem(COMMISSION_CONFIG_KEY)
+    if (!raw) return DEFAULT_COMMISSION_CONFIG
+    const parsed = JSON.parse(raw) as Partial<import("@/types/db").CommissionConfig>
+    return { ...DEFAULT_COMMISSION_CONFIG, ...parsed }
+  } catch {
+    return DEFAULT_COMMISSION_CONFIG
+  }
+}
+
+function writeCommissionConfigLocal(cfg: import("@/types/db").CommissionConfig) {
+  if (typeof localStorage === "undefined") return
+  try {
+    localStorage.setItem(COMMISSION_CONFIG_KEY, JSON.stringify(cfg))
+  } catch {
+    /* ignore quota errors */
+  }
+}
+
+/** Load the active commission config for the current org. */
+export async function getCommissionConfig(): Promise<import("@/types/db").CommissionConfig> {
+  if (PREVIEW_MODE) return readCommissionConfigLocal()
+  try {
+    const { data, error } = await supabase
+      .from("ra_program_settings" as never)
+      .select("*")
+      .eq("organization_id", requireOrg())
+      .maybeSingle()
+    if (error) throw error
+    if (!data) return DEFAULT_COMMISSION_CONFIG
+    return rowToCommissionConfig(data as Record<string, unknown>)
+  } catch {
+    return readCommissionConfigLocal()
+  }
+}
+
+/** Persist the commission config. Bumps `updated_at`. */
+export async function saveCommissionConfig(
+  cfg: Omit<import("@/types/db").CommissionConfig, "updated_at">
+): Promise<import("@/types/db").CommissionConfig> {
+  const next: import("@/types/db").CommissionConfig = {
+    ...cfg,
+    updated_at: new Date().toISOString(),
+  }
+  writeCommissionConfigLocal(next)
+  if (PREVIEW_MODE) return next
+  const orgId = requireOrg()
+  const row = {
+    organization_id: orgId,
+    one_time_mode: cfg.one_time_mode,
+    one_time_value: cfg.one_time_value,
+    implementation_fee: cfg.implementation_fee,
+    recurring_mode: cfg.recurring_mode,
+    recurring_value: cfg.recurring_value,
+    monthly_service_fee: cfg.monthly_service_fee,
+    recurring_duration_kind: cfg.recurring_duration.kind,
+    recurring_duration_months:
+      cfg.recurring_duration.kind === "months" ? cfg.recurring_duration.months : null,
+    attribution_window_days: cfg.attribution_window_days,
+    annual_minimum_referrals: cfg.annual_minimum_referrals,
+    checkin_interval_days: cfg.checkin_interval_days,
+    checkin_warning_days: cfg.checkin_warning_days,
+    checkin_suspension_days: cfg.checkin_suspension_days,
+    agreement_version: cfg.agreement_version,
+  }
+  const { data, error } = await supabase
+    .from("ra_program_settings" as never)
+    .upsert(row as never, { onConflict: "organization_id" })
+    .select()
+    .single()
+  if (error) throw error
+  return rowToCommissionConfig(data as Record<string, unknown>)
+}
+
+function rowToCommissionConfig(row: Record<string, unknown>): import("@/types/db").CommissionConfig {
+  return {
+    one_time_mode: row.one_time_mode as "flat" | "percent",
+    one_time_value: Number(row.one_time_value),
+    implementation_fee: Number(row.implementation_fee),
+    recurring_mode: row.recurring_mode as "flat" | "percent",
+    recurring_value: Number(row.recurring_value),
+    monthly_service_fee: Number(row.monthly_service_fee),
+    recurring_duration:
+      row.recurring_duration_kind === "months"
+        ? { kind: "months", months: Number(row.recurring_duration_months ?? 12) }
+        : { kind: "indefinite" },
+    attribution_window_days: Number(row.attribution_window_days),
+    annual_minimum_referrals: Number(row.annual_minimum_referrals),
+    checkin_interval_days: Number(row.checkin_interval_days),
+    checkin_warning_days: Number(row.checkin_warning_days),
+    checkin_suspension_days: Number(row.checkin_suspension_days),
+    agreement_version: String(row.agreement_version),
+    updated_at: String(row.updated_at ?? new Date().toISOString()),
+  }
+}
+
+// ── Agreement acceptance ─────────────────────────────────────────────────────
+// localStorage-backed until PR-3 migration adds the columns + audit table.
+
+const AGREEMENT_LS_PREFIX = "avanew-crm.ra.agreement."
+
+type AgreementAcceptance = {
+  agreement_completed: true
+  agreement_version: string
+  agreement_accepted_at: string
+  agreement_ip_address: string | null
+  agreement_user_agent: string | null
+  agreement_signed_name: string
+}
+
+export function getLocalAgreementAcceptance(raId: string): AgreementAcceptance | null {
+  if (typeof localStorage === "undefined") return null
+  try {
+    const raw = localStorage.getItem(AGREEMENT_LS_PREFIX + raId)
+    return raw ? (JSON.parse(raw) as AgreementAcceptance) : null
+  } catch {
+    return null
+  }
+}
+
+export async function saveRaAgreement(
+  raId: string,
+  data: { signed_name: string; agreement_version: string }
+): Promise<AgreementAcceptance> {
+  const acceptance: AgreementAcceptance = {
+    agreement_completed: true,
+    agreement_version: data.agreement_version,
+    agreement_accepted_at: new Date().toISOString(),
+    agreement_ip_address: null,
+    agreement_user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+    agreement_signed_name: data.signed_name,
+  }
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(AGREEMENT_LS_PREFIX + raId, JSON.stringify(acceptance))
+    } catch {
+      /* ignore quota */
+    }
+  }
+  if (PREVIEW_MODE) return acceptance
+  try {
+    // Edge function captures IP from request headers and writes the audit row + ra_associates patch.
+    const { data: result, error } = await supabase.functions.invoke<AgreementAcceptance>(
+      "accept-agreement",
+      {
+        body: {
+          ra_associate_id: raId,
+          agreement_version: data.agreement_version,
+          signed_legal_name: data.signed_name,
+        },
+      }
+    )
+    if (error) throw error
+    return result ?? acceptance
+  } catch (err) {
+    // Surface but don't block — localStorage holds the optimistic state.
+    console.warn("[saveRaAgreement] edge function failed; client copy retained.", err)
+    return acceptance
+  }
+}
+
+// ── Preview-mode RA record ───────────────────────────────────────────────────
+// Lets the RA onboarding + dashboard flows render with mock data when
+// VITE_PREVIEW_MODE=true. Persisted to localStorage so step completions stick
+// across page reloads in preview.
+
+const PREVIEW_RA_LS = "avanew-crm.preview.ra-associate"
+
+function getPreviewRaAssociate(): import("@/types/db").RaAssociate {
+  if (typeof localStorage !== "undefined") {
+    try {
+      const raw = localStorage.getItem(PREVIEW_RA_LS)
+      if (raw) {
+        const parsed = JSON.parse(raw) as import("@/types/db").RaAssociate
+        // Merge any local agreement acceptance so completion sticks
+        const localAgreement = getLocalAgreementAcceptance(parsed.id)
+        return localAgreement ? { ...parsed, ...localAgreement } : parsed
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+  const seed: import("@/types/db").RaAssociate = {
+    id: "preview-ra-id",
+    organization_id: "preview-org",
+    user_id: "preview-user",
+    slug: "preview",
+    display_name: "Preview Associate",
+    status: "pending",
+    photo_url: null,
+    contact_phone: null,
+    contact_email: null,
+    bio: null,
+    ach_account_holder: null,
+    ach_bank_name: null,
+    ach_routing: null,
+    ach_account: null,
+    photo_completed: false,
+    contact_completed: false,
+    banking_completed: false,
+    submitted_at: null,
+    verification_notes: null,
+    verified_at: null,
+    activated_at: null,
+    template_id: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    email: "preview@divigner.com",
+    full_name: "Preview Associate",
+  }
+  if (typeof localStorage !== "undefined") {
+    try { localStorage.setItem(PREVIEW_RA_LS, JSON.stringify(seed)) } catch { /* ignore */ }
+  }
+  return seed
+}
+
+// ── W-9 upload (R4b) ─────────────────────────────────────────────────────────
+// localStorage-backed metadata until PR-3 migration adds columns + ra-w9
+// storage bucket. The actual PDF blob is held in-memory only in preview mode.
+
+const W9_LS_PREFIX = "avanew-crm.ra.w9."
+
+type W9Acceptance = {
+  w9_completed: true
+  w9_document_url: string
+  w9_uploaded_at: string
+}
+
+export function getLocalW9(raId: string): W9Acceptance | null {
+  if (typeof localStorage === "undefined") return null
+  try {
+    const raw = localStorage.getItem(W9_LS_PREFIX + raId)
+    return raw ? (JSON.parse(raw) as W9Acceptance) : null
+  } catch {
+    return null
+  }
+}
+
+export async function saveRaW9(
+  raId: string,
+  file: File
+): Promise<W9Acceptance> {
+  if (file.size > 10 * 1024 * 1024) throw new Error("W-9 must be under 10 MB")
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    throw new Error("W-9 must be a PDF file")
+  }
+  if (PREVIEW_MODE) {
+    const stub: W9Acceptance = {
+      w9_completed: true,
+      w9_document_url: `preview://w9/${raId}/${encodeURIComponent(file.name)}`,
+      w9_uploaded_at: new Date().toISOString(),
+    }
+    if (typeof localStorage !== "undefined") {
+      try { localStorage.setItem(W9_LS_PREFIX + raId, JSON.stringify(stub)) } catch { /* ignore */ }
+    }
+    return stub
+  }
+  // Real mode: upload to private ra-w9 bucket, then mark RA row.
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Not authenticated")
+  const path = `${user.id}/w9-${Date.now()}.pdf`
+  const { error: uploadErr } = await supabase.storage
+    .from("ra-w9")
+    .upload(path, file, { upsert: false, contentType: "application/pdf" })
+  if (uploadErr) throw uploadErr
+  const acceptance: W9Acceptance = {
+    w9_completed: true,
+    w9_document_url: path,
+    w9_uploaded_at: new Date().toISOString(),
+  }
+  const { error: updateErr } = await supabase
+    .from("ra_associates")
+    .update({
+      w9_completed: true,
+      w9_document_url: path,
+      w9_uploaded_at: acceptance.w9_uploaded_at,
+    } as never)
+    .eq("id", raId)
+  if (updateErr) throw updateErr
+  return acceptance
+}
+
+// ── Preview-mode RA list + invite + status mutation ──────────────────────────
+// Mirrors listRaAssociates / inviteRa / status mutation behavior using
+// localStorage so admin views render without Supabase access.
+
+const PREVIEW_RA_LIST_LS = "avanew-crm.preview.ra-list"
+
+function seedPreviewRaList(): import("@/types/db").RaAssociate[] {
+  const base = (overrides: Partial<import("@/types/db").RaAssociate>): import("@/types/db").RaAssociate => ({
+    id: crypto.randomUUID(),
+    organization_id: "preview-org",
+    user_id: crypto.randomUUID(),
+    slug: "ra",
+    display_name: "Referral Associate",
+    status: "pending",
+    photo_url: null,
+    contact_phone: null,
+    contact_email: null,
+    bio: null,
+    ach_account_holder: null,
+    ach_bank_name: null,
+    ach_routing: null,
+    ach_account: null,
+    photo_completed: false,
+    contact_completed: false,
+    banking_completed: false,
+    submitted_at: null,
+    verification_notes: null,
+    verified_at: null,
+    activated_at: null,
+    template_id: null,
+    created_at: new Date(Date.now() - 86400_000 * 30).toISOString(),
+    updated_at: new Date().toISOString(),
+    email: "ra@example.com",
+    full_name: "Referral Associate",
+    ...overrides,
+  })
+
+  return [
+    base({
+      slug: "jae",
+      display_name: "Jae McKinney",
+      status: "active",
+      photo_completed: true,
+      contact_completed: true,
+      banking_completed: true,
+      w9_completed: true,
+      agreement_completed: true,
+      activated_at: new Date(Date.now() - 86400_000 * 12).toISOString(),
+      email: "jae@divigner.com",
+      full_name: "Jae McKinney",
+      contact_phone: "+18045550101",
+      contact_email: "jae@divigner.com",
+    }),
+    base({
+      slug: "rachel-stevens",
+      display_name: "Rachel Stevens",
+      status: "verification",
+      photo_completed: true,
+      contact_completed: true,
+      banking_completed: true,
+      w9_completed: true,
+      agreement_completed: true,
+      submitted_at: new Date(Date.now() - 86400_000 * 2).toISOString(),
+      email: "rachel.stevens@example.com",
+      full_name: "Rachel Stevens",
+    }),
+    base({
+      slug: "marcus-okafor",
+      display_name: "Marcus Okafor",
+      status: "pending",
+      photo_completed: true,
+      contact_completed: false,
+      banking_completed: false,
+      created_at: new Date(Date.now() - 86400_000 * 5).toISOString(),
+      email: "marcus.okafor@example.com",
+      full_name: "Marcus Okafor",
+    }),
+    base({
+      slug: "priya-narayan",
+      display_name: "Priya Narayan",
+      status: "needs_changes",
+      photo_completed: true,
+      contact_completed: true,
+      banking_completed: false,
+      verification_notes: "ACH routing number appears invalid. Please re-submit banking details.",
+      email: "priya.narayan@example.com",
+      full_name: "Priya Narayan",
+    }),
+    base({
+      slug: "dan-fischer",
+      display_name: "Dan Fischer",
+      status: "declined",
+      email: "dan.fischer@example.com",
+      full_name: "Dan Fischer",
+    }),
+  ]
+}
+
+function listPreviewRaAssociates(): import("@/types/db").RaAssociate[] {
+  if (typeof localStorage === "undefined") return seedPreviewRaList()
+  try {
+    const raw = localStorage.getItem(PREVIEW_RA_LIST_LS)
+    if (raw) return JSON.parse(raw) as import("@/types/db").RaAssociate[]
+  } catch {
+    /* fall through */
+  }
+  const seed = seedPreviewRaList()
+  try { localStorage.setItem(PREVIEW_RA_LIST_LS, JSON.stringify(seed)) } catch { /* ignore */ }
+  return seed
+}
+
+function savePreviewRaList(list: import("@/types/db").RaAssociate[]) {
+  if (typeof localStorage === "undefined") return
+  try { localStorage.setItem(PREVIEW_RA_LIST_LS, JSON.stringify(list)) } catch { /* ignore */ }
+}
+
+async function invitePreviewRa(input: {
+  email: string
+  first_name: string
+  last_name: string
+  slug: string
+}): Promise<import("@/types/db").RaAssociate> {
+  const list = listPreviewRaAssociates()
+  if (list.some((r) => r.slug === input.slug)) throw new Error(`Slug "${input.slug}" is already in use`)
+  if (list.some((r) => r.email.toLowerCase() === input.email.toLowerCase())) {
+    throw new Error(`${input.email} has already been invited`)
+  }
+  const display = `${input.first_name} ${input.last_name}`.trim()
+  const created: import("@/types/db").RaAssociate = {
+    id: crypto.randomUUID(),
+    organization_id: "preview-org",
+    user_id: crypto.randomUUID(),
+    slug: input.slug,
+    display_name: display,
+    status: "pending",
+    photo_url: null,
+    contact_phone: null,
+    contact_email: null,
+    bio: null,
+    ach_account_holder: null,
+    ach_bank_name: null,
+    ach_routing: null,
+    ach_account: null,
+    photo_completed: false,
+    contact_completed: false,
+    banking_completed: false,
+    submitted_at: null,
+    verification_notes: null,
+    verified_at: null,
+    activated_at: null,
+    template_id: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    email: input.email,
+    full_name: display,
+  }
+  savePreviewRaList([created, ...list])
+  return created
+}
+
+/** Update RA status (admin action). Mocks in preview, real Supabase otherwise. */
+export async function updateRaStatus(
+  raId: string,
+  patch: Partial<Pick<import("@/types/db").RaAssociate, "status" | "verification_notes" | "verified_at" | "activated_at">>
+): Promise<void> {
+  if (PREVIEW_MODE) {
+    const list = listPreviewRaAssociates()
+    const idx = list.findIndex((r) => r.id === raId)
+    if (idx === -1) throw new Error("RA not found")
+    list[idx] = { ...list[idx], ...patch, updated_at: new Date().toISOString() }
+    savePreviewRaList(list)
+    return
+  }
+  const { error } = await supabase
+    .from("ra_associates")
+    .update(patch)
+    .eq("id", raId)
+  if (error) throw error
+}
+
+/** Fetch a single RA by slug. Preview-aware. */
+export async function getRaBySlug(slug: string): Promise<import("@/types/db").RaAssociate | null> {
+  if (PREVIEW_MODE) {
+    return listPreviewRaAssociates().find((r) => r.slug === slug) ?? null
+  }
+  const { data, error } = await supabase
+    .from("ra_associates")
+    .select(`
+      *,
+      profiles!ra_associates_user_id_fkey ( email, full_name )
+    `)
+    .eq("slug", slug)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  const profile = (data as Record<string, unknown>).profiles as { email: string; full_name: string | null } | null
+  const { profiles: _p, ...rest } = data as Record<string, unknown>
+  return { ...rest, email: profile?.email ?? "", full_name: profile?.full_name ?? null } as import("@/types/db").RaAssociate
+}
+
+// ── RA-attributed leads / deals / payouts (preview-aware) ────────────────────
+
+type RaLead = {
+  id: string
+  ra_slug: string
+  name: string
+  company: string | null
+  email: string | null
+  phone: string | null
+  stage: "new" | "qualified" | "proposal_sent" | "call_booked" | "closed_won" | "closed_lost"
+  value: number | null
+  intent: "learning" | "interested" | "sold" | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+  closed_at: string | null
+  closed_reason: string | null
+}
+
+type RaPayout = {
+  id: string
+  ra_slug: string
+  deal_id: string | null
+  client_name: string
+  type: "one_time" | "recurring"
+  period_start: string | null
+  period_end: string | null
+  amount: number
+  status: "scheduled" | "paid" | "skipped" | "cancelled"
+  paid_at: string | null
+}
+
+function seedRaLeads(): RaLead[] {
+  const now = Date.now()
+  const day = 86400_000
+  const d = (offset: number) => new Date(now - offset * day).toISOString()
+  return [
+    // jae's pipeline
+    { id: "rl-1",  ra_slug: "jae", name: "Sarah Chen",     company: "Riverbend Health",   email: "sarah@riverbend.health", phone: "+1 415 555 0102", stage: "new",           value: 6000,  intent: "interested", notes: "Met at NJ Health Tech Mixer.",      created_at: d(2),  updated_at: d(1),  closed_at: null,        closed_reason: null },
+    { id: "rl-2",  ra_slug: "jae", name: "Marcus Rivera",  company: "Apex Capital",       email: "marcus@apexcap.io",      phone: "+1 212 555 0103", stage: "qualified",     value: 6000,  intent: "interested", notes: "Wants demo before EOM.",            created_at: d(5),  updated_at: d(3),  closed_at: null,        closed_reason: null },
+    { id: "rl-3",  ra_slug: "jae", name: "Dr. Linda Park", company: "PineStreet Pediatrics", email: "lpark@pinestreet.med", phone: "+1 609 555 0104", stage: "proposal_sent", value: 6000,  intent: "interested", notes: "Sent SOW Apr 14. Awaiting board.",  created_at: d(10), updated_at: d(4),  closed_at: null,        closed_reason: null },
+    { id: "rl-4",  ra_slug: "jae", name: "Tomás Aguilar",  company: "Aguilar Insurance", email: "tomas@aguilar-ins.com",  phone: "+1 305 555 0105", stage: "call_booked",   value: 6000,  intent: "interested", notes: "Discovery call Tuesday 2pm.",      created_at: d(8),  updated_at: d(2),  closed_at: null,        closed_reason: null },
+    { id: "rl-5",  ra_slug: "jae", name: "Greta Olsen",    company: "Olsen Estate Law",   email: "greta@olsenlaw.com",     phone: "+1 201 555 0106", stage: "closed_won",    value: 6000,  intent: "sold",       notes: "Signed Mar 18. Implementation kicked off.", created_at: d(45), updated_at: d(10), closed_at: d(10),       closed_reason: null },
+    { id: "rl-6",  ra_slug: "jae", name: "Avery Kahn",     company: "Kahn Realty Group",  email: "avery@kahnrealty.com",   phone: "+1 732 555 0107", stage: "closed_won",    value: 6000,  intent: "sold",       notes: "Live since Feb 22.",                created_at: d(80), updated_at: d(20), closed_at: d(20),       closed_reason: null },
+    { id: "rl-7",  ra_slug: "jae", name: "Beth Quan",      company: "Quan Family Dental", email: "drquan@quandental.com",  phone: "+1 856 555 0108", stage: "closed_lost",   value: null,  intent: "learning",   notes: "Chose competitor (cheaper).",       created_at: d(40), updated_at: d(15), closed_at: d(15),       closed_reason: "budget" },
+  ]
+}
+
+function seedRaPayouts(): RaPayout[] {
+  const day = 86400_000
+  const now = Date.now()
+  const d = (offset: number) => new Date(now - offset * day).toISOString()
+  const dateOnly = (offset: number) => new Date(now - offset * day).toISOString().slice(0,10)
+  return [
+    // Greta Olsen — one-time + recurring
+    { id: "p-1",  ra_slug: "jae", deal_id: "rl-5", client_name: "Olsen Estate Law",  type: "one_time", period_start: null,             period_end: null,             amount: 1000, status: "paid",      paid_at: d(8) },
+    { id: "p-2",  ra_slug: "jae", deal_id: "rl-5", client_name: "Olsen Estate Law",  type: "recurring", period_start: dateOnly(40),    period_end: dateOnly(10),     amount: 50,   status: "paid",      paid_at: d(8) },
+    { id: "p-3",  ra_slug: "jae", deal_id: "rl-5", client_name: "Olsen Estate Law",  type: "recurring", period_start: dateOnly(10),    period_end: dateOnly(-20),    amount: 50,   status: "scheduled", paid_at: null },
+    // Avery Kahn — one-time + accumulating recurring
+    { id: "p-4",  ra_slug: "jae", deal_id: "rl-6", client_name: "Kahn Realty Group", type: "one_time", period_start: null,             period_end: null,             amount: 1000, status: "paid",      paid_at: d(18) },
+    { id: "p-5",  ra_slug: "jae", deal_id: "rl-6", client_name: "Kahn Realty Group", type: "recurring", period_start: dateOnly(80),    period_end: dateOnly(50),     amount: 50,   status: "paid",      paid_at: d(45) },
+    { id: "p-6",  ra_slug: "jae", deal_id: "rl-6", client_name: "Kahn Realty Group", type: "recurring", period_start: dateOnly(50),    period_end: dateOnly(20),     amount: 50,   status: "paid",      paid_at: d(15) },
+    { id: "p-7",  ra_slug: "jae", deal_id: "rl-6", client_name: "Kahn Realty Group", type: "recurring", period_start: dateOnly(20),    period_end: dateOnly(-10),    amount: 50,   status: "scheduled", paid_at: null },
+  ]
+}
+
+export async function listLeadsForRaSlug(slug: string): Promise<RaLead[]> {
+  if (PREVIEW_MODE) {
+    const overrides = readLeadOverrides()
+    return seedRaLeads()
+      .filter((l) => l.ra_slug === slug)
+      .map((l) => ({ ...l, ...(overrides[l.id] ?? {}) } as RaLead))
+  }
+  // Real Supabase: join leads → ra_associates by slug. Requires PR-3 stage column.
+  const { data, error } = await supabase
+    .from("leads" as never)
+    .select(`
+      id, organization_id, first_name, last_name, company, email, phone,
+      stage, attribution_expires_at, prospect_intent, description,
+      created_at, updated_at, closed_at, closed_reason,
+      referred_by_ra_id,
+      ra_associates!leads_referred_by_ra_id_fkey ( slug )
+    ` as never)
+    .order("updated_at", { ascending: false } as never)
+  if (error) throw error
+  const rows = (data ?? []) as unknown as Array<Record<string, unknown>>
+  return rows
+    .filter((r) => (r.ra_associates as { slug?: string } | null)?.slug === slug)
+    .map((r) => ({
+      id: String(r.id),
+      ra_slug: slug,
+      name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim(),
+      company: (r.company as string) ?? null,
+      email: (r.email as string) ?? null,
+      phone: (r.phone as string) ?? null,
+      stage: (r.stage as RaLead["stage"]) ?? "new",
+      value: 6000,
+      intent: (r.prospect_intent as RaLead["intent"]) ?? null,
+      notes: (r.description as string) ?? null,
+      created_at: String(r.created_at),
+      updated_at: String(r.updated_at),
+      closed_at: (r.closed_at as string) ?? null,
+      closed_reason: (r.closed_reason as string) ?? null,
+    }))
+}
+
+export async function listPayoutsForRaSlug(slug: string): Promise<RaPayout[]> {
+  if (PREVIEW_MODE) {
+    const seeded = seedRaPayouts().filter((p) => p.ra_slug === slug)
+    const generated = readGeneratedPayouts().filter((p) => p.ra_slug === slug)
+    return [...generated, ...seeded]
+  }
+  const ra = await getRaBySlug(slug)
+  if (!ra) return []
+  const { data, error } = await supabase
+    .from("commission_payouts" as never)
+    .select("*")
+    .eq("ra_associate_id", ra.id)
+    .order("created_at", { ascending: false } as never)
+  if (error) throw error
+  return ((data ?? []) as unknown as Array<Record<string, unknown>>).map((r) => ({
+    id: String(r.id),
+    ra_slug: slug,
+    deal_id: (r.deal_id as string) ?? null,
+    client_name: (r.notes as string) ?? "Client",
+    type: r.type as RaPayout["type"],
+    period_start: (r.period_start as string) ?? null,
+    period_end: (r.period_end as string) ?? null,
+    amount: Number(r.amount),
+    status: r.status as RaPayout["status"],
+    paid_at: (r.paid_at as string) ?? null,
+  }))
+}
+
+// ── Client check-ins (PR-13) ─────────────────────────────────────────────────
+
+export type ClientCheckin = {
+  id: string
+  ra_slug: string
+  lead_id: string | null
+  client_name: string
+  checkin_at: string
+  method: "phone" | "video" | "in_person" | "email"
+  notes: string | null
+  created_by: string | null
+}
+
+export type ActiveClient = {
+  lead_id: string
+  client_name: string
+  closed_at: string
+  last_checkin_at: string | null
+  days_since: number          // days since closed_at if no check-in, else since last_checkin_at
+  severity: "ok" | "warning" | "overdue"
+}
+
+const CHECKINS_LS = "avanew-crm.preview.client-checkins"
+
+function readCheckins(): ClientCheckin[] {
+  if (typeof localStorage === "undefined") return []
+  try {
+    const raw = localStorage.getItem(CHECKINS_LS)
+    return raw ? (JSON.parse(raw) as ClientCheckin[]) : []
+  } catch { return [] }
+}
+function writeCheckins(arr: ClientCheckin[]) {
+  if (typeof localStorage === "undefined") return
+  try { localStorage.setItem(CHECKINS_LS, JSON.stringify(arr)) } catch { /* ignore */ }
+}
+
+export async function listCheckinsForRaSlug(slug: string): Promise<ClientCheckin[]> {
+  if (PREVIEW_MODE) {
+    return readCheckins()
+      .filter((c) => c.ra_slug === slug)
+      .sort((a, b) => (a.checkin_at < b.checkin_at ? 1 : -1))
+  }
+  const ra = await getRaBySlug(slug)
+  if (!ra) return []
+  const { data, error } = await supabase
+    .from("client_checkins" as never)
+    .select("id, lead_id, client_name, checkin_at, method, notes, created_by")
+    .eq("ra_associate_id", ra.id)
+    .order("checkin_at", { ascending: false } as never)
+  if (error) throw error
+  return ((data ?? []) as unknown as Array<Record<string, unknown>>).map((r) => ({
+    id: String(r.id),
+    ra_slug: slug,
+    lead_id: (r.lead_id as string) ?? null,
+    client_name: (r.client_name as string) ?? "Client",
+    checkin_at: String(r.checkin_at),
+    method: r.method as ClientCheckin["method"],
+    notes: (r.notes as string) ?? null,
+    created_by: (r.created_by as string) ?? null,
+  }))
+}
+
+export async function logClientCheckin(input: {
+  ra_slug: string
+  lead_id: string | null
+  client_name: string
+  method: ClientCheckin["method"]
+  notes?: string | null
+}): Promise<ClientCheckin> {
+  const now = new Date().toISOString()
+  if (PREVIEW_MODE) {
+    const row: ClientCheckin = {
+      id: crypto.randomUUID(),
+      ra_slug: input.ra_slug,
+      lead_id: input.lead_id,
+      client_name: input.client_name,
+      checkin_at: now,
+      method: input.method,
+      notes: input.notes ?? null,
+      created_by: null,
+    }
+    writeCheckins([row, ...readCheckins()])
+    return row
+  }
+  const ra = await getRaBySlug(input.ra_slug)
+  if (!ra) throw new Error("RA not found")
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data, error } = await supabase
+    .from("client_checkins" as never)
+    .insert({
+      organization_id: ra.organization_id,
+      ra_associate_id: ra.id,
+      lead_id: input.lead_id,
+      client_name: input.client_name,
+      method: input.method,
+      notes: input.notes ?? null,
+      created_by: user?.id ?? null,
+    } as never)
+    .select("id, lead_id, client_name, checkin_at, method, notes, created_by")
+    .single()
+  if (error) throw error
+  const r = data as unknown as Record<string, unknown>
+  return {
+    id: String(r.id),
+    ra_slug: input.ra_slug,
+    lead_id: (r.lead_id as string) ?? null,
+    client_name: String(r.client_name),
+    checkin_at: String(r.checkin_at),
+    method: r.method as ClientCheckin["method"],
+    notes: (r.notes as string) ?? null,
+    created_by: (r.created_by as string) ?? null,
+  }
+}
+
+/** Active clients (closed_won, not lost) with derived check-in status. */
+export async function listActiveClientsForRaSlug(slug: string): Promise<ActiveClient[]> {
+  const [leads, checkins, cfg] = await Promise.all([
+    listLeadsForRaSlug(slug),
+    listCheckinsForRaSlug(slug),
+    getCommissionConfig(),
+  ])
+  const active = leads.filter((l) => l.stage === "closed_won")
+  const dayMs = 86400_000
+  const now = Date.now()
+  return active.map((l) => {
+    const lc = checkins
+      .filter((c) => c.lead_id === l.id)
+      .sort((a, b) => (a.checkin_at < b.checkin_at ? 1 : -1))[0] ?? null
+    const lastIso = lc?.checkin_at ?? l.closed_at ?? l.updated_at
+    const days = Math.floor((now - new Date(lastIso).getTime()) / dayMs)
+    const severity: ActiveClient["severity"] =
+      days >= cfg.checkin_suspension_days ? "overdue"
+        : days >= cfg.checkin_warning_days ? "warning"
+        : "ok"
+    return {
+      lead_id: l.id,
+      client_name: l.company ?? l.name,
+      closed_at: l.closed_at ?? l.updated_at,
+      last_checkin_at: lc?.checkin_at ?? null,
+      days_since: days,
+      severity,
+    }
+  })
+}
+
+// ── Annual minimum tracker (PR-14) ───────────────────────────────────────────
+
+export type AnnualMinimumStatus = {
+  year: number
+  count: number
+  target: number
+  on_track: boolean
+  days_remaining_in_year: number
+  grace_period_active: boolean   // Jan 1–Apr 1 of FOLLOWING year
+  grace_days_remaining: number   // days until suspension flag if shortfall
+}
+
+export async function getAnnualMinimumStatus(
+  slug: string,
+  year?: number,
+): Promise<AnnualMinimumStatus> {
+  const cfg = await getCommissionConfig()
+  const target = cfg.annual_minimum_referrals
+  const now = new Date()
+  const evalYear = year ?? now.getFullYear()
+  const leads = await listLeadsForRaSlug(slug)
+  const count = leads.filter((l) => {
+    if (l.stage !== "closed_won") return false
+    const when = l.closed_at ?? l.updated_at
+    if (!when) return false
+    return new Date(when).getFullYear() === evalYear
+  }).length
+  const yearEnd = new Date(evalYear, 11, 31)
+  const graceEnd = new Date(evalYear + 1, 3, 1) // Apr 1 of next year
+  const dayMs = 86400_000
+  const days_remaining_in_year = Math.max(
+    0,
+    Math.ceil((yearEnd.getTime() - now.getTime()) / dayMs),
+  )
+  const inGrace = now.getTime() > yearEnd.getTime() && now.getTime() < graceEnd.getTime()
+  const grace_days_remaining = Math.max(
+    0,
+    Math.ceil((graceEnd.getTime() - now.getTime()) / dayMs),
+  )
+  return {
+    year: evalYear,
+    count,
+    target,
+    on_track: count >= target,
+    days_remaining_in_year,
+    grace_period_active: inGrace && count < target,
+    grace_days_remaining: inGrace ? grace_days_remaining : 0,
+  }
+}
+
+export type { RaLead, RaPayout }
+
+// ── Lead detail / mutations (A8) ─────────────────────────────────────────────
+
+const LEAD_NOTES_LS_PREFIX = "avanew-crm.lead.notes."
+const PREVIEW_LEAD_OVERRIDES_LS = "avanew-crm.preview.lead-overrides"
+
+type LeadNote = { id: string; text: string; at: string }
+
+function readLeadOverrides(): Record<string, Partial<RaLead>> {
+  if (typeof localStorage === "undefined") return {}
+  try {
+    const raw = localStorage.getItem(PREVIEW_LEAD_OVERRIDES_LS)
+    return raw ? JSON.parse(raw) as Record<string, Partial<RaLead>> : {}
+  } catch { return {} }
+}
+function writeLeadOverride(id: string, patch: Partial<RaLead>) {
+  if (typeof localStorage === "undefined") return
+  const map = readLeadOverrides()
+  map[id] = { ...map[id], ...patch }
+  try { localStorage.setItem(PREVIEW_LEAD_OVERRIDES_LS, JSON.stringify(map)) } catch { /* ignore */ }
+}
+
+function readLeadNotes(leadId: string): LeadNote[] {
+  if (typeof localStorage === "undefined") return []
+  try {
+    const raw = localStorage.getItem(LEAD_NOTES_LS_PREFIX + leadId)
+    return raw ? (JSON.parse(raw) as LeadNote[]) : []
+  } catch { return [] }
+}
+function writeLeadNotes(leadId: string, notes: LeadNote[]) {
+  if (typeof localStorage === "undefined") return
+  try { localStorage.setItem(LEAD_NOTES_LS_PREFIX + leadId, JSON.stringify(notes)) } catch { /* ignore */ }
+}
+
+export async function getLeadDetail(leadId: string): Promise<{ lead: RaLead; notes: LeadNote[] }> {
+  if (PREVIEW_MODE) {
+    const base = seedRaLeads().find((l) => l.id === leadId)
+    if (!base) throw new Error("Lead not found")
+    const overrides = readLeadOverrides()[leadId] ?? {}
+    const lead = { ...base, ...overrides } as RaLead
+    return { lead, notes: readLeadNotes(leadId) }
+  }
+  // Real Supabase
+  const { data, error } = await supabase
+    .from("leads" as never)
+    .select(`
+      id, organization_id, first_name, last_name, company, email, phone,
+      stage, prospect_intent, description, created_at, updated_at,
+      closed_at, closed_reason,
+      referred_by_ra_id,
+      ra_associates!leads_referred_by_ra_id_fkey ( slug )
+    ` as never)
+    .eq("id", leadId)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error("Lead not found")
+  const row = data as unknown as Record<string, unknown>
+  const lead: RaLead = {
+    id: String(row.id),
+    ra_slug: ((row.ra_associates as { slug?: string } | null)?.slug) ?? "",
+    name: `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim(),
+    company: (row.company as string) ?? null,
+    email: (row.email as string) ?? null,
+    phone: (row.phone as string) ?? null,
+    stage: (row.stage as RaLead["stage"]) ?? "new",
+    value: 6000,
+    intent: (row.prospect_intent as RaLead["intent"]) ?? null,
+    notes: (row.description as string) ?? null,
+    created_at: String(row.created_at),
+    updated_at: String(row.updated_at),
+    closed_at: (row.closed_at as string) ?? null,
+    closed_reason: (row.closed_reason as string) ?? null,
+  }
+  return { lead, notes: readLeadNotes(leadId) }
+}
+
+export async function updateLeadStage(leadId: string, stage: RaLead["stage"]): Promise<RaLead> {
+  const now = new Date().toISOString()
+  const isClosed = stage === "closed_won" || stage === "closed_lost"
+  if (PREVIEW_MODE) {
+    writeLeadOverride(leadId, {
+      stage,
+      updated_at: now,
+      ...(isClosed ? { closed_at: now } : { closed_at: null }),
+    })
+    const { lead } = await getLeadDetail(leadId)
+    if (stage === "closed_won") {
+      try { await generatePayoutsForDeal(leadId, lead.ra_slug) }
+      catch { /* swallow — payout generation is best-effort */ }
+    }
+    return lead
+  }
+  const { error } = await supabase
+    .from("leads" as never)
+    .update({
+      stage,
+      updated_at: now,
+      closed_at: isClosed ? now : null,
+    } as never)
+    .eq("id", leadId)
+  if (error) throw error
+  const { lead } = await getLeadDetail(leadId)
+  if (stage === "closed_won") {
+    try { await generatePayoutsForDeal(leadId, lead.ra_slug) }
+    catch { /* swallow — payout generation is best-effort */ }
+  }
+  return lead
+}
+
+// ── Payout schedule generation (PR-12) ───────────────────────────────────────
+
+const GENERATED_PAYOUTS_LS = "avanew-crm.preview.payouts-generated"
+const INDEFINITE_HORIZON_MONTHS = 24
+
+function readGeneratedPayouts(): RaPayout[] {
+  if (typeof localStorage === "undefined") return []
+  try {
+    const raw = localStorage.getItem(GENERATED_PAYOUTS_LS)
+    return raw ? (JSON.parse(raw) as RaPayout[]) : []
+  } catch { return [] }
+}
+function writeGeneratedPayouts(payouts: RaPayout[]) {
+  if (typeof localStorage === "undefined") return
+  try { localStorage.setItem(GENERATED_PAYOUTS_LS, JSON.stringify(payouts)) } catch { /* ignore */ }
+}
+
+function monthBoundaries(anchor: Date, monthsAhead: number): { start: string; end: string } {
+  const start = new Date(anchor.getFullYear(), anchor.getMonth() + monthsAhead, 1)
+  const end = new Date(anchor.getFullYear(), anchor.getMonth() + monthsAhead + 1, 0)
+  const iso = (d: Date) => d.toISOString().slice(0, 10)
+  return { start: iso(start), end: iso(end) }
+}
+
+/**
+ * Generate the commission payout schedule for a closed-won deal.
+ * Writes one one-time payout + N recurring payouts (N = months in duration,
+ * or 24 months for indefinite). Idempotent: returns existing payouts if
+ * already generated for this lead.
+ */
+export async function generatePayoutsForDeal(
+  leadId: string,
+  raSlug: string,
+): Promise<RaPayout[]> {
+  const [cfg, lead, ra] = await Promise.all([
+    getCommissionConfig(),
+    getLeadDetail(leadId).then((r) => r.lead),
+    getRaBySlug(raSlug),
+  ])
+  if (!ra) throw new Error("RA not found for payout generation")
+
+  const oneTimeAmount = calcOneTimeCommission(cfg)
+  const recurringAmount = calcRecurringCommissionPerMonth(cfg)
+  const monthsCount =
+    cfg.recurring_duration.kind === "indefinite"
+      ? INDEFINITE_HORIZON_MONTHS
+      : cfg.recurring_duration.months
+
+  // Anchor: the month implementation completes — treat closed_at as the
+  // implementation-paid moment. First recurring period starts the next month.
+  const anchorIso = lead.closed_at ?? new Date().toISOString()
+  const anchor = new Date(anchorIso)
+  const clientName = lead.company ?? lead.name
+
+  if (PREVIEW_MODE) {
+    const existing = readGeneratedPayouts()
+    const already = existing.filter((p) => p.deal_id === leadId)
+    if (already.length > 0) return already
+
+    const oneTime: RaPayout = {
+      id: `pg-${leadId}-ot`,
+      ra_slug: raSlug,
+      deal_id: leadId,
+      client_name: clientName,
+      type: "one_time",
+      period_start: null,
+      period_end: null,
+      amount: oneTimeAmount,
+      status: "scheduled",
+      paid_at: null,
+    }
+    const recurring: RaPayout[] = Array.from({ length: monthsCount }, (_, i) => {
+      const { start, end } = monthBoundaries(anchor, i + 1)
+      return {
+        id: `pg-${leadId}-r${i + 1}`,
+        ra_slug: raSlug,
+        deal_id: leadId,
+        client_name: clientName,
+        type: "recurring",
+        period_start: start,
+        period_end: end,
+        amount: recurringAmount,
+        status: "scheduled",
+        paid_at: null,
+      }
+    })
+    const fresh = [oneTime, ...recurring]
+    writeGeneratedPayouts([...existing, ...fresh])
+    return fresh
+  }
+
+  // Supabase path: skip if any payouts already exist for this lead.
+  const { data: existing, error: existingErr } = await supabase
+    .from("commission_payouts" as never)
+    .select("id")
+    .eq("lead_id", leadId)
+    .limit(1)
+  if (existingErr) throw existingErr
+  if ((existing ?? []).length > 0) return []
+
+  const rows: Array<Record<string, unknown>> = [
+    {
+      organization_id: ra.organization_id,
+      ra_associate_id: ra.id,
+      lead_id: leadId,
+      type: "one_time",
+      amount: oneTimeAmount,
+      status: "scheduled",
+      notes: clientName,
+    },
+    ...Array.from({ length: monthsCount }, (_, i) => {
+      const { start, end } = monthBoundaries(anchor, i + 1)
+      return {
+        organization_id: ra.organization_id,
+        ra_associate_id: ra.id,
+        lead_id: leadId,
+        type: "recurring",
+        amount: recurringAmount,
+        status: "scheduled",
+        period_start: start,
+        period_end: end,
+        notes: clientName,
+      }
+    }),
+  ]
+  const { error } = await supabase.from("commission_payouts" as never).insert(rows as never)
+  if (error) throw error
+  return []
+}
+
+export async function addLeadNote(leadId: string, text: string): Promise<LeadNote> {
+  const note: LeadNote = { id: crypto.randomUUID(), text, at: new Date().toISOString() }
+  const all = [note, ...readLeadNotes(leadId)]
+  writeLeadNotes(leadId, all)
+  return note
 }

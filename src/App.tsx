@@ -50,6 +50,7 @@ import { AccountDetail } from "@/pages/AccountDetail"
 import { Deals } from "@/pages/Deals"
 import { DealForm } from "@/pages/DealForm"
 import { Leads } from "@/pages/Leads"
+import { LeadDetail } from "@/pages/LeadDetail"
 import { LeadForm } from "@/pages/LeadForm"
 import { Tasks } from "@/pages/Tasks"
 import { TaskForm } from "@/pages/TaskForm"
@@ -78,6 +79,9 @@ import { SettingsAuditLogs } from "@/pages/settings/SettingsAuditLogs"
 import { SettingsData } from "@/pages/settings/SettingsData"
 import { SettingsBranding } from "@/pages/settings/SettingsBranding"
 import { SettingsSystem } from "@/pages/settings/SettingsSystem"
+import { SettingsRA } from "@/pages/settings/SettingsRA"
+import { SettingsRAReview } from "@/pages/settings/SettingsRAReview"
+import { SettingsRADetail } from "@/pages/settings/SettingsRADetail"
 import { RaStoryboard } from "@/pages/mockups/RaStoryboard"
 
 function App() {
@@ -114,6 +118,7 @@ function App() {
 
         <Route path="/leads" element={<Leads />} />
         <Route path="/leads/new" element={<LeadForm />} />
+        <Route path="/leads/:id" element={<LeadDetail />} />
         <Route path="/leads/:id/edit" element={<LeadForm />} />
 
         <Route path="/contacts" element={<Contacts />} />
@@ -165,6 +170,9 @@ function App() {
           <Route path="financial" element={<RoleGate allow={["super_user","admin"]}><SettingsFinancial /></RoleGate>} />
           <Route path="partners-vendors" element={<RoleGate allow={["super_user","admin"]}><SettingsPartnersVendors /></RoleGate>} />
           <Route path="landing-pages" element={<RoleGate allow={["super_user","admin"]}><SettingsLandingPages /></RoleGate>} />
+          <Route path="ra" element={<RoleGate allow={["super_user","admin"]}><SettingsRA /></RoleGate>} />
+          <Route path="ra/:slug/review" element={<RoleGate allow={["super_user","admin"]}><SettingsRAReview /></RoleGate>} />
+          <Route path="ra/:slug" element={<RoleGate allow={["super_user","admin"]}><SettingsRADetail /></RoleGate>} />
           <Route path="integrations" element={<RoleGate allow={["super_user","admin"]}><SettingsIntegrations /></RoleGate>} />
           <Route path="notifications" element={<SettingsNotifications />} />
           <Route path="security" element={<RoleGate allow={["super_user","admin"]}><SettingsSecurity /></RoleGate>} />

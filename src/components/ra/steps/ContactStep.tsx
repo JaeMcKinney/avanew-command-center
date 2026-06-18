@@ -7,10 +7,11 @@ import type { RaAssociate } from "@/types/db"
 
 type Props = {
   ra: RaAssociate
+  stepLabel?: string
   onComplete: (updated: Partial<RaAssociate>) => void
 }
 
-export function ContactStep({ ra, onComplete }: Props) {
+export function ContactStep({ ra, stepLabel = "Step 2 of 4", onComplete }: Props) {
   const [phone, setPhone] = useState(ra.contact_phone ?? "")
   const [email, setEmail] = useState(ra.contact_email ?? "")
   const [bio, setBio] = useState(ra.bio ?? "")
@@ -66,7 +67,7 @@ export function ContactStep({ ra, onComplete }: Props) {
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div>
         <p style={{ margin: "0 0 4px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(95,227,210,.7)" }}>
-          Step 2 of 4
+          {stepLabel}
         </p>
         <h2 style={{ margin: "0 0 8px", fontSize: "20px", fontWeight: 600, color: "#EAF2F9" }}>
           Contact info

@@ -10,6 +10,8 @@ import {
   DIVIGNER_NOISE_SVG,
 } from "@/lib/brand"
 
+const PREVIEW_MODE = import.meta.env.VITE_PREVIEW_MODE === "true"
+
 type RevokedReason = "declined" | "terminated" | "suspended"
 
 function FullPageLoader() {
@@ -90,6 +92,18 @@ export function RaPortalGuard() {
 
   useEffect(() => {
     async function check() {
+      if (PREVIEW_MODE) {
+        const ra = await getRaAssociate().catch(() => null)
+        if (!ra) { setReady(true); return }
+        switch (ra.status) {
+          case "declined":   setRevokedReason("declined"); break
+          case "terminated": setRevokedReason("terminated"); break
+          case "suspended":  setRevokedReason("suspended"); break
+          default:           break
+        }
+        setReady(true)
+        return
+      }
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { navigate("/login", { replace: true }); return }
 

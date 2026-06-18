@@ -6,10 +6,11 @@ import type { RaAssociate } from "@/types/db"
 
 type Props = {
   ra: RaAssociate
+  stepLabel?: string
   onComplete: (updated: Partial<RaAssociate>) => void
 }
 
-export function PhotoStep({ ra, onComplete }: Props) {
+export function PhotoStep({ ra, stepLabel = "Step 1 of 4", onComplete }: Props) {
   const [preview, setPreview] = useState<string | null>(ra.photo_url ?? null)
   const [saving, setSaving] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
@@ -54,7 +55,7 @@ export function PhotoStep({ ra, onComplete }: Props) {
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div>
         <p style={{ margin: "0 0 4px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(95,227,210,.7)" }}>
-          Step 1 of 4
+          {stepLabel}
         </p>
         <h2 style={{ margin: "0 0 8px", fontSize: "20px", fontWeight: 600, color: "#EAF2F9" }}>
           Profile photo

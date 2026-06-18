@@ -7,10 +7,11 @@ import type { RaAssociate } from "@/types/db"
 
 type Props = {
   ra: RaAssociate
+  stepLabel?: string
   onComplete: (updated: Partial<RaAssociate>) => void
 }
 
-export function BankingStep({ ra, onComplete }: Props) {
+export function BankingStep({ ra, stepLabel = "Step 3 of 4", onComplete }: Props) {
   const [holder, setHolder] = useState(ra.ach_account_holder ?? "")
   const [bankName, setBankName] = useState(ra.ach_bank_name ?? "")
   const [routing, setRouting] = useState(ra.ach_routing ?? "")
@@ -74,7 +75,7 @@ export function BankingStep({ ra, onComplete }: Props) {
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div>
         <p style={{ margin: "0 0 4px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(95,227,210,.7)" }}>
-          Step 3 of 4
+          {stepLabel}
         </p>
         <h2 style={{ margin: "0 0 8px", fontSize: "20px", fontWeight: 600, color: "#EAF2F9" }}>
           Banking details

@@ -3,11 +3,14 @@ import { useNavigate } from "react-router-dom"
 import { Loader2, AlertTriangle, CheckCircle2, Circle } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
-import { getRaAssociate } from "@/lib/data"
+import { getRaAssociate, PREVIEW_DATA_MODE } from "@/lib/data"
+import { AgreementStep } from "@/components/ra/steps/AgreementStep"
 import { PhotoStep } from "@/components/ra/steps/PhotoStep"
 import { ContactStep } from "@/components/ra/steps/ContactStep"
 import { BankingStep } from "@/components/ra/steps/BankingStep"
+import { W9Step } from "@/components/ra/steps/W9Step"
 import { SubmitStep } from "@/components/ra/steps/SubmitStep"
+import { getLocalAgreementAcceptance, getLocalW9 } from "@/lib/data"
 import {
   DIVIGNER_LOGO_SRC,
   DIVIGNER_NOISE_SVG,
@@ -16,14 +19,18 @@ import {
 } from "@/lib/brand"
 import type { RaAssociate } from "@/types/db"
 
-type Step = 0 | 1 | 2 | 3   // photo | contact | banking | submit
+type Step = 0 | 1 | 2 | 3 | 4 | 5   // agreement | photo | contact | banking | w9 | submit
 
 const STEPS = [
-  { label: "Photo",    field: "photo_completed"   as const },
-  { label: "Contact",  field: "contact_completed" as const },
-  { label: "Banking",  field: "banking_completed" as const },
-  { label: "Review",   field: null },
+  { label: "Agreement", field: "agreement_completed" as const },
+  { label: "Photo",     field: "photo_completed"     as const },
+  { label: "Contact",   field: "contact_completed"   as const },
+  { label: "Banking",   field: "banking_completed"   as const },
+  { label: "W-9",       field: "w9_completed"        as const },
+  { label: "Review",    field: null },
 ]
+
+const TOTAL_PROGRESS_SECTIONS = 5   // agreement + photo + contact + banking + w9
 
 export function RaOnboardingSteps() {
   const navigate = useNavigate()
@@ -33,12 +40,14 @@ export function RaOnboardingSteps() {
 
   useEffect(() => {
     async function init() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { navigate("/login", { replace: true }); return }
+      if (!PREVIEW_DATA_MODE) {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) { navigate("/login", { replace: true }); return }
 
-      // Must have completed the password gate first
-      if (!session.user.user_metadata?.password_set) {
-        navigate("/onboarding", { replace: true }); return
+        // Must have completed the password gate first
+        if (!session.user.user_metadata?.password_set) {
+          navigate("/onboarding", { replace: true }); return
+        }
       }
 
       const record = await getRaAssociate().catch(() => null)
@@ -57,13 +66,24 @@ export function RaOnboardingSteps() {
         navigate("/ra/dashboard", { replace: true }); return
       }
 
-      setRa(record)
+      // Merge localStorage agreement + W-9 acceptance (until PR-3 wires real columns).
+      const localAgreement = getLocalAgreementAcceptance(record.id)
+      const localW9 = getLocalW9(record.id)
+      const hydrated: RaAssociate = {
+        ...record,
+        ...(localAgreement ?? {}),
+        ...(localW9 ?? {}),
+      }
+
+      setRa(hydrated)
 
       // Auto-advance to first incomplete section
-      if (!record.photo_completed) { setStep(0); }
-      else if (!record.contact_completed) { setStep(1); }
-      else if (!record.banking_completed) { setStep(2); }
-      else { setStep(3); }
+      if (!hydrated.agreement_completed) { setStep(0); }
+      else if (!hydrated.photo_completed) { setStep(1); }
+      else if (!hydrated.contact_completed) { setStep(2); }
+      else if (!hydrated.banking_completed) { setStep(3); }
+      else if (!hydrated.w9_completed) { setStep(4); }
+      else { setStep(5); }
 
       setLoading(false)
     }
@@ -72,7 +92,7 @@ export function RaOnboardingSteps() {
 
   function handleStepComplete(updated: Partial<RaAssociate>) {
     setRa((prev) => prev ? { ...prev, ...updated } : prev)
-    setStep((s) => Math.min(s + 1, 3) as Step)
+    setStep((s) => Math.min(s + 1, 5) as Step)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
@@ -184,7 +204,7 @@ export function RaOnboardingSteps() {
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 {STEPS.map((s, i) => {
-                  const done = s.field ? ra[s.field] : false
+                  const done = s.field ? Boolean(ra[s.field]) : false
                   const active = i === step
                   return (
                     <button
@@ -219,14 +239,14 @@ export function RaOnboardingSteps() {
                 <div style={{ height: "4px", background: "rgba(160,190,215,.15)", borderRadius: "2px", overflow: "hidden" }}>
                   <div style={{
                     height: "100%",
-                    width: `${([ra.photo_completed, ra.contact_completed, ra.banking_completed].filter(Boolean).length / 3) * 100}%`,
+                    width: `${([ra.agreement_completed, ra.photo_completed, ra.contact_completed, ra.banking_completed, ra.w9_completed].filter(Boolean).length / TOTAL_PROGRESS_SECTIONS) * 100}%`,
                     background: "linear-gradient(90deg,#18B9A6,#34D6C2)",
                     borderRadius: "2px",
                     transition: "width .4s ease",
                   }} />
                 </div>
                 <p style={{ margin: "6px 0 0", fontSize: "11px", color: "#6E8499" }}>
-                  {[ra.photo_completed, ra.contact_completed, ra.banking_completed].filter(Boolean).length}/3 sections done
+                  {[ra.agreement_completed, ra.photo_completed, ra.contact_completed, ra.banking_completed, ra.w9_completed].filter(Boolean).length}/{TOTAL_PROGRESS_SECTIONS} sections done
                 </p>
               </div>
             </div>
@@ -239,10 +259,12 @@ export function RaOnboardingSteps() {
               padding: "36px 40px",
               boxShadow: "0 32px 80px -20px rgba(0,0,0,.5)",
             }}>
-              {step === 0 && <PhotoStep   ra={ra} onComplete={handleStepComplete} />}
-              {step === 1 && <ContactStep ra={ra} onComplete={handleStepComplete} />}
-              {step === 2 && <BankingStep ra={ra} onComplete={handleStepComplete} />}
-              {step === 3 && <SubmitStep  ra={ra} onSubmitted={handleSubmitted}   />}
+              {step === 0 && <AgreementStep ra={ra} stepLabel="Step 1 of 6" onComplete={handleStepComplete} />}
+              {step === 1 && <PhotoStep     ra={ra} stepLabel="Step 2 of 6" onComplete={handleStepComplete} />}
+              {step === 2 && <ContactStep   ra={ra} stepLabel="Step 3 of 6" onComplete={handleStepComplete} />}
+              {step === 3 && <BankingStep   ra={ra} stepLabel="Step 4 of 6" onComplete={handleStepComplete} />}
+              {step === 4 && <W9Step        ra={ra} stepLabel="Step 5 of 6" onComplete={handleStepComplete} />}
+              {step === 5 && <SubmitStep    ra={ra} stepLabel="Step 6 of 6" onSubmitted={handleSubmitted}   />}
             </div>
 
           </div>

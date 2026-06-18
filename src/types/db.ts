@@ -128,6 +128,20 @@ export type RaAssociate = {
   photo_completed: boolean
   contact_completed: boolean
   banking_completed: boolean
+  // W-9 upload (R4b — uploaded PDF, not raw SSN). Optional until PR-3.
+  w9_completed?: boolean
+  w9_document_url?: string | null
+  w9_uploaded_at?: string | null
+  w9_reviewed_at?: string | null
+  w9_reviewed_by?: string | null
+  // Agreement acceptance (R0 — captured at /onboarding/agreement step).
+  // Optional until PR-3 migration adds the columns; localStorage-backed before then.
+  agreement_completed?: boolean
+  agreement_version?: string | null
+  agreement_accepted_at?: string | null
+  agreement_ip_address?: string | null
+  agreement_user_agent?: string | null
+  agreement_signed_name?: string | null
   submitted_at: string | null
   verification_notes: string | null
   verified_at: string | null
@@ -147,6 +161,46 @@ export type Profile = {
   avatar_url: string | null
   role: TeamRole
   created_at: string
+}
+
+// ── RA Program / Commission Configuration ────────────────────────────────────
+// Configurable per-organization. Drives commission display in admin views,
+// RA dashboards, public referral pages, and the signed agreement document.
+
+export type CommissionMode = "flat" | "percent"
+
+export type RecurringDuration =
+  | { kind: "indefinite" }
+  | { kind: "months"; months: number }
+
+export type CommissionConfig = {
+  // One-time referral commission paid when implementation fee is fully collected.
+  one_time_mode: CommissionMode
+  one_time_value: number              // dollars if flat, percent (0-100) if percent
+  // Reference base for percent calculation
+  implementation_fee: number          // e.g. 6000
+
+  // Recurring monthly commission paid while client remains active.
+  recurring_mode: CommissionMode
+  recurring_value: number             // dollars/month if flat, percent if percent
+  monthly_service_fee: number         // e.g. 600
+  recurring_duration: RecurringDuration
+
+  // Attribution window: how long a submitted lead remains attributed to the RA.
+  attribution_window_days: number     // e.g. 30
+
+  // Operational thresholds (agreement §6 + §7) — surfaced here so all numbers
+  // referenced in the agreement and admin views live in one place.
+  annual_minimum_referrals: number    // e.g. 4
+  checkin_interval_days: number       // e.g. 90
+  checkin_warning_days: number        // e.g. 90  (warning email at this point)
+  checkin_suspension_days: number     // e.g. 150 (commission suspended at this point)
+
+  // Versioning — bump when the underlying agreement terms change so existing
+  // RAs are prompted to re-accept.
+  agreement_version: string           // e.g. "v2.0"
+
+  updated_at: string
 }
 
 export type Invitation = {

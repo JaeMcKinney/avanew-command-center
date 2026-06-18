@@ -10,10 +10,18 @@ import {
   Clock,
   Inbox,
   LogOut,
+  List,
+  LayoutGrid,
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
-import { getRaAssociate, getRaDashboardStats, listRaLeads } from "@/lib/data"
-import type { Lead } from "@/types/db"
+import {
+  getRaAssociate, getRaDashboardStats, listLeadsForRaSlug,
+  listActiveClientsForRaSlug, getAnnualMinimumStatus,
+} from "@/lib/data"
+import type { RaLead, ActiveClient, AnnualMinimumStatus } from "@/lib/data"
+import { PipelineBoard } from "@/components/PipelineBoard"
+import { usePipelineView } from "@/lib/usePipelineView"
+import { LogCheckinModal } from "@/components/LogCheckinModal"
 import {
   DIVIGNER_LOGO_SRC,
   DIVIGNER_NOISE_SVG,
@@ -44,6 +52,15 @@ const STAT_DEFS: {
   { key: "pendingCommission",label: "Pending Commission",  icon: Clock,      format: fmtCurrency },
 ]
 
+const STAGE_LABEL: Record<RaLead["stage"], string> = {
+  new: "New",
+  qualified: "Qualified",
+  proposal_sent: "Proposal Sent",
+  call_booked: "Call Booked",
+  closed_won: "Closed Won",
+  closed_lost: "Closed Lost",
+}
+
 function fmtCurrency(n: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -72,13 +89,30 @@ export function RaDashboard() {
     totalCommission: 0,
     pendingCommission: 0,
   })
-  const [leads, setLeads] = useState<Lead[]>([])
+  const [leads, setLeads] = useState<RaLead[]>([])
+  const [pipelineView, setPipelineView] = usePipelineView("ra-dashboard")
+  const [activeClients, setActiveClients] = useState<ActiveClient[]>([])
+  const [annual, setAnnual] = useState<AnnualMinimumStatus | null>(null)
+  const [checkinTarget, setCheckinTarget] = useState<{ leadId: string | null; name: string } | null>(null)
+
+  async function refreshActive(slug: string) {
+    const [ac, am] = await Promise.all([
+      listActiveClientsForRaSlug(slug),
+      getAnnualMinimumStatus(slug),
+    ])
+    setActiveClients(ac)
+    setAnnual(am)
+  }
 
   useEffect(() => {
-    getRaAssociate().then(setRa).catch(() => null)
     void (async () => {
       try {
-        const [s, l] = await Promise.all([getRaDashboardStats(), listRaLeads()])
+        const r = await getRaAssociate()
+        setRa(r)
+        const [s, l] = await Promise.all([
+          getRaDashboardStats(),
+          r?.slug ? listLeadsForRaSlug(r.slug) : Promise.resolve([] as RaLead[]),
+        ])
         setStats((prev) => ({
           ...prev,
           totalLeads:  s.total_leads,
@@ -86,11 +120,15 @@ export function RaDashboard() {
           dealsClosed: s.deals_closed,
         }))
         setLeads(l)
+        if (r?.slug) await refreshActive(r.slug)
       } catch {
         // leave defaults — RA can still see the page
       }
     })()
   }, [])
+
+  const boardLeads = leads.filter((l) => l.stage !== "closed_lost")
+  const lostLeads = leads.filter((l) => l.stage === "closed_lost")
 
   const referralUrl = ra?.slug
     ? `${window.location.origin}/refer/${ra.slug}`
@@ -240,23 +278,163 @@ export function RaDashboard() {
           ))}
         </div>
 
+        {/* annual minimum + check-ins due */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* annual minimum tracker */}
+          <div
+            className="rounded-2xl border border-white/10 p-6"
+            style={{ background: DIVIGNER_CARD_BG }}
+          >
+            <p
+              className="text-white/40 text-xs font-medium uppercase tracking-widest mb-3"
+              style={{ fontFamily: "Manrope, sans-serif" }}
+            >
+              Annual Referrals
+            </p>
+            {annual ? (
+              <>
+                <p
+                  className="text-3xl font-semibold text-white"
+                  style={{ fontFamily: "Fraunces, serif" }}
+                >
+                  {annual.count}<span className="text-white/40 text-xl">/{annual.target}</span>
+                </p>
+                <div className="mt-3 h-1.5 rounded-full bg-white/[.06] overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${Math.min(100, (annual.count / Math.max(1, annual.target)) * 100)}%`,
+                      background: annual.on_track ? "#34D6C2" : annual.grace_period_active ? "#F4B23A" : "#E76F51",
+                    }}
+                  />
+                </div>
+                <p
+                  className="text-white/50 text-xs mt-3"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
+                >
+                  {annual.on_track
+                    ? `On track for ${annual.year}.`
+                    : annual.grace_period_active
+                    ? `Grace period — ${annual.grace_days_remaining} day${annual.grace_days_remaining === 1 ? "" : "s"} to catch up.`
+                    : `${annual.days_remaining_in_year} day${annual.days_remaining_in_year === 1 ? "" : "s"} left in ${annual.year}.`}
+                </p>
+              </>
+            ) : (
+              <p className="text-white/30 text-sm" style={{ fontFamily: "Manrope, sans-serif" }}>—</p>
+            )}
+          </div>
+
+          {/* check-ins due */}
+          <div
+            className="rounded-2xl border border-white/10 p-6 lg:col-span-2"
+            style={{ background: DIVIGNER_CARD_BG }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <p
+                className="text-white/40 text-xs font-medium uppercase tracking-widest"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
+                Active Clients — Check-ins Due
+              </p>
+              {activeClients.length > 0 && (
+                <span className="text-white/40 text-xs" style={{ fontFamily: "Manrope, sans-serif" }}>
+                  {activeClients.filter((c) => c.severity !== "ok").length} due
+                </span>
+              )}
+            </div>
+            {activeClients.length === 0 ? (
+              <p className="text-white/30 text-sm" style={{ fontFamily: "Manrope, sans-serif" }}>
+                No active clients yet.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {activeClients.map((c) => {
+                  const dotColor = c.severity === "overdue" ? "#E76F51"
+                    : c.severity === "warning" ? "#F4B23A"
+                    : "#34D6C2"
+                  return (
+                    <li
+                      key={c.lead_id}
+                      className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg bg-white/[.03] hover:bg-white/[.05] border border-white/[.06]"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="h-2 w-2 rounded-full shrink-0" style={{ background: dotColor }} />
+                        <div className="min-w-0">
+                          <p
+                            className="text-white/85 text-sm truncate"
+                            style={{ fontFamily: "Manrope, sans-serif" }}
+                          >
+                            {c.client_name}
+                          </p>
+                          <p
+                            className="text-white/40 text-xs truncate"
+                            style={{ fontFamily: "Manrope, sans-serif" }}
+                          >
+                            {c.last_checkin_at
+                              ? `Last check-in ${c.days_since}d ago`
+                              : `${c.days_since}d since onboard, no check-in yet`}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCheckinTarget({ leadId: c.lead_id, name: c.client_name })}
+                        className="shrink-0 text-xs px-3 py-1.5 rounded-md border border-white/15 text-white/80 hover:bg-white/[.06] transition-colors"
+                        style={{ fontFamily: "Manrope, sans-serif" }}
+                      >
+                        Log check-in
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+
         {/* pipeline */}
         <div
           className="rounded-2xl border border-white/10 overflow-hidden"
           style={{ background: DIVIGNER_CARD_BG }}
         >
-          <div className="px-6 py-4 border-b border-white/[.08] flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-white/[.08] flex items-center justify-between gap-3">
             <h2
               className="text-white/80 text-sm font-semibold"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Your Pipeline
             </h2>
-            {leads.length > 0 && (
-              <span className="text-white/40 text-xs" style={{ fontFamily: "Manrope, sans-serif" }}>
-                {leads.length} {leads.length === 1 ? "lead" : "leads"}
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              {leads.length > 0 && (
+                <span className="text-white/40 text-xs hidden sm:inline" style={{ fontFamily: "Manrope, sans-serif" }}>
+                  {leads.length} {leads.length === 1 ? "lead" : "leads"}
+                </span>
+              )}
+              <div className="inline-flex rounded-md border border-white/10 bg-white/[.04] p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setPipelineView("list")}
+                  className={[
+                    "flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors",
+                    pipelineView === "list" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/80",
+                  ].join(" ")}
+                  style={{ fontFamily: "Manrope, sans-serif" }}
+                >
+                  <List className="h-3.5 w-3.5" /> List
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPipelineView("board")}
+                  className={[
+                    "flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors",
+                    pipelineView === "board" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/80",
+                  ].join(" ")}
+                  style={{ fontFamily: "Manrope, sans-serif" }}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" /> Board
+                </button>
+              </div>
+            </div>
           </div>
           {leads.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
@@ -279,37 +457,46 @@ export function RaDashboard() {
                 Share your referral link to start tracking leads.
               </p>
             </div>
+          ) : pipelineView === "board" ? (
+            <div className="p-4">
+              <PipelineBoard
+                leads={boardLeads}
+                variant="dark"
+                onLeadsChange={(next) => setLeads([...next, ...lostLeads])}
+              />
+            </div>
           ) : (
             <div className="divide-y divide-white/[.06]">
               {leads.map((lead) => (
                 <div
                   key={lead.id}
-                  className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-white/[.02]"
+                  onClick={() => navigate(`/leads/${lead.id}`)}
+                  className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-white/[.02] cursor-pointer"
                 >
                   <div className="min-w-0">
                     <p
                       className="text-white/90 text-sm font-medium truncate"
                       style={{ fontFamily: "Manrope, sans-serif" }}
                     >
-                      {lead.first_name} {lead.last_name ?? ""}
+                      {lead.name}
                     </p>
                     <p className="text-white/40 text-xs truncate" style={{ fontFamily: "Manrope, sans-serif" }}>
-                      {lead.email ?? lead.phone ?? "—"}
+                      {lead.company ?? lead.email ?? lead.phone ?? "—"}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span
                       className="px-2 py-0.5 text-[10px] uppercase tracking-widest rounded-full"
                       style={{
-                        background: lead.converted ? "rgba(52,214,194,.15)" : "rgba(255,255,255,.05)",
-                        color: lead.converted ? "#34D6C2" : "rgba(255,255,255,.5)",
+                        background: lead.stage === "closed_won" ? "rgba(52,214,194,.15)" : "rgba(255,255,255,.05)",
+                        color: lead.stage === "closed_won" ? "#34D6C2" : "rgba(255,255,255,.5)",
                         fontFamily: "Manrope, sans-serif",
                       }}
                     >
-                      {lead.converted ? "Closed" : (lead.lead_status ?? "New")}
+                      {STAGE_LABEL[lead.stage]}
                     </span>
                     <span className="text-white/30 text-xs" style={{ fontFamily: "Manrope, sans-serif" }}>
-                      {new Date(lead.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      {new Date(lead.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                     </span>
                   </div>
                 </div>
@@ -319,6 +506,18 @@ export function RaDashboard() {
         </div>
 
       </main>
+
+      {checkinTarget && ra?.slug && (
+        <LogCheckinModal
+          open={!!checkinTarget}
+          onClose={() => setCheckinTarget(null)}
+          raSlug={ra.slug}
+          leadId={checkinTarget.leadId}
+          clientName={checkinTarget.name}
+          variant="dark"
+          onLogged={() => { if (ra?.slug) void refreshActive(ra.slug) }}
+        />
+      )}
     </div>
   )
 }

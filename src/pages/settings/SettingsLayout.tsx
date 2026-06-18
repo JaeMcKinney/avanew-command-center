@@ -14,6 +14,7 @@ import {
   Plug2,
   Lock,
   LayoutTemplate,
+  UserPlus,
   ScrollText,
   Database,
   Server,
@@ -93,6 +94,13 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Partner & Vendor Settings",
         icon: Handshake,
         description: "External relationship config",
+        allow: ["super_user", "admin"],
+      },
+      {
+        to: "/settings/ra",
+        label: "Referral Associates",
+        icon: UserPlus,
+        description: "Invite, review, and manage RAs",
         allow: ["super_user", "admin"],
       },
       {

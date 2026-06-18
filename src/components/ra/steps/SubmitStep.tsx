@@ -6,15 +6,31 @@ import type { RaAssociate } from "@/types/db"
 
 type Props = {
   ra: RaAssociate
+  stepLabel?: string
   onSubmitted: () => void
 }
 
-export function SubmitStep({ ra, onSubmitted }: Props) {
+export function SubmitStep({ ra, stepLabel = "Step 4 of 4", onSubmitted }: Props) {
   const [submitting, setSubmitting] = useState(false)
 
-  const allComplete = ra.photo_completed && ra.contact_completed && ra.banking_completed
+  const allComplete = Boolean(
+    ra.agreement_completed &&
+    ra.photo_completed &&
+    ra.contact_completed &&
+    ra.banking_completed &&
+    ra.w9_completed
+  )
 
   const sections = [
+    {
+      label: "Referral Associate Agreement",
+      done: Boolean(ra.agreement_completed),
+      detail: ra.agreement_completed
+        ? `Signed${ra.agreement_signed_name ? ` by ${ra.agreement_signed_name}` : ""}${
+            ra.agreement_accepted_at ? ` · ${new Date(ra.agreement_accepted_at).toLocaleDateString()}` : ""
+          }`
+        : "Not accepted yet",
+    },
     {
       label: "Profile photo",
       done: ra.photo_completed,
@@ -33,6 +49,13 @@ export function SubmitStep({ ra, onSubmitted }: Props) {
       detail: ra.banking_completed
         ? `${ra.ach_bank_name ?? "Bank"} ···${(ra.ach_account ?? "").slice(-4)}`
         : "Not completed",
+    },
+    {
+      label: "IRS Form W-9",
+      done: Boolean(ra.w9_completed),
+      detail: ra.w9_completed
+        ? `Uploaded${ra.w9_uploaded_at ? ` · ${new Date(ra.w9_uploaded_at).toLocaleDateString()}` : ""}`
+        : "Not uploaded yet",
     },
   ]
 
@@ -54,7 +77,7 @@ export function SubmitStep({ ra, onSubmitted }: Props) {
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div>
         <p style={{ margin: "0 0 4px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(95,227,210,.7)" }}>
-          Step 4 of 4
+          {stepLabel}
         </p>
         <h2 style={{ margin: "0 0 8px", fontSize: "20px", fontWeight: 600, color: "#EAF2F9" }}>
           Review & submit
