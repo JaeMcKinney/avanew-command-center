@@ -1477,7 +1477,10 @@ export async function getRaPortalRedirect(): Promise<string | null> {
     .select("role")
     .eq("id", user.id)
     .maybeSingle()
-  if ((profile?.role ?? "") !== "referral_associate") return null
+  // profiles.role is typed as TeamRole locally (no referral_associate variant),
+  // but the DB column carries that role for invited RAs — cast through string.
+  const profileRole = (profile?.role as string | null) ?? ""
+  if (profileRole !== "referral_associate") return null
 
   // The RA goes to the portal — but routing depends on where they are in the
   // lifecycle. Without this branch every login would land them at

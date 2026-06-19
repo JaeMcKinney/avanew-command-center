@@ -732,6 +732,7 @@ export type OrganizationMember = {
   user_id: string
   role: TeamRole
   created_at: string
+  is_program_admin?: boolean
 }
 
 /** Organization with the current user's role in it — returned by listMyOrganizations */
