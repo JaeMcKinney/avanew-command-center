@@ -11,6 +11,7 @@ import {
   Mail,
   Target,
   Handshake,
+  Star,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -48,10 +49,12 @@ import {
   listTeamMembers,
   removeTeamMember,
   updateTeamMemberRole,
+  setProgramAdmin,
 } from "@/lib/data"
 import { useRole } from "@/hooks/useRole"
 import type { TeamMember, TeamRole } from "@/types/db"
 import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const ROLE_META: Record<
   TeamRole,
@@ -162,6 +165,21 @@ export function TeamSection() {
       await refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update role")
+    }
+  }
+
+  async function toggleProgramAdmin(member: TeamMember) {
+    const next = !member.is_program_admin
+    try {
+      await setProgramAdmin(member.id, next)
+      toast.success(
+        next
+          ? `${member.email} is now a Program Admin — will receive RA application notifications`
+          : `${member.email} is no longer a Program Admin`
+      )
+      await refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update Program Admin")
     }
   }
 
@@ -336,6 +354,42 @@ export function TeamSection() {
                       })}
                     </SelectContent>
                   </Select>
+
+                  {/* Program Admin designation — only meaningful on admin
+                      members, only assignable by super_user. Receives RA
+                      application notifications and may approve/decline. */}
+                  {m.status === "active" && (m.role === "admin" || m.is_program_admin) && (
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant={m.is_program_admin ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => void toggleProgramAdmin(m)}
+                            disabled={!isSuperUser || m.role !== "admin"}
+                            className={cn(
+                              "h-8 gap-1.5",
+                              m.is_program_admin
+                                ? "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-300 hover:bg-yellow-500/25"
+                                : "text-muted-foreground border-dashed"
+                            )}
+                          >
+                            <Star className={cn("h-3 w-3", m.is_program_admin && "fill-current")} />
+                            {m.is_program_admin ? "Program Admin" : "Make Program Admin"}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-[260px] text-xs">
+                          {m.is_program_admin
+                            ? "Receives RA application emails and may approve, decline, or delete RAs. Click to revoke."
+                            : m.role === "admin"
+                              ? "Designate as Program Admin: receives RA application emails and may approve, decline, or delete RAs."
+                              : "Only admin members can be designated as Program Admin."}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
                   <Button
                     variant="ghost"
                     size="icon"

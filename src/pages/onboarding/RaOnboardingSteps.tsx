@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Loader2, AlertTriangle, CheckCircle2, Circle } from "lucide-react"
+import { Loader2, AlertTriangle, CheckCircle2, Circle, LogOut } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
 import { getRaAssociate, PREVIEW_DATA_MODE } from "@/lib/data"
@@ -101,6 +101,13 @@ export function RaOnboardingSteps() {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
+  async function handleSignOut() {
+    // Each step persists to the DB on its Next click, so progress is already
+    // safe. Signing back in resumes at the first incomplete section.
+    await supabase.auth.signOut()
+    navigate("/login", { replace: true })
+  }
+
   // ── Loading ─────────────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -134,6 +141,23 @@ export function RaOnboardingSteps() {
                 The Divigner team is reviewing your profile. You'll receive an email once your account is activated — typically within 1–2 business days.
               </p>
             </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              style={{
+                marginTop: 24,
+                display: "inline-flex", alignItems: "center", gap: 6,
+                background: "transparent",
+                border: "none",
+                color: "#6E8499",
+                fontSize: 12, fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "'Manrope', sans-serif",
+              }}
+            >
+              <LogOut style={{ width: 13, height: 13 }} />
+              Sign out
+            </button>
           </div>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -161,11 +185,34 @@ export function RaOnboardingSteps() {
         <div style={{ position: "relative", zIndex: 1, maxWidth: "900px", margin: "0 auto", padding: "32px 20px 60px" }}>
 
           {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px", gap: 12 }}>
             <img src={DIVIGNER_LOGO_SRC} alt="Divigner" style={{ height: "44px" }} />
-            <p style={{ margin: 0, fontSize: "12px", color: "#6E8499" }}>
-              Referral Associate · Onboarding
-            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <p style={{ margin: 0, fontSize: "12px", color: "#6E8499" }}>
+                Referral Associate · Onboarding
+              </p>
+              {/* Sign out — progress is auto-saved on each step's Next click,
+                  so the RA can pause and resume later from the login screen. */}
+              <button
+                type="button"
+                onClick={handleSignOut}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: "rgba(255,255,255,.04)",
+                  border: "1px solid rgba(160,190,215,.18)",
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                  color: "#A2B6C9",
+                  fontSize: 12, fontWeight: 500,
+                  cursor: "pointer",
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+                title="Your progress is auto-saved. Sign back in to resume."
+              >
+                <LogOut style={{ width: 13, height: 13 }} />
+                Sign out
+              </button>
+            </div>
           </div>
 
           {/* needs_changes banner */}

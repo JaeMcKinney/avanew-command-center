@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import type { FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
-import { Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react"
+import { Eye, EyeOff, Loader2, LogOut, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
 import {
@@ -91,6 +91,11 @@ export function RaOnboarding() {
     navigate("/onboarding/steps", { replace: true })
   }
 
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    navigate("/login", { replace: true })
+  }
+
   // ── Shared style tokens ───────────────────────────────────────────────────
 
   const inputStyle: React.CSSProperties = {
@@ -142,11 +147,33 @@ export function RaOnboarding() {
         {/* Noise overlay */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: DIVIGNER_NOISE_SVG, opacity: 0.035, pointerEvents: "none" }} />
 
+        {/* Sign out — top-right. Password hasn't been set yet so there's
+            nothing to lose; lets the RA come back later via the same invite. */}
+        <button
+          type="button"
+          onClick={handleSignOut}
+          style={{
+            position: "absolute", top: 20, right: 24, zIndex: 2,
+            display: "flex", alignItems: "center", gap: 6,
+            background: "rgba(255,255,255,.04)",
+            border: "1px solid rgba(160,190,215,.18)",
+            borderRadius: 8,
+            padding: "6px 12px",
+            color: "#A2B6C9",
+            fontSize: 12, fontWeight: 500,
+            cursor: "pointer",
+            fontFamily: "'Manrope', sans-serif",
+          }}
+        >
+          <LogOut style={{ width: 13, height: 13 }} />
+          Sign out
+        </button>
+
         <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "420px" }}>
 
           {/* Logo */}
-          <div style={{ textAlign: "center", marginBottom: "32px" }}>
-            <img src={DIVIGNER_LOGO_SRC} alt="Divigner" style={{ height: "56px", width: "auto" }} />
+          <div style={{ textAlign: "center", marginBottom: "32px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <img src={DIVIGNER_LOGO_SRC} alt="Divigner" style={{ height: "80px", width: "auto" }} />
           </div>
 
           {/* Card */}

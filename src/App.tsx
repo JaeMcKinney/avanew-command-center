@@ -20,9 +20,11 @@ import { useOrganization } from "@/contexts/OrganizationContext"
 
 const PREVIEW_MODE = import.meta.env.VITE_PREVIEW_MODE === "true"
 
-/** Redirects to /select-org if no organisation is currently selected. */
+/** Redirects to /select-org if no organisation is currently selected.
+ *  Honors raRedirect from OrganizationContext — RAs are routed to their portal
+ *  or onboarding immediately, so the staff org-picker is never rendered. */
 function OrgGate({ children }: { children: ReactNode }) {
-  const { currentOrg, loading } = useOrganization()
+  const { currentOrg, loading, raRedirect } = useOrganization()
   const location = useLocation()
 
   if (PREVIEW_MODE) return <>{children}</>
@@ -35,11 +37,30 @@ function OrgGate({ children }: { children: ReactNode }) {
     )
   }
 
+  if (raRedirect) {
+    return <Navigate to={raRedirect} replace />
+  }
+
   if (!currentOrg) {
     return <Navigate to="/select-org" state={{ from: location }} replace />
   }
 
   return <>{children}</>
+}
+
+/** Wraps the /select-org route so an RA who somehow lands there gets bounced
+ *  to /ra/dashboard or /onboarding/steps instead of seeing the 3-org picker. */
+function SelectOrgRoute() {
+  const { raRedirect, loading } = useOrganization()
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+        Loading…
+      </div>
+    )
+  }
+  if (raRedirect) return <Navigate to={raRedirect} replace />
+  return <OrgPicker />
 }
 import { Dashboard } from "@/pages/Dashboard"
 import { Contacts } from "@/pages/Contacts"
@@ -80,6 +101,7 @@ import { SettingsData } from "@/pages/settings/SettingsData"
 import { SettingsBranding } from "@/pages/settings/SettingsBranding"
 import { SettingsSystem } from "@/pages/settings/SettingsSystem"
 import { SettingsRA } from "@/pages/settings/SettingsRA"
+import { SettingsRAArchive } from "@/pages/settings/SettingsRAArchive"
 import { SettingsRAReview } from "@/pages/settings/SettingsRAReview"
 import { SettingsRADetail } from "@/pages/settings/SettingsRADetail"
 import { RaStoryboard } from "@/pages/mockups/RaStoryboard"
@@ -100,7 +122,7 @@ function App() {
         path="/select-org"
         element={
           <ProtectedRoute>
-            <OrgPicker />
+            <SelectOrgRoute />
           </ProtectedRoute>
         }
       />
@@ -171,6 +193,7 @@ function App() {
           <Route path="partners-vendors" element={<RoleGate allow={["super_user","admin"]}><SettingsPartnersVendors /></RoleGate>} />
           <Route path="landing-pages" element={<RoleGate allow={["super_user","admin"]}><SettingsLandingPages /></RoleGate>} />
           <Route path="ra" element={<RoleGate allow={["super_user","admin"]}><SettingsRA /></RoleGate>} />
+          <Route path="ra/archive" element={<RoleGate allow={["super_user","admin"]}><SettingsRAArchive /></RoleGate>} />
           <Route path="ra/:slug/review" element={<RoleGate allow={["super_user","admin"]}><SettingsRAReview /></RoleGate>} />
           <Route path="ra/:slug" element={<RoleGate allow={["super_user","admin"]}><SettingsRADetail /></RoleGate>} />
           <Route path="integrations" element={<RoleGate allow={["super_user","admin"]}><SettingsIntegrations /></RoleGate>} />

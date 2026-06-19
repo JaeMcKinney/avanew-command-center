@@ -1221,7 +1221,7 @@ export async function listTeamMembers(): Promise<TeamMember[]> {
     await Promise.all([
       supabase
         .from("organization_members")
-        .select("user_id, role, created_at, profiles(id, full_name, email)")
+        .select("user_id, role, created_at, is_program_admin, profiles(id, full_name, email)")
         .eq("organization_id", orgId)
         .order("created_at", { ascending: true }),
       supabase
@@ -1232,7 +1232,7 @@ export async function listTeamMembers(): Promise<TeamMember[]> {
     ])
   if (mErr) throw mErr
   if (iErr) throw iErr
-  type OrgMemberRow = { user_id: string; role: string; created_at: string; profiles: { id: string; full_name: string | null; email: string | null } | null }
+  type OrgMemberRow = { user_id: string; role: string; created_at: string; is_program_admin: boolean | null; profiles: { id: string; full_name: string | null; email: string | null } | null }
   const active: TeamMember[] = ((members ?? []) as unknown as OrgMemberRow[]).map((m) => {
     const profile = m.profiles
     return {
@@ -1242,6 +1242,7 @@ export async function listTeamMembers(): Promise<TeamMember[]> {
       role: m.role as TeamRole,
       status: "active" as const,
       created_at: m.created_at,
+      is_program_admin: Boolean(m.is_program_admin),
     }
   })
   const pending: TeamMember[] = (invites ?? []).map((i) => ({
@@ -1319,10 +1320,15 @@ export async function updateTeamMemberRole(
     if (error) throw error
     return
   }
-  // Active member: update their role in organization_members
+  // Active member: update their role in organization_members. The
+  // enforce_program_admin_role trigger requires is_program_admin=true only on
+  // role='admin'; clear the flag in the same update when moving away from admin
+  // so we don't hit the trigger error.
+  const patch: { role: TeamRole; is_program_admin?: boolean } =
+    role === "admin" ? { role } : { role, is_program_admin: false }
   const { error } = await supabase
     .from("organization_members")
-    .update({ role })
+    .update(patch)
     .eq("organization_id", requireOrg())
     .eq("user_id", id)
   if (error) throw error
@@ -1471,13 +1477,38 @@ export async function getRaPortalRedirect(): Promise<string | null> {
     .select("role")
     .eq("id", user.id)
     .maybeSingle()
-  return (profile?.role ?? "") === "referral_associate" ? "/ra/dashboard" : null
+  if ((profile?.role ?? "") !== "referral_associate") return null
+
+  // The RA goes to the portal — but routing depends on where they are in the
+  // lifecycle. Without this branch every login would land them at
+  // /ra/dashboard, including a half-onboarded RA who hasn't finished their
+  // checklist, who would then see an empty dashboard instead of resuming where
+  // they left off. Mirrors the auto-advance logic in RaOnboardingSteps.tsx.
+  const { data: ra } = await supabase
+    .from("ra_associates")
+    .select("status, photo_completed, contact_completed, banking_completed, agreement_completed, w9_completed")
+    .eq("user_id", user.id)
+    .maybeSingle()
+  if (!ra) return "/ra/dashboard" // no RA row — let the dashboard guard handle it
+  const status = ra.status as string
+
+  // active → portal. terminated / declined → portal (will gracefully show the
+  // status). suspended → portal (read-only view there).
+  if (status === "active" || status === "declined" || status === "terminated" || status === "suspended") {
+    return "/ra/dashboard"
+  }
+  // verification: already submitted, /onboarding/steps renders the pending screen.
+  // pending / needs_changes / anything else with incomplete checklist: resume.
+  return "/onboarding/steps"
 }
 
-/** Best-effort RA lifecycle email (approved / declined / changes). Never throws. */
+/** Best-effort RA lifecycle email. Never throws.
+ *  - "submitted"        → notifies Program Admins of the RA's org
+ *  - other kinds        → notifies the RA themselves
+ */
 async function notifyRaStatus(
   raId: string,
-  kind: "approved" | "declined" | "changes_requested",
+  kind: "approved" | "declined" | "changes_requested" | "submitted",
   notes?: string,
 ): Promise<void> {
   if (PREVIEW_MODE) return
@@ -1551,7 +1582,9 @@ export async function saveRaBanking(raId: string, data: {
   if (error) throw error
 }
 
-/** Submit the completed application — moves status to 'verification'. */
+/** Submit the completed application — moves status to 'verification' and
+ *  fans out a "ready for review" email to every Program Admin in the org.
+ *  Notification is best-effort; failure doesn't block submission. */
 export async function submitRaApplication(raId: string): Promise<void> {
   if (PREVIEW_MODE) return
   const { error } = await supabase
@@ -1559,6 +1592,7 @@ export async function submitRaApplication(raId: string): Promise<void> {
     .update({ status: "verification", submitted_at: new Date().toISOString() })
     .eq("id", raId)
   if (error) throw error
+  await notifyRaStatus(raId, "submitted")
 }
 
 /** Approve a submitted RA application — moves status to 'active'. */
@@ -1602,6 +1636,119 @@ export async function revokeRa(raId: string): Promise<void> {
     body: { ra_id: raId },
   })
   if (error) throw error
+}
+
+/** Permanently delete an RA. Snapshots all related rows (leads, deals,
+ *  checkins, payouts, agreement audit, page views) into archive_* tables BEFORE
+ *  destroying the auth user. The original CRM records (companies, contacts)
+ *  stay in place; leads/deals.referred_by_ra_id will be SET NULL by FK once the
+ *  underlying profile cascades.
+ *
+ *  Gate: super_user or program_admin in the RA's org (enforced by the edge
+ *  function). The caller is encouraged to pass `confirmName` matching the RA's
+ *  display_name to mirror the typed-confirmation UI.
+ */
+export async function deleteRa(
+  raId: string,
+  opts?: { confirmName?: string; reason?: string }
+): Promise<{ archive_id: string; display_name: string }> {
+  if (PREVIEW_MODE) throw new Error("Not available in preview mode")
+  const { data, error } = await supabase.functions.invoke("delete-ra", {
+    body: {
+      ra_id: raId,
+      confirm_name: opts?.confirmName ?? null,
+      reason: opts?.reason ?? null,
+    },
+  })
+  if (error) throw error
+  return data as { archive_id: string; display_name: string }
+}
+
+// ── RA Archive readers ──────────────────────────────────────────────────────
+
+/** List archived RAs for the current org. Read-only view. */
+export async function listArchivedRas(): Promise<import("@/types/db").ArchivedRaAssociate[]> {
+  if (PREVIEW_MODE) return []
+  const { data, error } = await supabase
+    .from("archived_ra_associates")
+    .select("*")
+    .eq("organization_id", requireOrg())
+    .order("archived_at", { ascending: false })
+  if (error) throw error
+  return (data ?? []) as import("@/types/db").ArchivedRaAssociate[]
+}
+
+/** Get one archived RA with all preserved related rows. */
+export async function getArchivedRa(
+  archiveId: string
+): Promise<import("@/types/db").ArchivedRaDetail | null> {
+  if (PREVIEW_MODE) return null
+  const { data: ra, error: raErr } = await supabase
+    .from("archived_ra_associates")
+    .select("*")
+    .eq("id", archiveId)
+    .maybeSingle()
+  if (raErr) throw raErr
+  if (!ra) return null
+
+  const [leads, deals, checkins, payouts, agreements] = await Promise.all([
+    supabase.from("archived_leads").select("*").eq("archived_ra_associate_id", archiveId).order("archived_at", { ascending: false }),
+    supabase.from("archived_deals").select("*").eq("archived_ra_associate_id", archiveId).order("archived_at", { ascending: false }),
+    supabase.from("archived_client_checkins").select("*").eq("archived_ra_associate_id", archiveId).order("archived_at", { ascending: false }),
+    supabase.from("archived_commission_payouts").select("*").eq("archived_ra_associate_id", archiveId).order("archived_at", { ascending: false }),
+    supabase.from("archived_agreement_acceptances").select("*").eq("archived_ra_associate_id", archiveId).order("archived_at", { ascending: false }),
+  ])
+  return {
+    ra: ra as import("@/types/db").ArchivedRaAssociate,
+    leads: (leads.data ?? []) as import("@/types/db").ArchivedRaRow[],
+    deals: (deals.data ?? []) as import("@/types/db").ArchivedRaRow[],
+    checkins: (checkins.data ?? []) as import("@/types/db").ArchivedRaRow[],
+    payouts: (payouts.data ?? []) as import("@/types/db").ArchivedRaRow[],
+    agreements: (agreements.data ?? []) as import("@/types/db").ArchivedRaRow[],
+  }
+}
+
+// ── Program Admin designation ───────────────────────────────────────────────
+
+/** Toggle the Program Admin designation on an org member. Super User only.
+ *  The DB trigger enforces that only role='admin' members can hold this flag. */
+export async function setProgramAdmin(
+  userId: string,
+  value: boolean
+): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("organization_members")
+    .update({ is_program_admin: value })
+    .eq("organization_id", requireOrg())
+    .eq("user_id", userId)
+  if (error) throw error
+}
+
+/** Returns true when the current user can approve, decline, or delete RAs
+ *  in the current org. super_user OR (admin AND is_program_admin=true). */
+export async function canManageRaProgram(): Promise<boolean> {
+  if (PREVIEW_MODE) return true
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle()
+  if (profile?.role === "super_user") return true
+
+  const orgId = typeof localStorage !== "undefined"
+    ? localStorage.getItem("avanew-crm.current-org-id")
+    : null
+  if (!orgId) return false
+  const { data: member } = await supabase
+    .from("organization_members")
+    .select("role, is_program_admin")
+    .eq("organization_id", orgId)
+    .eq("user_id", user.id)
+    .maybeSingle()
+  return member?.role === "admin" && member?.is_program_admin === true
 }
 
 export async function inviteRa(input: {

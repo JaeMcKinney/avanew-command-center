@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import type { ReactNode } from "react"
-import { listMyOrganizations, setCurrentOrg } from "@/lib/data"
+import { listMyOrganizations, setCurrentOrg, getRaPortalRedirect } from "@/lib/data"
 import { supabase } from "@/lib/supabase"
 import type { OrgWithRole } from "@/types/db"
 
@@ -12,6 +12,12 @@ interface OrgContextValue {
   selectOrg: (org: OrgWithRole) => void
   loading: boolean
   refresh: () => Promise<void>
+  // Non-null when the signed-in user is a Referral Associate. The app should
+  // navigate them to this path immediately and skip ALL CRM org-selection /
+  // chrome rendering, so an RA never sees a flash of the staff workspace
+  // picker (Avanew / Divigner / Demo) on their way to /ra/dashboard or
+  // /onboarding/steps.
+  raRedirect: string | null
 }
 
 const OrgContext = createContext<OrgContextValue | null>(null)
@@ -20,9 +26,25 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const [orgs, setOrgs] = useState<OrgWithRole[]>([])
   const [currentOrg, setCurrentOrgState] = useState<OrgWithRole | null>(null)
   const [loading, setLoading] = useState(true)
+  const [raRedirect, setRaRedirect] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     try {
+      // Run the RA gate FIRST. If the signed-in user is an RA, they have no
+      // business in the staff org space — skip listMyOrganizations entirely
+      // so the org picker can never render for them, even momentarily.
+      // getRaPortalRedirect returns null for staff (super_user/owner/admin/bd/
+      // partner) and a path string for RAs.
+      const raPath = await getRaPortalRedirect().catch(() => null)
+      if (raPath) {
+        setRaRedirect(raPath)
+        setOrgs([])
+        setCurrentOrgState(null)
+        setCurrentOrg(null)
+        return
+      }
+      setRaRedirect(null)
+
       const list = await listMyOrganizations()
       setOrgs(list)
 
@@ -60,6 +82,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         setOrgs([])
         setCurrentOrgState(null)
         setCurrentOrg(null)
+        setRaRedirect(null)
         localStorage.removeItem(ORG_KEY)
       }
     })
@@ -74,7 +97,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <OrgContext.Provider value={{ orgs, currentOrg, selectOrg, loading, refresh }}>
+    <OrgContext.Provider value={{ orgs, currentOrg, selectOrg, loading, refresh, raRedirect }}>
       {children}
     </OrgContext.Provider>
   )

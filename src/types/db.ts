@@ -97,6 +97,10 @@ export type TeamMember = {
   role: TeamRole
   status: "active" | "invited"
   created_at: string
+  // True when this member is designated as a Program Admin for the org —
+  // receives RA application notifications and may approve/decline submissions.
+  // Only meaningful when role === "admin".
+  is_program_admin?: boolean
 }
 
 export type RaStatus =
@@ -152,6 +156,51 @@ export type RaAssociate = {
   // joined from profiles
   email: string
   full_name: string | null
+}
+
+// ── RA Archive (preserved when an RA is permanently deleted) ────────────────
+
+export type ArchivedRaAssociate = {
+  id: string
+  organization_id: string
+  original_ra_id: string
+  original_user_id: string | null
+  slug: string
+  display_name: string
+  email: string | null
+  status_at_archive: RaStatus
+  archived_at: string
+  archived_by: string | null
+  archive_reason: string | null
+  archived_leads_count: number
+  archived_deals_count: number
+  archived_checkins_count: number
+  archived_payouts_count: number
+  // Full row dump of the original ra_associates record at the moment of archival.
+  snapshot: Record<string, unknown>
+}
+
+export type ArchivedRaRow = {
+  id: string
+  archived_ra_associate_id: string
+  organization_id: string
+  archived_at: string
+  snapshot: Record<string, unknown>
+  // Each child table has its own original_*_id column, name varies.
+  original_lead_id?: string
+  original_deal_id?: string
+  original_checkin_id?: string
+  original_payout_id?: string
+  original_acceptance_id?: string
+}
+
+export type ArchivedRaDetail = {
+  ra: ArchivedRaAssociate
+  leads: ArchivedRaRow[]
+  deals: ArchivedRaRow[]
+  checkins: ArchivedRaRow[]
+  payouts: ArchivedRaRow[]
+  agreements: ArchivedRaRow[]
 }
 
 export type Profile = {

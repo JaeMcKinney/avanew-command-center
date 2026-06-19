@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { UserPlus, Users, Search, MoreHorizontal, Eye, CheckCircle2, XCircle } from "lucide-react"
+import { UserPlus, Users, Search, MoreHorizontal, Eye, CheckCircle2, XCircle, Trash2, Archive } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,8 +13,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Label } from "@/components/ui/label"
 import { PageHeader } from "@/components/PageHeader"
-import { listRaAssociates, updateRaStatus } from "@/lib/data"
+import {
+  listRaAssociates,
+  updateRaStatus,
+  deleteRa,
+  canManageRaProgram,
+} from "@/lib/data"
 import { toast } from "sonner"
 import type { RaAssociate, RaStatus } from "@/types/db"
 import { InviteRaModal } from "@/components/ra/InviteRaModal"
@@ -30,6 +46,20 @@ const STATUS_META: Record<RaStatus, { label: string; variant: "default" | "secon
   terminated:    { label: "Terminated",         variant: "destructive" },
 }
 
+// Each status gets its own filter bucket so admins can audit every lifecycle
+// state independently — especially Terminated, which is the entry point for
+// permanent deletion + archival.
+const FILTERS: { value: RaStatus | "all"; label: string }[] = [
+  { value: "all",           label: "All" },
+  { value: "pending",       label: "Pending" },
+  { value: "verification",  label: "Review" },
+  { value: "needs_changes", label: "Changes" },
+  { value: "active",        label: "Active" },
+  { value: "suspended",     label: "Suspended" },
+  { value: "declined",      label: "Declined" },
+  { value: "terminated",    label: "Terminated" },
+]
+
 export function SettingsRA() {
   const navigate = useNavigate()
   const [list, setList] = useState<RaAssociate[]>([])
@@ -38,6 +68,10 @@ export function SettingsRA() {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [bulkOpen, setBulkOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [confirmDelete, setConfirmDelete] = useState<RaAssociate | null>(null)
+  const [confirmName, setConfirmName] = useState("")
+  const [deleting, setDeleting] = useState(false)
+  const [canManage, setCanManage] = useState(false)
 
   async function refresh() {
     setLoading(true)
@@ -50,7 +84,10 @@ export function SettingsRA() {
     }
   }
 
-  useEffect(() => { void refresh() }, [])
+  useEffect(() => {
+    void refresh()
+    void canManageRaProgram().then(setCanManage)
+  }, [])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -107,14 +144,40 @@ export function SettingsRA() {
     }
   }
 
-  const FILTERS: { value: RaStatus | "all"; label: string }[] = [
-    { value: "all",           label: "All" },
-    { value: "pending",       label: "Pending" },
-    { value: "verification",  label: "Review" },
-    { value: "needs_changes", label: "Changes" },
-    { value: "active",        label: "Active" },
-    { value: "declined",      label: "Declined" },
-  ]
+  function openDelete(ra: RaAssociate) {
+    setConfirmDelete(ra)
+    setConfirmName("")
+  }
+
+  async function handleDelete() {
+    if (!confirmDelete) return
+    if (confirmName.trim() !== confirmDelete.display_name) {
+      toast.error("Confirmation name does not match")
+      return
+    }
+    setDeleting(true)
+    try {
+      const result = await deleteRa(confirmDelete.id, {
+        confirmName: confirmDelete.display_name,
+      })
+      toast.success(
+        `${result.display_name} deleted — prospect & client data preserved in archive`,
+        {
+          action: {
+            label: "View archive",
+            onClick: () => navigate("/settings/ra/archive"),
+          },
+        }
+      )
+      setConfirmDelete(null)
+      setConfirmName("")
+      void refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete")
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -124,6 +187,10 @@ export function SettingsRA() {
           description="Invite, review, and manage referral associates."
         />
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate("/settings/ra/archive")}>
+            <Archive className="h-3.5 w-3.5" />
+            Archive
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setBulkOpen(true)}>
             <Users className="h-3.5 w-3.5" />
             Bulk Invite
@@ -226,18 +293,30 @@ export function SettingsRA() {
                                 Open review
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuSeparator />
-                            {ra.status !== "active" && (
-                              <DropdownMenuItem onClick={() => quickApprove(ra)}>
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                Activate
-                              </DropdownMenuItem>
-                            )}
-                            {ra.status !== "declined" && ra.status !== "terminated" && (
-                              <DropdownMenuItem onClick={() => quickDecline(ra)} className="text-destructive focus:text-destructive">
-                                <XCircle className="h-3.5 w-3.5" />
-                                Decline
-                              </DropdownMenuItem>
+                            {canManage && (
+                              <>
+                                <DropdownMenuSeparator />
+                                {ra.status !== "active" && (
+                                  <DropdownMenuItem onClick={() => quickApprove(ra)}>
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    Activate
+                                  </DropdownMenuItem>
+                                )}
+                                {ra.status !== "declined" && ra.status !== "terminated" && (
+                                  <DropdownMenuItem onClick={() => quickDecline(ra)} className="text-destructive focus:text-destructive">
+                                    <XCircle className="h-3.5 w-3.5" />
+                                    Decline
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => openDelete(ra)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  Delete permanently
+                                </DropdownMenuItem>
+                              </>
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -269,6 +348,64 @@ export function SettingsRA() {
         onClose={() => setBulkOpen(false)}
         onInvited={() => { void refresh() }}
       />
+
+      {/* Typed-confirmation delete dialog. Prospect/client data is preserved
+          in the archive, but the RA identity (auth, profile, agreement
+          history, banking) is destroyed. Require typing the name. */}
+      <AlertDialog
+        open={Boolean(confirmDelete)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmDelete(null)
+            setConfirmName("")
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently delete this RA?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p>
+                  This will permanently remove <strong>{confirmDelete?.display_name}</strong>'s
+                  account, agreement audit trail, banking, and W-9.
+                </p>
+                <p>
+                  <strong>All prospect and client data (leads, deals, check-ins, commission history)
+                  is preserved in the archive</strong> — never discarded. You can view it later at
+                  Settings → Referral Associates → Archive.
+                </p>
+                <p className="text-destructive">This cannot be undone.</p>
+                <div className="space-y-1.5 pt-2">
+                  <Label htmlFor="confirm-name" className="text-foreground">
+                    Type <span className="font-mono font-bold">{confirmDelete?.display_name}</span> to confirm:
+                  </Label>
+                  <Input
+                    id="confirm-name"
+                    value={confirmName}
+                    onChange={(e) => setConfirmName(e.target.value)}
+                    placeholder={confirmDelete?.display_name}
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={
+                deleting ||
+                confirmName.trim() !== (confirmDelete?.display_name ?? "")
+              }
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting…" : "Delete permanently"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
