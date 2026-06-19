@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react"
-import { Loader2, Send, CheckCircle2, Mail, Link as LinkIcon } from "lucide-react"
+import { Loader2, Send, CheckCircle2, Mail, Link as LinkIcon, User, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
+import type { RaType } from "@/types/db"
 import {
   Dialog,
   DialogContent,
@@ -36,6 +38,7 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [slug, setSlug] = useState("")
+  const [raType, setRaType] = useState<RaType>("individual")
   const [slugTouched, setSlugTouched] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [sent, setSent] = useState<Sent | null>(null)
@@ -49,6 +52,7 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
 
   function reset() {
     setFirstName(""); setLastName(""); setEmail(""); setSlug("")
+    setRaType("individual")
     setSlugTouched(false); setSubmitting(false); setSent(null)
   }
 
@@ -71,6 +75,7 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
         last_name: lastName.trim(),
         email: email.trim(),
         slug,
+        ra_type: raType,
       })
       setSent({ name: created.display_name, email: created.email, slug: created.slug })
       onInvited()
@@ -147,6 +152,37 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
         </DialogHeader>
 
         <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs">RA type</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { value: "individual" as const, label: "Individual", icon: User, hint: "A single named partner" },
+                { value: "company" as const, label: "Company", icon: Building2, hint: "A partner brand / org" },
+              ]).map((opt) => {
+                const Icon = opt.icon
+                const active = raType === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setRaType(opt.value)}
+                    disabled={submitting}
+                    className={cn(
+                      "flex flex-col items-start gap-1 rounded-md border p-3 text-left transition-colors",
+                      active ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50"
+                    )}
+                  >
+                    <span className="flex items-center gap-1.5 text-sm font-medium">
+                      <Icon className="h-3.5 w-3.5" />
+                      {opt.label}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">{opt.hint}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="firstName" className="text-xs">First name</Label>

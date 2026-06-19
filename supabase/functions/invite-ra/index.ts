@@ -23,6 +23,7 @@ type InviteRaPayload = {
   first_name: string
   last_name: string
   slug: string
+  ra_type?: "individual" | "company"
   organization_id: string
   redirect_to?: string
 }
@@ -94,6 +95,7 @@ Deno.serve(async (req) => {
   const display_name = [first_name, last_name].filter(Boolean).join(" ")
   const slug = payload.slug?.trim().toLowerCase()
   const organization_id = payload.organization_id
+  const ra_type = payload.ra_type === "company" ? "company" : "individual"
 
   if (!email) return json(400, { error: "email is required" })
   if (!first_name) return json(400, { error: "first_name is required" })
@@ -139,6 +141,7 @@ Deno.serve(async (req) => {
       slug,
       display_name,
       status: "pending",
+      ra_type,
     })
     .select()
     .single()

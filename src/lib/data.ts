@@ -1759,6 +1759,7 @@ export async function inviteRa(input: {
   first_name: string
   last_name: string
   slug: string
+  ra_type?: import("@/types/db").RaType
 }): Promise<import("@/types/db").RaAssociate> {
   if (PREVIEW_MODE) return invitePreviewRa(input)
   const { data, error } = await supabase.functions.invoke<import("@/types/db").RaAssociate>(
@@ -1769,6 +1770,7 @@ export async function inviteRa(input: {
         first_name: input.first_name,
         last_name: input.last_name,
         slug: input.slug,
+        ra_type: input.ra_type ?? "individual",
         organization_id: requireOrg(),
         redirect_to: `${window.location.origin}/onboarding`,
       },
@@ -1777,6 +1779,19 @@ export async function inviteRa(input: {
   if (error) throw error
   if (!data) throw new Error("No data returned from invite-ra")
   return data
+}
+
+/** Change an RA's type (individual ⇄ company) after creation. */
+export async function updateRaType(
+  raId: string,
+  raType: import("@/types/db").RaType
+): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("ra_associates")
+    .update({ ra_type: raType })
+    .eq("id", raId)
+  if (error) throw error
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -1797,7 +1812,11 @@ export async function listRaLandingTemplates(): Promise<import("@/types/db").RaL
 }
 
 /** Create a new template — first one created becomes the default automatically. */
-export async function createRaLandingTemplate(name: string, html: string): Promise<import("@/types/db").RaLandingTemplate> {
+export async function createRaLandingTemplate(
+  name: string,
+  html: string,
+  opts?: { demo_html?: string; default_for_type?: import("@/types/db").RaType | null }
+): Promise<import("@/types/db").RaLandingTemplate> {
   if (PREVIEW_MODE) throw new Error("Not available in preview mode")
   const orgId = requireOrg()
 
@@ -1809,17 +1828,24 @@ export async function createRaLandingTemplate(name: string, html: string): Promi
 
   const { data, error } = await supabase
     .from("ra_landing_templates")
-    .insert({ organization_id: orgId, name, html, is_default: (count ?? 0) === 0 })
+    .insert({
+      organization_id: orgId,
+      name,
+      html,
+      demo_html: opts?.demo_html ?? "",
+      default_for_type: opts?.default_for_type ?? null,
+      is_default: (count ?? 0) === 0,
+    })
     .select("*")
     .single()
   if (error) throw error
   return data
 }
 
-/** Update a template's name and/or HTML. */
+/** Update a template's name, refer HTML, and/or demo HTML. */
 export async function updateRaLandingTemplate(
   id: string,
-  patch: { name?: string; html?: string }
+  patch: { name?: string; html?: string; demo_html?: string }
 ): Promise<void> {
   if (PREVIEW_MODE) return
   const { error } = await supabase
@@ -1827,6 +1853,68 @@ export async function updateRaLandingTemplate(
     .update(patch)
     .eq("id", id)
   if (error) throw error
+}
+
+/** Set a template as the org default for a given RA type (individual/company).
+ *  Clears the previous type-default first so the unique partial index doesn't
+ *  block the change. Pass null to clear the type-default on this template. */
+export async function setRaLandingTemplateDefaultForType(
+  id: string,
+  raType: import("@/types/db").RaType
+): Promise<void> {
+  if (PREVIEW_MODE) return
+  const orgId = requireOrg()
+  // Clear any existing default for this type in the org.
+  const { error: clearErr } = await supabase
+    .from("ra_landing_templates")
+    .update({ default_for_type: null })
+    .eq("organization_id", orgId)
+    .eq("default_for_type", raType)
+  if (clearErr) throw clearErr
+  const { error: setErr } = await supabase
+    .from("ra_landing_templates")
+    .update({ default_for_type: raType })
+    .eq("id", id)
+  if (setErr) throw setErr
+}
+
+/** Ensure the org has the two type-default templates ("RA Individual",
+ *  "RA Company"). Seeds each template's demo HTML from the live /demo.html so
+ *  the editor shows real content and the demo page renders from the template.
+ *  Idempotent — only creates a type-default that doesn't already exist. */
+export async function ensureDefaultRaTemplates(): Promise<void> {
+  if (PREVIEW_MODE) return
+  const orgId = requireOrg()
+  const { data: existing, error } = await supabase
+    .from("ra_landing_templates")
+    .select("id, default_for_type")
+    .eq("organization_id", orgId)
+  if (error) throw error
+
+  const haveIndividual = (existing ?? []).some((t) => t.default_for_type === "individual")
+  const haveCompany = (existing ?? []).some((t) => t.default_for_type === "company")
+  if (haveIndividual && haveCompany) return
+
+  // Pull the live demo markup once so both seeds start from the real page.
+  let demoHtml = ""
+  try {
+    const res = await fetch("/demo.html")
+    if (res.ok) demoHtml = await res.text()
+  } catch {
+    // If the static file isn't reachable, seed empty — the demo page falls
+    // back to the static file anyway until the user customizes it.
+  }
+
+  const seeds: { name: string; type: import("@/types/db").RaType }[] = []
+  if (!haveIndividual) seeds.push({ name: "RA Individual", type: "individual" })
+  if (!haveCompany) seeds.push({ name: "RA Company", type: "company" })
+
+  for (const seed of seeds) {
+    await createRaLandingTemplate(seed.name, "", {
+      demo_html: demoHtml,
+      default_for_type: seed.type,
+    })
+  }
 }
 
 /** Set a template as the org default. Clears the previous default in a single transaction. */
@@ -1873,17 +1961,24 @@ export async function setRaTemplate(raId: string, templateId: string | null): Pr
 // ───────────────────────────────────────────────────────────────────────────
 
 export type RaLandingPageData = {
-  slug:            string
-  display_name:    string
-  first_name:      string | null
-  last_name:       string | null
-  photo_url:       string | null
-  contact_phone:   string | null
-  contact_email:   string | null
-  bio:             string | null
-  is_active:       boolean
-  template_html:   string | null
-  template_name:   string | null
+  slug:               string
+  display_name:       string
+  first_name:         string | null
+  last_name:          string | null
+  photo_url:          string | null
+  contact_phone:      string | null
+  contact_email:      string | null
+  bio:                string | null
+  is_active:          boolean
+  ra_type:            import("@/types/db").RaType | null
+  template_html:      string | null
+  template_demo_html: string | null
+  template_name:      string | null
+  partner_company_name?: string | null
+  partner_logo_url?:     string | null
+  partner_website?:      string | null
+  linkedin_url?:         string | null
+  ra_title?:             string | null
 }
 
 /** Fetch a public RA landing page by slug. Returns null if no RA found. */

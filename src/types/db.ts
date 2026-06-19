@@ -151,6 +151,15 @@ export type RaAssociate = {
   verified_at: string | null
   activated_at: string | null
   template_id: string | null
+  // Individual vs Company. Set at invite, editable after. Drives which
+  // type-default landing template the public pages resolve to.
+  ra_type?: RaType
+  // Optional partner/company branding (populated for Company RAs).
+  partner_company_name?: string | null
+  partner_logo_url?: string | null
+  partner_website?: string | null
+  linkedin_url?: string | null
+  ra_title?: string | null
   created_at: string
   updated_at: string
   // joined from profiles
@@ -379,12 +388,19 @@ export type Lead = {
   updated_at: string
 }
 
+export type RaType = "individual" | "company"
+
 export type RaLandingTemplate = {
   id: string
   organization_id: string
   name: string
+  /** HTML body for the public /refer/:slug page. */
   html: string
+  /** HTML body for the public /demo/:slug page. */
+  demo_html: string
   is_default: boolean
+  /** When set, this template is the org default for that RA type. */
+  default_for_type: RaType | null
   created_at: string
   updated_at: string
 }

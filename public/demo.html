@@ -1258,8 +1258,13 @@
     });
   });
 
-  /* ── Slug from query string (?ra=slug) or path (/demo/<slug>) ── */
+  /* ── Slug resolution ──
+     1) window.__RA_DEMO_SLUG__ — injected when this markup is rendered as a
+        template body inside a srcdoc iframe (no query string available there)
+     2) ?ra=slug query string
+     3) /demo/<slug> path */
   var raSlug = (function(){
+    if (window.__RA_DEMO_SLUG__) return window.__RA_DEMO_SLUG__;
     var q = new URLSearchParams(window.location.search).get('ra');
     if(q) return q;
     var m = window.location.pathname.match(/\/demo\/([^/?#]+)/);

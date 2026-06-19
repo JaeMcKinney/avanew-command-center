@@ -12,6 +12,8 @@ import {
   Loader2,
   UserPlus,
   Users,
+  User,
+  Building2,
   Link2,
   ClipboardCheck,
 } from "lucide-react"
@@ -55,6 +57,7 @@ import { Label } from "@/components/ui/label"
 import {
   listRaAssociates,
   updateRaStatus,
+  updateRaType,
   deleteRa,
   canManageRaProgram,
   listLeadsForRa,
@@ -62,7 +65,7 @@ import {
   setRaTemplate,
 } from "@/lib/data"
 import { toast } from "sonner"
-import type { RaAssociate, RaStatus, RaLandingTemplate, Lead } from "@/types/db"
+import type { RaAssociate, RaStatus, RaType, RaLandingTemplate, Lead } from "@/types/db"
 import { InviteRaModal } from "@/components/ra/InviteRaModal"
 import { BulkInviteRaModal } from "@/components/ra/BulkInviteRaModal"
 import { RaVerificationDialog } from "@/components/RaVerificationDialog"
@@ -211,6 +214,16 @@ export function RaSection() {
       void refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to decline")
+    }
+  }
+
+  async function changeType(ra: RaAssociate, next: RaType) {
+    try {
+      await updateRaType(ra.id, next)
+      toast.success(`${ra.display_name} is now ${next === "company" ? "a Company" : "an Individual"} RA`)
+      void refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to change type")
     }
   }
 
@@ -371,7 +384,14 @@ export function RaSection() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{ra.email}</TableCell>
                       <TableCell>
-                        <Badge variant={meta.variant}>{meta.label}</Badge>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Badge variant={meta.variant}>{meta.label}</Badge>
+                          <Badge variant="outline" className="gap-1 text-[10px] font-normal text-muted-foreground">
+                            {ra.ra_type === "company"
+                              ? <><Building2 className="h-2.5 w-2.5" /> Company</>
+                              : <><User className="h-2.5 w-2.5" /> Individual</>}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell className="font-mono text-xs text-muted-foreground">/refer/{ra.slug}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
@@ -440,6 +460,18 @@ export function RaSection() {
                                 <DropdownMenuItem onClick={() => navigate(`/settings/ra/${ra.slug}/review`)}>
                                   <ClipboardCheck className="h-3.5 w-3.5" />
                                   Open full review
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              {ra.ra_type === "company" ? (
+                                <DropdownMenuItem onClick={() => changeType(ra, "individual")}>
+                                  <User className="h-3.5 w-3.5" />
+                                  Change to Individual
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => changeType(ra, "company")}>
+                                  <Building2 className="h-3.5 w-3.5" />
+                                  Change to Company
                                 </DropdownMenuItem>
                               )}
                               {canManage && (

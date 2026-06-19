@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { inviteRa, listRaAssociates } from "@/lib/data"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
+import type { RaType } from "@/types/db"
 
 type Props = {
   open: boolean
@@ -42,6 +44,7 @@ function slugValidShape(s: string): boolean { return /^[a-z0-9][a-z0-9-]*[a-z0-9
 
 export function BulkInviteRaModal({ open, onClose, onInvited }: Props) {
   const [activeTab, setActiveTab] = useState<"csv" | "paste" | "manual">("csv")
+  const [raType, setRaType] = useState<RaType>("individual")
   const [pasted, setPasted] = useState("")
   const [manualRows, setManualRows] = useState<Array<Partial<Row>>>([{}, {}, {}])
   const [rows, setRows] = useState<Row[]>([])
@@ -59,7 +62,7 @@ export function BulkInviteRaModal({ open, onClose, onInvited }: Props) {
   }, [open])
 
   function reset() {
-    setActiveTab("csv"); setPasted(""); setManualRows([{}, {}, {}]); setRows([]); setSubmitting(false)
+    setActiveTab("csv"); setRaType("individual"); setPasted(""); setManualRows([{}, {}, {}]); setRows([]); setSubmitting(false)
     if (fileRef.current) fileRef.current.value = ""
   }
 
@@ -155,7 +158,7 @@ export function BulkInviteRaModal({ open, onClose, onInvited }: Props) {
     const failures: { row: Row; message: string }[] = []
     for (const r of validRows) {
       try {
-        await inviteRa({ first_name: r.first_name, last_name: r.last_name, email: r.email, slug: r.slug })
+        await inviteRa({ first_name: r.first_name, last_name: r.last_name, email: r.email, slug: r.slug, ra_type: raType })
         success++
       } catch (err) {
         failures.push({ row: r, message: err instanceof Error ? err.message : "Unknown error" })
@@ -285,7 +288,26 @@ export function BulkInviteRaModal({ open, onClose, onInvited }: Props) {
           </div>
         </Tabs>
 
-        <DialogFooter className="border-t pt-4">
+        <DialogFooter className="border-t pt-4 sm:items-center">
+          <div className="mr-auto flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Type:</span>
+            <div className="flex items-center rounded-md border overflow-hidden">
+              {(["individual", "company"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setRaType(t)}
+                  disabled={submitting}
+                  className={cn(
+                    "px-2.5 py-1 text-xs font-medium capitalize",
+                    raType === t ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
           <Button variant="outline" onClick={handleClose} disabled={submitting}>Cancel</Button>
           <Button onClick={sendAll} disabled={!validRows.length || submitting}>
             {submitting

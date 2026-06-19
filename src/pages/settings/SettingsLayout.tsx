@@ -97,9 +97,9 @@ const NAV_GROUPS: NavGroup[] = [
       },
       {
         to: "/settings/landing-pages",
-        label: "Landing Pages",
+        label: "RA Page Templates",
         icon: LayoutTemplate,
-        description: "Referral page templates",
+        description: "Demo & refer page templates",
         allow: ["super_user", "admin"],
       },
       {
