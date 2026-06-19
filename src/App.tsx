@@ -100,7 +100,6 @@ import { SettingsAuditLogs } from "@/pages/settings/SettingsAuditLogs"
 import { SettingsData } from "@/pages/settings/SettingsData"
 import { SettingsBranding } from "@/pages/settings/SettingsBranding"
 import { SettingsSystem } from "@/pages/settings/SettingsSystem"
-import { SettingsRA } from "@/pages/settings/SettingsRA"
 import { SettingsRAArchive } from "@/pages/settings/SettingsRAArchive"
 import { SettingsRAReview } from "@/pages/settings/SettingsRAReview"
 import { SettingsRADetail } from "@/pages/settings/SettingsRADetail"
@@ -192,7 +191,10 @@ function App() {
           <Route path="financial" element={<RoleGate allow={["super_user","admin"]}><SettingsFinancial /></RoleGate>} />
           <Route path="partners-vendors" element={<RoleGate allow={["super_user","admin"]}><SettingsPartnersVendors /></RoleGate>} />
           <Route path="landing-pages" element={<RoleGate allow={["super_user","admin"]}><SettingsLandingPages /></RoleGate>} />
-          <Route path="ra" element={<RoleGate allow={["super_user","admin"]}><SettingsRA /></RoleGate>} />
+          {/* Legacy /settings/ra list route — redirected to the consolidated
+              RA tab inside /settings/team. Detail / review / archive sub-routes
+              are still mounted here for stable URLs. */}
+          <Route path="ra" element={<Navigate to="/settings/team" replace />} />
           <Route path="ra/archive" element={<RoleGate allow={["super_user","admin"]}><SettingsRAArchive /></RoleGate>} />
           <Route path="ra/:slug/review" element={<RoleGate allow={["super_user","admin"]}><SettingsRAReview /></RoleGate>} />
           <Route path="ra/:slug" element={<RoleGate allow={["super_user","admin"]}><SettingsRADetail /></RoleGate>} />

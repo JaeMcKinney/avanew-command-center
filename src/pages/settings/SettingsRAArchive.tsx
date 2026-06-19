@@ -35,7 +35,7 @@ export function SettingsRAArchive() {
   const archiveId = params.get("id")
 
   if (archiveId) return <ArchiveDetail id={archiveId} onBack={() => setParams({})} />
-  return <ArchiveList onOpen={(id) => setParams({ id })} onBackToList={() => navigate("/settings/ra")} />
+  return <ArchiveList onOpen={(id) => setParams({ id })} onBackToList={() => navigate("/settings/team")} />
 }
 
 function ArchiveList({

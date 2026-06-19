@@ -73,7 +73,7 @@ export function SettingsRAReview() {
   if (!ra) return (
     <div className="p-6 space-y-3">
       <p className="text-sm">Associate not found.</p>
-      <Button variant="outline" size="sm" onClick={() => navigate("/settings/ra")}>
+      <Button variant="outline" size="sm" onClick={() => navigate("/settings/team")}>
         <ArrowLeft className="h-3.5 w-3.5" /> Back to list
       </Button>
     </div>
@@ -172,7 +172,7 @@ export function SettingsRAReview() {
       })
       toast.success(`${ra!.display_name} notified of requested changes`)
       setRequestOpen(false)
-      navigate("/settings/ra")
+      navigate("/settings/team")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed")
     } finally {
@@ -186,7 +186,7 @@ export function SettingsRAReview() {
       await updateRaStatus(ra!.id, { status: "declined" })
       toast.success(`${ra!.display_name} declined`)
       setDeclineOpen(false)
-      navigate("/settings/ra")
+      navigate("/settings/team")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed")
     } finally {
@@ -197,7 +197,7 @@ export function SettingsRAReview() {
   return (
     <div className="space-y-6 max-w-5xl">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Link to="/settings/ra" className="hover:text-foreground">Referral Associates</Link>
+        <Link to="/settings/team" className="hover:text-foreground">Referral Associates</Link>
         <span>›</span>
         <span className="text-foreground">Review · {ra.display_name}</span>
       </div>
@@ -435,7 +435,7 @@ export function SettingsRAReview() {
       </Dialog>
 
       {/* Approval confirmation (A5) */}
-      <Dialog open={!!approvedSummary} onOpenChange={(v) => !v && navigate("/settings/ra")}>
+      <Dialog open={!!approvedSummary} onOpenChange={(v) => !v && navigate("/settings/team")}>
         <DialogContent className="sm:max-w-md">
           <div className="flex flex-col items-center text-center space-y-3 py-4">
             <div className="rounded-full bg-primary/10 p-3">
@@ -460,7 +460,7 @@ export function SettingsRAReview() {
             <Button variant="outline" onClick={() => navigate(`/settings/ra/${approvedSummary!.slug}`)}>
               View RA detail
             </Button>
-            <Button onClick={() => navigate("/settings/ra")}>Back to list</Button>
+            <Button onClick={() => navigate("/settings/team")}>Back to list</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

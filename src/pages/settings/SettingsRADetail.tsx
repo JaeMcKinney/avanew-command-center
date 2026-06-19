@@ -120,7 +120,7 @@ export function SettingsRADetail() {
   if (!ra) return (
     <div className="p-6 space-y-3">
       <p className="text-sm">Associate not found.</p>
-      <Button variant="outline" size="sm" onClick={() => navigate("/settings/ra")}>
+      <Button variant="outline" size="sm" onClick={() => navigate("/settings/team")}>
         <ArrowLeft className="h-3.5 w-3.5" /> Back to list
       </Button>
     </div>
@@ -132,7 +132,7 @@ export function SettingsRADetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Link to="/settings/ra" className="hover:text-foreground">Referral Associates</Link>
+        <Link to="/settings/team" className="hover:text-foreground">Referral Associates</Link>
         <span>›</span>
         <span className="text-foreground">{ra.display_name}</span>
       </div>
