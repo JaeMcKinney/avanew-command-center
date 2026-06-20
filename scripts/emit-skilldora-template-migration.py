@@ -28,9 +28,12 @@ DEMO = ROOT / "public" / "demo-skilldora.html"
 # one. Picked from /dev/urandom once and pinned here.
 TEMPLATE_ID = "c5a11d04-5d11-4d04-9c5a-5d115d04c5a1"
 
-MIGRATION_PATH = (
-    ROOT / "supabase" / "migrations" / "20260620120000_skilldora_custom_template.sql"
-)
+MIGRATIONS_DIR = ROOT / "supabase" / "migrations"
+MIGRATION_GLOB = "*_skilldora_custom_template*.sql"
+# Each regenerate writes a brand-new migration file with the next timestamp
+# so `supabase db push` actually re-applies (the CLI keys on filename, not
+# content). Past Skilldora-template migration files are left in place for
+# audit history.
 
 
 def dollar_tag(html: str) -> str:
@@ -42,6 +45,19 @@ def dollar_tag(html: str) -> str:
     return f"{base}{n if n else ''}"
 
 
+def next_migration_path() -> Path:
+    """Return a path with a timestamp strictly newer than every existing
+    Skilldora-template migration filename, so `supabase db push` re-applies."""
+    existing = sorted(MIGRATIONS_DIR.glob(MIGRATION_GLOB))
+    if not existing:
+        # First-ever run — anchor at today
+        stamp = "20260620120000"
+    else:
+        latest = existing[-1].name.split("_", 1)[0]  # the 14-digit prefix
+        stamp = str(int(latest) + 1)
+    return MIGRATIONS_DIR / f"{stamp}_skilldora_custom_template.sql"
+
+
 def main() -> None:
     if not DEMO.exists():
         raise SystemExit(
@@ -49,6 +65,7 @@ def main() -> None:
         )
     html = DEMO.read_text()
     tag = dollar_tag(html)
+    migration_path = next_migration_path()
 
     sql = f"""-- ═══════════════════════════════════════════════════════════════════════════
 -- Custom Skilldora-branded demo template
@@ -97,8 +114,8 @@ END
 $migration$;
 """
 
-    MIGRATION_PATH.write_text(sql)
-    print(f"wrote {MIGRATION_PATH} ({len(sql):,} bytes)")
+    migration_path.write_text(sql)
+    print(f"wrote {migration_path} ({len(sql):,} bytes)")
 
 
 if __name__ == "__main__":

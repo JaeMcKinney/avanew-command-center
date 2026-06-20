@@ -291,21 +291,152 @@ THEME_OVERRIDE = f"""
   .embed-label, .feature-label, .embed-desc, .featured-desc, .featured-tagline {{
     color: {SKD_BODY_TEXT} !important;
   }}
+  /* LIVE label — no pill, just the base red pulsing dot + dark text with halo */
   .embed-thumb-label {{
-    background: {SKD_SUCCESS} !important;
-    color: #fff !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: {SKD_HEADING_NAVY} !important;
+    text-shadow:
+      0 1px 2px rgba(255,255,255,0.85),
+      0 0 8px rgba(255,255,255,0.6) !important;
+  }}
+  .embed-thumb-label::before {{
+    /* Re-assert the base red pulsing dot so the cascade can't bleed any
+     * green/teal accent into it. */
+    background: #FF3D5A !important;
+    box-shadow: 0 0 10px #FF3D5A !important;
   }}
   .embed-link {{ color: {SKD_PRIMARY_BTN_BG} !important; }}
   .embed-link:hover {{ color: {SKD_PRIMARY_BTN_HOVER} !important; }}
 
-  /* "Not a X / A Y" rows */
+  /* "Not / Is" intrigue row — light card (base had a dark navy gradient bg
+   * with the .notis .is text rendered in --text which is now dark navy too). */
+  .notis {{
+    background: #fff !important;
+    border: 1px solid {SKD_LINE} !important;
+    box-shadow: 0 10px 30px -16px rgba(18,43,70,0.15) !important;
+  }}
+  .notis::after {{ opacity: 0.35 !important; }}
+  .notis:hover {{
+    border-color: {SKD_ACCENT_ORANGE} !important;
+    box-shadow: 0 18px 40px -16px rgba(18,43,70,0.22) !important;
+  }}
   .notis .not {{ color: {SKD_MUTED_TEXT} !important; }}
   .notis .arrow {{ color: {SKD_ACCENT_ORANGE} !important; }}
   .notis .is {{ color: {SKD_HEADING_NAVY} !important; font-weight: 600 !important; }}
 
-  /* Investment / pricing list */
+  /* Callout panel ("The short version") — light surface */
+  .callout {{
+    background: linear-gradient(120deg, rgba(56,93,255,0.06), rgba(255,97,19,0.05)) !important;
+    border: 1px solid {SKD_LINE} !important;
+  }}
+  .callout p {{ color: {SKD_HEADING_NAVY} !important; font-style: italic; }}
+  .callout .label {{ color: {SKD_ACCENT_ORANGE} !important; }}
+
+  /* Why-item rows — light cards (base had a dark navy gradient) */
+  .why-item {{
+    background: #fff !important;
+    border: 1px solid {SKD_LINE} !important;
+    box-shadow: 0 8px 22px -14px rgba(18,43,70,0.18) !important;
+  }}
+  .why-item::after {{ opacity: 0.3 !important; }}
+  .why-item h4 {{ color: {SKD_HEADING_NAVY} !important; }}
+  .why-item p {{ color: {SKD_BODY_TEXT} !important; }}
+  .why-item:hover {{
+    border-color: {SKD_PRIMARY_BTN_BG} !important;
+    box-shadow: 0 14px 32px -14px rgba(56,93,255,0.25) !important;
+  }}
+
+  /* Pricing cards — base uses .price / .price.one / .price.svc (NOT the
+   * .investment-card/.pricing-card selectors I targeted earlier — those
+   * never matched any element, leaving the whole pricing block dark). */
+  .price.one, .price.svc {{
+    background: #fff !important;
+    border: 1px solid {SKD_LINE} !important;
+    box-shadow: 0 14px 38px -18px rgba(18,43,70,0.18) !important;
+    color: {SKD_BODY_TEXT} !important;
+  }}
+  .price.svc {{
+    background: linear-gradient(160deg, #fff, {SKD_SUBTLE_BG}) !important;
+    box-shadow: 0 22px 50px -20px rgba(56,93,255,0.25) !important;
+  }}
+  .price.svc::after {{ opacity: 0.25 !important; }}
+  .price .pk {{ color: {SKD_MUTED_TEXT} !important; }}
+  .price.svc .pk {{ color: {SKD_PRIMARY_BTN_BG} !important; }}
+  .price .amt {{ color: {SKD_HEADING_NAVY} !important; }}
+  .price .amt span {{ color: {SKD_MUTED_TEXT} !important; }}
+  .price .freq {{ color: {SKD_PRIMARY_BTN_BG} !important; }}
+  .price .desc {{ color: {SKD_BODY_TEXT} !important; border-top-color: {SKD_LINE} !important; }}
+  .price .incl li {{ color: {SKD_BODY_TEXT} !important; }}
+  .price .incl li b {{ color: {SKD_HEADING_NAVY} !important; }}
+  .price .incl li ul li {{ color: {SKD_MUTED_TEXT} !important; }}
+  .price .incl svg {{ stroke: {SKD_PRIMARY_BTN_BG} !important; }}
+  .pill.green {{
+    background: rgba(56,93,255,0.10) !important;
+    color: {SKD_PRIMARY_BTN_BG} !important;
+    border: 1px solid rgba(56,93,255,0.25) !important;
+  }}
+
+  /* Investment / pricing list (legacy selectors — harmless if unmatched) */
   .investment-card ul li, .pricing-card ul li {{ color: {SKD_BODY_TEXT} !important; }}
   .investment-card .price, .pricing-card .price {{ color: {SKD_HEADING_NAVY} !important; }}
+
+  /* "Going Further" addon-note block — light card */
+  .addon-note {{
+    background: linear-gradient(160deg, #fff 0%, {SKD_SUBTLE_BG} 100%) !important;
+    border: 1px solid {SKD_LINE} !important;
+    box-shadow: 0 22px 60px -22px rgba(18,43,70,0.20) !important;
+  }}
+  .addon-note::after, .addon-note .addon-glow-teal {{ opacity: 0.25 !important; }}
+  .addon-note h3.addon-heading {{ color: {SKD_HEADING_NAVY} !important; }}
+  .addon-note h3.addon-heading .grad-gold {{
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: {SKD_ACCENT_ORANGE} !important;
+    color: {SKD_ACCENT_ORANGE} !important;
+  }}
+  .addon-note p {{ color: {SKD_BODY_TEXT} !important; }}
+  .addon-note p b {{ color: {SKD_HEADING_NAVY} !important; }}
+  .addon-tags .a-tag {{
+    color: {SKD_HEADING_NAVY} !important;
+    background: {SKD_SUBTLE_BG} !important;
+    border: 1px solid {SKD_LINE} !important;
+  }}
+  .addon-tags .a-tag:hover {{
+    background: rgba(56,93,255,0.08) !important;
+    border-color: {SKD_PRIMARY_BTN_BG} !important;
+  }}
+
+  /* Lead-capture modal form fields — base inputs were dark-navy bg with navy
+   * text (invisible inside the now-white modal card) */
+  .field label {{ color: {SKD_MUTED_TEXT} !important; }}
+  .field input {{
+    background: #fff !important;
+    color: {SKD_HEADING_NAVY} !important;
+    border: 1px solid {SKD_LINE} !important;
+  }}
+  .field input::placeholder {{ color: {SKD_MUTED_TEXT} !important; opacity: 0.7; }}
+  .field input:focus {{
+    background: #fff !important;
+    border-color: {SKD_PRIMARY_BTN_BG} !important;
+    box-shadow: 0 0 0 3px rgba(56,93,255,0.15) !important;
+  }}
+  .modal-eyebrow {{ color: {SKD_ACCENT_ORANGE} !important; }}
+  .modal-sub {{ color: {SKD_BODY_TEXT} !important; }}
+  .modal-foot {{ color: {SKD_MUTED_TEXT} !important; }}
+  .modal-success h3 {{ color: {SKD_HEADING_NAVY} !important; }}
+  .modal-success p {{ color: {SKD_BODY_TEXT} !important; }}
+  .modal-success svg {{ stroke: {SKD_PRIMARY_BTN_BG} !important; }}
+
+  /* Thumbnail click target — base hardcoded background:#06101D (ink black);
+   * neutralize so initial-paint flash matches the light theme. */
+  .embed-thumb-btn {{
+    background: linear-gradient(160deg, {SKD_SUBTLE_BG}, #fff) !important;
+  }}
 
   /* RA card */
   .ra-card {{ background: #fff !important; }}
@@ -358,11 +489,13 @@ THEME_OVERRIDE = f"""
   .final-cta h3 {{ color: {SKD_HEADING_NAVY} !important; }}
   .final-cta p {{ color: {SKD_BODY_TEXT} !important; }}
 
-  /* Footer */
+  /* Footer — tightened spacing (base had 64/88 padding + 60 margin-top) */
   footer {{
     background: #fff !important;
     border-top: 1px solid {SKD_LINE} !important;
     color: {SKD_MUTED_TEXT} !important;
+    margin-top: 28px !important;
+    padding: 36px 0 44px !important;
   }}
   .footer-logo-img {{ filter: none !important; height: 46px; }}
   .footer-text {{ color: {SKD_MUTED_TEXT} !important; }}
@@ -400,6 +533,155 @@ THEME_OVERRIDE = f"""
 
   /* Selection */
   ::selection {{ background: rgba(56,93,255,0.25); color: {SKD_HEADING_NAVY}; }}
+
+  /* ── Orange glow around the RA photo ─────────────────────────────────── */
+  @keyframes raGlow {{
+    0%, 100% {{
+      box-shadow:
+        0 0 0 5px rgba(255,97,19,0.10),
+        0 0 28px -4px rgba(255,97,19,0.32),
+        0 20px 50px -16px rgba(18,43,70,0.25);
+    }}
+    50% {{
+      box-shadow:
+        0 0 0 10px rgba(255,97,19,0.16),
+        0 0 56px -4px rgba(255,97,19,0.55),
+        0 20px 50px -16px rgba(18,43,70,0.3);
+    }}
+  }}
+  .ra-photo {{
+    background: linear-gradient(150deg, rgba(255,97,19,0.18), rgba(255,255,255,0.65)) !important;
+    border: 2px solid rgba(255,97,19,0.55) !important;
+    box-shadow:
+      0 0 0 5px rgba(255,97,19,0.10),
+      0 0 28px -4px rgba(255,97,19,0.32),
+      0 20px 50px -16px rgba(18,43,70,0.25) !important;
+  }}
+  .ra-photo .ra-photo-placeholder {{
+    color: {SKD_ACCENT_ORANGE} !important;
+    font-family: 'Roboto Slab', serif !important;
+    font-style: normal !important;
+  }}
+
+  /* ── Featured-avatar section (the "Ask her about Divigner" block) ────
+   * Big card around the floating Victoria — base had dark teal/navy gradient.
+   * Light it up for the Skilldora theme so the inner text reads. */
+  .featured-avatar {{
+    background: linear-gradient(160deg, #fff 0%, {SKD_SUBTLE_BG} 100%) !important;
+    border: 1px solid {SKD_LINE} !important;
+    box-shadow:
+      0 30px 80px -28px rgba(18,43,70,0.22),
+      0 0 0 1px rgba(255,255,255,0.5) inset !important;
+  }}
+  .featured-embed {{
+    background: #fff !important;
+    border-color: {SKD_LINE} !important;
+    box-shadow: 0 24px 50px -22px rgba(18,43,70,0.25) !important;
+  }}
+  .featured-name {{ color: {SKD_HEADING_NAVY} !important; }}
+  .featured-name .grad,
+  .featured-tagline,
+  .featured-desc,
+  .featured-foot {{
+    color: {SKD_BODY_TEXT} !important;
+    -webkit-text-fill-color: {SKD_BODY_TEXT} !important;
+    background: none !important;
+  }}
+  .featured-name .grad {{
+    color: {SKD_ACCENT_ORANGE} !important;
+    -webkit-text-fill-color: {SKD_ACCENT_ORANGE} !important;
+    font-style: normal !important;
+    font-weight: 700 !important;
+  }}
+  .featured-badge {{
+    background: linear-gradient(120deg, {SKD_PRIMARY_BTN_BG}, {SKD_PRIMARY_BTN_HOVER}) !important;
+    color: #fff !important;
+    border-color: {SKD_PRIMARY_BTN_HOVER} !important;
+    text-shadow: none !important;
+    box-shadow: 0 8px 22px -8px rgba(56,93,255,0.55) !important;
+  }}
+
+  /* Why-proof card (if shown) */
+  .why-proof-card {{
+    background: #fff !important;
+    border: 1px solid {SKD_LINE} !important;
+    color: {SKD_BODY_TEXT} !important;
+  }}
+
+  /* Generic .card (used in features/about sections) */
+  section .card {{
+    background: #fff !important;
+    border: 1px solid {SKD_LINE} !important;
+    color: {SKD_BODY_TEXT} !important;
+    box-shadow: 0 10px 30px -18px rgba(18,43,70,0.18) !important;
+  }}
+  section .card h3, section .card h4 {{ color: {SKD_HEADING_NAVY} !important; }}
+  section .card p, section .card li {{ color: {SKD_BODY_TEXT} !important; }}
+
+  /* Embed video thumbs — soften the dark radial behind images so the LIGHT
+   * badge still reads on the lighter theme. The thumbnails themselves are
+   * photographs so their own background sets the tone — we just neutralize
+   * the placeholder/loading bg. */
+  .embed-video, .embed-placeholder, .embed-loading, .embed-thumb-fallback {{
+    background: linear-gradient(160deg, {SKD_SUBTLE_BG}, #fff) !important;
+    color: {SKD_BODY_TEXT} !important;
+  }}
+  .embed-thumb-overlay {{
+    background: linear-gradient(180deg, rgba(0,0,0,0.04) 0%, transparent 35%, rgba(0,0,0,0.28) 100%) !important;
+  }}
+  .embed-error {{
+    background: #fff !important;
+    color: #d32f2f !important;
+    border: 1px solid #ffcdd2 !important;
+  }}
+
+  /* Cookie popup overlay — light bar, doesn't obscure the Final CTA button.
+   * Position-sticky on small screens so content scrolls under it cleanly. */
+  .cookie-popup {{
+    background: rgba(255,255,255,0.98) !important;
+    border-top: 1px solid {SKD_LINE} !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-shadow: 0 -8px 24px -10px rgba(18,43,70,0.18) !important;
+  }}
+  .cookie-popup-card p {{ color: {SKD_BODY_TEXT} !important; }}
+  .cookie-popup-card p a {{ color: {SKD_PRIMARY_BTN_BG} !important; }}
+
+  /* Reserve space for the cookie bar so the final CTA's button never sits
+   * underneath it. Measured: bar is ~76px desktop, ~120px mobile when text
+   * wraps; pad just enough and let it collapse if dismissed. */
+  body {{ padding-bottom: 80px !important; }}
+  @media (max-width: 600px) {{ body {{ padding-bottom: 140px !important; }} }}
+  body:has(.cookie-popup:not(.visible)) {{ padding-bottom: 0 !important; }}
+
+  /* Final CTA spacing — small bottom pad; tightened footer carries the rest */
+  .final-cta {{ padding: 60px 0 32px !important; }}
+
+  /* ── Mobile responsive audit ─────────────────────────────────────────── */
+  @media (max-width: 880px) {{
+    .topbar {{ padding: 10px 16px !important; }}
+    .logo-img {{ height: 38px !important; }}
+    .topbar.scrolled .logo-img {{ height: 32px !important; }}
+    .wrap {{ padding-left: 18px !important; padding-right: 18px !important; }}
+    .ra-partnership {{ padding: 22px 20px !important; border-radius: 14px !important; }}
+    .ra-partnership-text {{ font-size: 19px !important; line-height: 1.45 !important; }}
+    .ra-partnership-logos {{ gap: 18px !important; flex-wrap: wrap; justify-content: center; }}
+    .ra-partnership-logos img {{ max-height: 40px !important; }}
+    .featured-avatar {{ padding: 22px !important; grid-template-columns: 1fr !important; gap: 22px !important; }}
+    .featured-cta {{ padding: 14px 22px !important; font-size: 12.5px !important; width: 100%; justify-content: center; }}
+    .btn-primary, .btn-secondary {{ padding: 14px 22px !important; font-size: 13px !important; }}
+    .hero-cta-row {{ flex-direction: column !important; gap: 12px !important; }}
+    .hero-cta-row > * {{ width: 100% !important; justify-content: center !important; }}
+  }}
+  @media (max-width: 480px) {{
+    .navlinks {{ display: none !important; }}
+    .mob-toggle {{ display: grid !important; }}
+    .hero h1 {{ font-size: clamp(34px, 9vw, 44px) !important; }}
+    .sec-title {{ font-size: clamp(26px, 7vw, 36px) !important; }}
+    .ra-name {{ font-size: clamp(24px, 7vw, 32px) !important; }}
+    .ra-photo {{ width: 140px !important; height: 140px !important; }}
+    .featured-badge {{ font-size: 10.5px !important; padding: 8px 14px !important; letter-spacing: .16em !important; }}
+  }}
 
 """
 
