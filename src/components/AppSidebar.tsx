@@ -19,12 +19,20 @@ import {
   Truck,
   BarChart2,
   Landmark,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useRole } from "@/hooks/useRole"
 import { useOrganization } from "@/contexts/OrganizationContext"
 import { useTheme } from "@/lib/theme"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 // Per-org branding config keyed by slug
 const ORG_BRANDING: Record<string, {
@@ -73,35 +81,61 @@ const CASHFLOW_ITEMS: NavItem[] = [
 
 const CRM_PATHS = CRM_ITEMS.map((i) => i.to)
 
+/** Wraps a trigger with a right-side tooltip — only when the rail is collapsed. */
+function RailTooltip({
+  show,
+  label,
+  children,
+}: {
+  show: boolean
+  label: string
+  children: React.ReactNode
+}) {
+  if (!show) return <>{children}</>
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
 function SidebarLink({
   to,
   label,
   icon: Icon,
   sub,
+  collapsed,
   onNavigate,
-}: NavItem & { sub?: boolean; onNavigate?: () => void }) {
+}: NavItem & { sub?: boolean; collapsed?: boolean; onNavigate?: () => void }) {
   return (
-    <NavLink
-      to={to}
-      end={to === "/cashflow"}
-      onClick={onNavigate}
-      className={({ isActive }) =>
-        cn(
-          "group flex items-center gap-3 rounded-md py-2 text-sm font-medium transition-colors",
-          sub ? "pl-8 pr-3" : "px-3",
-          isActive
-            ? "bg-sidebar-accent text-primary"
-            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        )
-      }
-    >
-      {({ isActive }) => (
-        <>
-          <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-sidebar-foreground/50")} />
-          {label}
-        </>
-      )}
-    </NavLink>
+    <RailTooltip show={!!collapsed} label={label}>
+      <NavLink
+        to={to}
+        end={to === "/cashflow"}
+        onClick={onNavigate}
+        className={({ isActive }) =>
+          cn(
+            "group flex items-center rounded-md py-2 text-sm font-medium transition-colors",
+            collapsed
+              ? "mx-auto h-9 w-9 justify-center px-0"
+              : sub
+                ? "gap-3 pl-8 pr-3"
+                : "gap-3 px-3",
+            isActive
+              ? "bg-sidebar-accent text-primary"
+              : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          )
+        }
+      >
+        {({ isActive }) => (
+          <>
+            <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-sidebar-foreground/50")} />
+            {!collapsed && label}
+          </>
+        )}
+      </NavLink>
+    </RailTooltip>
   )
 }
 
@@ -110,15 +144,35 @@ function ModuleGroup({
   icon: Icon,
   items,
   defaultOpen,
+  collapsed,
+  onExpand,
   onNavigate,
 }: {
   label: string
   icon: LucideIcon
   items: NavItem[]
   defaultOpen?: boolean
+  collapsed?: boolean
+  onExpand?: () => void
   onNavigate?: () => void
 }) {
   const [open, setOpen] = useState(defaultOpen ?? false)
+
+  // Collapsed: a single icon. Clicking expands the rail so the user can drill in.
+  if (collapsed) {
+    return (
+      <RailTooltip show label={label}>
+        <button
+          type="button"
+          onClick={onExpand}
+          className="mx-auto flex h-9 w-9 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+        >
+          <Icon className="h-4 w-4 shrink-0 text-sidebar-foreground/50" />
+        </button>
+      </RailTooltip>
+    )
+  }
+
   return (
     <div>
       <button
@@ -141,7 +195,27 @@ function ModuleGroup({
   )
 }
 
-export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
+/** Section header in the nav — text label when expanded, a thin divider when collapsed. */
+function SectionLabel({ label, collapsed }: { label: string; collapsed?: boolean }) {
+  if (collapsed) {
+    return <div className="my-2 mx-auto h-px w-6 bg-sidebar-border" />
+  }
+  return (
+    <div className="pt-2 pb-1 px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/30 font-medium">
+      {label}
+    </div>
+  )
+}
+
+export function AppSidebar({
+  onNavigate,
+  collapsed = false,
+  onToggleCollapse,
+}: {
+  onNavigate?: () => void
+  collapsed?: boolean
+  onToggleCollapse?: () => void
+}) {
   const location = useLocation()
   const { can } = usePermissions()
   const { role } = useRole()
@@ -156,91 +230,134 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   const slug = currentOrg?.slug ?? ""
   const branding = ORG_BRANDING[slug]
+  const expand = () => { if (collapsed) onToggleCollapse?.() }
 
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-28 items-center justify-center border-b border-sidebar-border px-4">
-        {branding?.wordmark ? (
-          // Render BOTH variants always so they're decoded on mount.
-          // Toggle is pure CSS opacity — zero fetch/decode lag on switch.
-          <div className="relative flex h-20 w-full max-w-[200px] items-center justify-center">
-            <img
-              src={branding.logoLight}
-              alt={branding.name}
-              className={cn(
-                "absolute h-20 w-auto max-w-[200px] object-contain transition-opacity duration-150",
-                theme === "light" ? "opacity-100" : "opacity-0"
-              )}
-            />
-            <img
-              src={branding.logoDark}
-              alt={branding.name}
-              className={cn(
-                "absolute h-20 w-auto max-w-[200px] object-contain transition-opacity duration-150",
-                theme === "dark" ? "opacity-100" : "opacity-0"
-              )}
-            />
-          </div>
-        ) : branding ? (
-          <div className="flex flex-col items-center gap-1">
-            <img src={branding.icon} alt={branding.name} className="h-10 w-10 rounded-md object-cover" />
-            <p className="text-xs font-semibold leading-tight truncate">{branding.name}</p>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-md bg-primary grid place-items-center shrink-0">
-              <span className="text-sm font-bold text-primary-foreground">
-                {currentOrg?.name?.slice(0, 2).toUpperCase() ?? "AC"}
-              </span>
+    <TooltipProvider delayDuration={0}>
+      <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+        <div
+          className={cn(
+            "flex items-center justify-center border-b border-sidebar-border",
+            collapsed ? "h-16 px-2" : "h-28 px-4"
+          )}
+        >
+          {collapsed ? (
+            // Collapsed rail: square icon only (or initials fallback).
+            branding ? (
+              <img
+                src={branding.icon}
+                alt={branding.name}
+                className="h-9 w-9 rounded-md object-contain"
+              />
+            ) : (
+              <div className="h-9 w-9 rounded-md bg-primary grid place-items-center shrink-0">
+                <span className="text-sm font-bold text-primary-foreground">
+                  {currentOrg?.name?.slice(0, 2).toUpperCase() ?? "AC"}
+                </span>
+              </div>
+            )
+          ) : branding?.wordmark ? (
+            // Render BOTH variants always so they're decoded on mount.
+            // Toggle is pure CSS opacity — zero fetch/decode lag on switch.
+            <div className="relative flex h-20 w-full max-w-[200px] items-center justify-center">
+              <img
+                src={branding.logoLight}
+                alt={branding.name}
+                className={cn(
+                  "absolute h-20 w-auto max-w-[200px] object-contain transition-opacity duration-150",
+                  theme === "light" ? "opacity-100" : "opacity-0"
+                )}
+              />
+              <img
+                src={branding.logoDark}
+                alt={branding.name}
+                className={cn(
+                  "absolute h-20 w-auto max-w-[200px] object-contain transition-opacity duration-150",
+                  theme === "dark" ? "opacity-100" : "opacity-0"
+                )}
+              />
             </div>
-            <p className="text-sm font-semibold leading-tight truncate">{currentOrg?.name ?? "Command Center"}</p>
-          </div>
-        )}
-      </div>
-
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        <SidebarLink to="/dashboard" label="Dashboard" icon={LayoutDashboard} onNavigate={onNavigate} />
-
-        <div className="pt-2 pb-1 px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/30 font-medium">
-          Modules
+          ) : branding ? (
+            <div className="flex flex-col items-center gap-1">
+              <img src={branding.icon} alt={branding.name} className="h-10 w-10 rounded-md object-cover" />
+              <p className="text-xs font-semibold leading-tight truncate">{branding.name}</p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-md bg-primary grid place-items-center shrink-0">
+                <span className="text-sm font-bold text-primary-foreground">
+                  {currentOrg?.name?.slice(0, 2).toUpperCase() ?? "AC"}
+                </span>
+              </div>
+              <p className="text-sm font-semibold leading-tight truncate">{currentOrg?.name ?? "Command Center"}</p>
+            </div>
+          )}
         </div>
 
-        <ModuleGroup label="CRM" icon={Briefcase} items={CRM_ITEMS} defaultOpen={crmActive} onNavigate={onNavigate} />
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+          <SidebarLink to="/dashboard" label="Dashboard" icon={LayoutDashboard} collapsed={collapsed} onNavigate={onNavigate} />
 
-        {!isLimitedRole && (
-          <SidebarLink to="/tasks" label="Tasks" icon={CheckSquare} onNavigate={onNavigate} />
-        )}
+          <SectionLabel label="Modules" collapsed={collapsed} />
 
-        {can("cashflow.view") && (
-          <ModuleGroup
-            label="Cashflow"
-            icon={TrendingUp}
-            items={CASHFLOW_ITEMS.filter((i) => i.to !== "/cashflow/bank-connections" || can("cashflow.bank_connections"))}
-            defaultOpen={cashflowActive}
-            onNavigate={onNavigate}
-          />
-        )}
+          <ModuleGroup label="CRM" icon={Briefcase} items={CRM_ITEMS} defaultOpen={crmActive} collapsed={collapsed} onExpand={expand} onNavigate={onNavigate} />
 
-        {!isLimitedRole && (
-          <>
-            <div className="pt-2 pb-1 px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/30 font-medium">
-              Relationships
-            </div>
-            <SidebarLink to="/partners" label="Partners" icon={Handshake} onNavigate={onNavigate} />
-            <SidebarLink to="/vendors" label="Vendors" icon={Truck} onNavigate={onNavigate} />
-          </>
-        )}
+          {!isLimitedRole && (
+            <SidebarLink to="/tasks" label="Tasks" icon={CheckSquare} collapsed={collapsed} onNavigate={onNavigate} />
+          )}
 
-        <div className="pt-2 pb-1 px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/30 font-medium">
-          System
+          {can("cashflow.view") && (
+            <ModuleGroup
+              label="Cashflow"
+              icon={TrendingUp}
+              items={CASHFLOW_ITEMS.filter((i) => i.to !== "/cashflow/bank-connections" || can("cashflow.bank_connections"))}
+              defaultOpen={cashflowActive}
+              collapsed={collapsed}
+              onExpand={expand}
+              onNavigate={onNavigate}
+            />
+          )}
+
+          {!isLimitedRole && (
+            <>
+              <SectionLabel label="Relationships" collapsed={collapsed} />
+              <SidebarLink to="/partners" label="Partners" icon={Handshake} collapsed={collapsed} onNavigate={onNavigate} />
+              <SidebarLink to="/vendors" label="Vendors" icon={Truck} collapsed={collapsed} onNavigate={onNavigate} />
+            </>
+          )}
+
+          <SectionLabel label="System" collapsed={collapsed} />
+
+          <SidebarLink to="/settings" label="Settings" icon={Settings} collapsed={collapsed} onNavigate={onNavigate} />
+        </nav>
+
+        <div className="border-t border-sidebar-border p-2">
+          {onToggleCollapse && (
+            <RailTooltip show={collapsed} label="Expand sidebar">
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                className={cn(
+                  "flex w-full items-center rounded-md py-2 text-xs font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
+                  collapsed ? "justify-center px-0" : "gap-2 px-3"
+                )}
+              >
+                {collapsed ? (
+                  <PanelLeft className="h-4 w-4 shrink-0" />
+                ) : (
+                  <>
+                    <PanelLeftClose className="h-4 w-4 shrink-0" />
+                    Collapse
+                  </>
+                )}
+              </button>
+            </RailTooltip>
+          )}
+          {!collapsed && (
+            <div className="px-3 pt-1 text-xs text-sidebar-foreground/40">v0.1 · ACC</div>
+          )}
         </div>
-
-        <SidebarLink to="/settings" label="Settings" icon={Settings} onNavigate={onNavigate} />
-      </nav>
-
-      <div className="border-t border-sidebar-border p-4 text-xs text-sidebar-foreground/60">
-        v0.1 · ACC
       </div>
-    </div>
+    </TooltipProvider>
   )
 }
