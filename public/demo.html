@@ -279,6 +279,9 @@
   .price .incl li{list-style:none;display:flex;gap:12px;font-size:14px;color:var(--muted);line-height:1.55}
   .price .incl li b{color:var(--text);font-weight:600}
   .price .incl svg{flex:0 0 auto;width:17px;height:17px;margin-top:3px;stroke:var(--teal-bright);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .price .incl li ul{margin-top:7px;padding-left:2px;display:grid;gap:5px;list-style:none}
+  .price .incl li ul li{font-size:12.5px;color:var(--muted);display:flex;gap:8px;line-height:1.45;opacity:.85}
+  .price .incl li ul li::before{content:'·';color:var(--teal-bright);flex:0 0 auto;font-size:18px;line-height:1.2}
   .pill{display:inline-block;padding:5px 14px;border-radius:20px;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;margin-bottom:14px;font-family:'Manrope',sans-serif}
   .pill.green{background:rgba(52,214,194,.16);color:var(--cyan);border:1px solid rgba(52,214,194,.32)}
   .price.svc .pk{color:var(--text)}
@@ -976,8 +979,8 @@
         <ul class="incl">
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>480 minutes / month</b> of interactive talk time (8 hours)</span></li>
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Hosting &amp; uptime</b> attached to your domain</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Usage analytics</b>: sessions, engagement, and conversion paths</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Monthly access to transcripts + AI insights</b> on what visitors are really asking. New data added to your avatar on request</span></li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Usage analytics:</b> sessions, engagement, and conversion paths<ul><li>Session volume, duration, and return visit trends</li><li>Engagement depth and most-visited conversation topics</li><li>Conversion events: form submissions, referrals, and bookings</li></ul></span></li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Monthly transcripts and AI insights</b> on what visitors are really asking<ul><li>Full conversation transcripts delivered each month</li><li>AI summary of top questions and recurring themes</li><li>Knowledge gaps identified automatically</li><li>New training data applied to your avatar on request</li></ul></span></li>
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Live human support</b> from the Divigner team</span></li>
         </ul>
       </div>
