@@ -1711,6 +1711,30 @@ export async function getArchivedRa(
   }
 }
 
+/** Undo a permanent RA delete — re-creates the RA from its archive snapshot,
+ *  re-links leads/deals, restores payouts/checkins/agreements, and removes the
+ *  archive entry. Gated to super_user / program_admin by the edge function. */
+export async function restoreRa(archiveId: string): Promise<{
+  ra_id: string
+  slug: string
+  display_name: string
+  leads_relinked: number
+  deals_relinked: number
+  payouts_restored: number
+  checkins_restored: number
+}> {
+  if (PREVIEW_MODE) throw new Error("Not available in preview mode")
+  const { data, error } = await supabase.functions.invoke("restore-ra", {
+    body: { archive_id: archiveId },
+  })
+  if (error) throw error
+  return data as {
+    ra_id: string; slug: string; display_name: string
+    leads_relinked: number; deals_relinked: number
+    payouts_restored: number; checkins_restored: number
+  }
+}
+
 // ── Program Admin designation ───────────────────────────────────────────────
 
 /** Toggle the Program Admin designation on an org member. Super User only.
