@@ -4168,6 +4168,13 @@ export async function submitRaChangeRequest(input: {
       requested_by: user.id,
     } as never)
   if (error) throw error
+
+  // Best-effort: email the Program Admin(s) that a change is awaiting review.
+  try {
+    await supabase.functions.invoke("notify-ra-status", {
+      body: { ra_associate_id: input.raId, kind: "change_requested", request_type: input.request_type },
+    })
+  } catch { /* notification is non-blocking */ }
 }
 
 /** List a RA's own pending/historical change requests. */

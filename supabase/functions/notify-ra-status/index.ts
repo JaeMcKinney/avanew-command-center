@@ -22,12 +22,13 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2"
 
-type Kind = "approved" | "declined" | "changes_requested" | "submitted"
+type Kind = "approved" | "declined" | "changes_requested" | "submitted" | "change_requested"
 
 type Payload = {
   ra_associate_id: string
   kind: Kind
   notes?: string | null
+  request_type?: string | null   // for change_requested: "banking" | "w9" | "other"
 }
 
 const FROM = { email: "zuirrae@divigner.com", name: "Divigner Group" }
@@ -139,6 +140,28 @@ function buildProgramAdminEmail(
   }
 }
 
+function buildChangeRequestEmail(
+  raDisplayName: string,
+  orgName: string,
+  appUrl: string,
+  requestType: string,
+): { subject: string; html: string } {
+  const typeLabel = requestType === "banking" ? "banking details"
+    : requestType === "w9" ? "W-9 / tax info" : "account details"
+  return {
+    subject: `RA change request — ${raDisplayName} (${typeLabel})`,
+    html: wrap(
+      "Hi,",
+      orgName,
+      "An RA submitted a change request",
+      `<p style="color:#A2B6C9;font-size:.95rem;line-height:1.6;margin:0 0 12px"><strong style="color:#EAF2F9">${escapeHtml(raDisplayName)}</strong> requested a change to their <strong style="color:#EAF2F9">${escapeHtml(typeLabel)}</strong>.</p>
+       <p style="color:#A2B6C9;font-size:.9rem;line-height:1.5;margin:0">Open the Referral Associates tab to review and approve or decline it. Nothing changes on their record until you approve.</p>`,
+      "Review the request",
+      `${appUrl}/settings/team`,
+    ),
+  }
+}
+
 async function sendOne(
   sendgridKey: string,
   toEmail: string,
@@ -179,7 +202,7 @@ Deno.serve(async (req) => {
   let payload: Payload
   try { payload = await req.json() as Payload } catch { return json(400, { error: "Invalid JSON" }) }
   if (!payload.ra_associate_id) return json(400, { error: "ra_associate_id required" })
-  if (!["approved", "declined", "changes_requested", "submitted"].includes(payload.kind)) {
+  if (!["approved", "declined", "changes_requested", "submitted", "change_requested"].includes(payload.kind)) {
     return json(400, { error: "Invalid kind" })
   }
 
@@ -219,8 +242,12 @@ Deno.serve(async (req) => {
     return json(200, { sent: false, reason: "no_sendgrid_key" })
   }
 
-  // ── submitted: fan out to all Program Admins in the org ─────────────────────
-  if (payload.kind === "submitted") {
+  // ── submitted / change_requested: fan out to all Program Admins in the org ──
+  if (payload.kind === "submitted" || payload.kind === "change_requested") {
+    const buildAdminEmail = () =>
+      payload.kind === "change_requested"
+        ? buildChangeRequestEmail(ra.display_name, orgName, appUrl, payload.request_type ?? "other")
+        : buildProgramAdminEmail(ra.display_name, raEmail, orgName, appUrl, ra.slug)
     // Find all admins in this org with is_program_admin = true.
     // We need their auth.users(id) to look up emails from profiles.
     const { data: members, error: memErr } = await admin
@@ -240,7 +267,7 @@ Deno.serve(async (req) => {
       if (!fallback) {
         return json(200, { sent: false, reason: "no_program_admins_configured" })
       }
-      const { subject, html } = buildProgramAdminEmail(ra.display_name, raEmail, orgName, appUrl, ra.slug)
+      const { subject, html } = buildAdminEmail()
       const r = await sendOne(sendgridKey, fallback, subject, html)
       return json(r.ok ? 200 : 502, { sent: r.ok, to: [fallback], fallback: true })
     }
@@ -253,7 +280,7 @@ Deno.serve(async (req) => {
       .map((p: { email: string | null }) => p.email)
       .filter((e: string | null): e is string => Boolean(e))
 
-    const { subject, html } = buildProgramAdminEmail(ra.display_name, raEmail, orgName, appUrl, ra.slug)
+    const { subject, html } = buildAdminEmail()
     const results = await Promise.all(
       recipientEmails.map((email) => sendOne(sendgridKey, email, subject, html))
     )
