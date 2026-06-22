@@ -417,7 +417,7 @@ export function RaSection() {
                           </Badge>
                         </div>
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">/refer/{ra.slug}</TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">/demo/{ra.slug}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {ra.submitted_at
                           ? `Submitted ${formatDate(ra.submitted_at)}`
@@ -588,8 +588,8 @@ export function RaSection() {
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>
-                Submissions via{" "}
-                <span className="font-mono">/refer/{leadsTarget?.slug}</span>
+                Submissions from{" "}
+                <span className="font-mono">/demo/{leadsTarget?.slug}</span>
               </span>
               {!loadingLeads && (
                 <span>{leadsForRa.length} {leadsForRa.length === 1 ? "lead" : "leads"}</span>

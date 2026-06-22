@@ -86,9 +86,9 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
     }
   }
 
-  const referralUrl = useMemo(() => {
+  const demoUrl = useMemo(() => {
     if (typeof window === "undefined" || !sent) return ""
-    return `${window.location.origin}/refer/${sent.slug}`
+    return `${window.location.origin}/demo/${sent.slug}`
   }, [sent])
 
   // ── Sent confirmation (A3) ─────────────────────────────────────────────────
@@ -120,11 +120,14 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
                 <li>You receive a notification when their application is ready to verify</li>
               </ul>
             </div>
-            <div className="rounded-md border p-3 flex items-start gap-2.5 text-xs">
-              <LinkIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+            <div className="rounded-md border bg-primary/5 p-3 flex items-start gap-2.5 text-xs">
+              <LinkIcon className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground">Their referral URL (active once approved)</p>
-                <p className="font-mono text-muted-foreground truncate">{referralUrl}</p>
+                <p className="font-medium text-foreground">Their demo link (active once approved)</p>
+                <p className="font-mono text-muted-foreground truncate">{demoUrl}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  This is the link they'll share. Prospects click "Get in touch" on the demo to reach the referral form.
+                </p>
               </div>
             </div>
           </div>
@@ -219,9 +222,9 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="slug" className="text-xs">Referral URL slug</Label>
+            <Label htmlFor="slug" className="text-xs">Demo link slug</Label>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground font-mono shrink-0">/refer/</span>
+              <span className="text-xs text-muted-foreground font-mono shrink-0">/demo/</span>
               <Input
                 id="slug"
                 value={slug}

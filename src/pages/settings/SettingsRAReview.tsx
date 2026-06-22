@@ -178,7 +178,7 @@ export function SettingsRAReview() {
           )}
           <div>
             <h1 className="text-xl font-semibold">{ra.display_name}</h1>
-            <p className="text-xs text-muted-foreground">{ra.email} · /refer/{ra.slug}</p>
+            <p className="text-xs text-muted-foreground">{ra.email} · /demo/{ra.slug}</p>
           </div>
         </div>
         <Badge variant={ra.status === "verification" ? "secondary" : "outline"}>
@@ -499,16 +499,19 @@ export function SettingsRAReview() {
             <DialogHeader className="space-y-2">
               <DialogTitle>{approvedSummary?.display_name} is live!</DialogTitle>
               <DialogDescription>
-                Their referral page is now active and they can start submitting referrals.
+                Their demo page is now active and they can start sharing it with prospects.
               </DialogDescription>
             </DialogHeader>
           </div>
-          <div className="rounded-md border p-3 text-xs space-y-1">
-            <p className="font-medium text-foreground">Public referral URL</p>
+          <div className="rounded-md border bg-primary/5 p-3 text-xs space-y-1">
+            <p className="font-medium text-foreground">Their demo link</p>
             <p className="font-mono text-muted-foreground break-all">
               {typeof window !== "undefined" && approvedSummary
-                ? `${window.location.origin}/refer/${approvedSummary.slug}`
+                ? `${window.location.origin}/demo/${approvedSummary.slug}`
                 : ""}
+            </p>
+            <p className="text-[11px] text-muted-foreground pt-1">
+              Prospects click "Get in touch" on the demo to reach the referral form.
             </p>
           </div>
           <DialogFooter className="gap-2">

@@ -178,7 +178,7 @@ export function RaVerificationDialog({ ra, open, onClose, onActionComplete }: Pr
             </div>
             <p className="text-sm text-muted-foreground truncate">{ra.email}</p>
             <p className="text-xs text-muted-foreground font-mono mt-0.5">
-              /refer/{ra.slug}
+              /demo/{ra.slug}
             </p>
           </div>
         </div>
@@ -223,7 +223,7 @@ export function RaVerificationDialog({ ra, open, onClose, onActionComplete }: Pr
           </p>
           <InfoRow icon={Phone} label="Phone" value={ra.contact_phone} />
           <InfoRow icon={Mail} label="Email" value={ra.contact_email} />
-          <InfoRow icon={Link2} label="Ref URL" value={`/refer/${ra.slug}`} />
+          <InfoRow icon={Link2} label="Demo URL" value={`/demo/${ra.slug}`} />
           {ra.bio && (
             <div className="text-sm">
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">

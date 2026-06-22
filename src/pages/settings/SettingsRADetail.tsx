@@ -149,15 +149,15 @@ export function SettingsRADetail() {
           <div>
             <h1 className="text-xl font-semibold">{ra.display_name}</h1>
             <p className="text-xs text-muted-foreground">
-              {ra.email} · <span className="font-mono">/refer/{ra.slug}</span>
+              {ra.email} · <span className="font-mono">/demo/{ra.slug}</span>
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={ra.status === "active" ? "default" : "secondary"}>{STATUS_LABEL[ra.status]}</Badge>
           <Button asChild variant="outline" size="sm">
-            <a href={`/refer/${ra.slug}`} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-3.5 w-3.5" /> Public page
+            <a href={`/demo/${ra.slug}`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-3.5 w-3.5" /> Demo page
             </a>
           </Button>
         </div>

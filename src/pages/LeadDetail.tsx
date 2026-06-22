@@ -149,7 +149,7 @@ export function LeadDetail() {
               <>
                 {" · "}
                 <Link to={`/settings/ra/${lead.ra_slug}`} className="text-primary hover:underline">
-                  Referred by /refer/{lead.ra_slug}
+                  Referred by /demo/{lead.ra_slug}
                 </Link>
               </>
             )}
