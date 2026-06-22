@@ -3,12 +3,14 @@ import type { FormEvent } from "react"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { saveRaContact } from "@/lib/data"
-import type { RaAssociate } from "@/types/db"
+import { ReviewerCommentsBanner } from "@/components/ra/ReviewerCommentsBanner"
+import type { RaAssociate, RaSectionComment } from "@/types/db"
 
 type Props = {
   ra: RaAssociate
   stepLabel?: string
   onComplete: (updated: Partial<RaAssociate>) => void
+  reviewerComments?: RaSectionComment[]
 }
 
 // Mask a string of up to 10 digits as "(###) ###-####". Anything pre-formatted
@@ -21,7 +23,7 @@ function formatPhone(input: string): string {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
 }
 
-export function ContactStep({ ra, stepLabel = "Step 2 of 4", onComplete }: Props) {
+export function ContactStep({ ra, stepLabel = "Step 2 of 4", onComplete, reviewerComments = [] }: Props) {
   const [phone, setPhone] = useState(formatPhone(ra.contact_phone ?? ""))
   // Pre-fill contact email from the invite address (ra.email is the joined
   // profiles.email, set when the RA was invited). The RA may overwrite it
@@ -90,6 +92,9 @@ export function ContactStep({ ra, stepLabel = "Step 2 of 4", onComplete }: Props
           How prospects and the Divigner team can reach you. Displayed on your referral page.
         </p>
       </div>
+
+      <ReviewerCommentsBanner section="contact" comments={reviewerComments} />
+      <ReviewerCommentsBanner section="bio" comments={reviewerComments} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
         <div>

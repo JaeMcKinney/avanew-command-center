@@ -3,15 +3,17 @@ import type { FormEvent } from "react"
 import { ShieldCheck, Eye, EyeOff, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { saveRaBanking } from "@/lib/data"
-import type { RaAssociate } from "@/types/db"
+import { ReviewerCommentsBanner } from "@/components/ra/ReviewerCommentsBanner"
+import type { RaAssociate, RaSectionComment } from "@/types/db"
 
 type Props = {
   ra: RaAssociate
   stepLabel?: string
   onComplete: (updated: Partial<RaAssociate>) => void
+  reviewerComments?: RaSectionComment[]
 }
 
-export function BankingStep({ ra, stepLabel = "Step 3 of 4", onComplete }: Props) {
+export function BankingStep({ ra, stepLabel = "Step 3 of 4", onComplete, reviewerComments = [] }: Props) {
   // Default to the RA's full name from the invite (display_name = first + last).
   // The RA can still edit it for a joint account or business name.
   const [holder, setHolder] = useState(ra.ach_account_holder ?? ra.display_name ?? "")
@@ -86,6 +88,8 @@ export function BankingStep({ ra, stepLabel = "Step 3 of 4", onComplete }: Props
           Your earnings are paid via ACH direct deposit. Provide your bank account details below.
         </p>
       </div>
+
+      <ReviewerCommentsBanner section="banking" comments={reviewerComments} />
 
       {/* Security callout */}
       <div style={{

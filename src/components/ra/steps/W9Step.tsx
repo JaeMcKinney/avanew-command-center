@@ -2,17 +2,19 @@ import { useRef, useState } from "react"
 import { CheckCircle2, Download, FileText, Loader2, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { saveRaW9 } from "@/lib/data"
-import type { RaAssociate } from "@/types/db"
+import { ReviewerCommentsBanner } from "@/components/ra/ReviewerCommentsBanner"
+import type { RaAssociate, RaSectionComment } from "@/types/db"
 
 type Props = {
   ra: RaAssociate
   stepLabel?: string
   onComplete: (updated: Partial<RaAssociate>) => void
+  reviewerComments?: RaSectionComment[]
 }
 
 const IRS_W9_BLANK_URL = "https://www.irs.gov/pub/irs-pdf/fw9.pdf"
 
-export function W9Step({ ra, stepLabel = "Step 5 of 6", onComplete }: Props) {
+export function W9Step({ ra, stepLabel = "Step 5 of 6", onComplete, reviewerComments = [] }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving] = useState(false)
   const [filename, setFilename] = useState<string | null>(
@@ -66,6 +68,8 @@ export function W9Step({ ra, stepLabel = "Step 5 of 6", onComplete }: Props) {
           lives only inside the PDF.
         </p>
       </div>
+
+      <ReviewerCommentsBanner section="w9" comments={reviewerComments} />
 
       {/* Step 1 — download blank */}
       <div style={{

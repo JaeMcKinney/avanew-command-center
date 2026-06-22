@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { FormEvent } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
+import { Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
 import { getRaPortalRedirect } from "@/lib/data"
@@ -17,6 +18,7 @@ export function Login() {
   }
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
@@ -182,28 +184,55 @@ export function Login() {
                   Forgot password?
                 </Link>
               </div>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{
-                  background: "rgba(9,26,45,.7)",
-                  border: "1px solid rgba(160,190,215,.18)",
-                  borderRadius: "8px",
-                  padding: "0.625rem 0.875rem",
-                  color: "#EAF2F9",
-                  fontSize: "0.9375rem",
-                  outline: "none",
-                  transition: "border-color .2s",
-                  fontFamily: "'Manrope', sans-serif",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(52,214,194,.5)")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(160,190,215,.18)")}
-              />
+              <div style={{ position: "relative" }}>
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    background: "rgba(9,26,45,.7)",
+                    border: "1px solid rgba(160,190,215,.18)",
+                    borderRadius: "8px",
+                    padding: "0.625rem 2.5rem 0.625rem 0.875rem",
+                    color: "#EAF2F9",
+                    fontSize: "0.9375rem",
+                    outline: "none",
+                    transition: "border-color .2s",
+                    fontFamily: "'Manrope', sans-serif",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(52,214,194,.5)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(160,190,215,.18)")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                  style={{
+                    position: "absolute",
+                    right: "0.625rem",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#6E8499",
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  {showPassword
+                    ? <EyeOff style={{ width: 16, height: 16 }} />
+                    : <Eye style={{ width: 16, height: 16 }} />}
+                </button>
+              </div>
             </div>
 
             {/* Submit */}

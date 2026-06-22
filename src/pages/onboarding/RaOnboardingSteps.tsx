@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Loader2, AlertTriangle, CheckCircle2, Circle, LogOut } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
-import { getRaAssociate, PREVIEW_DATA_MODE } from "@/lib/data"
+import { getRaAssociate, listRaSectionComments, PREVIEW_DATA_MODE } from "@/lib/data"
 import { AgreementStep } from "@/components/ra/steps/AgreementStep"
 import { PhotoStep } from "@/components/ra/steps/PhotoStep"
 import { ContactStep } from "@/components/ra/steps/ContactStep"
@@ -17,7 +17,7 @@ import {
   DIVIGNER_BG,
   DIVIGNER_CARD_BG,
 } from "@/lib/brand"
-import type { RaAssociate } from "@/types/db"
+import type { RaAssociate, RaSectionComment } from "@/types/db"
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5   // agreement | photo | contact | banking | w9 | submit
 
@@ -35,6 +35,7 @@ const TOTAL_PROGRESS_SECTIONS = 5   // agreement + photo + contact + banking + w
 export function RaOnboardingSteps() {
   const navigate = useNavigate()
   const [ra, setRa] = useState<RaAssociate | null>(null)
+  const [comments, setComments] = useState<RaSectionComment[]>([])
   const [step, setStep] = useState<Step>(0)
   const [loading, setLoading] = useState(true)
 
@@ -76,6 +77,10 @@ export function RaOnboardingSteps() {
       }
 
       setRa(hydrated)
+
+      // Pull any reviewer comments so each step can surface its own.
+      const reviewerComments = await listRaSectionComments(record.id).catch(() => [])
+      setComments(reviewerComments)
 
       // Auto-advance to first incomplete section
       if (!hydrated.agreement_completed) { setStep(0); }
@@ -346,12 +351,12 @@ export function RaOnboardingSteps() {
               padding: "36px 40px",
               boxShadow: "0 32px 80px -20px rgba(0,0,0,.5)",
             }}>
-              {step === 0 && <AgreementStep ra={ra} stepLabel="Step 1 of 6" onComplete={handleStepComplete} />}
-              {step === 1 && <PhotoStep     ra={ra} stepLabel="Step 2 of 6" onComplete={handleStepComplete} />}
-              {step === 2 && <ContactStep   ra={ra} stepLabel="Step 3 of 6" onComplete={handleStepComplete} />}
-              {step === 3 && <BankingStep   ra={ra} stepLabel="Step 4 of 6" onComplete={handleStepComplete} />}
-              {step === 4 && <W9Step        ra={ra} stepLabel="Step 5 of 6" onComplete={handleStepComplete} />}
-              {step === 5 && <SubmitStep    ra={ra} stepLabel="Step 6 of 6" onSubmitted={handleSubmitted}   />}
+              {step === 0 && <AgreementStep ra={ra} stepLabel="Step 1 of 6" onComplete={handleStepComplete} reviewerComments={comments} />}
+              {step === 1 && <PhotoStep     ra={ra} stepLabel="Step 2 of 6" onComplete={handleStepComplete} reviewerComments={comments} />}
+              {step === 2 && <ContactStep   ra={ra} stepLabel="Step 3 of 6" onComplete={handleStepComplete} reviewerComments={comments} />}
+              {step === 3 && <BankingStep   ra={ra} stepLabel="Step 4 of 6" onComplete={handleStepComplete} reviewerComments={comments} />}
+              {step === 4 && <W9Step        ra={ra} stepLabel="Step 5 of 6" onComplete={handleStepComplete} reviewerComments={comments} />}
+              {step === 5 && <SubmitStep    ra={ra} stepLabel="Step 6 of 6" onSubmitted={handleSubmitted}   reviewerComments={comments} />}
             </div>
 
           </div>

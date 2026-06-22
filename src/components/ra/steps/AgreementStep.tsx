@@ -3,15 +3,17 @@ import { ArrowDown, CheckCircle2, FileSignature, Loader2, Scroll } from "lucide-
 import { toast } from "sonner"
 import { getCommissionConfig, saveRaAgreement } from "@/lib/data"
 import { getAgreementSections } from "@/lib/raAgreement"
-import type { CommissionConfig, RaAssociate } from "@/types/db"
+import { ReviewerCommentsBanner } from "@/components/ra/ReviewerCommentsBanner"
+import type { CommissionConfig, RaAssociate, RaSectionComment } from "@/types/db"
 
 type Props = {
   ra: RaAssociate
   stepLabel?: string  // e.g. "Step 1 of 5"
   onComplete: (updated: Partial<RaAssociate>) => void
+  reviewerComments?: RaSectionComment[]
 }
 
-export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete }: Props) {
+export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete, reviewerComments = [] }: Props) {
   const alreadyAccepted = ra.agreement_completed === true
   const [cfg, setCfg] = useState<CommissionConfig | null>(null)
   // Already-accepted RAs landing back on Step 1 should see the agreement
@@ -94,6 +96,8 @@ export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete }: Pro
           captured with a timestamp and serves as a legally binding electronic signature.
         </p>
       </div>
+
+      <ReviewerCommentsBanner section="agreement" comments={reviewerComments} />
 
       {alreadyAccepted && (
         <div style={{

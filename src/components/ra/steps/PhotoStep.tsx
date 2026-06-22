@@ -2,15 +2,17 @@ import { useState, useRef } from "react"
 import { Camera, Upload, Loader2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { saveRaPhoto } from "@/lib/data"
-import type { RaAssociate } from "@/types/db"
+import { ReviewerCommentsBanner } from "@/components/ra/ReviewerCommentsBanner"
+import type { RaAssociate, RaSectionComment } from "@/types/db"
 
 type Props = {
   ra: RaAssociate
   stepLabel?: string
   onComplete: (updated: Partial<RaAssociate>) => void
+  reviewerComments?: RaSectionComment[]
 }
 
-export function PhotoStep({ ra, stepLabel = "Step 1 of 4", onComplete }: Props) {
+export function PhotoStep({ ra, stepLabel = "Step 1 of 4", onComplete, reviewerComments = [] }: Props) {
   const [preview, setPreview] = useState<string | null>(ra.photo_url ?? null)
   const [saving, setSaving] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
@@ -64,6 +66,8 @@ export function PhotoStep({ ra, stepLabel = "Step 1 of 4", onComplete }: Props) 
           This photo will appear on your referral landing page. A clear headshot works best.
         </p>
       </div>
+
+      <ReviewerCommentsBanner section="photo" comments={reviewerComments} />
 
       {/* Upload area */}
       <div

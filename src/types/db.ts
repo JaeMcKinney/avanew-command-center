@@ -167,6 +167,32 @@ export type RaAssociate = {
   full_name: string | null
 }
 
+export type RaCommentSection =
+  | "agreement"
+  | "photo"
+  | "bio"
+  | "contact"
+  | "banking"
+  | "w9"
+  | "profile"
+  | "other"
+
+export type RaSectionComment = {
+  id: string
+  organization_id: string
+  ra_id: string
+  section: RaCommentSection
+  body: string
+  author_id: string
+  // Joined author profile (admin who wrote the comment)
+  author_name: string | null
+  author_email: string | null
+  resolved_at: string | null
+  resolved_by: string | null
+  created_at: string
+  updated_at: string
+}
+
 // ── RA Archive (preserved when an RA is permanently deleted) ────────────────
 
 export type ArchivedRaAssociate = {

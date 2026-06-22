@@ -338,7 +338,7 @@ export function RaSection() {
                   <TableHead>Status</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Joined</TableHead>
-                  <TableHead className="text-right w-[260px] sticky right-0 bg-card border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]">Actions</TableHead>
+                  <TableHead className="text-right w-[360px] sticky right-0 bg-card border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -399,8 +399,8 @@ export function RaSection() {
                           ? `Submitted ${formatDate(ra.submitted_at)}`
                           : formatDate(ra.created_at)}
                       </TableCell>
-                      <TableCell className="text-right sticky right-0 bg-card group-hover:bg-muted/50 border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                      <TableCell className="text-right w-[360px] sticky right-0 bg-card group-hover:bg-muted/50 border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-2 flex-nowrap">
                           {/* Template assignment — only meaningful for active RAs */}
                           {ra.status === "active" && templates.length > 0 && (
                             <select

@@ -2,15 +2,17 @@ import { useState } from "react"
 import { CheckCircle2, XCircle, Loader2, Send } from "lucide-react"
 import { toast } from "sonner"
 import { submitRaApplication } from "@/lib/data"
-import type { RaAssociate } from "@/types/db"
+import { ReviewerCommentsBanner } from "@/components/ra/ReviewerCommentsBanner"
+import type { RaAssociate, RaSectionComment } from "@/types/db"
 
 type Props = {
   ra: RaAssociate
   stepLabel?: string
   onSubmitted: () => void
+  reviewerComments?: RaSectionComment[]
 }
 
-export function SubmitStep({ ra, stepLabel = "Step 4 of 4", onSubmitted }: Props) {
+export function SubmitStep({ ra, stepLabel = "Step 4 of 4", onSubmitted, reviewerComments = [] }: Props) {
   const [submitting, setSubmitting] = useState(false)
 
   const allComplete = Boolean(
@@ -86,6 +88,15 @@ export function SubmitStep({ ra, stepLabel = "Step 4 of 4", onSubmitted }: Props
           Once you submit, the Divigner team will review your application and activate your account.
         </p>
       </div>
+
+      {/* All open reviewer comments rolled up so the RA can audit before re-submitting. */}
+      {reviewerComments.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {(["agreement", "photo", "bio", "contact", "banking", "w9"] as const).map((s) => (
+            <ReviewerCommentsBanner key={s} section={s} comments={reviewerComments} />
+          ))}
+        </div>
+      )}
 
       {/* Section checklist */}
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

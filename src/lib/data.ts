@@ -3824,6 +3824,123 @@ export async function getRaBySlug(slug: string): Promise<import("@/types/db").Ra
   return { ...rest, email: profile?.email ?? "", full_name: profile?.full_name ?? null } as import("@/types/db").RaAssociate
 }
 
+// ── RA per-section review comments ──────────────────────────────────────────
+// Threaded-by-section (flat within a section), admin-authored, RA-readable.
+// Used by SettingsRAReview.tsx (admin) and RaOnboardingSteps.tsx (RA).
+
+export async function listRaSectionComments(
+  raId: string,
+): Promise<import("@/types/db").RaSectionComment[]> {
+  if (PREVIEW_MODE) return []
+  const { data, error } = await supabase
+    .from("ra_section_comments")
+    .select(`
+      *,
+      author:profiles!ra_section_comments_author_id_fkey ( full_name, email )
+    `)
+    .eq("ra_id", raId)
+    .order("created_at", { ascending: true })
+  if (error) throw error
+  type Row = {
+    id: string; organization_id: string; ra_id: string; section: string;
+    body: string; author_id: string; resolved_at: string | null;
+    resolved_by: string | null; created_at: string; updated_at: string;
+    author: { full_name: string | null; email: string | null } | null
+  }
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    id: r.id,
+    organization_id: r.organization_id,
+    ra_id: r.ra_id,
+    section: r.section as import("@/types/db").RaCommentSection,
+    body: r.body,
+    author_id: r.author_id,
+    author_name: r.author?.full_name ?? null,
+    author_email: r.author?.email ?? null,
+    resolved_at: r.resolved_at,
+    resolved_by: r.resolved_by,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+  }))
+}
+
+export async function addRaSectionComment(input: {
+  raId: string
+  section: import("@/types/db").RaCommentSection
+  body: string
+}): Promise<import("@/types/db").RaSectionComment> {
+  if (PREVIEW_MODE) throw new Error("Comments are not available in preview mode")
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Not signed in")
+  const { data: raRow, error: raErr } = await supabase
+    .from("ra_associates")
+    .select("organization_id")
+    .eq("id", input.raId)
+    .maybeSingle()
+  if (raErr) throw raErr
+  if (!raRow) throw new Error("RA not found")
+  // Cast through `never` because the auto-generated DB types haven't been
+  // regenerated to include ra_section_comments yet — the runtime insert is
+  // validated by the table's CHECK constraints and RLS policy.
+  const { data, error } = await supabase
+    .from("ra_section_comments")
+    .insert({
+      organization_id: (raRow as { organization_id: string }).organization_id,
+      ra_id: input.raId,
+      section: input.section,
+      body: input.body.trim(),
+      author_id: user.id,
+    } as never)
+    .select(`
+      *,
+      author:profiles!ra_section_comments_author_id_fkey ( full_name, email )
+    `)
+    .single()
+  if (error) throw error
+  const row = data as unknown as {
+    id: string; organization_id: string; ra_id: string; section: string;
+    body: string; author_id: string; resolved_at: string | null;
+    resolved_by: string | null; created_at: string; updated_at: string;
+    author: { full_name: string | null; email: string | null } | null
+  }
+  return {
+    id: row.id,
+    organization_id: row.organization_id,
+    ra_id: row.ra_id,
+    section: row.section as import("@/types/db").RaCommentSection,
+    body: row.body,
+    author_id: row.author_id,
+    author_name: row.author?.full_name ?? null,
+    author_email: row.author?.email ?? null,
+    resolved_at: row.resolved_at,
+    resolved_by: row.resolved_by,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }
+}
+
+export async function resolveRaSectionComment(commentId: string, resolved: boolean): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Not signed in")
+  const { error } = await supabase
+    .from("ra_section_comments")
+    .update({
+      resolved_at: resolved ? new Date().toISOString() : null,
+      resolved_by: resolved ? user.id : null,
+    } as never)
+    .eq("id", commentId)
+  if (error) throw error
+}
+
+export async function deleteRaSectionComment(commentId: string): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("ra_section_comments")
+    .delete()
+    .eq("id", commentId)
+  if (error) throw error
+}
+
 // ── RA-attributed leads / deals / payouts (preview-aware) ────────────────────
 
 type RaLead = {

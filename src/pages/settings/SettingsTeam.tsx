@@ -6,7 +6,7 @@ import { Users, Link2 } from "lucide-react"
 
 export function SettingsTeam() {
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-7xl space-y-6">
       <PageHeader
         title="Team / Organization"
         description="Manage team members, assign roles, and control access."
