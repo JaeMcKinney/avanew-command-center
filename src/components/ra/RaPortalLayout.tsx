@@ -56,7 +56,7 @@ export function RaPortalLayout() {
       <aside
         className={cn(
           "hidden md:flex md:flex-col border-r border-sidebar-border transition-[width] duration-200",
-          collapsed ? "md:w-16" : "md:w-64"
+          collapsed ? "md:w-[72px]" : "md:w-64"
         )}
       >
         <RaSidebar collapsed={collapsed} onToggleCollapse={toggleCollapsed} />

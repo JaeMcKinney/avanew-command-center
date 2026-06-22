@@ -118,7 +118,7 @@ function SidebarLink({
           cn(
             "group flex items-center rounded-md py-2 text-sm font-medium transition-colors",
             collapsed
-              ? "mx-auto h-9 w-9 justify-center px-0"
+              ? "mx-auto h-10 w-10 justify-center px-0"
               : sub
                 ? "gap-3 pl-8 pr-3"
                 : "gap-3 px-3",
@@ -165,7 +165,7 @@ function ModuleGroup({
         <button
           type="button"
           onClick={onExpand}
-          className="mx-auto flex h-9 w-9 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+          className="mx-auto flex h-10 w-10 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
         >
           <Icon className="h-4 w-4 shrink-0 text-sidebar-foreground/50" />
         </button>
@@ -198,7 +198,7 @@ function ModuleGroup({
 /** Section header in the nav — text label when expanded, a thin divider when collapsed. */
 function SectionLabel({ label, collapsed }: { label: string; collapsed?: boolean }) {
   if (collapsed) {
-    return <div className="my-2 mx-auto h-px w-6 bg-sidebar-border" />
+    return <div className="my-3 mx-auto h-px w-8 bg-sidebar-border" />
   }
   return (
     <div className="pt-2 pb-1 px-3 text-[10px] uppercase tracking-widest text-sidebar-foreground/30 font-medium">
@@ -244,15 +244,15 @@ export function AppSidebar({
               onClick={onToggleCollapse}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               className={cn(
-                "absolute top-2 z-20 grid h-7 w-7 place-items-center rounded-md",
-                "border border-sidebar-border bg-sidebar-accent/70 text-sidebar-foreground",
-                "shadow-sm hover:bg-sidebar-accent hover:text-primary transition-colors",
+                "absolute top-2.5 z-20 grid h-8 w-8 place-items-center rounded-md",
+                "border border-sidebar-border bg-sidebar-accent text-sidebar-foreground",
+                "shadow-sm hover:bg-primary/15 hover:text-primary hover:border-primary/40 transition-colors",
                 collapsed ? "left-1/2 -translate-x-1/2" : "right-2"
               )}
             >
               {collapsed
-                ? <ChevronsRight className="h-4 w-4" />
-                : <ChevronsLeft className="h-4 w-4" />}
+                ? <ChevronsRight className="h-5 w-5" />
+                : <ChevronsLeft className="h-5 w-5" />}
             </button>
           </RailTooltip>
         )}
@@ -315,7 +315,7 @@ export function AppSidebar({
           )}
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+        <nav className={cn("flex-1 overflow-y-auto", collapsed ? "space-y-1.5 px-2 py-3" : "space-y-1 p-3")}>
           <SidebarLink to="/dashboard" label="Dashboard" icon={LayoutDashboard} collapsed={collapsed} onNavigate={onNavigate} />
 
           <SectionLabel label="Modules" collapsed={collapsed} />

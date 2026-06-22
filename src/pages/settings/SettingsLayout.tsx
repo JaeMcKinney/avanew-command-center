@@ -191,7 +191,7 @@ function NavItemLink({ item, collapsed, onClick }: { item: NavItem; collapsed: b
       className={({ isActive }) =>
         cn(
           "group flex items-center gap-3 rounded-md text-sm transition-colors",
-          collapsed ? "justify-center p-2" : "px-3 py-2",
+          collapsed ? "mx-auto h-10 w-10 justify-center" : "px-3 py-2",
           isActive
             ? "bg-sidebar-accent text-primary font-medium"
             : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -225,20 +225,20 @@ function NavItemLink({ item, collapsed, onClick }: { item: NavItem; collapsed: b
 function SidebarNav({ role, collapsed, onNavigate }: { role: TeamRole | null; collapsed: boolean; onNavigate?: () => void }) {
   return (
     <TooltipProvider>
-      <nav className={collapsed ? "space-y-3" : "space-y-4"}>
+      <nav className={collapsed ? "space-y-4" : "space-y-4"}>
         {NAV_GROUPS.map((group, gi) => {
           const visible = group.items.filter((item) => canSee(item, role))
           if (!visible.length) return null
           return (
             <div key={group.group}>
               {collapsed
-                ? gi > 0 && <div className="mx-2 mb-2 border-t border-border/50" aria-hidden />
+                ? gi > 0 && <div className="mx-auto my-3 h-px w-8 bg-border" aria-hidden />
                 : (
                   <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                     {group.group}
                   </p>
                 )}
-              <div className="space-y-0.5">
+              <div className={collapsed ? "space-y-1.5" : "space-y-0.5"}>
                 {visible.map((item) => (
                   <NavItemLink key={item.to} item={item} collapsed={collapsed} onClick={onNavigate} />
                 ))}
@@ -308,7 +308,7 @@ export function SettingsLayout() {
         <aside
           className={cn(
             "hidden lg:block sticky top-0 self-start shrink-0 transition-[width] duration-200",
-            collapsed ? "w-14" : "w-52 xl:w-56"
+            collapsed ? "w-16" : "w-52 xl:w-56"
           )}
         >
           <div className={cn("flex items-center mb-3", collapsed ? "justify-center" : "justify-between px-3")}>
@@ -322,11 +322,11 @@ export function SettingsLayout() {
               onClick={toggleCollapsed}
               aria-label={collapsed ? "Expand settings sidebar" : "Collapse settings sidebar"}
               title={collapsed ? "Expand" : "Collapse"}
-              className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border bg-accent/60 text-foreground shadow-sm hover:bg-accent hover:text-primary transition-colors"
+              className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-border bg-accent text-foreground shadow-sm hover:bg-primary/15 hover:text-primary hover:border-primary/40 transition-colors"
             >
               {collapsed
-                ? <ChevronsRight className="h-4 w-4" />
-                : <ChevronsLeft className="h-4 w-4" />}
+                ? <ChevronsRight className="h-5 w-5" />
+                : <ChevronsLeft className="h-5 w-5" />}
             </button>
           </div>
           <SidebarNav role={role} collapsed={collapsed} />
