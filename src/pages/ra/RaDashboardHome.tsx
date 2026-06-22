@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import {
   Copy, CheckCheck, DollarSign, Repeat, Eye, Megaphone, Share2,
-  TrendingUp, CalendarClock, ArrowRight, Sparkles, Trash2,
+  TrendingUp, CalendarClock, ArrowRight, Sparkles, Trash2, ShieldCheck,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -179,13 +179,46 @@ export function RaDashboardHome() {
         </Card>
       </div>
 
-      {/* Earnings */}
+      {/* Lifetime earnings hero — reassurance card. Designed to feel like a
+          rock-solid statement: this is what you've earned, it never goes down. */}
+      <Card className="border-primary/40 bg-gradient-to-br from-primary/[0.06] via-background to-background">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-6 flex-wrap">
+            <div className="flex-1 min-w-[240px]">
+              <p className="text-[11px] font-semibold text-primary uppercase tracking-widest flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Your lifetime earnings
+              </p>
+              <p className="text-4xl sm:text-5xl font-semibold tracking-tight mt-2 tabular-nums">
+                {fmtCurrency(earnings.totalAllTime)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2 max-w-md">
+                Every commission paid to you, in full. This number never goes down — earned commissions stay yours.
+              </p>
+            </div>
+            <div className="rounded-lg border bg-background/80 backdrop-blur px-5 py-4 min-w-[220px]">
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                <Repeat className="h-3 w-3" /> Monthly recurring
+              </p>
+              <p className="text-2xl font-semibold mt-1 tabular-nums">
+                {fmtCurrency(earnings.mrr)}
+                <span className="text-sm text-muted-foreground font-normal">/mo</span>
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                From {earnings.clients.filter((c) => c.monthly > 0).length} active client{earnings.clients.filter((c) => c.monthly > 0).length === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Earnings detail */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
-              <CardTitle className="text-base flex items-center gap-2"><DollarSign className="h-4 w-4 text-primary" /> Your Earnings</CardTitle>
-              <CardDescription>Commissions paid to you, including one-time and recurring.</CardDescription>
+              <CardTitle className="text-base flex items-center gap-2"><DollarSign className="h-4 w-4 text-primary" /> Earnings breakdown</CardTitle>
+              <CardDescription>One-time and recurring commissions, with a per-client view.</CardDescription>
             </div>
             <div className="inline-flex rounded-md border p-0.5">
               {RANGES.map((r) => (
