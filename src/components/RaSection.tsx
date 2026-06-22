@@ -68,6 +68,7 @@ import { toast } from "sonner"
 import type { RaAssociate, RaStatus, RaType, RaLandingTemplate, Lead } from "@/types/db"
 import { InviteRaModal } from "@/components/ra/InviteRaModal"
 import { BulkInviteRaModal } from "@/components/ra/BulkInviteRaModal"
+import { RaChangeRequestsCard } from "@/components/ra/RaChangeRequestsCard"
 import { RaVerificationDialog } from "@/components/RaVerificationDialog"
 
 const STATUS_META: Record<RaStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -294,6 +295,8 @@ export function RaSection() {
 
   return (
     <>
+      <div className="space-y-4">
+      {canManage && <RaChangeRequestsCard />}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -551,6 +554,7 @@ export function RaSection() {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       <InviteRaModal
         open={inviteOpen}

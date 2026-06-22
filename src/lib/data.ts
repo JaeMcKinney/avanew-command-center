@@ -4182,6 +4182,88 @@ export async function listRaChangeRequests(raId: string): Promise<import("@/type
   return (data ?? []) as unknown as import("@/types/db").RaChangeRequest[]
 }
 
+export type PendingRaChangeRequest = import("@/types/db").RaChangeRequest & {
+  ra_display_name: string
+  ra_slug: string
+}
+
+/** Admin/Program-Admin view: all pending change requests across the org's RAs. */
+export async function listPendingRaChangeRequests(): Promise<PendingRaChangeRequest[]> {
+  if (PREVIEW_MODE) return []
+  const { data, error } = await supabase
+    .from("ra_change_requests" as never)
+    .select(`*, ra_associates!ra_change_requests_ra_associate_id_fkey ( display_name, slug )`)
+    .eq("status", "pending")
+    .order("requested_at", { ascending: false } as never)
+  if (error) return []
+  return ((data ?? []) as unknown as Array<Record<string, unknown>>).map((r) => ({
+    ...(r as unknown as import("@/types/db").RaChangeRequest),
+    ra_display_name: (r.ra_associates as { display_name?: string } | null)?.display_name ?? "RA",
+    ra_slug: (r.ra_associates as { slug?: string } | null)?.slug ?? "",
+  }))
+}
+
+/**
+ * Approve or decline a banking / W-9 change request. On approve, the proposed
+ * payload is written onto the ra_associates row (banking fields are admin-only
+ * writable via RLS), then the request is marked reviewed. Decline only stamps
+ * the status — nothing is applied.
+ */
+export async function reviewRaChangeRequest(
+  requestId: string,
+  approve: boolean,
+  reviewNote?: string | null,
+): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Not signed in")
+
+  const { data: reqRow, error: reqErr } = await supabase
+    .from("ra_change_requests" as never)
+    .select("id, ra_associate_id, request_type, payload, status")
+    .eq("id", requestId)
+    .maybeSingle()
+  if (reqErr) throw reqErr
+  if (!reqRow) throw new Error("Request not found")
+  const req = reqRow as unknown as {
+    ra_associate_id: string
+    request_type: import("@/types/db").RaChangeRequestType
+    payload: Record<string, unknown>
+    status: string
+  }
+  if (req.status !== "pending") throw new Error("This request was already reviewed")
+
+  if (approve) {
+    if (req.request_type === "banking") {
+      const patch: Record<string, unknown> = {}
+      for (const k of ["ach_account_holder", "ach_bank_name", "ach_routing", "ach_account"]) {
+        if (req.payload[k] != null && req.payload[k] !== "") patch[k] = req.payload[k]
+      }
+      if (Object.keys(patch).length > 0) {
+        const { error: upErr } = await supabase.from("ra_associates").update(patch as never).eq("id", req.ra_associate_id)
+        if (upErr) throw upErr
+      }
+    } else if (req.request_type === "w9" && req.payload.w9_document_url) {
+      const { error: upErr } = await supabase
+        .from("ra_associates")
+        .update({ w9_document_url: req.payload.w9_document_url, w9_completed: true } as never)
+        .eq("id", req.ra_associate_id)
+      if (upErr) throw upErr
+    }
+  }
+
+  const { error: stampErr } = await supabase
+    .from("ra_change_requests" as never)
+    .update({
+      status: approve ? "approved" : "declined",
+      reviewed_by: user.id,
+      reviewed_at: new Date().toISOString(),
+      review_note: reviewNote ?? null,
+    } as never)
+    .eq("id", requestId)
+  if (stampErr) throw stampErr
+}
+
 // ── Client check-ins (PR-13) ─────────────────────────────────────────────────
 
 export type ClientCheckin = {
