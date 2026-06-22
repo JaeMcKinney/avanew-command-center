@@ -4075,6 +4075,113 @@ export async function listPayoutsForRaSlug(slug: string): Promise<RaPayout[]> {
   }))
 }
 
+// ── RA self-service: page-view analytics, demo seed, profile + change requests ──
+
+/** Aggregate the RA's own public page views (demo vs refer) over time windows.
+ *  RA reads only their own rows via RLS. Safe no-op in preview. */
+export async function getRaPageViewStats(): Promise<import("@/types/db").RaPageViewStats> {
+  const empty = { demo_total: 0, refer_total: 0, demo_7d: 0, refer_7d: 0, demo_30d: 0, refer_30d: 0 }
+  if (PREVIEW_MODE) return { ...empty, demo_total: 42, refer_total: 17, demo_7d: 8, refer_7d: 3, demo_30d: 25, refer_30d: 11 }
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return empty
+  const { data: ra } = await supabase.from("ra_associates").select("id").eq("user_id", user.id).maybeSingle()
+  const raId = (ra as { id?: string } | null)?.id
+  if (!raId) return empty
+  const { data, error } = await supabase
+    .from("ra_page_views" as never)
+    .select("page_type, viewed_at")
+    .eq("ra_id", raId)
+  if (error) return empty
+  const now = Date.now(), day = 86400_000
+  const rows = (data ?? []) as unknown as Array<{ page_type: string | null; viewed_at: string }>
+  const out = { ...empty }
+  for (const r of rows) {
+    const isDemo = r.page_type === "demo"
+    const ageDays = (now - new Date(r.viewed_at).getTime()) / day
+    if (isDemo) out.demo_total++; else out.refer_total++
+    if (ageDays <= 7) { if (isDemo) out.demo_7d++; else out.refer_7d++ }
+    if (ageDays <= 30) { if (isDemo) out.demo_30d++; else out.refer_30d++ }
+  }
+  return out
+}
+
+/** Record a public page view (demo or refer) for analytics. Fire-and-forget. */
+export async function recordRaPageView(slug: string, pageType: "demo" | "refer"): Promise<void> {
+  if (PREVIEW_MODE || !slug) return
+  try {
+    await supabase.rpc("record_ra_page_view" as never, {
+      p_slug: slug,
+      p_user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      p_page_type: pageType,
+    } as never)
+  } catch { /* analytics must never break the public page */ }
+}
+
+/** Seed 3 deletable demo leads for the RA (once). Returns rows inserted. */
+export async function ensureRaDemoLeads(slug: string): Promise<number> {
+  if (PREVIEW_MODE) return 0
+  const { data, error } = await supabase.rpc("ensure_ra_demo_leads" as never, { p_slug: slug } as never)
+  if (error) return 0
+  return Number(data ?? 0)
+}
+
+/** Clear the RA's demo seed leads. Returns rows deleted. */
+export async function clearRaDemoLeads(slug: string): Promise<number> {
+  if (PREVIEW_MODE) return 0
+  const { data, error } = await supabase.rpc("clear_ra_demo_leads" as never, { p_slug: slug } as never)
+  if (error) throw error
+  return Number(data ?? 0)
+}
+
+/** RA self-update of non-sensitive profile fields (alias name, bio, contact). */
+export async function updateRaSelfProfile(
+  raId: string,
+  patch: Partial<Pick<import("@/types/db").RaAssociate, "display_name" | "bio" | "contact_phone" | "contact_email">>,
+): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase.from("ra_associates").update(patch as never).eq("id", raId)
+  if (error) throw error
+}
+
+/** RA submits a banking / W-9 change request for Program Admin review. */
+export async function submitRaChangeRequest(input: {
+  raId: string
+  request_type: import("@/types/db").RaChangeRequestType
+  payload: Record<string, unknown>
+  note?: string | null
+}): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Not signed in")
+  const { data: raRow, error: raErr } = await supabase
+    .from("ra_associates").select("organization_id").eq("id", input.raId).maybeSingle()
+  if (raErr) throw raErr
+  if (!raRow) throw new Error("RA not found")
+  const { error } = await supabase
+    .from("ra_change_requests" as never)
+    .insert({
+      organization_id: (raRow as { organization_id: string }).organization_id,
+      ra_associate_id: input.raId,
+      request_type: input.request_type,
+      payload: input.payload,
+      note: input.note ?? null,
+      requested_by: user.id,
+    } as never)
+  if (error) throw error
+}
+
+/** List a RA's own pending/historical change requests. */
+export async function listRaChangeRequests(raId: string): Promise<import("@/types/db").RaChangeRequest[]> {
+  if (PREVIEW_MODE) return []
+  const { data, error } = await supabase
+    .from("ra_change_requests" as never)
+    .select("*")
+    .eq("ra_associate_id", raId)
+    .order("requested_at", { ascending: false } as never)
+  if (error) return []
+  return (data ?? []) as unknown as import("@/types/db").RaChangeRequest[]
+}
+
 // ── Client check-ins (PR-13) ─────────────────────────────────────────────────
 
 export type ClientCheckin = {

@@ -8,7 +8,11 @@ import { SetupAccount } from "@/pages/auth/SetupAccount"
 import { RaOnboarding } from "@/pages/onboarding/RaOnboarding"
 import { RaOnboardingSteps } from "@/pages/onboarding/RaOnboardingSteps"
 import { RaPortalGuard } from "@/components/RaPortalGuard"
-import { RaDashboard } from "@/pages/ra/RaDashboard"
+import { RaPortalLayout } from "@/components/ra/RaPortalLayout"
+import { RaDashboardHome } from "@/pages/ra/RaDashboardHome"
+import { RaDeals } from "@/pages/ra/RaDeals"
+import { RaActivities } from "@/pages/ra/RaActivities"
+import { RaSettings } from "@/pages/ra/RaSettings"
 import { RaLandingPage } from "@/pages/public/RaLandingPage"
 import { RaDemoPage } from "@/pages/public/RaDemoPage"
 import { SettingsLandingPages } from "@/pages/settings/SettingsLandingPages"
@@ -221,7 +225,8 @@ function App() {
       >
         <Route index element={<RaStoryboard />} />
       </Route>
-      {/* RA portal — own Divigner-branded layout, status-gated */}
+      {/* RA portal — staff-CRM-style shell, status-gated. RAs only ever see
+          Dashboard / Deals / Activities / Settings, scoped to their own data. */}
       <Route
         element={
           <ProtectedRoute>
@@ -229,7 +234,12 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="/ra/dashboard" element={<RaDashboard />} />
+        <Route element={<RaPortalLayout />}>
+          <Route path="/ra/dashboard" element={<RaDashboardHome />} />
+          <Route path="/ra/deals" element={<RaDeals />} />
+          <Route path="/ra/activities" element={<RaActivities />} />
+          <Route path="/ra/settings" element={<RaSettings />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

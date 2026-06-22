@@ -322,11 +322,11 @@ export function SettingsLayout() {
               onClick={toggleCollapsed}
               aria-label={collapsed ? "Expand settings sidebar" : "Collapse settings sidebar"}
               title={collapsed ? "Expand" : "Collapse"}
-              className="h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground/70 hover:text-foreground hover:bg-accent transition-colors"
+              className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border bg-accent/60 text-foreground shadow-sm hover:bg-accent hover:text-primary transition-colors"
             >
               {collapsed
-                ? <ChevronsRight className="h-3.5 w-3.5" />
-                : <ChevronsLeft className="h-3.5 w-3.5" />}
+                ? <ChevronsRight className="h-4 w-4" />
+                : <ChevronsLeft className="h-4 w-4" />}
             </button>
           </div>
           <SidebarNav role={role} collapsed={collapsed} />

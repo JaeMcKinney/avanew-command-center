@@ -19,8 +19,8 @@ import {
   Truck,
   BarChart2,
   Landmark,
-  PanelLeftClose,
-  PanelLeft,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -234,11 +234,32 @@ export function AppSidebar({
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+      <div className="relative flex h-full flex-col bg-sidebar text-sidebar-foreground">
+        {/* Collapse toggle — pinned top, double-arrow, high contrast so it's
+            easy to spot. Centered in the collapsed rail. */}
+        {onToggleCollapse && (
+          <RailTooltip show={collapsed} label="Expand sidebar">
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={cn(
+                "absolute top-2 z-20 grid h-7 w-7 place-items-center rounded-md",
+                "border border-sidebar-border bg-sidebar-accent/70 text-sidebar-foreground",
+                "shadow-sm hover:bg-sidebar-accent hover:text-primary transition-colors",
+                collapsed ? "left-1/2 -translate-x-1/2" : "right-2"
+              )}
+            >
+              {collapsed
+                ? <ChevronsRight className="h-4 w-4" />
+                : <ChevronsLeft className="h-4 w-4" />}
+            </button>
+          </RailTooltip>
+        )}
         <div
           className={cn(
             "flex items-center justify-center border-b border-sidebar-border",
-            collapsed ? "h-16 px-2" : "h-28 px-4"
+            collapsed ? "h-16 px-2 pt-8" : "h-28 px-4"
           )}
         >
           {collapsed ? (
@@ -330,33 +351,11 @@ export function AppSidebar({
           <SidebarLink to="/settings" label="Settings" icon={Settings} collapsed={collapsed} onNavigate={onNavigate} />
         </nav>
 
-        <div className="border-t border-sidebar-border p-2">
-          {onToggleCollapse && (
-            <RailTooltip show={collapsed} label="Expand sidebar">
-              <button
-                type="button"
-                onClick={onToggleCollapse}
-                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                className={cn(
-                  "flex w-full items-center rounded-md py-2 text-xs font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
-                  collapsed ? "justify-center px-0" : "gap-2 px-3"
-                )}
-              >
-                {collapsed ? (
-                  <PanelLeft className="h-4 w-4 shrink-0" />
-                ) : (
-                  <>
-                    <PanelLeftClose className="h-4 w-4 shrink-0" />
-                    Collapse
-                  </>
-                )}
-              </button>
-            </RailTooltip>
-          )}
-          {!collapsed && (
+        {!collapsed && (
+          <div className="border-t border-sidebar-border p-2">
             <div className="px-3 pt-1 text-xs text-sidebar-foreground/40">v0.1 · ACC</div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </TooltipProvider>
   )

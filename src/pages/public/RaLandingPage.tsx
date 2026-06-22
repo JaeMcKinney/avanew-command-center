@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { getRaLandingPage, submitRaLead, type RaLandingPageData } from "@/lib/data"
+import { getRaLandingPage, submitRaLead, recordRaPageView, type RaLandingPageData } from "@/lib/data"
 import {
   renderMergeTags,
   splitFormSlot,
@@ -25,6 +25,10 @@ export function RaLandingPage() {
   const [ra, setRa] = useState<RaLandingPageData | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+
+  useEffect(() => {
+    if (slug) void recordRaPageView(slug, "refer")
+  }, [slug])
 
   useEffect(() => {
     document.title = "Divigner AI Automations"

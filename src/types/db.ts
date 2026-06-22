@@ -193,6 +193,33 @@ export type RaSectionComment = {
   updated_at: string
 }
 
+export type RaChangeRequestType = "banking" | "w9" | "other"
+export type RaChangeRequestStatus = "pending" | "approved" | "declined"
+
+export type RaChangeRequest = {
+  id: string
+  organization_id: string
+  ra_associate_id: string
+  request_type: RaChangeRequestType
+  payload: Record<string, unknown>
+  note: string | null
+  status: RaChangeRequestStatus
+  requested_by: string | null
+  requested_at: string
+  reviewed_by: string | null
+  reviewed_at: string | null
+  review_note: string | null
+}
+
+export type RaPageViewStats = {
+  demo_total: number
+  refer_total: number
+  demo_7d: number
+  refer_7d: number
+  demo_30d: number
+  refer_30d: number
+}
+
 // ── RA Archive (preserved when an RA is permanently deleted) ────────────────
 
 export type ArchivedRaAssociate = {

@@ -101,6 +101,26 @@ function formatDate(iso: string): string {
 }
 
 /**
+ * Resolve the page template that's actually in effect for an RA, mirroring the
+ * get_ra_landing_page() cascade: explicit per-RA override → org default for the
+ * RA's type → legacy is_default → built-in Divigner fallback.
+ */
+function effectiveTemplate(
+  ra: RaAssociate,
+  templates: RaLandingTemplate[],
+): { label: string; explicit: boolean } {
+  if (ra.template_id) {
+    const t = templates.find((x) => x.id === ra.template_id)
+    if (t) return { label: t.name, explicit: true }
+  }
+  const typeDefault = templates.find((x) => x.default_for_type === (ra.ra_type ?? "individual"))
+  if (typeDefault) return { label: typeDefault.name, explicit: false }
+  const legacyDefault = templates.find((x) => x.is_default)
+  if (legacyDefault) return { label: legacyDefault.name, explicit: false }
+  return { label: "Built-in default", explicit: false }
+}
+
+/**
  * Single source of truth for managing Referral Associates. Renders inside
  * the "Referral Associates" tab on /settings/team. Owns the full RA list +
  * filter buckets + invite / bulk-invite + delete + archive entry + per-row
@@ -338,13 +358,14 @@ export function RaSection() {
                   <TableHead>Status</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Joined</TableHead>
-                  <TableHead className="text-right w-[360px] sticky right-0 bg-card border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]">Actions</TableHead>
+                  <TableHead>Page template</TableHead>
+                  <TableHead className="text-center w-[360px] sticky right-0 bg-card border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-10">
+                    <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-10">
                       <span className="inline-flex items-center gap-2">
                         <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading…
                       </span>
@@ -353,7 +374,7 @@ export function RaSection() {
                 )}
                 {!loading && filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-10">
+                    <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-10">
                       No associates match the current filter.
                     </TableCell>
                   </TableRow>
@@ -399,7 +420,22 @@ export function RaSection() {
                           ? `Submitted ${formatDate(ra.submitted_at)}`
                           : formatDate(ra.created_at)}
                       </TableCell>
-                      <TableCell className="text-right w-[360px] sticky right-0 bg-card group-hover:bg-muted/50 border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]" onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="text-xs">
+                        {(() => {
+                          const t = effectiveTemplate(ra, templates)
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-muted-foreground"
+                              title={t.explicit ? "Explicitly assigned" : "Resolved from defaults"}
+                            >
+                              <Link2 className="h-3 w-3 opacity-60" />
+                              {t.label}
+                              {!t.explicit && <span className="opacity-50">(auto)</span>}
+                            </span>
+                          )
+                        })()}
+                      </TableCell>
+                      <TableCell className="text-center w-[360px] sticky right-0 bg-card group-hover:bg-muted/50 border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-2 flex-nowrap">
                           {/* Template assignment — only meaningful for active RAs */}
                           {ra.status === "active" && templates.length > 0 && (

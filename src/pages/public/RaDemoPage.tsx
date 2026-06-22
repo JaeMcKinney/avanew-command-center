@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { getRaLandingPage } from "@/lib/data"
+import { getRaLandingPage, recordRaPageView } from "@/lib/data"
 
 const FRAME_STYLE: React.CSSProperties = {
   position: "fixed",
@@ -30,6 +30,10 @@ export function RaDemoPage() {
   useEffect(() => {
     document.title = "Divigner AI Automations"
   }, [])
+
+  useEffect(() => {
+    if (slug) void recordRaPageView(slug, "demo")
+  }, [slug])
 
   useEffect(() => {
     let alive = true
