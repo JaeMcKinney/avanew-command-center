@@ -12,10 +12,13 @@ type Props = {
 }
 
 export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete }: Props) {
+  const alreadyAccepted = ra.agreement_completed === true
   const [cfg, setCfg] = useState<CommissionConfig | null>(null)
-  const [scrolledToEnd, setScrolledToEnd] = useState(false)
+  // Already-accepted RAs landing back on Step 1 should see the agreement
+  // pre-validated, not be able to "uncheck" their prior signature.
+  const [scrolledToEnd, setScrolledToEnd] = useState(alreadyAccepted)
   const [signedName, setSignedName] = useState(ra.agreement_signed_name ?? "")
-  const [agreeBox, setAgreeBox] = useState(false)
+  const [agreeBox, setAgreeBox] = useState(alreadyAccepted)
   const [submitting, setSubmitting] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -68,7 +71,10 @@ export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete }: Pro
     }
   }
 
-  const alreadyAccepted = ra.agreement_completed === true
+  // Forward to the next step without re-recording acceptance.
+  function handleContinue() {
+    onComplete({})
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -243,7 +249,7 @@ export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete }: Pro
             value={signedName}
             onChange={(e) => setSignedName(e.target.value)}
             placeholder="Type your full legal name"
-            disabled={submitting}
+            disabled={submitting || alreadyAccepted}
             style={{
               background: "rgba(0,0,0,.22)",
               border: "1px solid rgba(160,190,215,.18)",
@@ -253,6 +259,8 @@ export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete }: Pro
               fontSize: "14px",
               outline: "none",
               fontFamily: "'Manrope', sans-serif",
+              opacity: alreadyAccepted ? 0.7 : 1,
+              cursor: alreadyAccepted ? "not-allowed" : "text",
             }}
           />
         </label>
@@ -262,8 +270,15 @@ export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete }: Pro
             type="checkbox"
             checked={agreeBox}
             onChange={(e) => setAgreeBox(e.target.checked)}
-            disabled={submitting}
-            style={{ marginTop: 3, accentColor: "#34D6C2" }}
+            // Once accepted, the signature is locked — the RA cannot un-sign by
+            // toggling the box on a return visit. Verification/audit log lives
+            // on the row (agreement_accepted_at / agreement_ip_address).
+            disabled={submitting || alreadyAccepted}
+            style={{
+              marginTop: 3,
+              accentColor: "#34D6C2",
+              cursor: alreadyAccepted ? "not-allowed" : "pointer",
+            }}
           />
           <span>
             I have read, understood, and agree to the Divigner Referral Associate Agreement. I understand that
@@ -275,25 +290,26 @@ export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete }: Pro
 
       <button
         type="button"
-        onClick={handleAccept}
-        disabled={!cfg || !scrolledToEnd || !agreeBox || signedName.trim().length < 3 || submitting}
+        onClick={alreadyAccepted ? handleContinue : handleAccept}
+        disabled={!alreadyAccepted && (!cfg || !scrolledToEnd || !agreeBox || signedName.trim().length < 3 || submitting)}
         style={{
-          display: "flex",
+          alignSelf: "flex-start",
+          display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
           gap: "8px",
           background:
-            !cfg || !scrolledToEnd || !agreeBox || signedName.trim().length < 3 || submitting
+            !alreadyAccepted && (!cfg || !scrolledToEnd || !agreeBox || signedName.trim().length < 3 || submitting)
               ? "rgba(52,214,194,.35)"
               : "linear-gradient(135deg,#18B9A6,#34D6C2)",
           border: "none",
           borderRadius: "10px",
-          padding: "13px",
-          fontSize: "15px",
+          padding: "12px 22px",
+          fontSize: "14px",
           fontWeight: 700,
           color: "#06101D",
           cursor:
-            !cfg || !scrolledToEnd || !agreeBox || signedName.trim().length < 3 || submitting
+            !alreadyAccepted && (!cfg || !scrolledToEnd || !agreeBox || signedName.trim().length < 3 || submitting)
               ? "not-allowed"
               : "pointer",
           fontFamily: "'Manrope', sans-serif",
@@ -301,7 +317,9 @@ export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete }: Pro
       >
         {submitting
           ? <><Loader2 style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} /> Recording acceptance…</>
-          : <><CheckCircle2 style={{ width: 15, height: 15 }} /> Accept &amp; continue</>}
+          : alreadyAccepted
+            ? <><CheckCircle2 style={{ width: 15, height: 15 }} /> Continue →</>
+            : <><CheckCircle2 style={{ width: 15, height: 15 }} /> Accept &amp; continue</>}
       </button>
     </div>
   )

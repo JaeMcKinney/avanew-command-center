@@ -174,9 +174,10 @@ export function W9Step({ ra, stepLabel = "Step 5 of 6", onComplete }: Props) {
         onClick={() => inputRef.current?.click()}
         disabled={saving}
         style={{
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+          alignSelf: "flex-start",
+          display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px",
           background: "linear-gradient(135deg,#18B9A6,#34D6C2)",
-          border: "none", borderRadius: "10px", padding: "12px",
+          border: "none", borderRadius: "10px", padding: "12px 22px",
           fontSize: "14px", fontWeight: 700, color: "#06101D",
           cursor: saving ? "not-allowed" : "pointer",
           opacity: saving ? 0.5 : 1,

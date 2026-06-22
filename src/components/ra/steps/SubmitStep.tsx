@@ -135,10 +135,11 @@ export function SubmitStep({ ra, stepLabel = "Step 4 of 4", onSubmitted }: Props
         disabled={!allComplete || submitting}
         onClick={handleSubmit}
         style={{
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+          alignSelf: "flex-start",
+          display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px",
           background: !allComplete || submitting ? "rgba(52,214,194,.35)" : "linear-gradient(135deg,#18B9A6,#34D6C2)",
-          border: "none", borderRadius: "10px", padding: "13px",
-          fontSize: "15px", fontWeight: 700, color: "#06101D",
+          border: "none", borderRadius: "10px", padding: "12px 22px",
+          fontSize: "14px", fontWeight: 700, color: "#06101D",
           cursor: !allComplete || submitting ? "not-allowed" : "pointer",
           fontFamily: "'Manrope', sans-serif",
         }}

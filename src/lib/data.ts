@@ -1223,11 +1223,17 @@ export async function listTeamMembers(): Promise<TeamMember[]> {
         .from("organization_members")
         .select("user_id, role, created_at, is_program_admin, profiles(id, full_name, email)")
         .eq("organization_id", orgId)
+        // RAs are managed exclusively on the Referral Associates tab; never
+        // surface them here as Admins via the ROLE_META fallback. Cast through
+        // unknown because TeamRole locally excludes the RA role even though
+        // the DB enum carries it.
+        .neq("role", "referral_associate" as unknown as TeamRole)
         .order("created_at", { ascending: true }),
       supabase
         .from("invitations")
         .select("id, email, full_name, role, created_at")
         .eq("organization_id", orgId)
+        .neq("role", "referral_associate" as unknown as TeamRole)
         .order("created_at", { ascending: true }),
     ])
   if (mErr) throw mErr

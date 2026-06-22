@@ -131,6 +131,7 @@ export function RaOnboarding() {
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600&family=Manrope:wght@300;400;500;600;700&display=swap" />
 
       <div
+        className="ra-onboarding-root"
         style={{
           minHeight: "100vh",
           display: "flex",
@@ -144,6 +145,13 @@ export function RaOnboarding() {
           background: DIVIGNER_BG,
         }}
       >
+        {/* Branded orb stage — pure CSS, lives behind everything. */}
+        <div className="ra-orb-stage" aria-hidden="true">
+          <div className="ra-orb-halo" />
+          <div className="ra-orb-ring" />
+          <div className="ra-orb" />
+          <div className="ra-orb-core" />
+        </div>
         {/* Noise overlay */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: DIVIGNER_NOISE_SVG, opacity: 0.035, pointerEvents: "none" }} />
 
@@ -315,7 +323,41 @@ export function RaOnboarding() {
         </div>
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes ra-orb-float { 0%, 100% { transform: translateY(-50%); } 50% { transform: translateY(calc(-50% - 22px)); } }
+        @keyframes ra-orb-spin { to { transform: rotate(360deg); } }
+        @keyframes ra-orb-pulse { 0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 50% { transform: translate(-50%,-50%) scale(1.12); opacity: .85; } }
+
+        .ra-orb-stage {
+          position: fixed; right: -200px; top: 50%;
+          transform: translateY(-50%);
+          width: 720px; height: 720px;
+          pointer-events: none; z-index: 0; opacity: .65;
+        }
+        .ra-orb { position: absolute; inset: 0; border-radius: 50%; filter: blur(2px); animation: ra-orb-float 9s ease-in-out infinite;
+          background:
+            radial-gradient(circle at 36% 30%, rgba(150,255,240,.85), rgba(52,214,194,.45) 26%, rgba(20,120,150,.22) 48%, transparent 64%),
+            radial-gradient(circle at 60% 70%, rgba(40,160,200,.4), transparent 55%); }
+        .ra-orb-ring { position: absolute; inset: 60px; border-radius: 50%; filter: blur(26px); opacity: .7; animation: ra-orb-spin 22s linear infinite;
+          background: conic-gradient(from 0deg, transparent, rgba(95,227,210,.5), transparent 38%, rgba(201,168,106,.4), transparent 70%); }
+        .ra-orb-core { position: absolute; left: 50%; top: 50%; width: 90px; height: 90px; transform: translate(-50%,-50%); border-radius: 50%;
+          background: radial-gradient(circle at 38% 32%, #fff, #5FE3D2 45%, #18B9A6 80%);
+          box-shadow: 0 0 80px 20px rgba(52,214,194,.5), 0 0 160px 40px rgba(52,214,194,.25);
+          animation: ra-orb-pulse 5s ease-in-out infinite; }
+        .ra-orb-halo { position: absolute; inset: -40px; border-radius: 50%; border: 1px solid rgba(95,227,210,.12); box-shadow: inset 0 0 120px rgba(52,214,194,.2); }
+
+        .ra-onboarding-root input:focus,
+        .ra-onboarding-root textarea:focus,
+        .ra-onboarding-root select:focus {
+          border-color: rgba(95,227,210,.65) !important;
+          box-shadow: 0 0 0 3px rgba(52,214,194,.22);
+        }
+
+        @media (max-width: 720px) {
+          .ra-orb-stage { width: 480px; height: 480px; right: -200px; opacity: .45; }
+        }
+      `}</style>
     </>
   )
 }

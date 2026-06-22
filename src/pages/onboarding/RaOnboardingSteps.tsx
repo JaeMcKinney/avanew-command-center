@@ -123,44 +123,73 @@ export function RaOnboardingSteps() {
 
   // ── Submitted / pending review state ────────────────────────────────────────
   if (ra?.status === "verification") {
+    const submittedName = ra.display_name || ra.full_name || ""
     return (
       <>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600&family=Manrope:wght@400;500;600;700&display=swap" />
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem 1rem", background: DIVIGNER_BG, fontFamily: "'Manrope', sans-serif", position: "relative" }}>
-          <div style={{ position: "absolute", inset: 0, backgroundImage: DIVIGNER_NOISE_SVG, opacity: 0.035, pointerEvents: "none" }} />
-          <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "440px", textAlign: "center" }}>
-            <img src={DIVIGNER_LOGO_SRC} alt="Divigner" style={{ height: "52px", marginBottom: "40px" }} />
-            <div style={{ background: DIVIGNER_CARD_BG, border: "1px solid rgba(160,190,215,.14)", borderRadius: "20px", padding: "40px", boxShadow: "0 32px 80px -20px rgba(0,0,0,.7)" }}>
-              <div style={{ background: "rgba(52,214,194,.1)", borderRadius: "50%", width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-                <CheckCircle2 style={{ width: 32, height: 32, color: "#34D6C2" }} />
-              </div>
-              <h1 style={{ margin: "0 0 12px", fontSize: "22px", fontWeight: 600, color: "#EAF2F9", fontFamily: "'Fraunces', serif" }}>
-                Application submitted!
-              </h1>
-              <p style={{ margin: 0, fontSize: "14px", color: "#A2B6C9", lineHeight: 1.7 }}>
-                The Divigner team is reviewing your profile. You'll receive an email once your account is activated — typically within 1–2 business days.
-              </p>
+        <div className="ra-onboarding-root" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem 1rem", background: DIVIGNER_BG, fontFamily: "'Manrope', sans-serif", position: "relative", overflow: "hidden" }}>
+            <OnboardingOrbs />
+            <div style={{ position: "absolute", inset: 0, backgroundImage: DIVIGNER_NOISE_SVG, opacity: 0.035, pointerEvents: "none" }} />
+            {/* RA identity chip — pairs the name (and uploaded avatar when present) next to the sign-out button. */}
+            <div style={{ position: "absolute", top: 20, right: 24, zIndex: 3, display: "flex", alignItems: "center", gap: 12 }}>
+              {submittedName && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#A2B6C9", fontSize: 13, fontWeight: 500 }}>
+                  {ra.photo_url
+                    ? <img src={ra.photo_url} alt="" style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", border: "1px solid rgba(95,227,210,.35)" }} />
+                    : <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(52,214,194,.12)", color: "#34D6C2", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{initialsOf(submittedName)}</div>}
+                  <span>{submittedName}</span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleSignOut}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  background: "rgba(255,255,255,.04)",
+                  border: "1px solid rgba(160,190,215,.18)",
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                  color: "#A2B6C9",
+                  fontSize: 12, fontWeight: 500,
+                  cursor: "pointer",
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                <LogOut style={{ width: 13, height: 13 }} />
+                Sign out
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              style={{
-                marginTop: 24,
-                display: "inline-flex", alignItems: "center", gap: 6,
-                background: "transparent",
-                border: "none",
-                color: "#6E8499",
-                fontSize: 12, fontWeight: 500,
-                cursor: "pointer",
-                fontFamily: "'Manrope', sans-serif",
-              }}
-            >
-              <LogOut style={{ width: 13, height: 13 }} />
-              Sign out
-            </button>
-          </div>
+            <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "440px", textAlign: "center" }}>
+              {/* Logo sits centered on top of the card, overlapping its top edge. */}
+              <div style={{ position: "relative" }}>
+                <img
+                  src={DIVIGNER_LOGO_SRC}
+                  alt="Divigner"
+                  style={{
+                    height: "48px",
+                    position: "absolute",
+                    top: -28,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    zIndex: 2,
+                    filter: "drop-shadow(0 8px 20px rgba(0,0,0,.45))",
+                  }}
+                />
+                <div style={{ background: DIVIGNER_CARD_BG, border: "1px solid rgba(160,190,215,.14)", borderRadius: "20px", padding: "56px 40px 40px", boxShadow: "0 32px 80px -20px rgba(0,0,0,.7)" }}>
+                  <div style={{ background: "rgba(52,214,194,.1)", borderRadius: "50%", width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                    <CheckCircle2 style={{ width: 32, height: 32, color: "#34D6C2" }} />
+                  </div>
+                  <h1 style={{ margin: "0 0 12px", fontSize: "22px", fontWeight: 600, color: "#EAF2F9", fontFamily: "'Fraunces', serif" }}>
+                    Application submitted!
+                  </h1>
+                  <p style={{ margin: 0, fontSize: "14px", color: "#A2B6C9", lineHeight: 1.7 }}>
+                    The Divigner team is reviewing your profile. You'll receive an email once your account is activated — typically within 1–2 business days.
+                  </p>
+                </div>
+              </div>
+            </div>
         </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <OnboardingPageStyles />
       </>
     )
   }
@@ -168,18 +197,21 @@ export function RaOnboardingSteps() {
   if (!ra) return null
 
   const isNeedsChanges = ra.status === "needs_changes"
+  const raName = ra.display_name || ra.full_name || ""
 
   // ── Main wizard ─────────────────────────────────────────────────────────────
   return (
     <>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600&family=Manrope:wght@300;400;500;600;700&display=swap" />
 
-      <div style={{
+      <div className="ra-onboarding-root" style={{
         minHeight: "100vh",
         background: DIVIGNER_BG,
         fontFamily: "'Manrope', sans-serif",
         position: "relative",
+        overflow: "hidden",
       }}>
+        <OnboardingOrbs />
         <div style={{ position: "fixed", inset: 0, backgroundImage: DIVIGNER_NOISE_SVG, opacity: 0.035, pointerEvents: "none", zIndex: 0 }} />
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: "900px", margin: "0 auto", padding: "32px 20px 60px" }}>
@@ -188,9 +220,17 @@ export function RaOnboardingSteps() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px", gap: 12 }}>
             <img src={DIVIGNER_LOGO_SRC} alt="Divigner" style={{ height: "44px" }} />
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <p style={{ margin: 0, fontSize: "12px", color: "#6E8499" }}>
-                Referral Associate · Onboarding
-              </p>
+              {raName && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {ra.photo_url
+                    ? <img src={ra.photo_url} alt="" style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", border: "1px solid rgba(95,227,210,.4)" }} />
+                    : <div style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(52,214,194,.12)", color: "#34D6C2", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{initialsOf(raName)}</div>}
+                  <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#EAF2F9" }}>{raName}</span>
+                    <span style={{ fontSize: 11, color: "#6E8499" }}>Referral Associate · Onboarding</span>
+                  </div>
+                </div>
+              )}
               {/* Sign out — progress is auto-saved on each step's Next click,
                   so the RA can pause and resume later from the login screen. */}
               <button
@@ -318,7 +358,79 @@ export function RaOnboardingSteps() {
         </div>
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <OnboardingPageStyles />
     </>
+  )
+}
+
+// ── Shared visual pieces ────────────────────────────────────────────────────
+
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("")
+}
+
+// Pure-CSS orb stage borrowed from the demo template — lives fixed behind all
+// scrolling content so the onboarding pages share the brand's hero look.
+function OnboardingOrbs() {
+  return (
+    <div className="ra-orb-stage" aria-hidden="true">
+      <div className="ra-orb-halo" />
+      <div className="ra-orb-ring" />
+      <div className="ra-orb" />
+      <div className="ra-orb-core" />
+    </div>
+  )
+}
+
+function OnboardingPageStyles() {
+  return (
+    <style>{`
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes ra-orb-float { 0%, 100% { transform: translateY(-50%); } 50% { transform: translateY(calc(-50% - 22px)); } }
+      @keyframes ra-orb-spin { to { transform: rotate(360deg); } }
+      @keyframes ra-orb-pulse { 0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 50% { transform: translate(-50%,-50%) scale(1.12); opacity: .85; } }
+
+      .ra-orb-stage {
+        position: fixed;
+        right: -200px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 720px;
+        height: 720px;
+        pointer-events: none;
+        z-index: 0;
+        opacity: .65;
+      }
+      .ra-orb { position: absolute; inset: 0; border-radius: 50%; filter: blur(2px); animation: ra-orb-float 9s ease-in-out infinite;
+        background:
+          radial-gradient(circle at 36% 30%, rgba(150,255,240,.85), rgba(52,214,194,.45) 26%, rgba(20,120,150,.22) 48%, transparent 64%),
+          radial-gradient(circle at 60% 70%, rgba(40,160,200,.4), transparent 55%); }
+      .ra-orb-ring { position: absolute; inset: 60px; border-radius: 50%; filter: blur(26px); opacity: .7; animation: ra-orb-spin 22s linear infinite;
+        background: conic-gradient(from 0deg, transparent, rgba(95,227,210,.5), transparent 38%, rgba(201,168,106,.4), transparent 70%); }
+      .ra-orb-core { position: absolute; left: 50%; top: 50%; width: 90px; height: 90px; transform: translate(-50%,-50%); border-radius: 50%;
+        background: radial-gradient(circle at 38% 32%, #fff, #5FE3D2 45%, #18B9A6 80%);
+        box-shadow: 0 0 80px 20px rgba(52,214,194,.5), 0 0 160px 40px rgba(52,214,194,.25);
+        animation: ra-orb-pulse 5s ease-in-out infinite; }
+      .ra-orb-halo { position: absolute; inset: -40px; border-radius: 50%; border: 1px solid rgba(95,227,210,.12); box-shadow: inset 0 0 120px rgba(52,214,194,.2); }
+
+      /* Focus highlight — applies to every input/textarea/select inside an
+         onboarding page. Inline styles set outline:none, so we override the
+         border + add a teal ring on focus to keep the active field obvious. */
+      .ra-onboarding-root input:focus,
+      .ra-onboarding-root textarea:focus,
+      .ra-onboarding-root select:focus {
+        border-color: rgba(95,227,210,.65) !important;
+        box-shadow: 0 0 0 3px rgba(52,214,194,.22);
+      }
+
+      @media (max-width: 720px) {
+        .ra-orb-stage { width: 480px; height: 480px; right: -200px; opacity: .45; }
+      }
+    `}</style>
   )
 }

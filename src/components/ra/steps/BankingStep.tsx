@@ -12,7 +12,9 @@ type Props = {
 }
 
 export function BankingStep({ ra, stepLabel = "Step 3 of 4", onComplete }: Props) {
-  const [holder, setHolder] = useState(ra.ach_account_holder ?? "")
+  // Default to the RA's full name from the invite (display_name = first + last).
+  // The RA can still edit it for a joint account or business name.
+  const [holder, setHolder] = useState(ra.ach_account_holder ?? ra.display_name ?? "")
   const [bankName, setBankName] = useState(ra.ach_bank_name ?? "")
   const [routing, setRouting] = useState(ra.ach_routing ?? "")
   const [account, setAccount] = useState(ra.ach_account ?? "")
@@ -180,10 +182,11 @@ export function BankingStep({ ra, stepLabel = "Step 3 of 4", onComplete }: Props
         type="submit"
         disabled={saving || !routingValid || !accountValid}
         style={{
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+          alignSelf: "flex-start",
+          display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px",
           background: saving || !routingValid || !accountValid ? "rgba(52,214,194,.35)" : "linear-gradient(135deg,#18B9A6,#34D6C2)",
-          border: "none", borderRadius: "10px", padding: "13px",
-          fontSize: "15px", fontWeight: 700, color: "#06101D",
+          border: "none", borderRadius: "10px", padding: "12px 22px",
+          fontSize: "14px", fontWeight: 700, color: "#06101D",
           cursor: saving || !routingValid || !accountValid ? "not-allowed" : "pointer",
           fontFamily: "'Manrope', sans-serif",
         }}

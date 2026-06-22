@@ -11,9 +11,23 @@ type Props = {
   onComplete: (updated: Partial<RaAssociate>) => void
 }
 
+// Mask a string of up to 10 digits as "(###) ###-####". Anything pre-formatted
+// with the +1 country code is treated as a US number — strip and re-format.
+function formatPhone(input: string): string {
+  const digits = input.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "").slice(0, 10)
+  if (digits.length === 0) return ""
+  if (digits.length < 4) return `(${digits}`
+  if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+}
+
 export function ContactStep({ ra, stepLabel = "Step 2 of 4", onComplete }: Props) {
-  const [phone, setPhone] = useState(ra.contact_phone ?? "")
-  const [email, setEmail] = useState(ra.contact_email ?? "")
+  const [phone, setPhone] = useState(formatPhone(ra.contact_phone ?? ""))
+  // Pre-fill contact email from the invite address (ra.email is the joined
+  // profiles.email, set when the RA was invited). The RA may overwrite it
+  // since the contact email shown on their referral page can differ from
+  // their login email.
+  const [email, setEmail] = useState(ra.contact_email ?? ra.email ?? "")
   const [bio, setBio] = useState(ra.bio ?? "")
   const [saving, setSaving] = useState(false)
 
@@ -84,10 +98,12 @@ export function ContactStep({ ra, stepLabel = "Step 2 of 4", onComplete }: Props
             type="tel"
             required
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+1 (555) 000-0000"
+            onChange={(e) => setPhone(formatPhone(e.target.value))}
+            placeholder="(555) 000-0000"
             style={inputStyle}
             autoComplete="tel"
+            inputMode="tel"
+            maxLength={14}
           />
         </div>
 
@@ -129,10 +145,11 @@ export function ContactStep({ ra, stepLabel = "Step 2 of 4", onComplete }: Props
         type="submit"
         disabled={saving}
         style={{
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+          alignSelf: "flex-start",
+          display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px",
           background: saving ? "rgba(52,214,194,.35)" : "linear-gradient(135deg,#18B9A6,#34D6C2)",
-          border: "none", borderRadius: "10px", padding: "13px",
-          fontSize: "15px", fontWeight: 700, color: "#06101D",
+          border: "none", borderRadius: "10px", padding: "12px 22px",
+          fontSize: "14px", fontWeight: 700, color: "#06101D",
           cursor: saving ? "not-allowed" : "pointer",
           fontFamily: "'Manrope', sans-serif",
         }}
