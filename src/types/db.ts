@@ -148,6 +148,7 @@ export type RaAssociate = {
   agreement_signed_name?: string | null
   submitted_at: string | null
   verification_notes: string | null
+  verification_notes_at?: string | null
   verified_at: string | null
   activated_at: string | null
   template_id: string | null

@@ -30,9 +30,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
-import { getRaBySlug, updateRaStatus, listRaSectionComments, getRaW9SignedUrl } from "@/lib/data"
+import { getRaBySlug, updateRaStatus, listRaSectionComments, getRaW9SignedUrl, listRaChangeRequests } from "@/lib/data"
 import { RaReviewSection } from "@/components/ra/RaReviewSection"
-import type { RaAssociate, RaStatus, RaSectionComment, RaCommentSection } from "@/types/db"
+import { RaActivityThread } from "@/components/ra/RaActivityThread"
+import type { RaAssociate, RaStatus, RaSectionComment, RaCommentSection, RaChangeRequest } from "@/types/db"
 
 const STATUS_LABEL: Record<RaStatus, string> = {
   pending:       "Pending onboarding",
@@ -60,6 +61,7 @@ export function SettingsRAReview() {
   const navigate = useNavigate()
   const [ra, setRa] = useState<RaAssociate | null>(null)
   const [comments, setComments] = useState<RaSectionComment[]>([])
+  const [changeRequests, setChangeRequests] = useState<RaChangeRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [requestOpen, setRequestOpen] = useState(false)
   const [requestNotes, setRequestNotes] = useState("")
@@ -74,8 +76,12 @@ export function SettingsRAReview() {
       const r = await getRaBySlug(slug)
       setRa(r)
       if (r) {
-        const c = await listRaSectionComments(r.id).catch(() => [])
+        const [c, cr] = await Promise.all([
+          listRaSectionComments(r.id).catch(() => []),
+          listRaChangeRequests(r.id).catch(() => []),
+        ])
         setComments(c)
+        setChangeRequests(cr)
       }
       setLoading(false)
     })()
@@ -426,29 +432,34 @@ export function SettingsRAReview() {
                 )
               })}
 
-              <div className="pt-3 border-t space-y-2">
-                <Button className="w-full" disabled={!allComplete || acting} onClick={approve}>
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Approve &amp; Activate
-                </Button>
-                <Button variant="outline" className="w-full" disabled={acting} onClick={() => setRequestOpen(true)}>
-                  Request changes
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full text-destructive hover:text-destructive"
-                  disabled={acting}
-                  onClick={() => setDeclineOpen(true)}
-                >
-                  <XCircle className="h-3.5 w-3.5" />
-                  Decline application
-                </Button>
-                {!allComplete && (
-                  <p className="text-[11px] text-muted-foreground text-center pt-1">
-                    Approve unlocks once all items are checked.
-                  </p>
-                )}
-              </div>
+              {/* Decision panel — only meaningful while the RA is awaiting a
+                  verdict. Once they're active / declined / terminated /
+                  suspended, View Detail reuses this screen as read-only. */}
+              {(ra.status === "pending" || ra.status === "verification" || ra.status === "needs_changes") && (
+                <div className="pt-3 border-t space-y-2">
+                  <Button className="w-full" disabled={!allComplete || acting} onClick={approve}>
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Approve &amp; Activate
+                  </Button>
+                  <Button variant="outline" className="w-full" disabled={acting} onClick={() => setRequestOpen(true)}>
+                    Request changes
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full text-destructive hover:text-destructive"
+                    disabled={acting}
+                    onClick={() => setDeclineOpen(true)}
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    Decline application
+                  </Button>
+                  {!allComplete && (
+                    <p className="text-[11px] text-muted-foreground text-center pt-1">
+                      Approve unlocks once all items are checked.
+                    </p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -459,6 +470,11 @@ export function SettingsRAReview() {
                   <AlertTriangle className="h-4 w-4" />
                   Earlier reviewer note
                 </CardTitle>
+                {ra.verification_notes_at && (
+                  <CardDescription className="text-[11px]">
+                    Sent {new Date(ra.verification_notes_at).toLocaleString()}
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardContent>
                 <p className="text-xs whitespace-pre-wrap leading-relaxed">{ra.verification_notes}</p>
@@ -467,6 +483,10 @@ export function SettingsRAReview() {
           )}
         </div>
       </div>
+
+      {/* Communication & activity thread — every program-admin ↔ RA event,
+          newest first. Paginates after the first 12. */}
+      <RaActivityThread ra={ra} comments={comments} changeRequests={changeRequests} />
 
       {/* Request changes modal */}
       <Dialog open={requestOpen} onOpenChange={(v) => !v && setRequestOpen(false)}>

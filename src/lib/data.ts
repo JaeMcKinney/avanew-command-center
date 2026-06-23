@@ -1627,7 +1627,11 @@ export async function requestRaChanges(raId: string, notes: string): Promise<voi
   const trimmed = notes.trim()
   const { error } = await supabase
     .from("ra_associates")
-    .update({ status: "needs_changes", verification_notes: trimmed })
+    .update({
+      status: "needs_changes",
+      verification_notes: trimmed,
+      verification_notes_at: new Date().toISOString(),
+    } as never)
     .eq("id", raId)
   if (error) throw error
   await notifyRaStatus(raId, "changes_requested", trimmed)
@@ -3293,10 +3297,10 @@ export async function getDocumentUrl(storagePath: string): Promise<string> {
  *  cannot link to it directly because (1) the bucket is private and (2) a bare
  *  path is treated as a relative URL by the browser, which React Router then
  *  falls through to `/dashboard` for. */
-export async function getRaW9SignedUrl(storagePath: string): Promise<string> {
+export async function getRaW9SignedUrl(storagePath: string, ttlSeconds = 60 * 60): Promise<string> {
   const { data, error } = await supabase.storage
     .from("ra-w9")
-    .createSignedUrl(storagePath, 60 * 60)
+    .createSignedUrl(storagePath, ttlSeconds)
   if (error) throw new Error(error.message)
   return data.signedUrl
 }

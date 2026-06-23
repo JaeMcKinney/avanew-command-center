@@ -15,8 +15,8 @@ import {
   User,
   Building2,
   Link2,
-  ClipboardCheck,
   ExternalLink,
+  Download,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -64,6 +64,7 @@ import {
   listLeadsForRa,
   listRaLandingTemplates,
   setRaTemplate,
+  getRaW9SignedUrl,
 } from "@/lib/data"
 import { toast } from "sonner"
 import type { RaAssociate, RaStatus, RaType, RaLandingTemplate, Lead } from "@/types/db"
@@ -229,6 +230,60 @@ export function RaSection() {
     }
   }
 
+  // Compliance export — dump every RA record in the current view to CSV with
+  // full banking digits and a per-row signed W-9 link (1-week TTL). Filtered
+  // list is used so the admin can scope the export by status filter.
+  const [exporting, setExporting] = useState(false)
+  async function exportCompliance() {
+    if (filtered.length === 0) { toast.info("No RAs to export"); return }
+    setExporting(true)
+    try {
+      const w9Urls = await Promise.all(filtered.map(async (r) => {
+        if (!r.w9_document_url) return ""
+        try { return await getRaW9SignedUrl(r.w9_document_url, 60 * 60 * 24 * 7) } catch { return "" }
+      }))
+      const headers = [
+        "Display Name", "Email", "Slug", "Status", "Type",
+        "Phone", "Public Email",
+        "ACH Account Holder", "Bank", "Routing Number", "Account Number",
+        "Agreement Signed By", "Agreement Accepted At", "Agreement Version", "Agreement IP",
+        "W-9 On File", "W-9 Uploaded At", "W-9 Reviewed At", "W-9 Download Link (1 week)",
+        "Submitted At", "Verified At", "Activated At", "Created At",
+      ]
+      const esc = (v: unknown) => {
+        const s = v == null ? "" : String(v)
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+      }
+      const rows = filtered.map((r, i) => [
+        r.display_name, r.email, r.slug, r.status, r.ra_type ?? "individual",
+        r.contact_phone ?? "", r.contact_email ?? "",
+        r.ach_account_holder ?? "", r.ach_bank_name ?? "",
+        r.ach_routing ?? "", r.ach_account ?? "",
+        r.agreement_signed_name ?? "", r.agreement_accepted_at ?? "",
+        r.agreement_version ?? "", r.agreement_ip_address ?? "",
+        r.w9_completed ? "yes" : "no", r.w9_uploaded_at ?? "",
+        r.w9_reviewed_at ?? "", w9Urls[i],
+        r.submitted_at ?? "", r.verified_at ?? "", r.activated_at ?? "", r.created_at,
+      ].map(esc).join(","))
+      const csv = [headers.map(esc).join(","), ...rows].join("\n")
+      const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 19)
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `ra-compliance-${stamp}.csv`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      toast.success(`Exported ${filtered.length} RA${filtered.length === 1 ? "" : "s"}`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Export failed")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   async function handleTemplateChange(raId: string, templateId: string | null) {
     try {
       await setRaTemplate(raId, templateId)
@@ -291,6 +346,20 @@ export function RaSection() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+              {canManage && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportCompliance}
+                  disabled={exporting}
+                  title="Export CSV with banking + W-9 download links for compliance"
+                >
+                  {exporting
+                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    : <Download className="h-3.5 w-3.5" />}
+                  Export
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={() => navigate("/settings/ra/archive")}>
                 <Archive className="h-3.5 w-3.5" />
                 Archive
@@ -443,16 +512,10 @@ export function RaSection() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => navigate(`/settings/ra/${ra.slug}`)}>
+                              <DropdownMenuItem onClick={() => navigate(`/settings/ra/${ra.slug}/review`)}>
                                 <Eye className="h-3.5 w-3.5" />
                                 View detail
                               </DropdownMenuItem>
-                              {isReview && (
-                                <DropdownMenuItem onClick={() => navigate(`/settings/ra/${ra.slug}/review`)}>
-                                  <ClipboardCheck className="h-3.5 w-3.5" />
-                                  Open full review
-                                </DropdownMenuItem>
-                              )}
                               {isActiveOrInflight && (
                                 <DropdownMenuItem onClick={() => setLeadsTarget(ra)}>
                                   <Inbox className="h-3.5 w-3.5" />
