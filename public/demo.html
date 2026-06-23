@@ -1344,9 +1344,13 @@
         fallbackEl.textContent = initials;
       }
 
-      /* Title */
+      /* Title — only render when the RA has one in DB. Otherwise hide the
+         element so we don't leak the page-author's hardcoded fallback title. */
       var titleEl = document.getElementById('ra-title');
-      if(titleEl && ra.ra_title) titleEl.innerHTML = ra.ra_title;
+      if(titleEl){
+        if(ra.ra_title) titleEl.innerHTML = ra.ra_title;
+        else titleEl.style.display = 'none';
+      }
 
       /* Bio */
       var bioEl = document.getElementById('ra-bio');

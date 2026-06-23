@@ -484,9 +484,11 @@ export function SettingsRAReview() {
         </div>
       </div>
 
-      {/* Communication & activity thread — every program-admin ↔ RA event,
-          newest first. Paginates after the first 12. */}
-      <RaActivityThread ra={ra} comments={comments} changeRequests={changeRequests} />
+      {/* Communication & activity thread — same left-column width as the
+          review sections above so it doesn't bleed into the sidebar space. */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+        <RaActivityThread ra={ra} comments={comments} changeRequests={changeRequests} />
+      </div>
 
       {/* Request changes modal */}
       <Dialog open={requestOpen} onOpenChange={(v) => !v && setRequestOpen(false)}>
