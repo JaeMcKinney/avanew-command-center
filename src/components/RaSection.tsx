@@ -362,7 +362,7 @@ export function RaSection() {
                   <TableHead>Slug</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Page template</TableHead>
-                  <TableHead className="text-center w-[360px] sticky right-0 bg-card border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]">Actions</TableHead>
+                  <TableHead className="text-center w-[60px] sticky right-0 bg-card border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -438,52 +438,8 @@ export function RaSection() {
                           )
                         })()}
                       </TableCell>
-                      <TableCell className="text-center w-[360px] sticky right-0 bg-card group-hover:bg-muted/50 border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-2 flex-nowrap">
-                          {/* Template assignment — only meaningful for active RAs */}
-                          {ra.status === "active" && templates.length > 0 && (
-                            <select
-                              value={ra.template_id ?? ""}
-                              onChange={(e) => handleTemplateChange(ra.id, e.target.value || null)}
-                              className="h-7 shrink-0 text-xs rounded-md border bg-background px-2 max-w-[140px]"
-                              title="Landing page template"
-                            >
-                              <option value="">Org default</option>
-                              {templates.map((t) => (
-                                <option key={t.id} value={t.id}>
-                                  {t.name}{t.is_default ? " (default)" : ""}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-
-                          {/* Leads drill-down — for any active or in-flight RA */}
-                          {isActiveOrInflight && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 text-xs gap-1.5"
-                              onClick={() => setLeadsTarget(ra)}
-                              title={`View leads referred by ${ra.display_name}`}
-                            >
-                              <Inbox className="h-3 w-3" />
-                              Leads
-                            </Button>
-                          )}
-
-                          {/* Inline Review button — quick verification dialog */}
-                          {isReview && canManage && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 text-xs gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
-                              onClick={() => setReviewTarget(ra)}
-                            >
-                              <ClipboardCheck className="h-3 w-3" />
-                              Review
-                            </Button>
-                          )}
-
+                      <TableCell className="text-center w-[60px] sticky right-0 bg-card group-hover:bg-muted/50 border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
@@ -499,6 +455,12 @@ export function RaSection() {
                                 <DropdownMenuItem onClick={() => navigate(`/settings/ra/${ra.slug}/review`)}>
                                   <ClipboardCheck className="h-3.5 w-3.5" />
                                   Open full review
+                                </DropdownMenuItem>
+                              )}
+                              {isActiveOrInflight && (
+                                <DropdownMenuItem onClick={() => setLeadsTarget(ra)}>
+                                  <Inbox className="h-3.5 w-3.5" />
+                                  View leads
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />

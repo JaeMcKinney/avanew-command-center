@@ -1510,7 +1510,7 @@ export async function getRaPortalRedirect(): Promise<string | null> {
  */
 async function notifyRaStatus(
   raId: string,
-  kind: "approved" | "declined" | "changes_requested" | "submitted",
+  kind: "approved" | "declined" | "changes_requested" | "submitted" | "resubmitted",
   notes?: string,
 ): Promise<void> {
   if (PREVIEW_MODE) return
@@ -1586,15 +1586,27 @@ export async function saveRaBanking(raId: string, data: {
 
 /** Submit the completed application — moves status to 'verification' and
  *  fans out a "ready for review" email to every Program Admin in the org.
+ *  If the prior status was 'needs_changes' the email uses resubmission copy
+ *  so admins know to focus on what changed since their last review.
  *  Notification is best-effort; failure doesn't block submission. */
 export async function submitRaApplication(raId: string): Promise<void> {
   if (PREVIEW_MODE) return
+  // Read current status BEFORE the update so we can distinguish first
+  // submission (pending → verification) from a resubmission after admin
+  // requested changes (needs_changes → verification).
+  const { data: prev } = await supabase
+    .from("ra_associates")
+    .select("status")
+    .eq("id", raId)
+    .maybeSingle()
+  const wasNeedsChanges = (prev?.status as string | null) === "needs_changes"
+
   const { error } = await supabase
     .from("ra_associates")
     .update({ status: "verification", submitted_at: new Date().toISOString() })
     .eq("id", raId)
   if (error) throw error
-  await notifyRaStatus(raId, "submitted")
+  await notifyRaStatus(raId, wasNeedsChanges ? "resubmitted" : "submitted")
 }
 
 /** Approve a submitted RA application — moves status to 'active'. */

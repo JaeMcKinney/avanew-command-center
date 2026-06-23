@@ -22,7 +22,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2"
 
-type Kind = "approved" | "declined" | "changes_requested" | "submitted" | "change_requested"
+type Kind = "approved" | "declined" | "changes_requested" | "submitted" | "resubmitted" | "change_requested"
 
 type Payload = {
   ra_associate_id: string
@@ -125,7 +125,22 @@ function buildProgramAdminEmail(
   orgName: string,
   appUrl: string,
   raSlug: string,
+  isResubmission: boolean,
 ): { subject: string; html: string } {
+  if (isResubmission) {
+    return {
+      subject: `RA requested-changes submitted — ${raDisplayName}`,
+      html: wrap(
+        "Hi,",
+        orgName,
+        "An RA has submitted their requested changes",
+        `<p style="color:#A2B6C9;font-size:.95rem;line-height:1.6;margin:0 0 12px"><strong style="color:#EAF2F9">${escapeHtml(raDisplayName)}</strong> (${escapeHtml(raEmail)}) addressed the changes you requested and re-submitted their application for review.</p>
+         <p style="color:#A2B6C9;font-size:.9rem;line-height:1.5;margin:0">Please review the updates and approve, request additional changes, or decline.</p>`,
+        "Review updated application",
+        `${appUrl}/settings/ra/${encodeURIComponent(raSlug)}/review`,
+      ),
+    }
+  }
   return {
     subject: `New RA application ready for review — ${raDisplayName}`,
     html: wrap(
@@ -202,7 +217,7 @@ Deno.serve(async (req) => {
   let payload: Payload
   try { payload = await req.json() as Payload } catch { return json(400, { error: "Invalid JSON" }) }
   if (!payload.ra_associate_id) return json(400, { error: "ra_associate_id required" })
-  if (!["approved", "declined", "changes_requested", "submitted", "change_requested"].includes(payload.kind)) {
+  if (!["approved", "declined", "changes_requested", "submitted", "resubmitted", "change_requested"].includes(payload.kind)) {
     return json(400, { error: "Invalid kind" })
   }
 
@@ -242,12 +257,12 @@ Deno.serve(async (req) => {
     return json(200, { sent: false, reason: "no_sendgrid_key" })
   }
 
-  // ── submitted / change_requested: fan out to all Program Admins in the org ──
-  if (payload.kind === "submitted" || payload.kind === "change_requested") {
+  // ── submitted / resubmitted / change_requested: fan out to all Program Admins in the org ──
+  if (payload.kind === "submitted" || payload.kind === "resubmitted" || payload.kind === "change_requested") {
     const buildAdminEmail = () =>
       payload.kind === "change_requested"
         ? buildChangeRequestEmail(ra.display_name, orgName, appUrl, payload.request_type ?? "other")
-        : buildProgramAdminEmail(ra.display_name, raEmail, orgName, appUrl, ra.slug)
+        : buildProgramAdminEmail(ra.display_name, raEmail, orgName, appUrl, ra.slug, payload.kind === "resubmitted")
     // Find all admins in this org with is_program_admin = true.
     // We need their auth.users(id) to look up emails from profiles.
     const { data: members, error: memErr } = await admin
