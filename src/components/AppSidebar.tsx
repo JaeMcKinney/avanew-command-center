@@ -259,19 +259,22 @@ export function AppSidebar({
         <div
           className={cn(
             "flex items-center justify-center border-b border-sidebar-border",
-            collapsed ? "h-16 px-2 pt-8" : "h-28 px-4"
+            // Collapsed: pt-12 reserves room for the absolutely-positioned
+            // collapse chip (top-2.5 + h-8); h-24 gives the 40px logo enough
+            // room to live without crowding the first nav icon below.
+            collapsed ? "h-24 px-2 pt-12 pb-3" : "h-28 px-4"
           )}
         >
           {collapsed ? (
-            // Collapsed rail: square icon only (or initials fallback).
+            // Collapsed rail: square icon centered (h-10 w-10 matches nav cells).
             branding ? (
               <img
                 src={branding.icon}
                 alt={branding.name}
-                className="h-9 w-9 rounded-md object-contain"
+                className="mx-auto h-10 w-10 rounded-md object-contain"
               />
             ) : (
-              <div className="h-9 w-9 rounded-md bg-primary grid place-items-center shrink-0">
+              <div className="mx-auto h-10 w-10 rounded-md bg-primary grid place-items-center shrink-0">
                 <span className="text-sm font-bold text-primary-foreground">
                   {currentOrg?.name?.slice(0, 2).toUpperCase() ?? "AC"}
                 </span>
@@ -315,7 +318,7 @@ export function AppSidebar({
           )}
         </div>
 
-        <nav className={cn("flex-1 overflow-y-auto", collapsed ? "space-y-1.5 px-2 py-3" : "space-y-1 p-3")}>
+        <nav className={cn("flex-1 overflow-y-auto", collapsed ? "space-y-1.5 px-2 pt-5 pb-3" : "space-y-1 p-3")}>
           <SidebarLink to="/dashboard" label="Dashboard" icon={LayoutDashboard} collapsed={collapsed} onNavigate={onNavigate} />
 
           <SectionLabel label="Modules" collapsed={collapsed} />

@@ -121,9 +121,9 @@ export function RaSidebar({
           </RailTooltip>
         )}
 
-        <div className={cn("flex items-center justify-center border-b border-sidebar-border", collapsed ? "h-16 px-2 pt-8" : "h-28 px-4")}>
+        <div className={cn("flex items-center justify-center border-b border-sidebar-border", collapsed ? "h-24 px-2 pt-12 pb-3" : "h-28 px-4")}>
           {collapsed ? (
-            <img src={DIVIGNER_ICON} alt="Divigner" className="h-9 w-9 rounded-md object-contain" />
+            <img src={DIVIGNER_ICON} alt="Divigner" className="mx-auto h-10 w-10 rounded-md object-contain" />
           ) : (
             <div className="relative flex h-20 w-full max-w-[200px] items-center justify-center">
               <img
@@ -140,7 +140,7 @@ export function RaSidebar({
           )}
         </div>
 
-        <nav className={cn("flex-1 overflow-y-auto", collapsed ? "space-y-1.5 px-2 py-3" : "space-y-1 p-3")}>
+        <nav className={cn("flex-1 overflow-y-auto", collapsed ? "space-y-1.5 px-2 pt-5 pb-3" : "space-y-1 p-3")}>
           <SidebarLink {...DASHBOARD_ITEM} collapsed={collapsed} onNavigate={onNavigate} />
           <SectionLabel label="Modules" collapsed={collapsed} />
           {MODULE_ITEMS.map((item) => (

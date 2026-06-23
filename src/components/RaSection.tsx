@@ -16,6 +16,7 @@ import {
   Building2,
   Link2,
   ClipboardCheck,
+  ExternalLink,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -417,26 +418,41 @@ export function RaSection() {
                           </Badge>
                         </div>
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">/demo/{ra.slug}</TableCell>
+                      <TableCell className="font-mono text-xs" onClick={(e) => e.stopPropagation()}>
+                        <a
+                          href={`/demo/${ra.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline inline-flex items-center gap-1"
+                          title="Open demo page in a new tab"
+                        >
+                          /demo/{ra.slug}
+                          <ExternalLink className="h-3 w-3 opacity-60" />
+                        </a>
+                      </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {ra.submitted_at
                           ? `Submitted ${formatDate(ra.submitted_at)}`
                           : formatDate(ra.created_at)}
                       </TableCell>
-                      <TableCell className="text-xs">
-                        {(() => {
-                          const t = effectiveTemplate(ra, templates)
-                          return (
-                            <span
-                              className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-muted-foreground"
-                              title={t.explicit ? "Explicitly assigned" : "Resolved from defaults"}
-                            >
-                              <Link2 className="h-3 w-3 opacity-60" />
-                              {t.label}
-                              {!t.explicit && <span className="opacity-50">(auto)</span>}
-                            </span>
-                          )
-                        })()}
+                      <TableCell className="text-xs" onClick={(e) => e.stopPropagation()}>
+                        {templates.length > 0 ? (
+                          <select
+                            value={ra.template_id ?? ""}
+                            onChange={(e) => handleTemplateChange(ra.id, e.target.value || null)}
+                            className="h-7 w-full max-w-[180px] text-xs rounded-md border bg-background px-2"
+                            title="Assign a landing page template"
+                          >
+                            <option value="">Org default (auto)</option>
+                            {templates.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.name}{t.is_default ? " (default)" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-center w-[60px] sticky right-0 bg-card group-hover:bg-muted/50 border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end">
