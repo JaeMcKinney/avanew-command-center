@@ -1470,8 +1470,10 @@ export async function getRaAssociate(): Promise<import("@/types/db").RaAssociate
 // Hard staff allowlist — these accounts are ALWAYS treated as staff, regardless
 // of profiles.role. Safety net so a stale/unapplied role migration can never
 // trap a known platform operator in the RA portal (e.g. jae is super_user AND
-// holds an RA profile for /refer/jae).
-const STAFF_EMAIL_ALLOWLIST = new Set(["jae@divigner.com"])
+// holds an RA profile for /refer/jae; zuirrae is admin + Program Admin AND
+// holds an RA profile for /refer/zuirrae). They land in the staff CRM and reach
+// their RA portal/refer page by URL.
+const STAFF_EMAIL_ALLOWLIST = new Set(["jae@divigner.com", "zuirrae@divigner.com"])
 
 export async function getRaPortalRedirect(): Promise<string | null> {
   if (PREVIEW_MODE) return null // preview demos the CRM as super_user
