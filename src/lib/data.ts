@@ -1717,6 +1717,48 @@ export async function getArchivedRa(
   }
 }
 
+/**
+ * Re-assign every live lead/deal originally referred by an archived RA to a
+ * different, active RA in the same org. Archive snapshot stays intact.
+ */
+export async function transferArchivedLeads(
+  archiveId: string,
+  targetUserId: string,
+): Promise<{
+  target_display_name: string
+  leads_transferred: number
+  deals_transferred: number
+}> {
+  if (PREVIEW_MODE) throw new Error("Not available in preview mode")
+  const { data, error } = await supabase.functions.invoke("transfer-archived-leads", {
+    body: { archive_id: archiveId, target_user_id: targetUserId },
+  })
+  if (error) throw error
+  return data as {
+    target_display_name: string
+    leads_transferred: number
+    deals_transferred: number
+  }
+}
+
+/**
+ * Permanently delete an archive entry — this drops the snapshot and CASCADEs
+ * to every archived_* child row. After this runs, the only recovery path is
+ * an external backup. Live leads/deals are NOT touched; call
+ * transferArchivedLeads first if you want to preserve attribution.
+ */
+export async function hardDeleteArchivedRa(
+  archiveId: string,
+  confirmName: string,
+): Promise<{ display_name: string }> {
+  if (PREVIEW_MODE) throw new Error("Not available in preview mode")
+  const { data, error } = await supabase.functions.invoke("hard-delete-archive", {
+    body: { archive_id: archiveId, confirm_name: confirmName },
+  })
+  if (error) throw error
+  return data as { display_name: string }
+}
+
 /** Undo a permanent RA delete — re-creates the RA from its archive snapshot,
  *  re-links leads/deals, restores payouts/checkins/agreements, and removes the
  *  archive entry. Gated to super_user / program_admin by the edge function. */

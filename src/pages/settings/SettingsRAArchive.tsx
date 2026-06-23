@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { ArrowLeft, Archive as ArchiveIcon, Search, FileText, Users, ListChecks, Receipt, FileSignature, RotateCcw, Loader2 } from "lucide-react"
+import { ArrowLeft, Archive as ArchiveIcon, Search, FileText, Users, ListChecks, Receipt, FileSignature, RotateCcw, Loader2, ArrowRightLeft, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -18,9 +19,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { PageHeader } from "@/components/PageHeader"
-import { listArchivedRas, getArchivedRa, restoreRa } from "@/lib/data"
+import { listArchivedRas, getArchivedRa, restoreRa, hardDeleteArchivedRa } from "@/lib/data"
 import { toast } from "sonner"
 import type { ArchivedRaAssociate, ArchivedRaDetail, RaStatus } from "@/types/db"
+import { TransferRaLeadsModal } from "@/components/ra/TransferRaLeadsModal"
 
 /** Restore button + confirmation. Re-creates the RA from its archive snapshot. */
 function RestoreControl({
@@ -76,7 +78,7 @@ function RestoreControl({
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm">
                 <p>
-                  This re-creates the RA at <span className="font-mono">/refer/{archive.slug}</span>,
+                  This re-creates the RA at <span className="font-mono">/demo/{archive.slug}</span>,
                   re-links their leads &amp; deals, and restores their payout and check-in history.
                 </p>
                 <p>
@@ -90,6 +92,98 @@ function RestoreControl({
             <AlertDialogCancel disabled={restoring}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={(e) => { e.preventDefault(); void handleRestore() }} disabled={restoring}>
               {restoring ? <><Loader2 className="h-4 w-4 animate-spin" /> Restoring…</> : "Restore RA"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  )
+}
+
+/** Two-step permanent-delete confirmation. Warns about transfer first, then
+ *  requires typed-confirmation of the archived display name. */
+function HardDeleteControl({
+  archive,
+  hasLiveLeads,
+  onDeleted,
+}: {
+  archive: { id: string; display_name: string; leads_count: number; deals_count: number }
+  hasLiveLeads: boolean
+  onDeleted: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [confirmName, setConfirmName] = useState("")
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete() {
+    setDeleting(true)
+    try {
+      await hardDeleteArchivedRa(archive.id, archive.display_name)
+      toast.success(`${archive.display_name}'s archive entry permanently deleted`)
+      setOpen(false)
+      onDeleted()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete")
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+        onClick={(e) => { e.stopPropagation(); setOpen(true); setConfirmName("") }}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+        Delete archive
+      </Button>
+      <AlertDialog open={open} onOpenChange={(o) => { if (!o && !deleting) { setOpen(false); setConfirmName("") } }}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently delete this archive?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p>
+                  This destroys <strong>{archive.display_name}</strong>'s archived snapshot
+                  — every preserved lead, deal, check-in, payout, and agreement record
+                  ({archive.leads_count} leads · {archive.deals_count} deals).
+                </p>
+                {hasLiveLeads && (
+                  <div className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 px-3 py-2">
+                    <p className="text-amber-800 dark:text-amber-300 text-xs">
+                      You still have {archive.leads_count} live lead{archive.leads_count === 1 ? "" : "s"} (and {archive.deals_count} deal{archive.deals_count === 1 ? "" : "s"})
+                      with their original referrer unset. Consider <strong>transferring them to another RA</strong> first —
+                      after delete, the link back to the original attribution is gone forever.
+                    </p>
+                  </div>
+                )}
+                <p className="text-destructive font-medium">This cannot be undone — no Restore option after this point.</p>
+                <div className="space-y-1.5 pt-2">
+                  <Label htmlFor="archive-confirm" className="text-foreground">
+                    Type <span className="font-mono font-bold">{archive.display_name}</span> to confirm:
+                  </Label>
+                  <Input
+                    id="archive-confirm"
+                    value={confirmName}
+                    onChange={(e) => setConfirmName(e.target.value)}
+                    placeholder={archive.display_name}
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); void handleDelete() }}
+              disabled={deleting || confirmName.trim() !== archive.display_name}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <><Loader2 className="h-4 w-4 animate-spin" /> Deleting…</> : "Delete forever"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -253,10 +347,22 @@ function ArchiveList({
                         })}
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <RestoreControl
-                          archive={{ id: r.id, display_name: r.display_name, slug: r.slug }}
-                          onRestored={() => { setRows((prev) => prev.filter((x) => x.id !== r.id)); onRestored() }}
-                        />
+                        <div className="inline-flex items-center gap-1.5">
+                          <RestoreControl
+                            archive={{ id: r.id, display_name: r.display_name, slug: r.slug }}
+                            onRestored={() => { setRows((prev) => prev.filter((x) => x.id !== r.id)); onRestored() }}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5"
+                            onClick={(e) => { e.stopPropagation(); onOpen(r.id) }}
+                            title="Open detail to transfer leads or permanently delete"
+                          >
+                            <ArrowRightLeft className="h-3.5 w-3.5" />
+                            Manage
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )
@@ -274,6 +380,8 @@ function ArchiveDetail({ id, onBack, onRestored }: { id: string; onBack: () => v
   const [detail, setDetail] = useState<ArchivedRaDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [transferOpen, setTransferOpen] = useState(false)
+  const [transferred, setTransferred] = useState<{ name: string; leads: number; deals: number } | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -305,14 +413,17 @@ function ArchiveDetail({ id, onBack, onRestored }: { id: string; onBack: () => v
   }
 
   const { ra } = detail
+  const leadsCount = detail.leads.length
+  const dealsCount = detail.deals.length
+  const hasLiveLeads = leadsCount > 0 || dealsCount > 0
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={ra.display_name}
-        description={`Archived ${new Date(ra.archived_at).toLocaleString()} · /refer/${ra.slug}`}
+        description={`Archived ${new Date(ra.archived_at).toLocaleString()} · /demo/${ra.slug}`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button variant="outline" size="sm" onClick={onBack}>
               <ArrowLeft className="h-3.5 w-3.5" />
               Back to archive
@@ -321,8 +432,45 @@ function ArchiveDetail({ id, onBack, onRestored }: { id: string; onBack: () => v
               archive={{ id: ra.id, display_name: ra.display_name, slug: ra.slug }}
               onRestored={onRestored}
             />
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setTransferOpen(true)}
+              disabled={!hasLiveLeads}
+              title={hasLiveLeads ? "Re-assign live leads to another RA" : "No leads to transfer"}
+            >
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+              Transfer leads
+            </Button>
+            <HardDeleteControl
+              archive={{ id: ra.id, display_name: ra.display_name, leads_count: leadsCount, deals_count: dealsCount }}
+              hasLiveLeads={hasLiveLeads && !transferred}
+              onDeleted={onBack}
+            />
           </div>
         }
+      />
+
+      {transferred && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4 text-sm">
+            <strong>{transferred.leads} lead{transferred.leads === 1 ? "" : "s"}</strong>
+            {transferred.deals > 0 && <> and <strong>{transferred.deals} deal{transferred.deals === 1 ? "" : "s"}</strong></>}
+            {" "}transferred to <strong>{transferred.name}</strong>. The archive snapshot is unchanged.
+          </CardContent>
+        </Card>
+      )}
+
+      <TransferRaLeadsModal
+        open={transferOpen}
+        onClose={() => setTransferOpen(false)}
+        archive={{ id: ra.id, display_name: ra.display_name, leads_count: leadsCount, deals_count: dealsCount }}
+        onTransferred={(r) => setTransferred({
+          name: r.target_display_name,
+          leads: r.leads_transferred,
+          deals: r.deals_transferred,
+        })}
       />
 
       <Card>
