@@ -125,11 +125,16 @@ Deno.serve(async (req) => {
   const userId = inviteData?.user?.id
   if (!userId) return json(500, { error: "No user ID returned from invite" })
 
-  // Ensure the profile row exists (created by handle_new_user trigger).
-  // Upsert is safe here — if trigger already ran it's a no-op.
+  // Force-set profile.role = 'referral_associate'. The handle_new_user trigger
+  // runs synchronously inside inviteUserByEmail and creates the profile row
+  // with role='member' (because invite-ra bypasses the invitations table, so
+  // the trigger has no role hint). Without overwriting here, profiles.role
+  // stays 'member' → getRaPortalRedirect treats them as staff → the new RA
+  // gets dropped into the staff CRM instead of /onboarding/steps. Don't pass
+  // ignoreDuplicates — we WANT to overwrite the trigger's row.
   await admin.from("profiles").upsert(
     { id: userId, email, full_name: display_name, role: "referral_associate" },
-    { onConflict: "id", ignoreDuplicates: true }
+    { onConflict: "id" }
   )
 
   // Create the ra_associates row.
