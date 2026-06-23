@@ -103,26 +103,6 @@ function formatDate(iso: string): string {
 }
 
 /**
- * Resolve the page template that's actually in effect for an RA, mirroring the
- * get_ra_landing_page() cascade: explicit per-RA override → org default for the
- * RA's type → legacy is_default → built-in Divigner fallback.
- */
-function effectiveTemplate(
-  ra: RaAssociate,
-  templates: RaLandingTemplate[],
-): { label: string; explicit: boolean } {
-  if (ra.template_id) {
-    const t = templates.find((x) => x.id === ra.template_id)
-    if (t) return { label: t.name, explicit: true }
-  }
-  const typeDefault = templates.find((x) => x.default_for_type === (ra.ra_type ?? "individual"))
-  if (typeDefault) return { label: typeDefault.name, explicit: false }
-  const legacyDefault = templates.find((x) => x.is_default)
-  if (legacyDefault) return { label: legacyDefault.name, explicit: false }
-  return { label: "Built-in default", explicit: false }
-}
-
-/**
  * Single source of truth for managing Referral Associates. Renders inside
  * the "Referral Associates" tab on /settings/team. Owns the full RA list +
  * filter buckets + invite / bulk-invite + delete + archive entry + per-row
