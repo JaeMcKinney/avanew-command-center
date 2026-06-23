@@ -308,7 +308,7 @@ export function RaSection() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[220px]">
+            <div className="relative w-full sm:w-72 shrink-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 placeholder="Search by name, email, or slug…"
@@ -342,7 +342,7 @@ export function RaSection() {
                   <TableHead>Status</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Joined</TableHead>
-                  <TableHead>Page template</TableHead>
+                  <TableHead>Template</TableHead>
                   <TableHead className="text-center w-[60px] sticky right-0 bg-card border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -435,7 +435,7 @@ export function RaSection() {
                         )}
                       </TableCell>
                       <TableCell className="text-center w-[60px] sticky right-0 bg-card group-hover:bg-muted/50 border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end">
+                        <div className="flex items-center justify-center">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0">

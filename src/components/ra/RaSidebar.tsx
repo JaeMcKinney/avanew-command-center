@@ -53,31 +53,39 @@ function RailTooltip({ show, label, children }: { show: boolean; label: string; 
 }
 
 function SidebarLink({ to, label, icon: Icon, end, collapsed, onNavigate }: NavItem & { collapsed?: boolean; onNavigate?: () => void }) {
-  return (
-    <RailTooltip show={!!collapsed} label={label}>
-      <NavLink
-        to={to}
-        end={end}
-        onClick={onNavigate}
-        className={({ isActive }) =>
-          cn(
-            "group flex items-center rounded-md py-2 text-sm font-medium transition-colors",
-            collapsed ? "mx-auto h-10 w-10 justify-center px-0" : "gap-3 px-3",
-            isActive
-              ? "bg-sidebar-accent text-primary"
-              : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          )
-        }
-      >
-        {({ isActive }) => (
-          <>
-            <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-sidebar-foreground/50")} />
-            {!collapsed && label}
-          </>
-        )}
-      </NavLink>
-    </RailTooltip>
+  // See AppSidebar SidebarLink for why collapsed links go through a flex
+  // wrapper instead of relying on mx-auto on the NavLink directly.
+  const link = (
+    <NavLink
+      to={to}
+      end={end}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        cn(
+          "group flex items-center rounded-md py-2 text-sm font-medium transition-colors",
+          collapsed ? "h-10 w-10 justify-center px-0" : "gap-3 px-3",
+          isActive
+            ? "bg-sidebar-accent text-primary"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        )
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-sidebar-foreground/50")} />
+          {!collapsed && label}
+        </>
+      )}
+    </NavLink>
   )
+  if (collapsed) {
+    return (
+      <RailTooltip show label={label}>
+        <div className="flex justify-center">{link}</div>
+      </RailTooltip>
+    )
+  }
+  return link
 }
 
 function SectionLabel({ label, collapsed }: { label: string; collapsed?: boolean }) {

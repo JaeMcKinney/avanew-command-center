@@ -108,35 +108,48 @@ function SidebarLink({
   collapsed,
   onNavigate,
 }: NavItem & { sub?: boolean; collapsed?: boolean; onNavigate?: () => void }) {
-  return (
-    <RailTooltip show={!!collapsed} label={label}>
-      <NavLink
-        to={to}
-        end={to === "/cashflow"}
-        onClick={onNavigate}
-        className={({ isActive }) =>
-          cn(
-            "group flex items-center rounded-md py-2 text-sm font-medium transition-colors",
-            collapsed
-              ? "mx-auto h-10 w-10 justify-center px-0"
-              : sub
-                ? "gap-3 pl-8 pr-3"
-                : "gap-3 px-3",
-            isActive
-              ? "bg-sidebar-accent text-primary"
-              : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          )
-        }
-      >
-        {({ isActive }) => (
-          <>
-            <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-sidebar-foreground/50")} />
-            {!collapsed && label}
-          </>
-        )}
-      </NavLink>
-    </RailTooltip>
+  // Wrapping the NavLink in a flex centerer when collapsed bypasses two bugs:
+  // 1. Radix Slot stringifies className-as-function, polluting the class
+  //    attribute with conflicting px-0 / px-3 / pl-8 tokens that drag the
+  //    link off-axis.
+  // 2. mx-auto on a block child of <nav> doesn't always center reliably
+  //    once Tailwind's utility cascade fights itself. Flex parent + child
+  //    with fixed dimensions = guaranteed pixel-perfect centering.
+  const link = (
+    <NavLink
+      to={to}
+      end={to === "/cashflow"}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        cn(
+          "group flex items-center rounded-md py-2 text-sm font-medium transition-colors",
+          collapsed
+            ? "h-10 w-10 justify-center px-0"
+            : sub
+              ? "gap-3 pl-8 pr-3"
+              : "gap-3 px-3",
+          isActive
+            ? "bg-sidebar-accent text-primary"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        )
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-sidebar-foreground/50")} />
+          {!collapsed && label}
+        </>
+      )}
+    </NavLink>
   )
+  if (collapsed) {
+    return (
+      <RailTooltip show label={label}>
+        <div className="flex justify-center">{link}</div>
+      </RailTooltip>
+    )
+  }
+  return link
 }
 
 function ModuleGroup({
