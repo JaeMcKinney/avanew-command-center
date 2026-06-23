@@ -4,6 +4,8 @@
     { "source": "/cme-avatars/a2ai/", "destination": "/cme-avatars/a2ai/index.html" },
     { "source": "/cme-avatars", "destination": "/cme-avatars/index.html" },
     { "source": "/cme-avatars/", "destination": "/cme-avatars/index.html" },
+    { "source": "/cme-avatars-2", "destination": "/cme-avatars-2/index.html" },
+    { "source": "/cme-avatars-2/", "destination": "/cme-avatars-2/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
