@@ -224,3 +224,19 @@ Off `Avanew2026!` (was shared in chat history). Accounts:
 - Demo-seed counts: still excluded from stats via the marker; verify they
   don't inflate annual-minimum / earnings in edge cases.
 - Rotate test passwords (above).
+
+---
+
+## Addendum — Zuirrae dual-role access fix (post-session-10, commit `4897c7d`)
+**Problem:** `zuirrae@divigner.com` is `organization_members` admin + `is_program_admin=true` AND has an active `ra_associates` profile (`/refer/zuirrae`), but `profiles.role='referral_associate'`. The router (`getRaPortalRedirect` + `AppLayout`) keys off `profiles.role`, so it forced her into the RA portal and **blocked the staff CRM** — her Program Admin tools were unreachable.
+
+**Fix:** added `zuirrae@divigner.com` to `STAFF_EMAIL_ALLOWLIST` in `src/lib/data.ts` (the same hardcoded escape hatch as `jae@divigner.com`). She now lands in the **staff CRM** as Admin/Program Admin and reaches her RA portal (`/ra/dashboard`) + public page (`/refer/zuirrae`) by URL. One login, both surfaces. Built + pushed; deploying on Vercel. If she's already logged in, sign out + back in for the new routing to take effect.
+
+**Password:** reset directly on prod auth via `supabase db query --linked` —
+`update auth.users set encrypted_password = extensions.crypt('Avanew2026!', extensions.gen_salt('bf'))`.
+Verified after: `$2a$10$…` bcrypt hash, email confirmed, 1 email identity, project `cbmcyffvsebrxkmxufxx`.
+Login: **https://avanew-command-center.vercel.app/login** → `zuirrae@divigner.com` / `Avanew2026!`.
+
+**Reusable: reset a password from the CLI.** `pgcrypto` lives in the **`extensions`** schema here, so qualify the funcs: `extensions.crypt(...)`, `extensions.gen_salt('bf')`. Run via `supabase db query --linked -f <file.sql>` (linked project = `cbmcyffvsebrxkmxufxx`). Write the SQL to a temp file (avoids shell-quoting the `!`) and delete it after.
+
+**Architectural note:** the allowlist is a hardcoded escape hatch — fine for 2 operators (jae, zuirrae). A 3rd "staff member who is also an RA" is the trigger to build a proper multi-role / role-switcher model instead of growing the list.
