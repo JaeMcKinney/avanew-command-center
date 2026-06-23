@@ -363,7 +363,7 @@ export function RaSection() {
                   <TableHead>Slug</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Page template</TableHead>
-                  <TableHead className="text-center w-[60px] sticky right-0 bg-card border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]"></TableHead>
+                  <TableHead className="text-center w-[60px] sticky right-0 bg-card border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

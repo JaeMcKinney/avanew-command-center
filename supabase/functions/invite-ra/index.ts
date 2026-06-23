@@ -72,13 +72,30 @@ Deno.serve(async (req) => {
   const { data: callerData, error: callerErr } = await admin.auth.getUser(callerJwt)
   if (callerErr || !callerData.user) return json(401, { error: "Invalid session" })
 
-  // Verify caller has permission to invite RAs (admin+ in their profile).
+  // Verify caller has permission to invite RAs. Accept admin+ from EITHER
+  // profiles.role OR organization_members.role for the target org — profile.role
+  // has been observed drifting to 'referral_associate' on staff accounts that
+  // also hold an RA row (e.g. zuirrae@divigner.com), which would otherwise
+  // 403 the actual program admin out of inviting.
+  const STAFF_ROLES = ["super_user", "owner", "admin"]
   const { data: callerProfile } = await admin
     .from("profiles")
     .select("role")
     .eq("id", callerData.user.id)
     .maybeSingle()
-  if (!["super_user", "owner", "admin"].includes(callerProfile?.role ?? "")) {
+  let isStaff = STAFF_ROLES.includes(callerProfile?.role ?? "")
+  if (!isStaff) {
+    // Fall back: check the caller's role inside the org they're inviting into.
+    // Done as a separate query so the early-success path stays a single read.
+    // organization_id from payload isn't trusted yet, so verify membership in
+    // ANY org with a staff role — RA-program admins are admins in their org.
+    const { data: memberships } = await admin
+      .from("organization_members")
+      .select("role")
+      .eq("user_id", callerData.user.id)
+    isStaff = (memberships ?? []).some((m: { role: string }) => STAFF_ROLES.includes(m.role))
+  }
+  if (!isStaff) {
     return json(403, { error: "Admin or above required" })
   }
 
