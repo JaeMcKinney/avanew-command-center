@@ -95,8 +95,8 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
   if (sent) {
     return (
       <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-        <DialogContent className="sm:max-w-md">
-          <div className="flex flex-col items-center text-center space-y-3 py-4">
+        <DialogContent className="sm:max-w-md flex flex-col max-h-[90vh]">
+          <div className="flex flex-col items-center text-center space-y-3 py-4 shrink-0">
             <div className="rounded-full bg-primary/10 p-3">
               <CheckCircle2 className="h-7 w-7 text-primary" />
             </div>
@@ -109,7 +109,7 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
             </DialogHeader>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 overflow-y-auto flex-1 min-h-0">
             <div className="rounded-md border bg-muted/40 p-3 space-y-2 text-xs">
               <div className="flex items-center gap-2 font-medium text-foreground">
                 <Mail className="h-3.5 w-3.5 text-primary" /> What happens next
@@ -132,7 +132,7 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-2">
+          <DialogFooter className="gap-2 sm:gap-2 shrink-0 pt-4">
             <Button variant="outline" onClick={() => { setSent(null); reset() }}>
               Invite another
             </Button>
