@@ -30,7 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
-import { getRaBySlug, updateRaStatus, listRaSectionComments } from "@/lib/data"
+import { getRaBySlug, updateRaStatus, listRaSectionComments, getRaW9SignedUrl } from "@/lib/data"
 import { RaReviewSection } from "@/components/ra/RaReviewSection"
 import type { RaAssociate, RaStatus, RaSectionComment, RaCommentSection } from "@/types/db"
 
@@ -368,11 +368,20 @@ export function SettingsRAReview() {
                   {ra.w9_reviewed_at && <> · marked reviewed</>}
                 </p>
                 {ra.w9_document_url && (
-                  <Button asChild variant="outline" size="sm">
-                    <a href={ra.w9_document_url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Open W-9 PDF
-                    </a>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const url = await getRaW9SignedUrl(ra.w9_document_url!)
+                        window.open(url, "_blank", "noopener,noreferrer")
+                      } catch (err) {
+                        toast.error(err instanceof Error ? err.message : "Failed to open W-9")
+                      }
+                    }}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Open W-9 PDF
                   </Button>
                 )}
               </div>

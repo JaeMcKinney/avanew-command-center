@@ -3285,6 +3285,19 @@ export async function getDocumentUrl(storagePath: string): Promise<string> {
   return data.signedUrl
 }
 
+/** Create a 1-hour signed URL for an RA's W-9 PDF in the private ra-w9 bucket.
+ *  The DB column stores a bare storage path (e.g. "<user_id>/w9-<ts>.pdf"); we
+ *  cannot link to it directly because (1) the bucket is private and (2) a bare
+ *  path is treated as a relative URL by the browser, which React Router then
+ *  falls through to `/dashboard` for. */
+export async function getRaW9SignedUrl(storagePath: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from("ra-w9")
+    .createSignedUrl(storagePath, 60 * 60)
+  if (error) throw new Error(error.message)
+  return data.signedUrl
+}
+
 // ── Organization management ───────────────────────────────────────────────────
 
 /** List all organizations the current user belongs to, with their role in each. */

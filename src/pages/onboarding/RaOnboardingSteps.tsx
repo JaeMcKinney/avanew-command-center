@@ -82,8 +82,23 @@ export function RaOnboardingSteps() {
       const reviewerComments = await listRaSectionComments(record.id).catch(() => [])
       setComments(reviewerComments)
 
+      // If admin requested changes, jump straight to the first section with an
+      // open (unresolved) comment so the RA sees what to fix instead of landing
+      // on Submit (which they would otherwise hit, since all sections are
+      // already marked complete from their original submission).
+      if (record.status === "needs_changes") {
+        const sectionToStep: Record<string, Step> = {
+          agreement: 0, photo: 1, bio: 2, contact: 2, banking: 3, w9: 4,
+        }
+        const firstOpen = reviewerComments.find((c) => !c.resolved_at)
+        if (firstOpen && sectionToStep[firstOpen.section] !== undefined) {
+          setStep(sectionToStep[firstOpen.section])
+        } else {
+          setStep(5) // no per-section comments → review summary screen
+        }
+      }
       // Auto-advance to first incomplete section
-      if (!hydrated.agreement_completed) { setStep(0); }
+      else if (!hydrated.agreement_completed) { setStep(0); }
       else if (!hydrated.photo_completed) { setStep(1); }
       else if (!hydrated.contact_completed) { setStep(2); }
       else if (!hydrated.banking_completed) { setStep(3); }
