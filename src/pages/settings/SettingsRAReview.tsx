@@ -13,6 +13,8 @@ import {
   ShieldCheck,
   ExternalLink,
   MessageSquare,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -64,6 +66,7 @@ export function SettingsRAReview() {
   const [declineOpen, setDeclineOpen] = useState(false)
   const [acting, setActing] = useState(false)
   const [approvedSummary, setApprovedSummary] = useState<RaAssociate | null>(null)
+  const [showAccount, setShowAccount] = useState(false)
 
   useEffect(() => {
     if (!slug) return
@@ -323,12 +326,26 @@ export function SettingsRAReview() {
                 <dd className="font-medium">{ra.ach_bank_name || "—"}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Routing (last 4)</dt>
-                <dd className="font-mono">{ra.ach_routing ? `···${ra.ach_routing.slice(-4)}` : "—"}</dd>
+                <dt className="text-xs text-muted-foreground">Routing number</dt>
+                <dd className="font-mono">{ra.ach_routing || "—"}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Account (last 4)</dt>
-                <dd className="font-mono">{ra.ach_account ? `···${ra.ach_account.slice(-4)}` : "—"}</dd>
+                <dt className="text-xs text-muted-foreground">Account number</dt>
+                <dd className="font-mono flex items-center gap-1.5">
+                  {ra.ach_account
+                    ? showAccount ? ra.ach_account : `···${ra.ach_account.slice(-4)}`
+                    : "—"}
+                  {ra.ach_account && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAccount((v) => !v)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={showAccount ? "Hide account number" : "Show account number"}
+                    >
+                      {showAccount ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  )}
+                </dd>
               </div>
             </dl>
           </RaReviewSection>

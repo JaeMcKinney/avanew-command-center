@@ -431,7 +431,7 @@ export function SettingsRADetail() {
               </div>
               <div className="flex items-center gap-2">
                 <Landmark className="h-3.5 w-3.5 text-muted-foreground" />
-                ACH: {ra.banking_completed ? `${ra.ach_bank_name ?? "Bank"} ···${(ra.ach_account ?? "").slice(-4)}` : <span className="text-muted-foreground italic">not provided</span>}
+                ACH: {ra.banking_completed ? `${ra.ach_bank_name ?? "Bank"} · ${ra.ach_routing ?? ""} / ${ra.ach_account ?? ""}` : <span className="text-muted-foreground italic">not provided</span>}
               </div>
             </CardContent>
           </Card>
