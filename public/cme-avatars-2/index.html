@@ -867,13 +867,13 @@
     <div class="tier-divider reveal"><span class="tier-label">For healthcare providers &amp; practices</span></div>
     <div class="embed-grid stagger">
       <article class="embed-card">
-        <div class="embed-video">
-          <a href="https://divigner.com/californiadermatology-com/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Victoria's live program">
+        <div class="embed-video" data-tavus-persona="p89d1a8b29c9" data-tavus-replica="re206226de83" data-tavus-name="Victoria" data-avatar-preview="/avatars/victoria.png">
+          <button type="button" class="embed-thumb-btn" aria-label="Preview Victoria's avatar">
             <img class="embed-thumb" src="/avatars/victoria.png" alt="Victoria, Patient Concierge · Dermatology" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="embed-thumb-fallback" style="display:none"><b>Victoria</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
-          </a>
+          </button>
         </div>
         <div class="embed-body">
           <div class="embed-name">Victoria</div>
@@ -885,13 +885,13 @@
         </div>
       </article>
       <article class="embed-card">
-        <div class="embed-video">
-          <a href="https://reviveprivatecare.com/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Zoey's live program">
+        <div class="embed-video" data-tavus-persona="pa0257a52b28" data-tavus-replica="r606d3db65da" data-tavus-name="Zoey" data-avatar-preview="/avatars/zoey.png">
+          <button type="button" class="embed-thumb-btn" aria-label="Preview Zoey's avatar">
             <img class="embed-thumb" src="/avatars/zoey.png" alt="Zoey, Patient Concierge · Private Care" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="embed-thumb-fallback" style="display:none"><b>Zoey</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
-          </a>
+          </button>
         </div>
         <div class="embed-body">
           <div class="embed-name">Zoey</div>
@@ -903,13 +903,13 @@
         </div>
       </article>
       <article class="embed-card">
-        <div class="embed-video">
-          <a href="https://ohsnj.com" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Zayla's live program">
+        <div class="embed-video" data-tavus-persona="pe5d5fd2c639" data-tavus-replica="r7ebfad5b1bc" data-tavus-name="Zayla" data-avatar-preview="/avatars/zayla.png">
+          <button type="button" class="embed-thumb-btn" aria-label="Preview Zayla's avatar">
             <img class="embed-thumb" src="/avatars/zayla.png" alt="Zayla, Patient Concierge · Oncology" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="embed-thumb-fallback" style="display:none"><b>Zayla</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
-          </a>
+          </button>
         </div>
         <div class="embed-body">
           <div class="embed-name">Zayla</div>
@@ -1393,9 +1393,8 @@
   });
 
 
-  /* ── Tavus avatar modal (thumbnail click → open modal → mint conversation) ── */
-  var TAVUS_FN_URL  = 'https://cbmcyffvsebrxkmxufxx.supabase.co/functions/v1/tavus-start-conversation';
-  var TAVUS_FN_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibWN5ZmZ2c2VicnhrbXh1Znh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjU3MTMsImV4cCI6MjA5MzA0MTcxM30.Uxh5aWShe3YkrBkjjBe8WcP0fqQH-4pp6P8NyqKRt7A';
+  /* ── Avatar preview modal (thumbnail click → iframe embed) ── */
+  var AVATAR_IFRAME_BASE = 'https://avatar-iframe-component.vercel.app/';
 
   var avatarModal       = document.getElementById('avatar-modal');
   var avatarModalStage  = document.getElementById('avatar-modal-stage');
@@ -1431,13 +1430,28 @@
     avatarModalStage.classList.toggle('size-large');
   });
 
-  function startTavusConversation(stage){
+  function absoluteAssetUrl(path){
+    if(!path) return '';
+    if(/^https?:\/\//.test(path)) return path;
+    return window.location.origin + (path.charAt(0) === '/' ? path : '/' + path);
+  }
+
+  function buildAvatarIframeUrl(stage){
     var personaId = stage.dataset.tavusPersona;
     var replicaId = stage.dataset.tavusReplica || '';
-    var name      = stage.dataset.tavusName    || 'Avatar';
+    var preview   = stage.dataset.avatarPreview || (stage.querySelector('.embed-thumb') && stage.querySelector('.embed-thumb').getAttribute('src')) || '';
+    var params    = new URLSearchParams();
+    params.set('pid', personaId);
+    if(replicaId) params.set('rid', replicaId);
+    if(preview) params.set('preview', absoluteAssetUrl(preview));
+    return AVATAR_IFRAME_BASE + '?' + params.toString();
+  }
+
+  function openAvatarPreview(stage){
+    var personaId = stage.dataset.tavusPersona;
+    var name      = stage.dataset.tavusName || 'Avatar';
 
     if(!personaId){
-      // No persona wired yet - show a friendly "coming soon" inside the modal
       openAvatarModal(name);
       setTimeout(function(){
         avatarModalFrame.innerHTML =
@@ -1452,49 +1466,37 @@
     }
 
     openAvatarModal(name);
+    avatarModalText.textContent = 'Loading ' + name + '…';
 
-    fetch(TAVUS_FN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': 'Bearer ' + TAVUS_FN_KEY,
-        'apikey':        TAVUS_FN_KEY
-      },
-      body: JSON.stringify({
-        persona_id:        personaId,
-        replica_id:        replicaId || undefined,
-        conversation_name: 'demo:' + name + ':' + (raSlug || 'direct')
-      })
-    })
-    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, data:d}; }); })
-    .then(function(res){
-      if(!res.ok || !res.data.conversation_url){
-        throw new Error((res.data && res.data.error) || 'No conversation URL returned');
-      }
-      var iframe = document.createElement('iframe');
-      iframe.src = res.data.conversation_url;
-      iframe.allow = 'camera; microphone; autoplay; display-capture';
-      iframe.setAttribute('allowfullscreen', '');
-      avatarModalFrame.innerHTML = '';
-      avatarModalFrame.appendChild(iframe);
-    })
-    .catch(function(err){
+    var iframe = document.createElement('iframe');
+    iframe.src = buildAvatarIframeUrl(stage);
+    iframe.allow = 'camera; microphone; autoplay; display-capture';
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.addEventListener('load', function(){
+      avatarModalFrame.querySelector('.avatar-modal-loading') && avatarModalFrame.querySelector('.avatar-modal-loading').remove();
+    });
+    iframe.addEventListener('error', function(){
       avatarModalFrame.innerHTML =
         '<div class="embed-error">' +
-          '<b>Couldn\'t connect</b>' +
-          '<div>' + (err && err.message ? err.message : 'Unknown error') + '</div>' +
+          '<b>Couldn\'t load preview</b>' +
+          '<div>Please try again in a moment.</div>' +
           '<button type="button" id="avatar-modal-retry">Try again</button>' +
         '</div>';
       document.getElementById('avatar-modal-retry').addEventListener('click', function(){
-        startTavusConversation(stage);
+        openAvatarPreview(stage);
       });
     });
+
+    setTimeout(function(){
+      avatarModalFrame.innerHTML = '';
+      avatarModalFrame.appendChild(iframe);
+    }, 150);
   }
 
   document.querySelectorAll('.embed-video button.embed-thumb-btn').forEach(function(btn){
     var stage = btn.closest('.embed-video');
     if(!stage) return;
-    btn.addEventListener('click', function(){ startTavusConversation(stage); });
+    btn.addEventListener('click', function(){ openAvatarPreview(stage); });
   });
 })();
 </script>
