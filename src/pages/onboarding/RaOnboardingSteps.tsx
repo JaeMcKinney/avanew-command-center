@@ -164,8 +164,8 @@ export function RaOnboardingSteps() {
                 Sign out
               </button>
             </div>
-            <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "440px", textAlign: "center" }}>
-              {/* Logo sits centered on top of the card, overlapping its top edge. */}
+            <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "440px", textAlign: "center", paddingTop: "60px" }}>
+              {/* Logo sits fully above the card top edge. */}
               <div style={{ position: "relative" }}>
                 <img
                   src={DIVIGNER_LOGO_SRC}
@@ -173,14 +173,14 @@ export function RaOnboardingSteps() {
                   style={{
                     height: "48px",
                     position: "absolute",
-                    top: -28,
+                    top: -56,
                     left: "50%",
                     transform: "translateX(-50%)",
                     zIndex: 2,
                     filter: "drop-shadow(0 8px 20px rgba(0,0,0,.45))",
                   }}
                 />
-                <div style={{ background: DIVIGNER_CARD_BG, border: "1px solid rgba(160,190,215,.14)", borderRadius: "20px", padding: "56px 40px 40px", boxShadow: "0 32px 80px -20px rgba(0,0,0,.7)" }}>
+                <div style={{ background: DIVIGNER_CARD_BG, border: "1px solid rgba(160,190,215,.14)", borderRadius: "20px", padding: "32px 40px 40px", boxShadow: "0 32px 80px -20px rgba(0,0,0,.7)" }}>
                   <div style={{ background: "rgba(52,214,194,.1)", borderRadius: "50%", width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
                     <CheckCircle2 style={{ width: 32, height: 32, color: "#34D6C2" }} />
                   </div>
