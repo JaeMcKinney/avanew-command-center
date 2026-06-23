@@ -1462,17 +1462,18 @@ export async function getRaAssociate(): Promise<import("@/types/db").RaAssociate
  * the staff CRM. Returns the path to send them to ("/ra/dashboard") or null if
  * they are a staff user (super_user / owner / admin / bd / partner).
  *
- * Keyed off profiles.role === "referral_associate" — the authoritative signal
- * set by the invite-ra edge function — NOT merely "has an ra_associates row".
- * This is critical: a staff member (e.g. the super_user) may ALSO hold an RA
- * profile for their own /refer/:slug page, and must keep full CRM access.
+ * Detection is keyed off the presence of an `ra_associates` row, NOT profiles.role.
+ * We tried role-based detection first, but a mismatched role (set by the
+ * handle_new_user trigger to 'member' or by older seed migrations to 'partner')
+ * left RAs landing on the OrgPicker after login — that's an unacceptable second
+ * screen. Has-an-RA-row is the authoritative signal; the STAFF_EMAIL_ALLOWLIST
+ * below is the explicit override for staff who also hold an RA profile for
+ * their own /refer/:slug page.
  */
 // Hard staff allowlist — these accounts are ALWAYS treated as staff, regardless
-// of profiles.role. Safety net so a stale/unapplied role migration can never
-// trap a known platform operator in the RA portal (e.g. jae is super_user AND
-// holds an RA profile for /refer/jae; zuirrae is admin + Program Admin AND
-// holds an RA profile for /refer/zuirrae). They land in the staff CRM and reach
-// their RA portal/refer page by URL.
+// of whether they hold an ra_associates row. They land in the staff CRM and
+// reach their RA portal / refer page by URL only. Add new dual-role users
+// here; the user has confirmed RAs have no other portal to select from.
 const STAFF_EMAIL_ALLOWLIST = new Set(["jae@divigner.com", "zuirrae@divigner.com"])
 
 export async function getRaPortalRedirect(): Promise<string | null> {
@@ -1480,27 +1481,17 @@ export async function getRaPortalRedirect(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
   if (user.email && STAFF_EMAIL_ALLOWLIST.has(user.email.trim().toLowerCase())) return null
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle()
-  // profiles.role is typed as TeamRole locally (no referral_associate variant),
-  // but the DB column carries that role for invited RAs — cast through string.
-  const profileRole = (profile?.role as string | null) ?? ""
-  if (profileRole !== "referral_associate") return null
 
-  // The RA goes to the portal — but routing depends on where they are in the
-  // lifecycle. Without this branch every login would land them at
-  // /ra/dashboard, including a half-onboarded RA who hasn't finished their
-  // checklist, who would then see an empty dashboard instead of resuming where
-  // they left off. Mirrors the auto-advance logic in RaOnboardingSteps.tsx.
+  // Routing depends on lifecycle status — without this branch every login would
+  // land them at /ra/dashboard, including a half-onboarded RA who hasn't
+  // finished their checklist (who would then see an empty dashboard instead of
+  // resuming where they left off). Mirrors RaOnboardingSteps.tsx auto-advance.
   const { data: ra } = await supabase
     .from("ra_associates")
     .select("status, photo_completed, contact_completed, banking_completed, agreement_completed, w9_completed")
     .eq("user_id", user.id)
     .maybeSingle()
-  if (!ra) return "/ra/dashboard" // no RA row — let the dashboard guard handle it
+  if (!ra) return null // no RA row → staff user, let the CRM gates handle them
   const status = ra.status as string
 
   // active → portal. terminated / declined → portal (will gracefully show the
