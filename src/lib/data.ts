@@ -4143,6 +4143,33 @@ export async function updateRaSelfProfile(
   if (error) throw error
 }
 
+/**
+ * Upload a new W-9 PDF for review WITHOUT mutating ra_associates. The returned
+ * path is meant to be embedded in a ra_change_requests payload; when a Program
+ * Admin approves the request, reviewRaChangeRequest applies the path to
+ * ra_associates.w9_document_url and flips w9_completed = true.
+ */
+export async function uploadRaW9ForReview(
+  raId: string,
+  file: File,
+): Promise<{ w9_document_url: string }> {
+  if (file.size > 10 * 1024 * 1024) throw new Error("W-9 must be under 10 MB")
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    throw new Error("W-9 must be a PDF file")
+  }
+  if (PREVIEW_MODE) {
+    return { w9_document_url: `preview://w9/${raId}/pending-${encodeURIComponent(file.name)}` }
+  }
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Not authenticated")
+  const path = `${user.id}/pending-${Date.now()}.pdf`
+  const { error: uploadErr } = await supabase.storage
+    .from("ra-w9")
+    .upload(path, file, { upsert: false, contentType: "application/pdf" })
+  if (uploadErr) throw uploadErr
+  return { w9_document_url: path }
+}
+
 /** RA submits a banking / W-9 change request for Program Admin review. */
 export async function submitRaChangeRequest(input: {
   raId: string

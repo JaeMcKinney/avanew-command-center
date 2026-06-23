@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Camera, Loader2, ShieldCheck, Landmark, FileText, Clock } from "lucide-react"
+import { Camera, Loader2, ShieldCheck, Landmark, FileText, Clock, Download, Upload } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import {
   getRaAssociate, saveRaPhoto, updateRaSelfProfile,
-  submitRaChangeRequest, listRaChangeRequests,
+  submitRaChangeRequest, listRaChangeRequests, uploadRaW9ForReview,
 } from "@/lib/data"
 import type { RaAssociate, RaChangeRequest } from "@/types/db"
+
+const IRS_W9_BLANK_URL = "https://www.irs.gov/pub/irs-pdf/fw9.pdf"
 
 function formatPhone(input: string): string {
   const d = input.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "").slice(0, 10)
@@ -40,6 +42,12 @@ export function RaSettings() {
   const [bankAccount, setBankAccount] = useState("")
   const [bankNote, setBankNote] = useState("")
   const [submittingBank, setSubmittingBank] = useState(false)
+
+  // W-9 change request form
+  const w9InputRef = useRef<HTMLInputElement>(null)
+  const [w9File, setW9File] = useState<File | null>(null)
+  const [w9Note, setW9Note] = useState("")
+  const [submittingW9, setSubmittingW9] = useState(false)
 
   async function load() {
     const r = await getRaAssociate()
@@ -105,7 +113,27 @@ export function RaSettings() {
     finally { setSubmittingBank(false) }
   }
 
+  async function requestW9Change() {
+    if (!ra || !w9File) { toast.error("Choose a signed W-9 PDF first"); return }
+    setSubmittingW9(true)
+    try {
+      const { w9_document_url } = await uploadRaW9ForReview(ra.id, w9File)
+      await submitRaChangeRequest({
+        raId: ra.id,
+        request_type: "w9",
+        payload: { w9_document_url, file_name: w9File.name },
+        note: w9Note.trim() || null,
+      })
+      toast.success("W-9 change sent to the Divigner team for review")
+      setW9File(null); setW9Note("")
+      if (w9InputRef.current) w9InputRef.current.value = ""
+      await load()
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to submit") }
+    finally { setSubmittingW9(false) }
+  }
+
   const pendingBanking = requests.find((r) => r.request_type === "banking" && r.status === "pending")
+  const pendingW9 = requests.find((r) => r.request_type === "w9" && r.status === "pending")
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -184,7 +212,9 @@ export function RaSettings() {
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-xs font-medium text-muted-foreground">Request a banking change</p>
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Landmark className="h-3.5 w-3.5" /> Request a banking change
+              </p>
               <div className="grid sm:grid-cols-2 gap-3">
                 <Input placeholder="Account holder name" value={bankHolder} onChange={(e) => setBankHolder(e.target.value)} />
                 <Input placeholder="Bank name" value={bankName} onChange={(e) => setBankName(e.target.value)} />
@@ -194,6 +224,52 @@ export function RaSettings() {
               <Textarea rows={2} placeholder="Anything the reviewer should know (optional)" value={bankNote} onChange={(e) => setBankNote(e.target.value)} />
               <Button onClick={requestBankingChange} disabled={submittingBank}>
                 {submittingBank ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Submitting…</> : "Submit for review"}
+              </Button>
+            </div>
+          )}
+
+          <div className="h-px bg-border" />
+
+          {pendingW9 ? (
+            <div className="rounded-md border border-amber-300/50 bg-amber-50 dark:bg-amber-500/10 p-3 text-sm flex items-center gap-2">
+              <Clock className="h-4 w-4 text-amber-600 shrink-0" />
+              <span className="text-amber-800 dark:text-amber-300">Your W-9 update is pending review. We'll email you once it's processed.</span>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5" /> Replace your W-9 on file
+              </p>
+              <p className="text-xs text-muted-foreground -mt-1">
+                Download the blank IRS form, complete and sign it offline, then upload the signed PDF here.
+              </p>
+              <a
+                href={IRS_W9_BLANK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                <Download className="h-3.5 w-3.5" /> Download blank W-9 from irs.gov
+              </a>
+              <div className="rounded-md border bg-muted/30 p-3 flex items-center gap-3">
+                <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-xs flex-1 min-w-0 truncate">
+                  {w9File ? w9File.name : "No file selected — PDF only, max 10 MB"}
+                </span>
+                <input
+                  ref={w9InputRef}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) setW9File(f) }}
+                />
+                <Button size="sm" variant="outline" onClick={() => w9InputRef.current?.click()} disabled={submittingW9}>
+                  <Upload className="h-3.5 w-3.5" /> {w9File ? "Choose different" : "Choose PDF"}
+                </Button>
+              </div>
+              <Textarea rows={2} placeholder="Anything the reviewer should know (optional)" value={w9Note} onChange={(e) => setW9Note(e.target.value)} />
+              <Button onClick={requestW9Change} disabled={submittingW9 || !w9File}>
+                {submittingW9 ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Submitting…</> : "Submit W-9 for review"}
               </Button>
             </div>
           )}
