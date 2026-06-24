@@ -507,6 +507,7 @@ export type Deal = {
   probability: number | null
   campaign_source: string | null
   description: string | null
+  referred_by_ra_id: string | null
   created_at: string
   updated_at: string
 }
