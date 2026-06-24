@@ -95,6 +95,9 @@ export function useRole() {
   }, [])
 
   const canViewAs = actualRole === "super_user"
+  // View-as-RA is allowed for admin+ so program admins can QA the portal
+  // their own RAs experience without needing super_user.
+  const canViewAsRa = actualRole === "super_user" || actualRole === "owner" || actualRole === "admin"
   const effectiveRole: TeamRole | null =
     canViewAs && viewAs ? viewAs : actualRole
 
@@ -111,6 +114,7 @@ export function useRole() {
     actualRole,
     viewAs: canViewAs && viewAs && viewAs !== actualRole ? viewAs : null,
     canViewAs,
+    canViewAsRa,
     setViewAsRole,
     isOwner: effectiveRole === "owner" || effectiveRole === "super_user",
     isSuperUser: effectiveRole === "super_user",

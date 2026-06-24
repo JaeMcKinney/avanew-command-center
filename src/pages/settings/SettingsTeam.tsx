@@ -20,6 +20,7 @@ export function SettingsTeam() {
   function handleChange(next: string) {
     setTab(next)
     try { window.localStorage.setItem(TAB_KEY, next) } catch { /* ignore quota */ }
+    window.dispatchEvent(new CustomEvent("team-tab-change", { detail: next }))
   }
 
   return (

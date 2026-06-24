@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
 import type { LucideIcon } from "lucide-react"
 import {
@@ -287,11 +287,40 @@ function MobileNav({ role }: { role: TeamRole | null }) {
   )
 }
 
+const RA_TAB_KEY = "avanew-crm.settings-team.tab"
+
 export function SettingsLayout() {
   const { role } = useRole()
+  const location = useLocation()
   const [collapsed, setCollapsed] = useState(
     () => typeof window !== "undefined" && localStorage.getItem(COLLAPSE_KEY) === "1"
   )
+
+  // Auto-collapse the settings sidebar when the RA tab is active on the
+  // Team page — the RA table needs the horizontal room. Restore the user's
+  // saved preference when they navigate away.
+  const onTeamPage = location.pathname === "/settings/team" || location.pathname.startsWith("/settings/team/")
+  const [teamTab, setTeamTab] = useState(() => localStorage.getItem(RA_TAB_KEY) ?? "team")
+  const [autoCollapsed, setAutoCollapsed] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: Event) => setTeamTab((e as CustomEvent).detail)
+    window.addEventListener("team-tab-change", handler)
+    return () => window.removeEventListener("team-tab-change", handler)
+  }, [])
+
+  const raTabActive = onTeamPage && teamTab === "ra"
+
+  useEffect(() => {
+    if (raTabActive && !collapsed) {
+      setCollapsed(true)
+      setAutoCollapsed(true)
+    } else if (!raTabActive && autoCollapsed) {
+      const saved = localStorage.getItem(COLLAPSE_KEY) === "1"
+      setCollapsed(saved)
+      setAutoCollapsed(false)
+    }
+  }, [raTabActive]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggleCollapsed() {
     setCollapsed((v) => {
@@ -299,6 +328,7 @@ export function SettingsLayout() {
       try { localStorage.setItem(COLLAPSE_KEY, next ? "1" : "0") } catch { /* ignore */ }
       return next
     })
+    setAutoCollapsed(false)
   }
 
   return (

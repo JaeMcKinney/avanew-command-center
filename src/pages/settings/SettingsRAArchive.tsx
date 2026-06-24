@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { ArrowLeft, Archive as ArchiveIcon, Search, FileText, Users, ListChecks, Receipt, FileSignature, RotateCcw, Loader2, ArrowRightLeft, Trash2 } from "lucide-react"
+import { ArrowLeft, Archive as ArchiveIcon, Search, FileText, Users, ListChecks, Receipt, FileSignature, RotateCcw, Loader2, ArrowRightLeft, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -244,6 +245,10 @@ function ArchiveList({
   const [rows, setRows] = useState<ArchivedRaAssociate[]>([])
   const [query, setQuery] = useState("")
   const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [bulkConfirm, setBulkConfirm] = useState("")
 
   useEffect(() => {
     let alive = true
@@ -269,6 +274,83 @@ function ArchiveList({
     )
   }, [rows, query])
 
+  // Prune selected entries when the visible (filtered) list shrinks — otherwise
+  // the toolbar would show "N selected" for rows the user can no longer see.
+  useEffect(() => {
+    const visibleIds = new Set(filtered.map((r) => r.id))
+    setSelected((prev) => {
+      let changed = false
+      const next = new Set<string>()
+      for (const id of prev) {
+        if (visibleIds.has(id)) next.add(id)
+        else changed = true
+      }
+      return changed ? next : prev
+    })
+  }, [filtered])
+
+  const allFilteredChecked = filtered.length > 0 && filtered.every((r) => selected.has(r.id))
+  const someFilteredChecked = filtered.some((r) => selected.has(r.id)) && !allFilteredChecked
+
+  function toggleOne(id: string, on: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (on) next.add(id)
+      else next.delete(id)
+      return next
+    })
+  }
+
+  function toggleAll(on: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (on) filtered.forEach((r) => next.add(r.id))
+      else filtered.forEach((r) => next.delete(r.id))
+      return next
+    })
+  }
+
+  function clearSelection() {
+    setSelected(new Set())
+  }
+
+  async function handleBulkDelete() {
+    if (bulkConfirm.trim().toUpperCase() !== "DELETE") {
+      toast.error("Type DELETE to confirm")
+      return
+    }
+    const targets = rows.filter((r) => selected.has(r.id))
+    if (targets.length === 0) return
+    setBulkDeleting(true)
+    const deletedIds = new Set<string>()
+    const failed: string[] = []
+    for (const r of targets) {
+      try {
+        await hardDeleteArchivedRa(r.id, r.display_name)
+        deletedIds.add(r.id)
+      } catch (err) {
+        failed.push(`${r.display_name}: ${err instanceof Error ? err.message : "unknown error"}`)
+      }
+    }
+    setBulkDeleting(false)
+    if (deletedIds.size > 0) {
+      setRows((prev) => prev.filter((r) => !deletedIds.has(r.id)))
+      setSelected((prev) => {
+        const next = new Set(prev)
+        deletedIds.forEach((id) => next.delete(id))
+        return next
+      })
+      toast.success(`Permanently deleted ${deletedIds.size} archive${deletedIds.size === 1 ? "" : "s"}`)
+    }
+    if (failed.length > 0) {
+      toast.error(`${failed.length} failed to delete`, {
+        description: failed.slice(0, 3).join(" · "),
+      })
+    }
+    setBulkOpen(false)
+    setBulkConfirm("")
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -284,20 +366,49 @@ function ArchiveList({
 
       <Card>
         <CardContent className="p-4 sm:p-6 space-y-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search archived RAs…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-8"
-            />
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="relative max-w-md flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search archived RAs…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            {selected.size > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-destructive/30 bg-destructive/5">
+                <span className="text-xs text-foreground">
+                  <strong>{selected.size}</strong> selected
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => { setBulkConfirm(""); setBulkOpen(true) }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete selected
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={clearSelection} title="Clear selection">
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="rounded-md border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={allFilteredChecked ? true : someFilteredChecked ? "indeterminate" : false}
+                      onCheckedChange={(v) => toggleAll(v === true)}
+                      aria-label="Select all archived RAs"
+                      disabled={loading || filtered.length === 0}
+                    />
+                  </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Status when archived</TableHead>
@@ -309,14 +420,14 @@ function ArchiveList({
               <TableBody>
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-10">
+                    <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-10">
                       Loading archive…
                     </TableCell>
                   </TableRow>
                 )}
                 {!loading && filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-10">
+                    <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-10">
                       {query ? "No archived RAs match your search." : "No RAs have been archived yet."}
                     </TableCell>
                   </TableRow>
@@ -325,8 +436,16 @@ function ArchiveList({
                   const total =
                     r.archived_leads_count + r.archived_deals_count +
                     r.archived_checkins_count + r.archived_payouts_count
+                  const isSelected = selected.has(r.id)
                   return (
-                    <TableRow key={r.id} className="cursor-pointer" onClick={() => onOpen(r.id)}>
+                    <TableRow key={r.id} className="cursor-pointer" data-state={isSelected ? "selected" : undefined} onClick={() => onOpen(r.id)}>
+                      <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(v) => toggleOne(r.id, v === true)}
+                          aria-label={`Select ${r.display_name}`}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{r.display_name}</TableCell>
                       <TableCell className="text-muted-foreground">{r.email ?? "—"}</TableCell>
                       <TableCell>
@@ -372,6 +491,48 @@ function ArchiveList({
           </div>
         </CardContent>
       </Card>
+
+      {/* Bulk delete confirmation — typed "DELETE" instead of per-row name so
+          admins can clear out test/dev archives quickly without typing each one. */}
+      <AlertDialog open={bulkOpen} onOpenChange={(o) => { if (!o && !bulkDeleting) { setBulkOpen(false); setBulkConfirm("") } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently delete {selected.size} archive{selected.size === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p>
+                  This destroys every selected archived RA's snapshot — including all preserved
+                  leads, deals, check-ins, payouts, and agreement records. Any live leads that were
+                  still attached lose their attribution.
+                </p>
+                <p className="text-destructive font-medium">This cannot be undone — no Restore option after this point.</p>
+                <div className="space-y-1.5 pt-2">
+                  <Label htmlFor="bulk-confirm" className="text-foreground">
+                    Type <span className="font-mono font-bold">DELETE</span> to confirm:
+                  </Label>
+                  <Input
+                    id="bulk-confirm"
+                    value={bulkConfirm}
+                    onChange={(e) => setBulkConfirm(e.target.value)}
+                    placeholder="DELETE"
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); void handleBulkDelete() }}
+              disabled={bulkDeleting || bulkConfirm.trim().toUpperCase() !== "DELETE"}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bulkDeleting ? <><Loader2 className="h-4 w-4 animate-spin" /> Deleting…</> : `Delete ${selected.size}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

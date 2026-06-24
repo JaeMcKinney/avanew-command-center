@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Outlet, useNavigate } from "react-router-dom"
 import { Loader2 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
-import { getRaAssociate } from "@/lib/data"
+import { getRaAssociate, getImpersonatedRaUserId } from "@/lib/data"
 import {
   DIVIGNER_BG,
   DIVIGNER_CARD_BG,
@@ -106,6 +106,14 @@ export function RaPortalGuard() {
       }
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { navigate("/login", { replace: true }); return }
+
+      // View-as-RA: admin is impersonating. Skip all status-based redirects —
+      // we want them to see the dashboard for any RA regardless of lifecycle
+      // state, and the password_set / login bounces don't apply to them.
+      if (getImpersonatedRaUserId()) {
+        setReady(true)
+        return
+      }
 
       if (!session.user.user_metadata?.password_set) {
         navigate("/onboarding", { replace: true }); return

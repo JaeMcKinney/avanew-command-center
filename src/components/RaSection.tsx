@@ -17,6 +17,9 @@ import {
   Link2,
   ExternalLink,
   Download,
+  Send,
+  LayoutTemplate,
+  Check,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -70,6 +73,7 @@ import { toast } from "sonner"
 import type { RaAssociate, RaStatus, RaType, RaLandingTemplate, Lead } from "@/types/db"
 import { InviteRaModal } from "@/components/ra/InviteRaModal"
 import { BulkInviteRaModal } from "@/components/ra/BulkInviteRaModal"
+import { ReinviteRaModal } from "@/components/ra/ReinviteRaModal"
 import { RaChangeRequestsCard } from "@/components/ra/RaChangeRequestsCard"
 import { RaVerificationDialog } from "@/components/RaVerificationDialog"
 
@@ -104,6 +108,95 @@ function formatDate(iso: string): string {
 }
 
 /**
+ * 3-dot template picker — replaces the inline <select> on the Template column.
+ * Groups templates into Individual / Company / Custom (default_for_type === null)
+ * so admins can see which templates are auto-assigned per RA type and which
+ * are bespoke (e.g. Skilldora's custom template).
+ */
+function TemplatePicker({
+  templates,
+  currentTemplateId,
+  raType,
+  onChange,
+}: {
+  templates: RaLandingTemplate[]
+  currentTemplateId: string | null
+  raType: RaType
+  onChange: (templateId: string | null) => void
+}) {
+  if (templates.length === 0) {
+    return <span className="text-muted-foreground">—</span>
+  }
+
+  const individual = templates.filter((t) => t.default_for_type === "individual")
+  const company = templates.filter((t) => t.default_for_type === "company")
+  const custom = templates.filter((t) => t.default_for_type === null)
+
+  const orgDefault = templates.find((t) => t.default_for_type === raType) ?? templates.find((t) => t.is_default)
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Assign landing page template">
+          <LayoutTemplate className="h-3.5 w-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuItem onClick={() => onChange(null)}>
+          {currentTemplateId === null ? <Check className="h-3.5 w-3.5" /> : <span className="h-3.5 w-3.5" />}
+          <div className="flex flex-col">
+            <span>Org default {orgDefault ? `(${orgDefault.name})` : "(auto)"}</span>
+            <span className="text-[10px] text-muted-foreground">Auto-pick by RA type</span>
+          </div>
+        </DropdownMenuItem>
+        {individual.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+              Individual
+            </div>
+            {individual.map((t) => (
+              <DropdownMenuItem key={t.id} onClick={() => onChange(t.id)}>
+                {currentTemplateId === t.id ? <Check className="h-3.5 w-3.5" /> : <span className="h-3.5 w-3.5" />}
+                {t.name}
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
+        {company.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+              Company
+            </div>
+            {company.map((t) => (
+              <DropdownMenuItem key={t.id} onClick={() => onChange(t.id)}>
+                {currentTemplateId === t.id ? <Check className="h-3.5 w-3.5" /> : <span className="h-3.5 w-3.5" />}
+                {t.name}
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
+        {custom.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+              Custom
+            </div>
+            {custom.map((t) => (
+              <DropdownMenuItem key={t.id} onClick={() => onChange(t.id)}>
+                {currentTemplateId === t.id ? <Check className="h-3.5 w-3.5" /> : <span className="h-3.5 w-3.5" />}
+                {t.name}
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/**
  * Single source of truth for managing Referral Associates. Renders inside
  * the "Referral Associates" tab on /settings/team. Owns the full RA list +
  * filter buckets + invite / bulk-invite + delete + archive entry + per-row
@@ -132,6 +225,9 @@ export function RaSection() {
 
   // Verification review dialog (modal — for quick reviews without leaving page)
   const [reviewTarget, setReviewTarget] = useState<RaAssociate | null>(null)
+
+  // Re-invite modal (admin can edit email before resending the sign-in link)
+  const [reinviteTarget, setReinviteTarget] = useState<RaAssociate | null>(null)
 
   async function refresh() {
     setLoading(true)
@@ -484,24 +580,13 @@ export function RaSection() {
                           ? `Submitted ${formatDate(ra.submitted_at)}`
                           : formatDate(ra.created_at)}
                       </TableCell>
-                      <TableCell className="text-xs" onClick={(e) => e.stopPropagation()}>
-                        {templates.length > 0 ? (
-                          <select
-                            value={ra.template_id ?? ""}
-                            onChange={(e) => handleTemplateChange(ra.id, e.target.value || null)}
-                            className="h-7 w-full max-w-[180px] text-xs rounded-md border bg-background px-2"
-                            title="Assign a landing page template"
-                          >
-                            <option value="">Org default (auto)</option>
-                            {templates.map((t) => (
-                              <option key={t.id} value={t.id}>
-                                {t.name}{t.is_default ? " (default)" : ""}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                      <TableCell className="text-xs text-center w-[60px]" onClick={(e) => e.stopPropagation()}>
+                        <TemplatePicker
+                          templates={templates}
+                          currentTemplateId={ra.template_id}
+                          raType={ra.ra_type ?? "individual"}
+                          onChange={(id) => handleTemplateChange(ra.id, id)}
+                        />
                       </TableCell>
                       <TableCell className="text-center w-[60px] sticky right-0 bg-card group-hover:bg-muted/50 border-l shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.10)]" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center">
@@ -520,6 +605,12 @@ export function RaSection() {
                                 <DropdownMenuItem onClick={() => setLeadsTarget(ra)}>
                                   <Inbox className="h-3.5 w-3.5" />
                                   View leads
+                                </DropdownMenuItem>
+                              )}
+                              {canManage && (
+                                <DropdownMenuItem onClick={() => setReinviteTarget(ra)}>
+                                  <Send className="h-3.5 w-3.5" />
+                                  Re-invite
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />
@@ -595,6 +686,15 @@ export function RaSection() {
         open={!!reviewTarget}
         onClose={() => setReviewTarget(null)}
         onActionComplete={() => { setReviewTarget(null); void refresh() }}
+      />
+
+      {/* Re-invite modal — resend the sign-in email, optionally with a new
+          address (typo fix without delete-and-reinvite). */}
+      <ReinviteRaModal
+        ra={reinviteTarget}
+        open={!!reinviteTarget}
+        onClose={() => setReinviteTarget(null)}
+        onResent={() => void refresh()}
       />
 
       {/* Per-RA leads drill-down */}

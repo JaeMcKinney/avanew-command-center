@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Menu, LogOut, Sun, Moon, Eye, Check, Building2, ChevronsUpDown } from "lucide-react"
+import { Menu, LogOut, Sun, Moon, Eye, Check, Building2, ChevronsUpDown, UserCircle2, Search, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,12 +22,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AppSidebar } from "@/components/AppSidebar"
+import { Input } from "@/components/ui/input"
 import { useAuth } from "@/contexts/AuthContext"
 import { useTheme } from "@/lib/theme"
 import { useRole } from "@/hooks/useRole"
+import { useViewAsRa } from "@/hooks/useViewAsRa"
 import { useOrganization } from "@/contexts/OrganizationContext"
-import { getMyProfile } from "@/lib/data"
-import type { TeamRole } from "@/types/db"
+import { getMyProfile, listRaAssociates } from "@/lib/data"
+import type { RaAssociate, TeamRole } from "@/types/db"
 
 function deriveDisplay(user: ReturnType<typeof useAuth>["user"]) {
   const meta = user?.user_metadata as { full_name?: string } | undefined
@@ -56,8 +58,40 @@ export function TopBar() {
   const [open, setOpen] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const { fullName, initials } = deriveDisplay(user)
-  const { role, canViewAs, viewAs, setViewAsRole } = useRole()
+  const { role, canViewAs, canViewAsRa, viewAs, setViewAsRole } = useRole()
+  const { viewAsRa, setViewAsRa, clear: clearViewAsRa } = useViewAsRa()
   const { currentOrg, orgs } = useOrganization()
+
+  // RAs available for impersonation. Loaded lazily once when the admin opens
+  // the dropdown — the list rarely changes during a session and the user has
+  // to click through to see it anyway.
+  const [raList, setRaList] = useState<RaAssociate[] | null>(null)
+  const [raQuery, setRaQuery] = useState("")
+  async function loadRas() {
+    if (raList !== null) return
+    try {
+      const rows = await listRaAssociates()
+      setRaList(rows)
+    } catch {
+      setRaList([])
+    }
+  }
+  const raResults = useMemo(() => {
+    if (!raList) return []
+    const q = raQuery.trim().toLowerCase()
+    const sorted = [...raList].sort((a, b) => a.display_name.localeCompare(b.display_name))
+    if (!q) return sorted.slice(0, 25)
+    return sorted.filter((r) =>
+      r.display_name.toLowerCase().includes(q) ||
+      r.email.toLowerCase().includes(q) ||
+      r.slug.toLowerCase().includes(q)
+    ).slice(0, 25)
+  }, [raList, raQuery])
+
+  function pickRa(ra: RaAssociate) {
+    setViewAsRa({ userId: ra.user_id, displayName: ra.display_name, slug: ra.slug })
+    navigate("/ra/dashboard")
+  }
 
   useEffect(() => {
     getMyProfile()
@@ -186,6 +220,61 @@ export function TopBar() {
                       </span>
                     </DropdownMenuItem>
                   ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+            </>
+          )}
+          {canViewAsRa && (
+            <>
+              <DropdownMenuSub onOpenChange={(o) => { if (o) void loadRas() }}>
+                <DropdownMenuSubTrigger>
+                  <UserCircle2 className="h-4 w-4" />
+                  View as RA…
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-72 p-0">
+                  <div className="p-2 border-b">
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        placeholder="Search RAs…"
+                        value={raQuery}
+                        onChange={(e) => setRaQuery(e.target.value)}
+                        className="h-8 pl-7 text-xs"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto p-1">
+                    {viewAsRa && (
+                      <DropdownMenuItem onClick={clearViewAsRa} className="text-destructive focus:text-destructive">
+                        <X className="h-3.5 w-3.5" />
+                        Exit RA view (currently: {viewAsRa.displayName})
+                      </DropdownMenuItem>
+                    )}
+                    {raList === null && (
+                      <div className="p-3 text-xs text-muted-foreground text-center">Loading…</div>
+                    )}
+                    {raList !== null && raResults.length === 0 && (
+                      <div className="p-3 text-xs text-muted-foreground text-center">
+                        {raQuery ? "No RAs match." : "No RAs in this workspace."}
+                      </div>
+                    )}
+                    {raResults.map((ra) => {
+                      const isMe = user?.id === ra.user_id
+                      return (
+                        <DropdownMenuItem key={ra.id} onClick={() => pickRa(ra)}>
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className="truncate">
+                              {ra.display_name}
+                              {isMe && <span className="ml-1.5 text-[10px] text-primary">(your RA)</span>}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground truncate">{ra.email}</span>
+                          </div>
+                        </DropdownMenuItem>
+                      )
+                    })}
+                  </div>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuSeparator />

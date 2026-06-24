@@ -1,6 +1,8 @@
-import { Eye, X } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { Eye, X, UserCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRole } from "@/hooks/useRole"
+import { useViewAsRa } from "@/hooks/useViewAsRa"
 import type { TeamRole } from "@/types/db"
 
 const ROLE_LABELS: Record<TeamRole, string> = {
@@ -13,6 +15,30 @@ const ROLE_LABELS: Record<TeamRole, string> = {
 
 export function ViewAsBanner() {
   const { viewAs, setViewAsRole } = useRole()
+  const { viewAsRa, clear: clearViewAsRa } = useViewAsRa()
+  const navigate = useNavigate()
+
+  // Two distinct impersonation modes — RA takes precedence if both are set so
+  // the staff CRM stays scoped to a single mental model at a time.
+  if (viewAsRa) {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b border-sky-300 bg-sky-100 px-4 py-2 text-sm text-sky-900 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-200">
+        <UserCircle2 className="h-4 w-4 shrink-0" />
+        <span className="text-center">
+          Viewing the RA portal as <strong>{viewAsRa.displayName}</strong>. Read-only — writes are blocked.
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => { clearViewAsRa(); navigate("/dashboard") }}
+          className="h-7 gap-1 text-sky-900 hover:bg-sky-200 dark:text-sky-200 dark:hover:bg-sky-900/50"
+        >
+          <X className="h-3.5 w-3.5" />
+          Exit RA view
+        </Button>
+      </div>
+    )
+  }
 
   if (!viewAs) return null
 

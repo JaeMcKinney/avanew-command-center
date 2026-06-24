@@ -7,6 +7,7 @@ import { getRaAssociate } from "@/lib/data"
 import { useTheme } from "@/lib/theme"
 import { RaSidebar } from "@/components/ra/RaSidebar"
 import { ScrollToTopButton } from "@/components/ScrollToTopButton"
+import { ViewAsBanner } from "@/components/ViewAsBanner"
 import type { RaAssociate } from "@/types/db"
 
 function getInitials(name: string | null | undefined) {
@@ -63,6 +64,7 @@ export function RaPortalLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <ViewAsBanner />
         {/* Topbar */}
         <header className="flex h-14 items-center justify-end gap-2 border-b bg-background px-4 md:px-6">
           <button

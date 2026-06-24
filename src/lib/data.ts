@@ -102,6 +102,30 @@ function saveMock<T>(table: string, rows: T[]) {
 
 const VIEW_AS_KEY = "avanew-crm.view-as-role"
 
+// View-as-RA impersonation. Admin+ users can pick a specific RA from the
+// TopBar and the RA portal pages will fetch that RA's data instead of their
+// own. Reads only — write functions throw if the impersonated user_id doesn't
+// match the caller's actual id, so staff can't accidentally edit another
+// RA's profile while QA'ing the portal.
+const VIEW_AS_RA_KEY = "avanew-crm.view-as-ra-user-id"
+
+export function getImpersonatedRaUserId(): string | null {
+  if (typeof localStorage === "undefined") return null
+  const v = localStorage.getItem(VIEW_AS_RA_KEY)
+  return v && v.length > 0 ? v : null
+}
+
+/** Throw if the caller is currently impersonating another RA. Used by every
+ *  write function in the RA portal so View-As stays strictly read-only. */
+async function assertNotImpersonating(action: string): Promise<void> {
+  const impersonated = getImpersonatedRaUserId()
+  if (!impersonated) return
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user && impersonated !== user.id) {
+    throw new Error(`Cannot ${action} while viewing as another RA. Exit RA view first.`)
+  }
+}
+
 function previewContext(): { userId: string; role: TeamRole; scoping: boolean } {
   let viewAs: TeamRole | null = null
   if (typeof localStorage !== "undefined") {
@@ -1430,11 +1454,15 @@ export async function listRaAssociates(): Promise<import("@/types/db").RaAssocia
 
 // ── RA self-service data functions ──────────────────────────────────────────
 
-/** Fetch the current user's own RA associate record (includes all fields). */
+/** Fetch the current user's own RA associate record (includes all fields).
+ *  If an admin is using View-as-RA, returns the impersonated RA instead — but
+ *  only when the caller still has read access (admins can read any RA in
+ *  their org via the ra_read_own_or_admin RLS policy). */
 export async function getRaAssociate(): Promise<import("@/types/db").RaAssociate | null> {
   if (PREVIEW_MODE) return getPreviewRaAssociate()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
+  const targetUserId = getImpersonatedRaUserId() ?? user.id
   const { data, error } = await supabase
     .from("ra_associates")
     .select(`
@@ -1444,7 +1472,7 @@ export async function getRaAssociate(): Promise<import("@/types/db").RaAssociate
         full_name
       )
     `)
-    .eq("user_id", user.id)
+    .eq("user_id", targetUserId)
     .maybeSingle()
   if (error) throw error
   if (!data) return null
@@ -1480,6 +1508,9 @@ export async function getRaPortalRedirect(): Promise<string | null> {
   if (PREVIEW_MODE) return null // preview demos the CRM as super_user
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
+  // View-as-RA active: staff already chose to enter the portal — let them in
+  // regardless of allowlist or their own RA-row presence.
+  if (getImpersonatedRaUserId()) return null
   if (user.email && STAFF_EMAIL_ALLOWLIST.has(user.email.trim().toLowerCase())) return null
 
   // Routing depends on lifecycle status — without this branch every login would
@@ -1591,6 +1622,7 @@ export async function saveRaBanking(raId: string, data: {
  *  Notification is best-effort; failure doesn't block submission. */
 export async function submitRaApplication(raId: string): Promise<void> {
   if (PREVIEW_MODE) return
+  await assertNotImpersonating("submit this application")
   // Read current status BEFORE the update so we can distinguish first
   // submission (pending → verification) from a resubmission after admin
   // requested changes (needs_changes → verification).
@@ -1862,6 +1894,32 @@ export async function inviteRa(input: {
   return data
 }
 
+/** Resend a sign-in link to an existing RA, optionally with a new email
+ *  address. Returns `{ mode }` indicating whether Supabase sent a fresh
+ *  invite ("invite") or a recovery email ("recovery"), so the UI can phrase
+ *  the success toast accurately. */
+export async function reinviteRa(input: {
+  ra_id: string
+  new_email?: string | null
+}): Promise<{ ra_id: string; email: string; email_changed: boolean; mode: "invite" | "recovery" }> {
+  if (PREVIEW_MODE) {
+    return { ra_id: input.ra_id, email: input.new_email ?? "preview@example.com", email_changed: false, mode: "invite" }
+  }
+  const { data, error } = await supabase.functions.invoke<{ ra_id: string; email: string; email_changed: boolean; mode: "invite" | "recovery" }>(
+    "reinvite-ra",
+    {
+      body: {
+        ra_id: input.ra_id,
+        new_email: input.new_email,
+        redirect_to: `${window.location.origin}/onboarding`,
+      },
+    }
+  )
+  if (error) throw error
+  if (!data) throw new Error("No data returned from reinvite-ra")
+  return data
+}
+
 /** Change an RA's type (individual ⇄ company) after creation. */
 export async function updateRaType(
   raId: string,
@@ -2102,6 +2160,24 @@ export type RaDashboardStats = {
 
 export async function getRaDashboardStats(): Promise<RaDashboardStats> {
   if (PREVIEW_MODE) return { total_leads: 0, active_leads: 0, deals_closed: 0 }
+
+  // View-as-RA: the RPC reads auth.uid() server-side, so we can't impersonate
+  // through it. Recompute from the leads/deals tables directly using the
+  // impersonated user_id. Admins already have read access via org-member RLS.
+  const impersonated = getImpersonatedRaUserId()
+  if (impersonated) {
+    const [allLeads, activeLeads, dealsClosed] = await Promise.all([
+      supabase.from("leads").select("id", { count: "exact", head: true }).eq("referred_by_ra_id", impersonated),
+      supabase.from("leads").select("id", { count: "exact", head: true }).eq("referred_by_ra_id", impersonated).eq("converted", false),
+      supabase.from("deals").select("id", { count: "exact", head: true }).eq("referred_by_ra_id", impersonated),
+    ])
+    return {
+      total_leads: allLeads.count ?? 0,
+      active_leads: activeLeads.count ?? 0,
+      deals_closed: dealsClosed.count ?? 0,
+    }
+  }
+
   const { data, error } = await supabase.rpc("get_ra_dashboard_stats")
   if (error) throw error
   const row = (data as RaDashboardStats[] | null)?.[0]
@@ -2113,10 +2189,11 @@ export async function listRaLeads(): Promise<import("@/types/db").Lead[]> {
   if (PREVIEW_MODE) return []
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
+  const targetUserId = getImpersonatedRaUserId() ?? user.id
   const { data, error } = await supabase
     .from("leads")
     .select("*")
-    .eq("referred_by_ra_id", user.id)
+    .eq("referred_by_ra_id", targetUserId)
     .order("created_at", { ascending: false })
   if (error) throw error
   return data ?? []
@@ -4203,6 +4280,7 @@ export async function updateRaSelfProfile(
   patch: Partial<Pick<import("@/types/db").RaAssociate, "display_name" | "bio" | "contact_phone" | "contact_email">>,
 ): Promise<void> {
   if (PREVIEW_MODE) return
+  await assertNotImpersonating("update this profile")
   const { error } = await supabase.from("ra_associates").update(patch as never).eq("id", raId)
   if (error) throw error
 }
@@ -4224,6 +4302,7 @@ export async function uploadRaW9ForReview(
   if (PREVIEW_MODE) {
     return { w9_document_url: `preview://w9/${raId}/pending-${encodeURIComponent(file.name)}` }
   }
+  await assertNotImpersonating("upload a W-9")
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Not authenticated")
   const path = `${user.id}/pending-${Date.now()}.pdf`
@@ -4242,6 +4321,7 @@ export async function submitRaChangeRequest(input: {
   note?: string | null
 }): Promise<void> {
   if (PREVIEW_MODE) return
+  await assertNotImpersonating("submit a change request")
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Not signed in")
   const { data: raRow, error: raErr } = await supabase
