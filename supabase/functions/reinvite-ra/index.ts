@@ -90,24 +90,34 @@ Deno.serve(async (req) => {
 
   if (!payload.ra_id) return json(400, { error: "ra_id is required" })
 
-  // Look up the RA — need user_id + current email.
+  // Look up the RA — need user_id + current email. Email lives on profiles,
+  // not ra_associates (the only email-shaped column on ra_associates is
+  // contact_email, which is the RA-editable display address, NOT the auth
+  // login email). Mirrors listRaAssociates() in src/lib/data.ts which joins
+  // profiles for the email field.
   const { data: ra, error: raErr } = await admin
     .from("ra_associates")
-    .select("id, user_id, email, display_name")
+    .select("id, user_id, display_name, profiles:profiles!ra_associates_user_id_fkey(email)")
     .eq("id", payload.ra_id)
-    .maybeSingle()
+    .maybeSingle<{
+      id: string
+      user_id: string
+      display_name: string
+      profiles: { email: string | null } | null
+    }>()
   if (raErr) return json(500, { error: raErr.message })
   if (!ra) return json(404, { error: "RA not found" })
 
-  const newEmail = payload.new_email?.trim().toLowerCase() || ra.email
+  const currentEmail = (ra.profiles?.email ?? "").toLowerCase()
+  const newEmail = payload.new_email?.trim().toLowerCase() || currentEmail
   if (!newEmail) return json(400, { error: "No email available for this RA" })
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
     return json(400, { error: "Invalid email" })
   }
 
-  // Update the auth user's email if it changed (the trigger does not propagate
-  // ra_associates.email to auth.users; this also keeps profiles in sync).
-  const emailChanged = newEmail !== (ra.email ?? "").toLowerCase()
+  // Update the auth user's email if it changed. profiles.email is the source
+  // of truth — ra_associates has no email column.
+  const emailChanged = newEmail !== currentEmail
   if (emailChanged) {
     const { error: updErr } = await admin.auth.admin.updateUserById(ra.user_id, {
       email: newEmail,
@@ -116,7 +126,6 @@ Deno.serve(async (req) => {
     if (updErr) return json(500, { error: `Email update failed: ${updErr.message}` })
 
     await admin.from("profiles").update({ email: newEmail }).eq("id", ra.user_id)
-    await admin.from("ra_associates").update({ email: newEmail }).eq("id", ra.id)
   }
 
   // Try inviteUserByEmail first. For existing users this returns an error like
