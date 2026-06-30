@@ -3,7 +3,6 @@ import type { LucideIcon } from "lucide-react"
 import {
   LayoutDashboard,
   Kanban,
-  ClipboardList,
   Settings,
   ChevronsLeft,
   ChevronsRight,
@@ -18,9 +17,9 @@ import {
 } from "@/components/ui/tooltip"
 
 // Mirror of the staff AppSidebar chrome, but scoped to the Referral Associate
-// portal: only Dashboard / Deals / Activities / Settings. No Leads, Accounts,
-// Contacts, Reports, Cashflow, or Relationships — RAs only ever see their own
-// referred pipeline, never org-wide CRM or company financials.
+// portal: only Dashboard / Deals / Settings. No Leads, Accounts, Contacts,
+// Reports, Cashflow, or Relationships — RAs only ever see their own referred
+// pipeline, never org-wide CRM or company financials.
 
 const DIVIGNER_LOGO_LIGHT = "/logos/divigner-logo-light.png"
 const DIVIGNER_LOGO_DARK = "/logos/divigner-logo-dark.png"
@@ -37,7 +36,6 @@ const DASHBOARD_ITEM: NavItem = { to: "/ra/dashboard", label: "Dashboard", icon:
 
 const MODULE_ITEMS: NavItem[] = [
   { to: "/ra/deals", label: "Deals", icon: Kanban },
-  { to: "/ra/activities", label: "Activities", icon: ClipboardList },
 ]
 
 const SETTINGS_ITEM: NavItem = { to: "/ra/settings", label: "Settings", icon: Settings }

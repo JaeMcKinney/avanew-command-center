@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ArrowDown, CheckCircle2, FileSignature, Loader2, Scroll } from "lucide-react"
+import { ArrowDown, CheckCircle2, Download, ExternalLink, FileSignature, Loader2, Scroll } from "lucide-react"
 import { toast } from "sonner"
 import { getCommissionConfig, saveRaAgreement } from "@/lib/data"
 import { getAgreementSections } from "@/lib/raAgreement"
@@ -122,6 +122,65 @@ export function AgreementStep({ ra, stepLabel = "Step 1 of 5", onComplete, revie
           </div>
         </div>
       )}
+
+      {/* Read-easier actions: open in new tab / download PDF */}
+      <div style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "8px",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}>
+        <span style={{ fontSize: "12px", color: "#6E8499" }}>
+          Prefer a full-page view? Open or download the agreement to read it on your own.
+        </span>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <a
+            href="/agreement"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "transparent",
+              color: "#A2B6C9",
+              border: "1px solid rgba(160,190,215,.25)",
+              borderRadius: "8px",
+              padding: "7px 12px",
+              fontSize: "12px",
+              fontWeight: 600,
+              textDecoration: "none",
+              fontFamily: "'Manrope', sans-serif",
+            }}
+          >
+            <ExternalLink style={{ width: 13, height: 13 }} />
+            Open in new tab
+          </a>
+          <a
+            href="/agreement?print=1"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "transparent",
+              color: "#A2B6C9",
+              border: "1px solid rgba(160,190,215,.25)",
+              borderRadius: "8px",
+              padding: "7px 12px",
+              fontSize: "12px",
+              fontWeight: 600,
+              textDecoration: "none",
+              fontFamily: "'Manrope', sans-serif",
+            }}
+          >
+            <Download style={{ width: 13, height: 13 }} />
+            Download PDF
+          </a>
+        </div>
+      </div>
 
       {/* Scrollable agreement body */}
       <div style={{ position: "relative" }}>

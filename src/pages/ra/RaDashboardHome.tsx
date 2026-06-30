@@ -1,19 +1,17 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import {
   Copy, CheckCheck, DollarSign, Repeat, Eye, Megaphone, Share2,
-  TrendingUp, CalendarClock, ArrowRight, Sparkles, Trash2, ShieldCheck,
+  TrendingUp, CalendarClock, ArrowRight, Sparkles, Trash2, ShieldCheck, Target,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import {
   getRaAssociate, listLeadsForRaSlug, listPayoutsForRaSlug,
-  listActiveClientsForRaSlug, getAnnualMinimumStatus, getCommissionConfig,
   getRaPageViewStats, ensureRaDemoLeads, clearRaDemoLeads,
 } from "@/lib/data"
-import type { RaLead, RaPayout, ActiveClient, AnnualMinimumStatus } from "@/lib/data"
-import { LogCheckinModal } from "@/components/LogCheckinModal"
+import type { RaLead, RaPayout } from "@/lib/data"
 import type { RaAssociate, RaPageViewStats } from "@/types/db"
 
 function fmtCurrency(n: number) {
@@ -27,20 +25,36 @@ const RANGES = [
   { key: "all", label: "All time", days: Infinity },
 ] as const
 
-type RangeKey = (typeof RANGES)[number]["key"]
+type RangeKey = (typeof RANGES)[number]["key"] | "custom"
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function isoDaysAgo(days: number) {
+  return new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10)
+}
+
+function ComingSoonBadge() {
+  return (
+    <span className="absolute top-3 right-3 text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30">
+      Coming soon
+    </span>
+  )
+}
 
 export function RaDashboardHome() {
   const [ra, setRa] = useState<RaAssociate | null>(null)
   const [leads, setLeads] = useState<RaLead[]>([])
   const [payouts, setPayouts] = useState<RaPayout[]>([])
-  const [activeClients, setActiveClients] = useState<ActiveClient[]>([])
-  const [annual, setAnnual] = useState<AnnualMinimumStatus | null>(null)
   const [views, setViews] = useState<RaPageViewStats | null>(null)
-  const [checkinIntervalDays, setCheckinIntervalDays] = useState(90)
   const [range, setRange] = useState<RangeKey>("365")
+  const [customFrom, setCustomFrom] = useState(isoDaysAgo(30))
+  const [customTo, setCustomTo] = useState(todayIso())
+  const [customOpen, setCustomOpen] = useState(false)
   const [copied, setCopied] = useState<"demo" | "refer" | null>(null)
-  const [checkinTarget, setCheckinTarget] = useState<{ leadId: string | null; name: string } | null>(null)
   const [clearingDemo, setClearingDemo] = useState(false)
+  const customRef = useRef<HTMLDivElement>(null)
 
   async function load() {
     const r = await getRaAssociate()
@@ -48,20 +62,25 @@ export function RaDashboardHome() {
     if (!r?.slug) return
     // Seed demo data on first visit (no-op once they have leads).
     await ensureRaDemoLeads(r.slug).catch(() => 0)
-    const [l, p, ac, am, cfg, vs] = await Promise.all([
+    const [l, p, vs] = await Promise.all([
       listLeadsForRaSlug(r.slug),
       listPayoutsForRaSlug(r.slug),
-      listActiveClientsForRaSlug(r.slug),
-      getAnnualMinimumStatus(r.slug),
-      getCommissionConfig(),
       getRaPageViewStats(),
     ])
-    setLeads(l); setPayouts(p); setActiveClients(ac); setAnnual(am)
-    setCheckinIntervalDays(cfg.checkin_interval_days)
-    setViews(vs)
+    setLeads(l); setPayouts(p); setViews(vs)
   }
 
   useEffect(() => { void load().catch(() => {}) }, [])
+
+  // Close the Custom date popover on outside click so it doesn't trap the user.
+  useEffect(() => {
+    if (!customOpen) return
+    function onClick(e: MouseEvent) {
+      if (customRef.current && !customRef.current.contains(e.target as Node)) setCustomOpen(false)
+    }
+    document.addEventListener("mousedown", onClick)
+    return () => document.removeEventListener("mousedown", onClick)
+  }, [customOpen])
 
   const origin = typeof window !== "undefined" ? window.location.origin : ""
   const demoUrl = ra?.slug ? `${origin}/demo/${ra.slug}` : ""
@@ -80,11 +99,30 @@ export function RaDashboardHome() {
   // ── Earnings ──────────────────────────────────────────────────────────────
   const earnings = useMemo(() => {
     const paid = payouts.filter((p) => p.status === "paid")
-    const rangeDays = RANGES.find((r) => r.key === range)!.days
-    const cutoff = rangeDays === Infinity ? 0 : Date.now() - rangeDays * 86400_000
-    const totalInRange = paid
-      .filter((p) => (p.paid_at ? new Date(p.paid_at).getTime() >= cutoff : false) || rangeDays === Infinity)
-      .reduce((s, p) => s + p.amount, 0)
+    let inRange: (p: RaPayout) => boolean
+    let rangeLabel: string
+    if (range === "custom") {
+      const fromMs = new Date(customFrom).getTime()
+      // Include the entire "to" day, not just midnight.
+      const toMs = new Date(customTo).getTime() + 86400_000 - 1
+      inRange = (p) => {
+        if (!p.paid_at) return false
+        const t = new Date(p.paid_at).getTime()
+        return t >= fromMs && t <= toMs
+      }
+      rangeLabel = `${customFrom} → ${customTo}`
+    } else {
+      const rangeDays = RANGES.find((r) => r.key === range)!.days
+      if (rangeDays === Infinity) {
+        inRange = () => true
+        rangeLabel = "All time"
+      } else {
+        const cutoff = Date.now() - rangeDays * 86400_000
+        inRange = (p) => (p.paid_at ? new Date(p.paid_at).getTime() >= cutoff : false)
+        rangeLabel = RANGES.find((r) => r.key === range)!.label
+      }
+    }
+    const totalInRange = paid.filter(inRange).reduce((s, p) => s + p.amount, 0)
     const totalAllTime = paid.reduce((s, p) => s + p.amount, 0)
     const oneTimeAllTime = paid.filter((p) => p.type === "one_time").reduce((s, p) => s + p.amount, 0)
 
@@ -105,8 +143,8 @@ export function RaDashboardHome() {
       .map(([name, v]) => ({ name, total: v.total, monthly: v.recurringActive ? v.monthly : 0 }))
       .filter((c) => c.total > 0 || c.monthly > 0)
       .sort((a, b) => b.total - a.total)
-    return { totalInRange, totalAllTime, oneTimeAllTime, mrr, clients }
-  }, [payouts, range])
+    return { totalInRange, totalAllTime, oneTimeAllTime, mrr, clients, rangeLabel }
+  }, [payouts, range, customFrom, customTo])
 
   async function handleClearDemo() {
     if (!ra?.slug) return
@@ -179,40 +217,58 @@ export function RaDashboardHome() {
         </Card>
       </div>
 
-      {/* Lifetime earnings hero — reassurance card. Designed to feel like a
-          rock-solid statement: this is what you've earned, it never goes down. */}
-      <Card className="border-primary/40 bg-gradient-to-br from-primary/[0.06] via-background to-background">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-6 flex-wrap">
-            <div className="flex-1 min-w-[240px]">
-              <p className="text-[11px] font-semibold text-primary uppercase tracking-widest flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Your lifetime earnings
-              </p>
-              <p className="text-4xl sm:text-5xl font-semibold tracking-tight mt-2 tabular-nums">
-                {fmtCurrency(earnings.totalAllTime)}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2 max-w-md">
-                Every commission paid to you, in full. This number never goes down — earned commissions stay yours.
-              </p>
+      {/* Lifetime earnings hero (2 cols) + Page Views (1 col) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2 border-primary/40 bg-gradient-to-br from-primary/[0.06] via-background to-background">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-6 flex-wrap">
+              <div className="flex-1 min-w-[240px]">
+                <p className="text-[11px] font-semibold text-primary uppercase tracking-widest flex items-center gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Your lifetime earnings
+                </p>
+                <p className="text-4xl sm:text-5xl font-semibold tracking-tight mt-2 tabular-nums">
+                  {fmtCurrency(earnings.totalAllTime)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2 max-w-md">
+                  Every commission paid to you, in full. This number never goes down — earned commissions stay yours.
+                </p>
+              </div>
+              <div className="rounded-lg border bg-background/80 backdrop-blur px-5 py-4 min-w-[200px]">
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <Repeat className="h-3 w-3" /> Monthly recurring
+                </p>
+                <p className="text-2xl font-semibold mt-1 tabular-nums">
+                  {fmtCurrency(earnings.mrr)}
+                  <span className="text-sm text-muted-foreground font-normal">/mo</span>
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  From {earnings.clients.filter((c) => c.monthly > 0).length} active client{earnings.clients.filter((c) => c.monthly > 0).length === 1 ? "" : "s"}
+                </p>
+              </div>
             </div>
-            <div className="rounded-lg border bg-background/80 backdrop-blur px-5 py-4 min-w-[220px]">
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                <Repeat className="h-3 w-3" /> Monthly recurring
-              </p>
-              <p className="text-2xl font-semibold mt-1 tabular-nums">
-                {fmtCurrency(earnings.mrr)}
-                <span className="text-sm text-muted-foreground font-normal">/mo</span>
-              </p>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                From {earnings.clients.filter((c) => c.monthly > 0).length} active client{earnings.clients.filter((c) => c.monthly > 0).length === 1 ? "" : "s"}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Earnings detail */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><Eye className="h-4 w-4 text-muted-foreground" /> Page Views</CardTitle>
+            <CardDescription>How often your public pages were opened.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5"><Megaphone className="h-3.5 w-3.5 text-primary" /> Demo</span>
+              <span className="tabular-nums"><strong>{views?.demo_total ?? 0}</strong> <span className="text-muted-foreground text-xs">total · {views?.demo_7d ?? 0} this week</span></span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5"><Share2 className="h-3.5 w-3.5 text-muted-foreground" /> Refer</span>
+              <span className="tabular-nums"><strong>{views?.refer_total ?? 0}</strong> <span className="text-muted-foreground text-xs">total · {views?.refer_7d ?? 0} this week</span></span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Earnings breakdown */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -220,23 +276,57 @@ export function RaDashboardHome() {
               <CardTitle className="text-base flex items-center gap-2"><DollarSign className="h-4 w-4 text-primary" /> Earnings breakdown</CardTitle>
               <CardDescription>One-time and recurring commissions, with a per-client view.</CardDescription>
             </div>
-            <div className="inline-flex rounded-md border p-0.5">
-              {RANGES.map((r) => (
+            <div className="relative" ref={customRef}>
+              <div className="inline-flex rounded-md border p-0.5">
+                {RANGES.map((r) => (
+                  <button
+                    key={r.key}
+                    onClick={() => { setRange(r.key); setCustomOpen(false) }}
+                    className={`px-2.5 py-1 rounded text-xs transition-colors ${range === r.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
                 <button
-                  key={r.key}
-                  onClick={() => setRange(r.key)}
-                  className={`px-2.5 py-1 rounded text-xs transition-colors ${range === r.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => { setRange("custom"); setCustomOpen((v) => !v) }}
+                  className={`px-2.5 py-1 rounded text-xs transition-colors ${range === "custom" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  {r.label}
+                  Custom…
                 </button>
-              ))}
+              </div>
+              {customOpen && (
+                <div className="absolute right-0 top-full mt-2 z-20 rounded-lg border bg-popover shadow-md p-3 flex items-end gap-2">
+                  <label className="flex flex-col text-[11px] text-muted-foreground gap-1">
+                    From
+                    <input
+                      type="date"
+                      value={customFrom}
+                      max={customTo}
+                      onChange={(e) => setCustomFrom(e.target.value)}
+                      className="rounded border bg-background px-2 py-1 text-xs text-foreground"
+                    />
+                  </label>
+                  <label className="flex flex-col text-[11px] text-muted-foreground gap-1">
+                    To
+                    <input
+                      type="date"
+                      value={customTo}
+                      min={customFrom}
+                      max={todayIso()}
+                      onChange={(e) => setCustomTo(e.target.value)}
+                      className="rounded border bg-background px-2 py-1 text-xs text-foreground"
+                    />
+                  </label>
+                  <Button size="sm" onClick={() => setCustomOpen(false)}>Apply</Button>
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-lg border p-4">
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5" /> Paid ({RANGES.find((r) => r.key === range)!.label})</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5" /> Paid ({earnings.rangeLabel})</p>
               <p className="text-2xl font-semibold mt-1">{fmtCurrency(earnings.totalInRange)}</p>
               <p className="text-[11px] text-muted-foreground mt-1">{fmtCurrency(earnings.totalAllTime)} all-time</p>
             </div>
@@ -271,40 +361,8 @@ export function RaDashboardHome() {
         </CardContent>
       </Card>
 
-      {/* Analytics + Annual */}
+      {/* Pipeline | Annual Referrals (Coming Soon) | Client Check-ins (Coming Soon) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2"><Eye className="h-4 w-4 text-muted-foreground" /> Page Views</CardTitle>
-            <CardDescription>How often your public pages were opened.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-1.5"><Megaphone className="h-3.5 w-3.5 text-primary" /> Demo</span>
-              <span className="tabular-nums"><strong>{views?.demo_total ?? 0}</strong> <span className="text-muted-foreground text-xs">total · {views?.demo_7d ?? 0} this week</span></span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-1.5"><Share2 className="h-3.5 w-3.5 text-muted-foreground" /> Refer</span>
-              <span className="tabular-nums"><strong>{views?.refer_total ?? 0}</strong> <span className="text-muted-foreground text-xs">total · {views?.refer_7d ?? 0} this week</span></span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {annual && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Annual Referrals</CardTitle>
-              <CardDescription>{annual.on_track ? `On track for ${annual.year}.` : `${annual.days_remaining_in_year} days left in ${annual.year}.`}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-semibold">{annual.count}<span className="text-muted-foreground text-xl">/{annual.target}</span></p>
-              <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, (annual.count / Math.max(1, annual.target)) * 100)}%` }} />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Pipeline</CardTitle>
@@ -316,51 +374,32 @@ export function RaDashboardHome() {
             </Button>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Check-ins due — countdown from closed-won date */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2"><CalendarClock className="h-4 w-4 text-muted-foreground" /> Client Check-ins</CardTitle>
-          <CardDescription>Quarterly touchpoints, timed from when each deal closed.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {activeClients.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No active clients yet.</p>
-          ) : (
-            <div className="rounded-lg border divide-y">
-              {activeClients.map((c) => {
-                const dueInDays = checkinIntervalDays - c.days_since
-                const label = dueInDays < 0 ? `${Math.abs(dueInDays)}d overdue`
-                  : dueInDays === 0 ? "Due today"
-                  : `Due in ${dueInDays}d`
-                const color = c.severity === "overdue" ? "text-red-600"
-                  : c.severity === "warning" ? "text-amber-600" : "text-muted-foreground"
-                return (
-                  <div key={c.lead_id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                    <span className="font-medium truncate">{c.client_name}</span>
-                    <span className="flex items-center gap-3 shrink-0">
-                      <span className={`text-xs ${color}`}>{label}</span>
-                      <Button variant="outline" size="sm" className="h-7" onClick={() => setCheckinTarget({ leadId: c.lead_id, name: c.client_name })}>Log check-in</Button>
-                    </span>
-                  </div>
-                )
-              })}
+        <Card className="relative">
+          <ComingSoonBadge />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><Target className="h-4 w-4 text-muted-foreground" /> Annual Referrals</CardTitle>
+            <CardDescription>4 qualified referrals per calendar year to stay in good standing.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold text-muted-foreground">—<span className="text-xl">/4</span></p>
+            <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-muted-foreground/20" style={{ width: "0%" }} />
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {checkinTarget && ra?.slug && (
-        <LogCheckinModal
-          open={!!checkinTarget}
-          onClose={() => setCheckinTarget(null)}
-          raSlug={ra.slug}
-          leadId={checkinTarget.leadId}
-          clientName={checkinTarget.name}
-          onLogged={() => { if (ra?.slug) void load() }}
-        />
-      )}
+        <Card className="relative">
+          <ComingSoonBadge />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><CalendarClock className="h-4 w-4 text-muted-foreground" /> Client Check-ins</CardTitle>
+            <CardDescription>Quarterly touchpoints, timed from when each deal closed.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Log check-ins for each active client to keep recurring commissions in good standing.</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

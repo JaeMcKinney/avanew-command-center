@@ -7,11 +7,11 @@ import { ResetPassword } from "@/pages/auth/ResetPassword"
 import { SetupAccount } from "@/pages/auth/SetupAccount"
 import { RaOnboarding } from "@/pages/onboarding/RaOnboarding"
 import { RaOnboardingSteps } from "@/pages/onboarding/RaOnboardingSteps"
+import { AgreementView } from "@/pages/onboarding/AgreementView"
 import { RaPortalGuard } from "@/components/RaPortalGuard"
 import { RaPortalLayout } from "@/components/ra/RaPortalLayout"
 import { RaDashboardHome } from "@/pages/ra/RaDashboardHome"
 import { RaDeals } from "@/pages/ra/RaDeals"
-import { RaActivities } from "@/pages/ra/RaActivities"
 import { RaSettings } from "@/pages/ra/RaSettings"
 import { RaLandingPage } from "@/pages/public/RaLandingPage"
 import { RaDemoPage } from "@/pages/public/RaDemoPage"
@@ -119,6 +119,7 @@ function App() {
       <Route path="/setup-account" element={<SetupAccount />} />
       <Route path="/onboarding" element={<RaOnboarding />} />
       <Route path="/onboarding/steps" element={<RaOnboardingSteps />} />
+      <Route path="/agreement" element={<AgreementView />} />
       <Route path="/refer/:slug" element={<RaLandingPage />} />
       <Route path="/demo/:slug" element={<RaDemoPage />} />
       <Route
@@ -226,7 +227,7 @@ function App() {
         <Route index element={<RaStoryboard />} />
       </Route>
       {/* RA portal — staff-CRM-style shell, status-gated. RAs only ever see
-          Dashboard / Deals / Activities / Settings, scoped to their own data. */}
+          Dashboard / Deals / Settings, scoped to their own data. */}
       <Route
         element={
           <ProtectedRoute>
@@ -237,7 +238,6 @@ function App() {
         <Route element={<RaPortalLayout />}>
           <Route path="/ra/dashboard" element={<RaDashboardHome />} />
           <Route path="/ra/deals" element={<RaDeals />} />
-          <Route path="/ra/activities" element={<RaActivities />} />
           <Route path="/ra/settings" element={<RaSettings />} />
         </Route>
       </Route>
