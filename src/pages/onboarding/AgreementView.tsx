@@ -166,6 +166,16 @@ export function AgreementView() {
           color: #A2B6C9;
         }
 
+        /* Phones (portrait + landscape): wrap the toolbar so the action
+           buttons never clip at the right edge, and slim the doc padding. */
+        @media (max-width: 720px) {
+          .agreement-view { padding: 16px 12px 60px; }
+          .agreement-view__toolbar { flex-wrap: wrap; padding: 10px 12px; }
+          .agreement-view__toolbar-actions { flex-wrap: wrap; }
+          .agreement-view__doc { padding: 28px 18px; }
+          .agreement-view__title { font-size: 22px; }
+        }
+
         @media print {
           .agreement-view {
             background: #ffffff !important;

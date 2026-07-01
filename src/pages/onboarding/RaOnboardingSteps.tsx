@@ -203,7 +203,7 @@ export function RaOnboardingSteps() {
                     filter: "drop-shadow(0 8px 20px rgba(0,0,0,.45))",
                   }}
                 />
-                <div style={{ background: DIVIGNER_CARD_BG, border: "1px solid rgba(160,190,215,.14)", borderRadius: "20px", padding: "32px 40px 40px", boxShadow: "0 32px 80px -20px rgba(0,0,0,.7)" }}>
+                <div className="ra-status-card" style={{ background: DIVIGNER_CARD_BG, border: "1px solid rgba(160,190,215,.14)", borderRadius: "20px", padding: "32px 40px 40px", boxShadow: "0 32px 80px -20px rgba(0,0,0,.7)" }}>
                   <div style={{ background: "rgba(52,214,194,.1)", borderRadius: "50%", width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
                     <CheckCircle2 style={{ width: 32, height: 32, color: "#34D6C2" }} />
                   </div>
@@ -275,7 +275,7 @@ export function RaOnboardingSteps() {
                     filter: "drop-shadow(0 8px 20px rgba(0,0,0,.45))",
                   }}
                 />
-                <div style={{ background: DIVIGNER_CARD_BG, border: "1px solid rgba(160,190,215,.14)", borderRadius: "20px", padding: "32px 40px 40px", boxShadow: "0 32px 80px -20px rgba(0,0,0,.7)" }}>
+                <div className="ra-status-card" style={{ background: DIVIGNER_CARD_BG, border: "1px solid rgba(160,190,215,.14)", borderRadius: "20px", padding: "32px 40px 40px", boxShadow: "0 32px 80px -20px rgba(0,0,0,.7)" }}>
                   <div style={{ background: "rgba(251,191,36,.1)", borderRadius: "50%", width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
                     <AlertTriangle style={{ width: 32, height: 32, color: "#fbbf24" }} />
                   </div>
@@ -316,14 +316,13 @@ export function RaOnboardingSteps() {
         <OnboardingOrbs />
         <div style={{ position: "fixed", inset: 0, backgroundImage: DIVIGNER_NOISE_SVG, opacity: 0.035, pointerEvents: "none", zIndex: 0 }} />
 
-        {/* zoom scales the whole wizard (and all child step components) up by
-            default so nobody has to bump browser zoom to read it — mirrors the
-            ~125% that felt comfortable on a 16" display. Leaves the fixed orb /
-            noise background untouched. */}
-        <div style={{ zoom: 1.2, position: "relative", zIndex: 1, maxWidth: "900px", margin: "0 auto", padding: "32px 20px 60px" }}>
+        {/* .ra-wizard-shell carries a desktop-only zoom (see OnboardingPageStyles)
+            so the wizard reads comfortably on large displays without bumping
+            browser zoom, while phones/tablets keep natural 1:1 scale. */}
+        <div className="ra-wizard-shell" style={{ position: "relative", zIndex: 1, maxWidth: "900px", margin: "0 auto", padding: "32px 20px 60px" }}>
 
           {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px", gap: 12 }}>
+          <div className="ra-wizard-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px", gap: 12 }}>
             <img src={DIVIGNER_LOGO_SRC} alt="Divigner" style={{ height: "44px" }} />
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               {raName && (
@@ -333,7 +332,7 @@ export function RaOnboardingSteps() {
                     : <div style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(52,214,194,.12)", color: "#34D6C2", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{initialsOf(raName)}</div>}
                   <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: "#EAF2F9" }}>{raName}</span>
-                    <span style={{ fontSize: 11, color: "#6E8499" }}>Referral Associate · Onboarding</span>
+                    <span className="ra-wizard-sub" style={{ fontSize: 11, color: "#6E8499" }}>Referral Associate · Onboarding</span>
                   </div>
                 </div>
               )}
@@ -380,11 +379,13 @@ export function RaOnboardingSteps() {
             </div>
           )}
 
-          {/* Two-column layout: sidebar + content */}
-          <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: "24px", alignItems: "start" }}>
+          {/* Two-column layout: sidebar + content. Collapses to a stacked
+              layout (step chips strip on top) below 900px — see
+              OnboardingPageStyles. */}
+          <div className="ra-wizard-grid" style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: "24px", alignItems: "start" }}>
 
             {/* Sidebar progress */}
-            <div style={{
+            <div className="ra-wizard-side" style={{
               background: DIVIGNER_CARD_BG,
               border: "1px solid rgba(160,190,215,.14)",
               borderRadius: "16px",
@@ -392,10 +393,10 @@ export function RaOnboardingSteps() {
               position: "sticky",
               top: "24px",
             }}>
-              <p style={{ margin: "0 0 16px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6E8499" }}>
+              <p className="ra-wizard-side-label" style={{ margin: "0 0 16px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6E8499" }}>
                 Progress
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <div className="ra-wizard-steps" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 {STEPS.map((s, i) => {
                   const done = s.field ? Boolean(ra[s.field]) : false
                   const active = i === step
@@ -428,7 +429,7 @@ export function RaOnboardingSteps() {
               </div>
 
               {/* Overall progress bar */}
-              <div style={{ marginTop: "20px" }}>
+              <div className="ra-wizard-progressbar" style={{ marginTop: "20px" }}>
                 <div style={{ height: "4px", background: "rgba(160,190,215,.15)", borderRadius: "2px", overflow: "hidden" }}>
                   <div style={{
                     height: "100%",
@@ -445,7 +446,7 @@ export function RaOnboardingSteps() {
             </div>
 
             {/* Step content card */}
-            <div style={{
+            <div className="ra-wizard-card" style={{
               background: DIVIGNER_CARD_BG,
               border: "1px solid rgba(160,190,215,.14)",
               borderRadius: "16px",
@@ -532,6 +533,62 @@ function OnboardingPageStyles() {
       .ra-onboarding-root select:focus {
         border-color: rgba(95,227,210,.65) !important;
         box-shadow: 0 0 0 3px rgba(52,214,194,.22);
+      }
+
+      /* Desktop-only readability zoom (was inline zoom:1.2). Phones/tablets
+         keep 1:1 scale — a zoomed 375px viewport is effectively ~312px and
+         everything overflows. */
+      .ra-wizard-shell { zoom: 1.2; }
+      @media (max-width: 1199px) {
+        .ra-wizard-shell { zoom: 1; }
+      }
+
+      /* ── Mobile / narrow layout (covers phone portrait AND landscape) ──
+         Inline styles below win specificity, hence the !importants. */
+      @media (max-width: 900px) {
+        .ra-wizard-shell { padding: 16px 12px 48px !important; }
+        .ra-wizard-header { margin-bottom: 18px !important; }
+        .ra-wizard-header > img { height: 34px !important; }
+
+        /* Sidebar collapses into a horizontal step-chip strip above the card.
+           minmax(0,1fr) + min-width:0 stop wide children (agreement doc, chip
+           strip) from inflating the track past the viewport — a bare 1fr
+           track's implicit min-width:auto would otherwise grow to fit them. */
+        .ra-wizard-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 14px !important; }
+        .ra-wizard-grid > * { min-width: 0; }
+        .ra-wizard-side { position: static !important; padding: 12px 12px 10px !important; }
+        .ra-wizard-side-label { margin: 0 0 10px !important; }
+        .ra-wizard-steps {
+          flex-direction: row !important;
+          gap: 6px !important;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          padding-bottom: 2px;
+        }
+        .ra-wizard-steps::-webkit-scrollbar { display: none; }
+        .ra-wizard-steps button {
+          width: auto !important;
+          flex: 0 0 auto;
+          padding: 7px 10px !important;
+          white-space: nowrap;
+        }
+        .ra-wizard-progressbar { margin-top: 12px !important; }
+
+        .ra-wizard-card { padding: 22px 16px !important; }
+        .ra-status-card { padding: 28px 20px 32px !important; }
+
+        /* 16px floor stops iOS Safari from auto-zooming the page when an
+           input gains focus. */
+        .ra-onboarding-root input,
+        .ra-onboarding-root textarea,
+        .ra-onboarding-root select {
+          font-size: 16px !important;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .ra-wizard-sub { display: none; }
       }
 
       @media (max-width: 720px) {
