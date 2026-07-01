@@ -52,7 +52,7 @@ function buildReminderEmail(firstName: string, orgName: string, actionLink: stri
     "Your invite link expires in 24 hours",
     `<p style="color:#A2B6C9;font-size:.95rem;line-height:1.6;margin:0 0 14px">Your invite to join <strong style="color:#EAF2F9">${escapeHtml(orgName)}</strong>'s Referral Associate Program expires in about 24 hours. Click below before then to get started.</p>
      <div style="background:rgba(244,178,58,.1);border:1px solid rgba(244,178,58,.3);border-radius:8px;padding:14px 16px">
-       <p style="margin:0;color:#A2B6C9;font-size:.85rem;line-height:1.5">Once you're in, you'll also have <strong style="color:#EAF2F9">21 days</strong> from your original invite to complete and submit onboarding, or your application will auto-close.</p>
+       <p style="margin:0;color:#A2B6C9;font-size:.85rem;line-height:1.5">Once you're in, you'll also have <strong style="color:#EAF2F9">14 days</strong> from your original invite to complete and submit onboarding, or your application will auto-close.</p>
      </div>`,
     "Accept invite",
     actionLink,

@@ -7,7 +7,7 @@
 //      create the auth.users row (which triggers handle_new_user, creating the
 //      matching profiles row synchronously). Its action_link is NOT used.
 //   4. Inserts a row into ra_associates (status: pending, with invite_expires_at
-//      = now+72h and onboarding_deadline_at = now+21d) and organization_members
+//      = now+72h and onboarding_deadline_at = now+14d) and organization_members
 //      (role: referral_associate).
 //   5. Sends a branded SendGrid email containing an app-domain
 //      /invite/accept?token=<signed> link (72h window we control ourselves,
@@ -167,12 +167,12 @@ Deno.serve(async (req) => {
   )
 
   // Both deadlines are computed from one shared `now` so they stay in sync
-  // with created_at — 72h invite-link window, 21-day onboarding-submission
+  // with created_at — 72h invite-link window, 14-day onboarding-submission
   // window. Enforced by the notify-ra-invite-expiring / notify-ra-onboarding-
   // deadline cron functions.
   const now = new Date()
   const inviteExpiresAt = new Date(now.getTime() + 72 * 60 * 60 * 1000).toISOString()
-  const onboardingDeadlineAt = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000).toISOString()
+  const onboardingDeadlineAt = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString()
 
   // Create the ra_associates row.
   const { data: raRow, error: raErr } = await admin

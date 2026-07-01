@@ -4,9 +4,9 @@
 // status='pending' who hasn't submitted onboarding for review yet
 // (submitted_at IS NULL), sends reminders at 7 and 2 days before
 // onboarding_deadline_at, and flips status → 'onboarding_expired' once the
-// 21-day window has fully passed.
+// 14-day window has fully passed.
 //
-// Per the product decision that the 21-day deadline only gates *first*
+// Per the product decision that the 14-day deadline only gates *first*
 // submission: this query is `status = 'pending'`, not `.in(['pending',
 // 'needs_changes'])`. needs_changes can only be reached after a first
 // submission (submitted_at gets set the moment status first becomes
@@ -16,7 +16,7 @@
 //
 // Reminder dedup uses the same exact-day-match trick as
 // notify-ra-checkin-due (daysRemaining === 7 / === 2) rather than an extra
-// tracking column — a missed day-14 reminder still has day-19 as a natural
+// tracking column — a missed day-7 reminder still has day-12 as a natural
 // second chance before the hard deadline, unlike the single-shot 72h
 // invite-link reminder in notify-ra-invite-expiring.
 //
@@ -101,9 +101,9 @@ Deno.serve(async (req) => {
 
     // Sanity check: any candidate here should have clicked their invite
     // already (they can't have progressed past 'pending' otherwise) — a row
-    // with invite_clicked_at still null this deep into the 21-day window
+    // with invite_clicked_at still null this deep into the 14-day window
     // would mean notify-ra-invite-expiring has been failing to run for over
-    // two weeks. Surface it loudly rather than silently emailing someone who
+    // a week. Surface it loudly rather than silently emailing someone who
     // never opened the app.
     if (!ra.invite_clicked_at) {
       console.warn(`RA ${raId} has daysRemaining=${daysRemaining} but invite_clicked_at is null — check notify-ra-invite-expiring's cron health`)

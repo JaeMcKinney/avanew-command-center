@@ -285,7 +285,7 @@ export function RaOnboardingSteps() {
                   <p style={{ margin: 0, fontSize: "14px", color: "#A2B6C9", lineHeight: 1.7 }}>
                     {isInviteExpired
                       ? "Your invite link expired after 72 hours without being used. Please contact your Divigner representative to request a new invite."
-                      : "Your application was automatically closed because onboarding wasn't completed within 21 days of your invite. Please contact your Divigner representative to reapply."}
+                      : "Your application was automatically closed because onboarding wasn't completed within 14 days of your invite. Please contact your Divigner representative to reapply."}
                   </p>
                 </div>
               </div>

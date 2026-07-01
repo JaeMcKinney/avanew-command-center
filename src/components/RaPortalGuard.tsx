@@ -46,7 +46,7 @@ const REVOKED_COPY: Record<RevokedReason, { emoji: string; heading: string; body
   onboarding_expired: {
     emoji: "⌛",
     heading: "Onboarding Window Closed",
-    body: "Your application was automatically closed because onboarding wasn't completed within 21 days of your invite. Please contact your Divigner representative to reapply.",
+    body: "Your application was automatically closed because onboarding wasn't completed within 14 days of your invite. Please contact your Divigner representative to reapply.",
   },
 }
 

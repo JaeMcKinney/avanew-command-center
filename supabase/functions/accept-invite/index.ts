@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
   if (raErr) return json(500, { error: raErr.message })
   if (!ra) return json(200, { ok: false, reason: "invalid" })
 
-  // Already closed by the 21-day onboarding deadline.
+  // Already closed by the 14-day onboarding deadline.
   if (ra.status === "onboarding_expired") return json(200, { ok: false, reason: "closed" })
 
   // Already expired (either the cron flipped it, or the token/row is past 72h).

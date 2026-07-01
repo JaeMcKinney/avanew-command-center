@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
       .update({
         status: "pending",
         invite_expires_at: inviteExpiresAt.toISOString(),
-        onboarding_deadline_at: new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+        onboarding_deadline_at: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         invite_clicked_at: null,
         invite_reminder_sent: false,
       })

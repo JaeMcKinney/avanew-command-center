@@ -59,7 +59,7 @@ export function ReinviteRaModal({ ra, open, onClose, onResent }: Props) {
         : "They'll get a new magic-link email shortly."
       toast.success(headline, {
         description: result.reactivated
-          ? `${baseDescription} Their record was reactivated with a fresh 72-hour link window and 21-day onboarding deadline.`
+          ? `${baseDescription} Their record was reactivated with a fresh 72-hour link window and 14-day onboarding deadline.`
           : baseDescription,
       })
       onResent?.()

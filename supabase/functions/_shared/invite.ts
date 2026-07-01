@@ -86,7 +86,7 @@ export function inviteEmailHtml(firstName: string, orgName: string, acceptUrl: s
      <div style="background:rgba(244,178,58,.1);border:1px solid rgba(244,178,58,.3);border-radius:8px;padding:14px 16px">
        <p style="margin:0 0 8px;font-weight:600;color:#F4D58A;font-size:.9rem">Two deadlines to know</p>
        <p style="margin:0 0 6px;color:#A2B6C9;font-size:.85rem;line-height:1.5">This invite link expires in <strong style="color:#EAF2F9">72 hours</strong>.</p>
-       <p style="margin:0;color:#A2B6C9;font-size:.85rem;line-height:1.5">You must complete and submit your onboarding within <strong style="color:#EAF2F9">3 weeks (21 days)</strong> of this invite, or your application will be automatically closed and you'll need to reapply.</p>
+       <p style="margin:0;color:#A2B6C9;font-size:.85rem;line-height:1.5">You must complete and submit your onboarding within <strong style="color:#EAF2F9">2 weeks (14 days)</strong> of this invite, or your application will be automatically closed and you'll need to reapply.</p>
      </div>`,
     "Accept invite & set your password",
     acceptUrl,
