@@ -26,6 +26,7 @@ import type { RaLead, RaPayout } from "@/lib/data"
 const STATUS_LABEL: Record<RaStatus, string> = {
   pending: "Pending onboarding", verification: "Pending review", needs_changes: "Changes requested",
   active: "Active", suspended: "Suspended", declined: "Declined", terminated: "Terminated",
+  invite_expired: "Invite expired", onboarding_expired: "Onboarding expired",
 }
 
 const STAGE_LABEL: Record<RaLead["stage"], string> = {

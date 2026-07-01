@@ -201,6 +201,8 @@ const STATUS_LABELS: Record<RaStatus, string> = {
   suspended: "Suspended",
   declined: "Declined",
   terminated: "Terminated",
+  invite_expired: "Invite expired",
+  onboarding_expired: "Onboarding expired",
 }
 
 /**

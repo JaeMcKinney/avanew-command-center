@@ -1530,8 +1530,13 @@ export async function getRaPortalRedirect(): Promise<string | null> {
   const status = ra.status as string
 
   // active → portal. terminated / declined → portal (will gracefully show the
-  // status). suspended → portal (read-only view there).
-  if (status === "active" || status === "declined" || status === "terminated" || status === "suspended") {
+  // status). suspended → portal (read-only view there). invite_expired /
+  // onboarding_expired are the same shape of "terminal, blocked, needs an
+  // admin action to unstick" — RaPortalGuard shows the matching revoked screen.
+  if (
+    status === "active" || status === "declined" || status === "terminated" || status === "suspended" ||
+    status === "invite_expired" || status === "onboarding_expired"
+  ) {
     return "/ra/dashboard"
   }
   // verification: already submitted, /onboarding/steps renders the pending screen.
@@ -1901,15 +1906,17 @@ export async function inviteRa(input: {
 /** Resend a sign-in link to an existing RA, optionally with a new email
  *  address. Returns `{ mode }` indicating whether Supabase sent a fresh
  *  invite ("invite") or a recovery email ("recovery"), so the UI can phrase
- *  the success toast accurately. */
+ *  the success toast accurately. `reactivated` is true when the RA's status
+ *  was invite_expired/onboarding_expired and got reset to pending with a
+ *  fresh 72h/21d deadline pair. */
 export async function reinviteRa(input: {
   ra_id: string
   new_email?: string | null
-}): Promise<{ ra_id: string; email: string; email_changed: boolean; mode: "invite" | "recovery" }> {
+}): Promise<{ ra_id: string; email: string; email_changed: boolean; mode: "invite" | "recovery"; reactivated: boolean }> {
   if (PREVIEW_MODE) {
-    return { ra_id: input.ra_id, email: input.new_email ?? "preview@example.com", email_changed: false, mode: "invite" }
+    return { ra_id: input.ra_id, email: input.new_email ?? "preview@example.com", email_changed: false, mode: "invite", reactivated: false }
   }
-  const { data, error } = await supabase.functions.invoke<{ ra_id: string; email: string; email_changed: boolean; mode: "invite" | "recovery" }>(
+  const { data, error } = await supabase.functions.invoke<{ ra_id: string; email: string; email_changed: boolean; mode: "invite" | "recovery"; reactivated: boolean }>(
     "reinvite-ra",
     {
       body: {

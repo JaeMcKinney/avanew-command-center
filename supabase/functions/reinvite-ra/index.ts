@@ -5,13 +5,19 @@
 //
 // Flow:
 //   1. Verify caller is admin+ in profiles or any org_members row.
-//   2. Look up the RA by id; pull current email + user_id.
+//   2. Look up the RA by id; pull current email + user_id + status.
 //   3. If new_email differs from current: update auth.users, profiles.email,
 //      and ra_associates.email.
 //   4. Re-send the invite. We try inviteUserByEmail first (works in some
 //      Supabase versions for existing pending users); on "already registered"
 //      we fall back to generateLink + resetPasswordForEmail so the RA still
 //      gets a usable email.
+//   5. If the RA's status is invite_expired or onboarding_expired, this is a
+//      reapply — reset status to 'pending' and restart both deadline clocks
+//      (invite_expires_at, onboarding_deadline_at) from now, and clear
+//      invite_clicked_at/invite_reminder_sent so the fresh 72h window is
+//      actually enforced rather than being permanently skipped because the
+//      RA's old click timestamp is still on the row.
 //
 // Deploy:
 //   supabase functions deploy reinvite-ra --no-verify-jwt
@@ -97,12 +103,13 @@ Deno.serve(async (req) => {
   // profiles for the email field.
   const { data: ra, error: raErr } = await admin
     .from("ra_associates")
-    .select("id, user_id, display_name, profiles:profiles!ra_associates_user_id_fkey(email)")
+    .select("id, user_id, display_name, status, profiles:profiles!ra_associates_user_id_fkey(email)")
     .eq("id", payload.ra_id)
     .maybeSingle<{
       id: string
       user_id: string
       display_name: string
+      status: string
       profiles: { email: string | null } | null
     }>()
   if (raErr) return json(500, { error: raErr.message })
@@ -162,10 +169,33 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Reapply path: an expired RA clicking "Re-invite" needs a full clock
+  // restart, not just a fresh email — otherwise ra_associates.status still
+  // reads invite_expired/onboarding_expired (the onboarding-gate screens
+  // would immediately re-block them) and the stale deadline columns would
+  // just get re-flagged expired again by the next cron pass.
+  let reactivated = false
+  if (ra.status === "invite_expired" || ra.status === "onboarding_expired") {
+    const now = new Date()
+    const { error: resetErr } = await admin
+      .from("ra_associates")
+      .update({
+        status: "pending",
+        invite_expires_at: new Date(now.getTime() + 72 * 60 * 60 * 1000).toISOString(),
+        onboarding_deadline_at: new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+        invite_clicked_at: null,
+        invite_reminder_sent: false,
+      })
+      .eq("id", ra.id)
+    if (resetErr) return json(500, { error: `Reinvite sent but clock reset failed: ${resetErr.message}` })
+    reactivated = true
+  }
+
   return json(200, {
     ra_id: ra.id,
     email: newEmail,
     email_changed: emailChanged,
     mode, // "invite" or "recovery"
+    reactivated, // true when this reset an expired RA back to pending with fresh deadlines
   })
 })

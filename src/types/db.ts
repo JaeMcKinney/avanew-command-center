@@ -111,6 +111,8 @@ export type RaStatus =
   | "suspended"
   | "declined"
   | "terminated"
+  | "invite_expired"
+  | "onboarding_expired"
 
 export type RaAssociate = {
   id: string
@@ -151,6 +153,13 @@ export type RaAssociate = {
   verification_notes_at?: string | null
   verified_at: string | null
   activated_at: string | null
+  // Invite link expiry (72h) + onboarding submission deadline (21d), both set
+  // from invite time by invite-ra. invite_clicked_at is set once by the
+  // onboarding password gate the first time an authenticated session is seen.
+  invite_expires_at?: string | null
+  invite_clicked_at?: string | null
+  onboarding_deadline_at?: string | null
+  invite_reminder_sent?: boolean
   template_id: string | null
   // Individual vs Company. Set at invite, editable after. Drives which
   // type-default landing template the public pages resolve to.

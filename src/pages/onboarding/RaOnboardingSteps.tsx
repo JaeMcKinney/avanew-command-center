@@ -19,7 +19,7 @@ import {
 } from "@/lib/brand"
 import type { RaAssociate, RaSectionComment } from "@/types/db"
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5   // agreement | photo | contact | banking | w9 | submit
+type Step = number   // index into STEPS — agreement | photo | contact | banking | w9 | submit
 
 const STEPS = [
   { label: "Agreement", field: "agreement_completed" as const },
@@ -30,7 +30,8 @@ const STEPS = [
   { label: "Review",    field: null },
 ]
 
-const TOTAL_PROGRESS_SECTIONS = 5   // agreement + photo + contact + banking + w9
+// All sections except the trailing Review step (which has no completion field).
+const TOTAL_PROGRESS_SECTIONS = STEPS.filter((s) => s.field !== null).length
 
 export function RaOnboardingSteps() {
   const navigate = useNavigate()
@@ -55,6 +56,13 @@ export function RaOnboardingSteps() {
       if (!record) {
         toast.error("No RA record found. Please contact Divigner support.")
         navigate("/login", { replace: true }); return
+      }
+
+      // Invite link expired (72h, never clicked) or onboarding deadline
+      // passed (21d, never submitted) — block before the auto-advance logic
+      // below ever runs.
+      if (record.status === "invite_expired" || record.status === "onboarding_expired") {
+        setRa(record); setLoading(false); return
       }
 
       // Already submitted — show pending state instead of re-showing checklist
@@ -94,7 +102,7 @@ export function RaOnboardingSteps() {
         if (firstOpen && sectionToStep[firstOpen.section] !== undefined) {
           setStep(sectionToStep[firstOpen.section])
         } else {
-          setStep(5) // no per-section comments → review summary screen
+          setStep(STEPS.length - 1) // no per-section comments → review summary screen
         }
       }
       // Auto-advance to first incomplete section
@@ -103,7 +111,7 @@ export function RaOnboardingSteps() {
       else if (!hydrated.contact_completed) { setStep(2); }
       else if (!hydrated.banking_completed) { setStep(3); }
       else if (!hydrated.w9_completed) { setStep(4); }
-      else { setStep(5); }
+      else { setStep(STEPS.length - 1); }
 
       setLoading(false)
     }
@@ -112,7 +120,7 @@ export function RaOnboardingSteps() {
 
   function handleStepComplete(updated: Partial<RaAssociate>) {
     setRa((prev) => prev ? { ...prev, ...updated } : prev)
-    setStep((s) => Math.min(s + 1, 5) as Step)
+    setStep((s) => Math.min(s + 1, STEPS.length - 1))
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
@@ -204,6 +212,80 @@ export function RaOnboardingSteps() {
                   </h1>
                   <p style={{ margin: 0, fontSize: "14px", color: "#A2B6C9", lineHeight: 1.7 }}>
                     The Divigner team is reviewing your profile. You'll receive an email once your account is activated — typically within 1–2 business days.
+                  </p>
+                </div>
+              </div>
+            </div>
+        </div>
+        <OnboardingPageStyles />
+      </>
+    )
+  }
+
+  // ── Invite/onboarding window expired ────────────────────────────────────────
+  if (ra?.status === "invite_expired" || ra?.status === "onboarding_expired") {
+    const isInviteExpired = ra.status === "invite_expired"
+    const expiredName = ra.display_name || ra.full_name || ""
+    return (
+      <>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600&family=Manrope:wght@400;500;600;700&display=swap" />
+        <div className="ra-onboarding-root" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem 1rem", background: DIVIGNER_BG, fontFamily: "'Manrope', sans-serif", position: "relative", overflow: "hidden" }}>
+            <OnboardingOrbs />
+            <div style={{ position: "absolute", inset: 0, backgroundImage: DIVIGNER_NOISE_SVG, opacity: 0.035, pointerEvents: "none" }} />
+            <div style={{ position: "absolute", top: 20, right: 24, zIndex: 3, display: "flex", alignItems: "center", gap: 12 }}>
+              {expiredName && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#A2B6C9", fontSize: 13, fontWeight: 500 }}>
+                  {ra.photo_url
+                    ? <img src={ra.photo_url} alt="" style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", border: "1px solid rgba(95,227,210,.35)" }} />
+                    : <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(52,214,194,.12)", color: "#34D6C2", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{initialsOf(expiredName)}</div>}
+                  <span>{expiredName}</span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleSignOut}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  background: "rgba(255,255,255,.04)",
+                  border: "1px solid rgba(160,190,215,.18)",
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                  color: "#A2B6C9",
+                  fontSize: 12, fontWeight: 500,
+                  cursor: "pointer",
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                <LogOut style={{ width: 13, height: 13 }} />
+                Sign out
+              </button>
+            </div>
+            <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "440px", textAlign: "center", paddingTop: "60px" }}>
+              <div style={{ position: "relative" }}>
+                <img
+                  src={DIVIGNER_LOGO_SRC}
+                  alt="Divigner"
+                  style={{
+                    height: "48px",
+                    position: "absolute",
+                    top: -56,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    zIndex: 2,
+                    filter: "drop-shadow(0 8px 20px rgba(0,0,0,.45))",
+                  }}
+                />
+                <div style={{ background: DIVIGNER_CARD_BG, border: "1px solid rgba(160,190,215,.14)", borderRadius: "20px", padding: "32px 40px 40px", boxShadow: "0 32px 80px -20px rgba(0,0,0,.7)" }}>
+                  <div style={{ background: "rgba(251,191,36,.1)", borderRadius: "50%", width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                    <AlertTriangle style={{ width: 32, height: 32, color: "#fbbf24" }} />
+                  </div>
+                  <h1 style={{ margin: "0 0 12px", fontSize: "22px", fontWeight: 600, color: "#EAF2F9", fontFamily: "'Fraunces', serif" }}>
+                    {isInviteExpired ? "Invite link expired" : "Onboarding window closed"}
+                  </h1>
+                  <p style={{ margin: 0, fontSize: "14px", color: "#A2B6C9", lineHeight: 1.7 }}>
+                    {isInviteExpired
+                      ? "Your invite link expired after 72 hours without being used. Please contact your Divigner representative to request a new invite."
+                      : "Your application was automatically closed because onboarding wasn't completed within 21 days of your invite. Please contact your Divigner representative to reapply."}
                   </p>
                 </div>
               </div>
@@ -366,12 +448,12 @@ export function RaOnboardingSteps() {
               padding: "36px 40px",
               boxShadow: "0 32px 80px -20px rgba(0,0,0,.5)",
             }}>
-              {step === 0 && <AgreementStep ra={ra} stepLabel="Step 1 of 6" onComplete={handleStepComplete} reviewerComments={comments} />}
-              {step === 1 && <PhotoStep     ra={ra} stepLabel="Step 2 of 6" onComplete={handleStepComplete} reviewerComments={comments} />}
-              {step === 2 && <ContactStep   ra={ra} stepLabel="Step 3 of 6" onComplete={handleStepComplete} reviewerComments={comments} />}
-              {step === 3 && <BankingStep   ra={ra} stepLabel="Step 4 of 6" onComplete={handleStepComplete} reviewerComments={comments} />}
-              {step === 4 && <W9Step        ra={ra} stepLabel="Step 5 of 6" onComplete={handleStepComplete} reviewerComments={comments} />}
-              {step === 5 && <SubmitStep    ra={ra} stepLabel="Step 6 of 6" onSubmitted={handleSubmitted}   reviewerComments={comments} />}
+              {step === 0 && <AgreementStep ra={ra} stepLabel={`Step 1 of ${STEPS.length}`} onComplete={handleStepComplete} reviewerComments={comments} />}
+              {step === 1 && <PhotoStep     ra={ra} stepLabel={`Step 2 of ${STEPS.length}`} onComplete={handleStepComplete} reviewerComments={comments} />}
+              {step === 2 && <ContactStep   ra={ra} stepLabel={`Step 3 of ${STEPS.length}`} onComplete={handleStepComplete} reviewerComments={comments} />}
+              {step === 3 && <BankingStep   ra={ra} stepLabel={`Step 4 of ${STEPS.length}`} onComplete={handleStepComplete} reviewerComments={comments} />}
+              {step === 4 && <W9Step        ra={ra} stepLabel={`Step 5 of ${STEPS.length}`} onComplete={handleStepComplete} reviewerComments={comments} />}
+              {step === 5 && <SubmitStep    ra={ra} stepLabel={`Step 6 of ${STEPS.length}`} onSubmitted={handleSubmitted}   reviewerComments={comments} />}
             </div>
 
           </div>

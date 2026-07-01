@@ -12,7 +12,7 @@ import {
 
 const PREVIEW_MODE = import.meta.env.VITE_PREVIEW_MODE === "true"
 
-type RevokedReason = "declined" | "terminated" | "suspended"
+export type RevokedReason = "declined" | "terminated" | "suspended" | "invite_expired" | "onboarding_expired"
 
 function FullPageLoader() {
   return (
@@ -38,9 +38,19 @@ const REVOKED_COPY: Record<RevokedReason, { emoji: string; heading: string; body
     heading: "Account Suspended",
     body: "Your Referral Associate account is currently suspended. Please contact your Divigner representative to resolve this.",
   },
+  invite_expired: {
+    emoji: "⏳",
+    heading: "Invite Link Expired",
+    body: "Your invite link expired after 72 hours without being used. Please contact your Divigner representative to request a new invite.",
+  },
+  onboarding_expired: {
+    emoji: "⌛",
+    heading: "Onboarding Window Closed",
+    body: "Your application was automatically closed because onboarding wasn't completed within 21 days of your invite. Please contact your Divigner representative to reapply.",
+  },
 }
 
-function RevokedScreen({ reason }: { reason: RevokedReason }) {
+export function RevokedScreen({ reason }: { reason: RevokedReason }) {
   const copy = REVOKED_COPY[reason]
   return (
     <div
@@ -96,10 +106,12 @@ export function RaPortalGuard() {
         const ra = await getRaAssociate().catch(() => null)
         if (!ra) { setReady(true); return }
         switch (ra.status) {
-          case "declined":   setRevokedReason("declined"); break
-          case "terminated": setRevokedReason("terminated"); break
-          case "suspended":  setRevokedReason("suspended"); break
-          default:           break
+          case "declined":           setRevokedReason("declined"); break
+          case "terminated":         setRevokedReason("terminated"); break
+          case "suspended":          setRevokedReason("suspended"); break
+          case "invite_expired":     setRevokedReason("invite_expired"); break
+          case "onboarding_expired": setRevokedReason("onboarding_expired"); break
+          default:                   break
         }
         setReady(true)
         return
@@ -143,6 +155,14 @@ export function RaPortalGuard() {
           break
         case "suspended":
           setRevokedReason("suspended")
+          setReady(true)
+          break
+        case "invite_expired":
+          setRevokedReason("invite_expired")
+          setReady(true)
+          break
+        case "onboarding_expired":
+          setRevokedReason("onboarding_expired")
           setReady(true)
           break
       }

@@ -36,13 +36,15 @@ import { RaActivityThread } from "@/components/ra/RaActivityThread"
 import type { RaAssociate, RaStatus, RaSectionComment, RaCommentSection, RaChangeRequest } from "@/types/db"
 
 const STATUS_LABEL: Record<RaStatus, string> = {
-  pending:       "Pending onboarding",
-  verification:  "Pending review",
-  needs_changes: "Changes requested",
-  active:        "Active",
-  suspended:     "Suspended",
-  declined:      "Declined",
-  terminated:    "Terminated",
+  pending:            "Pending onboarding",
+  verification:       "Pending review",
+  needs_changes:      "Changes requested",
+  active:             "Active",
+  suspended:          "Suspended",
+  declined:           "Declined",
+  terminated:         "Terminated",
+  invite_expired:     "Invite expired",
+  onboarding_expired: "Onboarding expired",
 }
 
 type SectionMeta = { key: RaCommentSection; label: string; icon: React.ReactNode }

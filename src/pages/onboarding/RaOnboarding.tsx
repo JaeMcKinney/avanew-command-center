@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Loader2, LogOut, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
+import { getRaAssociate } from "@/lib/data"
+import { RevokedScreen } from "@/components/RaPortalGuard"
 import {
   DIVIGNER_LOGO_SRC,
   DIVIGNER_NOISE_SVG,
@@ -31,6 +33,7 @@ function passwordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string; co
 export function RaOnboarding() {
   const navigate = useNavigate()
   const [ready, setReady] = useState(false)
+  const [expiredReason, setExpiredReason] = useState<"invite_expired" | "onboarding_expired" | null>(null)
   const [firstName, setFirstName] = useState("")
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
@@ -41,32 +44,50 @@ export function RaOnboarding() {
   const strength = passwordStrength(password)
   const mismatch = confirm.length > 0 && password !== confirm
 
+  // Runs from both places a valid session can first appear below (initial
+  // getSession() and the SIGNED_IN auth-state event) — this is "the click":
+  // the first moment the invite magic-link has authenticated the user.
+  async function checkRaAndProceed(meta: Record<string, any>) {
+    const ra = await getRaAssociate().catch(() => null)
+
+    if (ra && (ra.status === "invite_expired" || ra.status === "onboarding_expired")) {
+      // Covers the race where the cron expired this row in the gap between
+      // invite-send and the RA finally clicking — block before showing the
+      // password form rather than letting them set a password on a dead row.
+      setExpiredReason(ra.status)
+      setReady(true)
+      return
+    }
+
+    if (ra && !ra.invite_clicked_at) {
+      // Best-effort, non-blocking — don't fail the page load if this write fails.
+      supabase
+        .from("ra_associates")
+        .update({ invite_clicked_at: new Date().toISOString() })
+        .eq("id", ra.id)
+        .then(({ error }) => { if (error) console.error("invite_clicked_at update failed:", error) })
+    }
+
+    // Already completed password setup — skip gate and go to checklist
+    if (meta.password_set === true) {
+      navigate("/onboarding/steps", { replace: true })
+      return
+    }
+
+    setFirstName(meta.first_name ?? meta.full_name?.split(" ")[0] ?? "")
+    setReady(true)
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { navigate("/login", { replace: true }); return }
-
-      const meta = session.user.user_metadata ?? {}
-
-      // Already completed password setup — skip gate and go to checklist
-      if (meta.password_set === true) {
-        navigate("/onboarding/steps", { replace: true })
-        return
-      }
-
-      setFirstName(meta.first_name ?? meta.full_name?.split(" ")[0] ?? "")
-      setReady(true)
+      void checkRaAndProceed(session.user.user_metadata ?? {})
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "SIGNED_IN" && session) {
-          const meta = session.user.user_metadata ?? {}
-          if (meta.password_set === true) {
-            navigate("/onboarding/steps", { replace: true })
-            return
-          }
-          setFirstName(meta.first_name ?? meta.full_name?.split(" ")[0] ?? "")
-          setReady(true)
+          void checkRaAndProceed(session.user.user_metadata ?? {})
         }
       }
     )
@@ -122,6 +143,12 @@ export function RaOnboarding() {
         </div>
       </>
     )
+  }
+
+  // ── Expired invite / onboarding window ───────────────────────────────────
+
+  if (expiredReason) {
+    return <RevokedScreen reason={expiredReason} />
   }
 
   // ── Password gate ─────────────────────────────────────────────────────────

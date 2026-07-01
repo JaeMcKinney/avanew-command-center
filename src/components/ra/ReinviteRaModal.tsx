@@ -54,10 +54,13 @@ export function ReinviteRaModal({ ra, open, onClose, onResent }: Props) {
       const headline = result.email_changed
         ? `Email updated and re-invite sent to ${result.email}`
         : `Re-invite sent to ${result.email}`
+      const baseDescription = result.mode === "recovery"
+        ? "They already had an account — we sent a password reset link they can use to sign in."
+        : "They'll get a new magic-link email shortly."
       toast.success(headline, {
-        description: result.mode === "recovery"
-          ? "They already had an account — we sent a password reset link they can use to sign in."
-          : "They'll get a new magic-link email shortly.",
+        description: result.reactivated
+          ? `${baseDescription} Their record was reactivated with a fresh 72-hour link window and 21-day onboarding deadline.`
+          : baseDescription,
       })
       onResent?.()
       onClose()

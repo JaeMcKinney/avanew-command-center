@@ -78,27 +78,31 @@ import { RaChangeRequestsCard } from "@/components/ra/RaChangeRequestsCard"
 import { RaVerificationDialog } from "@/components/RaVerificationDialog"
 
 const STATUS_META: Record<RaStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  pending:       { label: "Pending onboarding", variant: "outline" },
-  verification:  { label: "Pending review",     variant: "secondary" },
-  needs_changes: { label: "Changes requested",  variant: "outline" },
-  active:        { label: "Active",             variant: "default" },
-  suspended:     { label: "Suspended",          variant: "destructive" },
-  declined:      { label: "Declined",           variant: "destructive" },
-  terminated:    { label: "Terminated",         variant: "destructive" },
+  pending:            { label: "Pending onboarding", variant: "outline" },
+  verification:       { label: "Pending review",     variant: "secondary" },
+  needs_changes:      { label: "Changes requested",  variant: "outline" },
+  active:             { label: "Active",             variant: "default" },
+  suspended:          { label: "Suspended",          variant: "destructive" },
+  declined:           { label: "Declined",           variant: "destructive" },
+  terminated:         { label: "Terminated",         variant: "destructive" },
+  invite_expired:     { label: "Invite expired",     variant: "destructive" },
+  onboarding_expired: { label: "Onboarding expired", variant: "destructive" },
 }
 
 // Each lifecycle state gets its own bucket so admins can audit every state
 // independently — Suspended and Terminated each get their own tab, separate
 // from Declined.
 const FILTERS: { value: RaStatus | "all"; label: string }[] = [
-  { value: "all",           label: "All" },
-  { value: "pending",       label: "Pending" },
-  { value: "verification",  label: "Review" },
-  { value: "needs_changes", label: "Changes" },
-  { value: "active",        label: "Active" },
-  { value: "suspended",     label: "Suspended" },
-  { value: "declined",      label: "Declined" },
-  { value: "terminated",    label: "Terminated" },
+  { value: "all",                label: "All" },
+  { value: "pending",            label: "Pending" },
+  { value: "verification",       label: "Review" },
+  { value: "needs_changes",      label: "Changes" },
+  { value: "active",             label: "Active" },
+  { value: "suspended",          label: "Suspended" },
+  { value: "declined",           label: "Declined" },
+  { value: "terminated",         label: "Terminated" },
+  { value: "invite_expired",     label: "Invite Expired" },
+  { value: "onboarding_expired", label: "Onboarding Expired" },
 ]
 
 function formatDate(iso: string): string {
