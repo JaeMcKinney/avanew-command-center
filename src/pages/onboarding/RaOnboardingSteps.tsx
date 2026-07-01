@@ -316,7 +316,11 @@ export function RaOnboardingSteps() {
         <OnboardingOrbs />
         <div style={{ position: "fixed", inset: 0, backgroundImage: DIVIGNER_NOISE_SVG, opacity: 0.035, pointerEvents: "none", zIndex: 0 }} />
 
-        <div style={{ position: "relative", zIndex: 1, maxWidth: "900px", margin: "0 auto", padding: "32px 20px 60px" }}>
+        {/* zoom scales the whole wizard (and all child step components) up by
+            default so nobody has to bump browser zoom to read it — mirrors the
+            ~125% that felt comfortable on a 16" display. Leaves the fixed orb /
+            noise background untouched. */}
+        <div style={{ zoom: 1.2, position: "relative", zIndex: 1, maxWidth: "900px", margin: "0 auto", padding: "32px 20px 60px" }}>
 
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px", gap: 12 }}>
