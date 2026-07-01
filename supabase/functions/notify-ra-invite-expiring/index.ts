@@ -35,6 +35,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2"
 import { wrap, escapeHtml, sendGridSend, DEFAULT_APP_URL } from "../_shared/email.ts"
+import { signInviteToken, buildAcceptUrl } from "../_shared/invite.ts"
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -105,18 +106,22 @@ Deno.serve(async (req) => {
     }
     if (!sendgrid) continue // leave invite_reminder_sent false — retry next hour once configured
 
+    const inviteSecret = Deno.env.get("INVITE_TOKEN_SECRET")
+    if (!inviteSecret) continue // can't sign a link — leave un-flagged, retry once configured
+
     const orgId = ra.organization_id as string
     const { data: org } = await admin.from("organizations").select("name").eq("id", orgId).maybeSingle()
     const orgName = org?.name ?? "Divigner Group"
     const firstName = ((ra.display_name as string) || "").split(" ")[0] ?? ""
 
-    const { data: linkData } = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-      options: { redirectTo: `${appUrl}/onboarding` },
-    })
-    const actionLink = linkData?.properties?.action_link
-    if (!actionLink) continue // generateLink failed — leave un-flagged, retry next hour
+    // Re-sign the same-window custom token (exp === invite_expires_at) and send
+    // the app-domain accept link — identical mechanism to the original invite,
+    // so both the original and this reminder link stay valid until the 72h mark.
+    const token = await signInviteToken(
+      { ra_id: raId, exp: Math.floor(new Date(expiresAtIso).getTime() / 1000) },
+      inviteSecret,
+    )
+    const actionLink = buildAcceptUrl(appUrl, token)
 
     const html = buildReminderEmail(firstName, orgName, actionLink)
     const result = await sendGridSend(sendgrid, email, "Your invite link expires in 24 hours", html)

@@ -21,8 +21,14 @@
 //
 // Deploy:
 //   supabase functions deploy reinvite-ra --no-verify-jwt
+//
+// Required secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SENDGRID_API_KEY,
+//   INVITE_TOKEN_SECRET (for the custom-token invite link on pending RAs).
+// Optional: APP_BASE_URL
 
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { sendGridSend, DEFAULT_APP_URL } from "../_shared/email.ts"
+import { signInviteToken, buildAcceptUrl, inviteEmailHtml } from "../_shared/invite.ts"
 
 type ReinvitePayload = {
   ra_id: string
@@ -103,13 +109,14 @@ Deno.serve(async (req) => {
   // profiles for the email field.
   const { data: ra, error: raErr } = await admin
     .from("ra_associates")
-    .select("id, user_id, display_name, status, profiles:profiles!ra_associates_user_id_fkey(email)")
+    .select("id, user_id, display_name, status, organization_id, profiles:profiles!ra_associates_user_id_fkey(email)")
     .eq("id", payload.ra_id)
     .maybeSingle<{
       id: string
       user_id: string
       display_name: string
       status: string
+      organization_id: string
       profiles: { email: string | null } | null
     }>()
   if (raErr) return json(500, { error: raErr.message })
@@ -135,60 +142,77 @@ Deno.serve(async (req) => {
     await admin.from("profiles").update({ email: newEmail }).eq("id", ra.user_id)
   }
 
-  // Try inviteUserByEmail first. For existing users this returns an error like
-  // "User already registered" — fall back to a recovery (password reset) email
-  // which always works and lands the RA in the onboarding flow after they set
-  // a password.
-  const redirectTo = payload.redirect_to
-  let mode: "invite" | "recovery" = "invite"
-  let inviteOk = false
-  let firstErr: string | null = null
-
-  try {
-    const { error: invErr } = await admin.auth.admin.inviteUserByEmail(newEmail, {
-      redirectTo,
-    })
-    if (!invErr) {
-      inviteOk = true
-    } else {
-      firstErr = invErr.message
-    }
-  } catch (e) {
-    firstErr = e instanceof Error ? e.message : "invite failed"
-  }
-
-  if (!inviteOk) {
-    // Recovery email always works for existing users. The RA gets a "reset
-    // password" message, clicks it, sets a password, lands in onboarding.
-    mode = "recovery"
-    const { error: recErr } = await admin.auth.resetPasswordForEmail(newEmail, {
-      redirectTo,
-    })
-    if (recErr) {
-      return json(500, { error: `Both invite and recovery failed. Invite: ${firstErr ?? "unknown"}. Recovery: ${recErr.message}` })
-    }
-  }
-
-  // Reapply path: an expired RA clicking "Re-invite" needs a full clock
-  // restart, not just a fresh email — otherwise ra_associates.status still
-  // reads invite_expired/onboarding_expired (the onboarding-gate screens
-  // would immediately re-block them) and the stale deadline columns would
-  // just get re-flagged expired again by the next cron pass.
+  // Reapply path FIRST: an expired RA clicking "Re-invite" needs a full clock
+  // restart before we issue the new link — otherwise ra_associates.status still
+  // reads invite_expired/onboarding_expired (the onboarding-gate screens would
+  // immediately re-block them) and the stale deadline columns would just get
+  // re-flagged expired by the next cron pass. Resetting first also means the
+  // signed token below carries a fresh 72h exp.
   let reactivated = false
+  let inviteExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000)
   if (ra.status === "invite_expired" || ra.status === "onboarding_expired") {
     const now = new Date()
+    inviteExpiresAt = new Date(now.getTime() + 72 * 60 * 60 * 1000)
     const { error: resetErr } = await admin
       .from("ra_associates")
       .update({
         status: "pending",
-        invite_expires_at: new Date(now.getTime() + 72 * 60 * 60 * 1000).toISOString(),
+        invite_expires_at: inviteExpiresAt.toISOString(),
         onboarding_deadline_at: new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000).toISOString(),
         invite_clicked_at: null,
         invite_reminder_sent: false,
       })
       .eq("id", ra.id)
-    if (resetErr) return json(500, { error: `Reinvite sent but clock reset failed: ${resetErr.message}` })
+    if (resetErr) return json(500, { error: `Clock reset failed: ${resetErr.message}` })
     reactivated = true
+  }
+
+  // Effective status after any reset. A pending RA (fresh, resumed, or just
+  // reactivated) gets our custom-token invite link. Anyone past the invite
+  // stage (active / verification / needs_changes / suspended / …) instead gets
+  // a recovery email so they can regain normal password-based access.
+  const effectiveStatus = reactivated ? "pending" : ra.status
+  const redirectTo = payload.redirect_to
+  let mode: "invite" | "recovery" = "invite"
+
+  if (effectiveStatus === "pending") {
+    // Custom 72h invite link (same mechanism as invite-ra). For a still-pending
+    // (non-reactivated) RA, reuse their existing invite_expires_at if present so
+    // a plain resend doesn't silently extend their window.
+    const sendgridKey = Deno.env.get("SENDGRID_API_KEY")
+    const inviteSecret = Deno.env.get("INVITE_TOKEN_SECRET")
+    if (!sendgridKey || !inviteSecret) {
+      return json(500, { error: "SENDGRID_API_KEY or INVITE_TOKEN_SECRET not set" })
+    }
+    if (!reactivated) {
+      const { data: cur } = await admin
+        .from("ra_associates")
+        .select("invite_expires_at")
+        .eq("id", ra.id)
+        .maybeSingle<{ invite_expires_at: string | null }>()
+      if (cur?.invite_expires_at) inviteExpiresAt = new Date(cur.invite_expires_at)
+    }
+    const { data: org } = await admin
+      .from("organizations")
+      .select("name")
+      .eq("id", ra.organization_id)
+      .maybeSingle()
+    const orgName = org?.name ?? "Divigner Group"
+    const appUrl = Deno.env.get("APP_BASE_URL") ?? DEFAULT_APP_URL
+    const firstName = (ra.display_name ?? "").split(" ")[0] ?? ""
+    const token = await signInviteToken(
+      { ra_id: ra.id, exp: Math.floor(inviteExpiresAt.getTime() / 1000) },
+      inviteSecret,
+    )
+    const html = inviteEmailHtml(firstName, orgName, buildAcceptUrl(appUrl, token))
+    const r = await sendGridSend(sendgridKey, newEmail, `You're invited to join ${orgName}'s Referral Associate Program`, html)
+    if (!r.ok) return json(502, { error: "Failed to send invite email" })
+    mode = "invite"
+  } else {
+    // Past the invite stage — recovery email so they can sign back in.
+    mode = "recovery"
+    const { error: recErr } = await admin.auth.resetPasswordForEmail(newEmail, { redirectTo })
+    if (recErr) return json(500, { error: `Recovery email failed: ${recErr.message}` })
   }
 
   return json(200, {

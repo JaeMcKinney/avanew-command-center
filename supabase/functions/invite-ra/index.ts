@@ -3,17 +3,15 @@
 // What this does:
 //   1. Verifies the caller is admin+ in their profile.
 //   2. Validates the slug format and uniqueness.
-//   3. Calls supabase.auth.admin.generateLink({type:"invite"}) — creates the
-//      auth.users row (which triggers handle_new_user, creating the matching
-//      profiles row synchronously) and returns a verifiable action_link,
-//      WITHOUT sending Supabase's own invite email.
+//   3. Calls supabase.auth.admin.generateLink({type:"invite"}) solely to
+//      create the auth.users row (which triggers handle_new_user, creating the
+//      matching profiles row synchronously). Its action_link is NOT used.
 //   4. Inserts a row into ra_associates (status: pending, with invite_expires_at
 //      = now+72h and onboarding_deadline_at = now+21d) and organization_members
 //      (role: referral_associate).
-//   5. Sends a branded SendGrid email (best-effort, non-blocking) containing
-//      the action_link and stating both deadlines plainly — matching every
-//      other RA-lifecycle email in this codebase instead of relying on
-//      GoTrue's default mailer/template.
+//   5. Sends a branded SendGrid email containing an app-domain
+//      /invite/accept?token=<signed> link (72h window we control ourselves,
+//      not a Supabase 24h-capped link) stating both deadlines plainly.
 //
 // Deploy:
 //   supabase functions deploy invite-ra --no-verify-jwt
@@ -22,9 +20,11 @@
 //   - SUPABASE_URL                (auto)
 //   - SUPABASE_SERVICE_ROLE_KEY   (your project's service-role key — keep secret)
 //   - SENDGRID_API_KEY            (same key used by every other RA notification)
+//   - INVITE_TOKEN_SECRET         (HMAC secret for signing invite tokens)
 
 import { createClient } from "npm:@supabase/supabase-js@2"
-import { wrap, escapeHtml, sendGridSend } from "../_shared/email.ts"
+import { sendGridSend, DEFAULT_APP_URL } from "../_shared/email.ts"
+import { signInviteToken, buildAcceptUrl, inviteEmailHtml } from "../_shared/invite.ts"
 
 type InviteRaPayload = {
   email: string
@@ -47,22 +47,6 @@ const json = (status: number, body: unknown) =>
       "access-control-allow-headers": "authorization, content-type, apikey, x-client-info",
     },
   })
-
-function buildInviteEmail(firstName: string, orgName: string, actionLink: string): string {
-  const greeting = firstName ? `Hi ${escapeHtml(firstName)},` : "Hi,"
-  return wrap(
-    greeting, orgName,
-    "You're invited!",
-    `<p style="color:#A2B6C9;font-size:.95rem;line-height:1.6;margin:0 0 14px">You've been invited to join <strong style="color:#EAF2F9">${escapeHtml(orgName)}</strong>'s Referral Associate Program. Click below to accept and set up your account.</p>
-     <div style="background:rgba(244,178,58,.1);border:1px solid rgba(244,178,58,.3);border-radius:8px;padding:14px 16px">
-       <p style="margin:0 0 8px;font-weight:600;color:#F4D58A;font-size:.9rem">Two deadlines to know</p>
-       <p style="margin:0 0 6px;color:#A2B6C9;font-size:.85rem;line-height:1.5">This invite link expires in <strong style="color:#EAF2F9">72 hours</strong>.</p>
-       <p style="margin:0;color:#A2B6C9;font-size:.85rem;line-height:1.5">You must complete and submit your onboarding within <strong style="color:#EAF2F9">3 weeks (21 days)</strong> of this invite, or your application will be automatically closed and you'll need to reapply.</p>
-     </div>`,
-    "Accept invite & set your password",
-    actionLink,
-  )
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -154,27 +138,24 @@ Deno.serve(async (req) => {
     .maybeSingle()
   if (existing) return json(409, { error: `Slug "${slug}" is already taken` })
 
-  // generateLink({type:"invite"}) creates the auth.users row (synchronously
-  // firing handle_new_user → profiles row) and returns a verifiable
-  // action_link, WITHOUT sending Supabase's own invite email — we send our
-  // own branded SendGrid email below instead.
-  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-    type: "invite",
+  // Create the auth.users row directly, pre-confirmed. We deliberately do NOT
+  // use generateLink({type:"invite"}) here: that leaves the user UNCONFIRMED,
+  // and the click-time magic link accept-invite mints could then be refused.
+  // A confirmed user always accepts a magic link. createUser sends no email
+  // (we send our own app-domain /invite/accept link), and fires handle_new_user
+  // → profiles row just like any other insert.
+  const { data: created, error: createErr } = await admin.auth.admin.createUser({
     email,
-    options: {
-      redirectTo: payload.redirect_to,
-      data: { full_name: display_name, first_name, last_name },
-    },
+    email_confirm: true,
+    user_metadata: { full_name: display_name, first_name, last_name },
   })
-  if (linkErr) return json(500, { error: linkErr.message })
+  if (createErr) return json(500, { error: createErr.message })
 
-  const userId = linkData?.user?.id
-  if (!userId) return json(500, { error: "No user ID returned from generateLink" })
-  const actionLink = linkData?.properties?.action_link
-  if (!actionLink) return json(500, { error: "No action_link returned from generateLink" })
+  const userId = created?.user?.id
+  if (!userId) return json(500, { error: "No user ID returned from createUser" })
 
   // Force-set profile.role = 'referral_associate'. The handle_new_user trigger
-  // runs synchronously inside generateLink and creates the profile row
+  // runs synchronously inside createUser and creates the profile row
   // with role='member' (because invite-ra bypasses the invitations table, so
   // the trigger has no role hint). Without overwriting here, profiles.role
   // stays 'member' → getRaPortalRedirect treats them as staff → the new RA
@@ -223,17 +204,26 @@ Deno.serve(async (req) => {
   // shouldn't fail an otherwise-successful invite; the admin can always
   // re-invite from the RA list.
   const sendgridKey = Deno.env.get("SENDGRID_API_KEY")
-  if (sendgridKey) {
+  const inviteSecret = Deno.env.get("INVITE_TOKEN_SECRET")
+  if (sendgridKey && inviteSecret) {
     const { data: org } = await admin
       .from("organizations")
       .select("name")
       .eq("id", organization_id)
       .maybeSingle()
     const orgName = org?.name ?? "Divigner Group"
-    const html = buildInviteEmail(first_name, orgName, actionLink)
+    const appUrl = Deno.env.get("APP_BASE_URL") ?? DEFAULT_APP_URL
+    // Token carries the 72h window (exp === invite_expires_at). accept-invite
+    // verifies it and mints a fresh sign-in link at click-time.
+    const token = await signInviteToken(
+      { ra_id: raRow.id, exp: Math.floor(now.getTime() / 1000) + 72 * 60 * 60 },
+      inviteSecret,
+    )
+    const acceptUrl = buildAcceptUrl(appUrl, token)
+    const html = inviteEmailHtml(first_name, orgName, acceptUrl)
     void sendGridSend(sendgridKey, email, `You're invited to join ${orgName}'s Referral Associate Program`, html)
   } else {
-    console.warn("SENDGRID_API_KEY not set; RA invited but no email sent")
+    console.warn("SENDGRID_API_KEY or INVITE_TOKEN_SECRET not set; RA invited but no email sent")
   }
 
   return json(200, {

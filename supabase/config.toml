@@ -226,13 +226,12 @@ max_frequency = "1s"
 # Number of characters used in the email OTP.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
-# Raised to 72h so RA invite links (which enforce their own 72h business-rule
-# expiry in ra_associates.invite_expires_at) don't die at GoTrue's shorter
-# default first. Local-dev config only — the live hosted project's Auth
-# settings must be verified/set separately in the Supabase Dashboard, since
-# config-file auth settings don't reliably propagate to hosted projects via
-# CLI push across Supabase CLI versions.
-otp_expiry = 259200
+# Left at the default: RA invite links no longer rely on this. They use an
+# app-controlled 72h token (see supabase/functions/_shared/invite.ts +
+# accept-invite); the short-lived GoTrue magic link is minted at click-time and
+# consumed within seconds, so the 1h OTP window is irrelevant to the 72h rule.
+# (Supabase also hard-caps this field at 86400 / 24h, so 72h was never settable.)
+otp_expiry = 3600
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]

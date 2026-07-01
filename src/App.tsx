@@ -8,6 +8,7 @@ import { SetupAccount } from "@/pages/auth/SetupAccount"
 import { RaOnboarding } from "@/pages/onboarding/RaOnboarding"
 import { RaOnboardingSteps } from "@/pages/onboarding/RaOnboardingSteps"
 import { AgreementView } from "@/pages/onboarding/AgreementView"
+import { InviteAccept } from "@/pages/onboarding/InviteAccept"
 import { RaPortalGuard } from "@/components/RaPortalGuard"
 import { RaPortalLayout } from "@/components/ra/RaPortalLayout"
 import { RaDashboardHome } from "@/pages/ra/RaDashboardHome"
@@ -119,6 +120,7 @@ function App() {
       <Route path="/setup-account" element={<SetupAccount />} />
       <Route path="/onboarding" element={<RaOnboarding />} />
       <Route path="/onboarding/steps" element={<RaOnboardingSteps />} />
+      <Route path="/invite/accept" element={<InviteAccept />} />
       <Route path="/agreement" element={<AgreementView />} />
       <Route path="/refer/:slug" element={<RaLandingPage />} />
       <Route path="/demo/:slug" element={<RaDemoPage />} />
