@@ -4,12 +4,22 @@
  * Factored out of notify-ra-status/index.ts's original wrap()/escapeHtml()/
  * sendOne() trio so invite-ra and the invite/onboarding-deadline cron
  * functions don't each carry their own copy. notify-ra-status and
- * notify-ra-checkin-due predate this file and keep their own inline copies —
- * not worth the regression risk of touching already-shipped functions.
+ * notify-ra-checkin-due predate this file and keep their own inline wrap()
+ * copies (not worth the regression risk of a full swap) but import LOGO_IMG
+ * from here so the header logo stays single-sourced.
  */
 
 export const FROM = { email: "zuirrae@divigner.com", name: "Divigner Group" }
 export const DEFAULT_APP_URL = "https://avanew-command-center.vercel.app"
+
+// Hosted PNG for email headers — email clients don't render SVG or data-URIs.
+// divigner-logo-dark is the for-dark-backgrounds variant (white lettering):
+// the same asset the RA portal sidebar shows in dark mode and that
+// ra-lead-submit already embeds in its notification emails.
+export const LOGO_URL =
+  `${Deno.env.get("APP_BASE_URL") ?? DEFAULT_APP_URL}/logos/divigner-logo-dark.png`
+export const LOGO_IMG =
+  `<img src="${LOGO_URL}" alt="Divigner Group" width="150" style="display:block;width:150px;max-width:150px;height:auto;margin:0 0 22px">`
 
 export function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) =>
@@ -27,6 +37,7 @@ export function wrap(
   return `
 <!doctype html><html><body style="margin:0;background:#06101D;font-family:'Manrope',Arial,sans-serif;padding:32px 0">
   <div style="max-width:520px;margin:0 auto;background:#0E2741;border:1px solid rgba(160,190,215,.14);border-radius:16px;padding:32px">
+    ${LOGO_IMG}
     <h1 style="color:#EAF2F9;font-size:1.4rem;margin:0 0 16px">${heading}</h1>
     <p style="color:#A2B6C9;font-size:.95rem;line-height:1.6;margin:0 0 12px">${greeting}</p>
     ${bodyHtml}

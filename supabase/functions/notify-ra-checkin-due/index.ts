@@ -24,6 +24,7 @@
 // Optional: APP_BASE_URL, RA_CHECKIN_INTERVAL_DAYS (default 90), RA_CHECKIN_LEAD_DAYS (default 7)
 
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { LOGO_IMG } from "../_shared/email.ts"
 
 const FROM = { email: "zuirrae@divigner.com", name: "Divigner Group" }
 const DEFAULT_APP_URL = "https://avanew-command-center.vercel.app"
@@ -125,6 +126,7 @@ Deno.serve(async (req) => {
     const html = `
 <!doctype html><html><body style="margin:0;background:#06101D;font-family:'Manrope',Arial,sans-serif;padding:32px 0">
   <div style="max-width:520px;margin:0 auto;background:#0E2741;border:1px solid rgba(160,190,215,.14);border-radius:16px;padding:32px">
+    ${LOGO_IMG}
     <h1 style="color:#EAF2F9;font-size:1.3rem;margin:0 0 14px">Client check-ins coming due</h1>
     <p style="color:#A2B6C9;font-size:.95rem;line-height:1.6;margin:0 0 16px">Hi ${esc((ra.display_name as string)?.split(" ")[0] ?? "there")}, a quarterly check-in is due soon for these clients. Staying current keeps your recurring commissions active.</p>
     <table style="width:100%;border-collapse:collapse;border-top:1px solid rgba(160,190,215,.14)">${rows}</table>
