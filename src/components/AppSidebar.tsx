@@ -24,7 +24,6 @@ import {
   Link2,
   GraduationCap,
   Inbox,
-  MessagesSquare,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -88,14 +87,13 @@ const CASHFLOW_ITEMS: NavItem[] = [
 // Future home of the RA admin suite. Referral Associates still lives in
 // Settings → Team (the link points there — no transfer yet); the other
 // modules are placeholders until they're built:
-//   Resources — LMS (downloadable docs + videos)
+//   Resources — LMS (downloadable docs + videos); program updates get
+//               pushed here too (forum idea dropped 2026-07-03)
 //   Inbox     — centralized RA email (RAs connect their own mail accounts)
-//   RA Chat   — community forum for RAs
 const REFERRAL_PROGRAM_ITEMS: NavItem[] = [
   { to: "/settings/team", label: "Referral Associates", icon: Link2 },
   { to: "/referral-program/resources", label: "Resources", icon: GraduationCap, comingSoon: true },
   { to: "/referral-program/inbox", label: "Inbox", icon: Inbox, comingSoon: true },
-  { to: "/referral-program/chat", label: "RA Chat", icon: MessagesSquare, comingSoon: true },
 ]
 
 const CRM_PATHS = CRM_ITEMS.map((i) => i.to)
