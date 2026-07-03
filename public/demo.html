@@ -579,19 +579,20 @@
     .hero{padding:120px 0 50px}
   }
 
-  /* ── Typography hardening: stop orphans / single-word last lines on every screen ── */
+  /* ── Typography hardening: no orphaned single words on any line, any screen.
+        text-wrap inherits, so the body rule covers ALL text — including copy
+        injected by JS (RA name/title/bio) — without maintaining an allowlist.
+        Headings and short display lines get balance for even line lengths. ── */
+  body { text-wrap: pretty; }
   h1, h2, h3, h4,
   .sec-title, .form-title, .featured-name, .embed-name, .modal-title,
   .qr-title, .featured-tagline, .addon-heading, .price .amt,
-  .ra-name, .ra-label, .final-cta h3, .success h2 {
+  .ra-name, .ra-label, .ra-title, .final-cta h3, .success h2 {
     text-wrap: balance;
   }
-  p, .lede, .hero-sub, .form-sub, .ra-bio, .embed-desc,
-  .featured-desc, .featured-foot, .card p, .why-item p, .notis,
-  .price .desc, .addon-note p, .modal-sub, .footer-text,
-  .form-foot, .consent-label, .modal-foot, .cookie-popup-card p {
-    text-wrap: pretty;
-  }
+  /* The hero title's forced <br> defeats balance on narrow screens and
+     strands the last word — let balance control all breaks on mobile */
+  @media(max-width:640px){ .hero h1 br{display:none} }
 
   /* ── Mobile (<520px): CTAs full-width, tighter form-card padding, prevent
         small buttons from sitting on their own line ── */
@@ -677,7 +678,7 @@
   <div class="wrap">
     <div class="hero-content reveal">
       <span class="eyebrow">Interactive Avatars by Divigner Group</span>
-      <h1>Meet the next<br><span class="grad">Face</span> of Your Web Presence.</h1>
+      <h1>Meet the next<br><span class="grad">Face</span> of Your Web&nbsp;Presence.</h1>
       <p class="hero-sub">Conversational, on-brand AI concierges that greet your visitors, answer their questions, and routes your prospective clients directly to your team by face or voice 24/7.</p>
       <div class="hero-cta-row">
         <a href="#" class="btn-secondary" id="hero-learn-more">Get in Touch
@@ -902,7 +903,7 @@
       <div class="why-item">
         <div class="why-num">03</div>
         <div>
-          <h4>Educate without overcommitting</h4>
+          <h4>Educate without&nbsp;overcommitting</h4>
           <p>For regulated practices (medical, legal, financial), the avatar answers educational questions with the right disclaimers and routes personal questions to a human, fast.</p>
         </div>
       </div>
@@ -973,7 +974,7 @@
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Compliance and routing</b> rules reviewed for your vertical</span></li>
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Embedded on your website as a floating widget,</b> compatible with WordPress, Shopify, Wix, Squarespace, Webflow, and custom-built sites, served under your own domain</span></li>
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Calendar and email integration included.</b> Choose one pairing: Google Calendar with Gmail, or Microsoft 365 Calendar with Office 365 Email. Cal.com and Calendly are also supported as standalone booking platforms</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Voice-only option available</b> at no additional cost. Customer support without a visual avatar, offered as an add-on</span></li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Voice-only option available</b> at no additional cost. Customer support without a visual avatar, offered as an&nbsp;add-on</span></li>
         </ul>
       </div>
 
