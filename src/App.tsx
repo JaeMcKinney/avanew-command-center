@@ -16,7 +16,8 @@ import { RaDeals } from "@/pages/ra/RaDeals"
 import { RaSettings } from "@/pages/ra/RaSettings"
 import { RaLandingPage } from "@/pages/public/RaLandingPage"
 import { RaDemoPage } from "@/pages/public/RaDemoPage"
-import { SettingsLandingPages } from "@/pages/settings/SettingsLandingPages"
+import { RaPageTemplates } from "@/pages/referral-program/RaPageTemplates"
+import { ReferralProgramAssociates } from "@/pages/referral-program/ReferralProgramAssociates"
 import { OrgPicker } from "@/pages/OrgPicker"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
 import { RoleGate } from "@/components/RoleGate"
@@ -187,6 +188,14 @@ function App() {
         <Route path="/vendors/new" element={<VendorForm />} />
         <Route path="/vendors/:id/edit" element={<VendorForm />} />
 
+        {/* Referral Program — future home of the RA admin suite.
+            /associates is a SANDBOX COPY of the Settings → Team RA tab (the
+            Settings tab stays the live path until cutover); /page-templates
+            fully moved here from /settings/landing-pages. */}
+        <Route path="/referral-program" element={<Navigate to="/referral-program/associates" replace />} />
+        <Route path="/referral-program/associates" element={<RoleGate allow={["super_user","admin"]}><ReferralProgramAssociates /></RoleGate>} />
+        <Route path="/referral-program/page-templates" element={<RoleGate allow={["super_user","admin"]}><RaPageTemplates /></RoleGate>} />
+
         {/* Settings — nested module */}
         <Route path="/settings" element={<SettingsLayout />}>
           <Route index element={<Navigate to="/settings/profile" replace />} />
@@ -197,7 +206,9 @@ function App() {
           <Route path="pipeline" element={<RoleGate allow={["super_user","admin"]}><SettingsPipeline /></RoleGate>} />
           <Route path="financial" element={<RoleGate allow={["super_user","admin"]}><SettingsFinancial /></RoleGate>} />
           <Route path="partners-vendors" element={<RoleGate allow={["super_user","admin"]}><SettingsPartnersVendors /></RoleGate>} />
-          <Route path="landing-pages" element={<RoleGate allow={["super_user","admin"]}><SettingsLandingPages /></RoleGate>} />
+          {/* Moved to the Referral Program section — redirect keeps old
+              bookmarks working. */}
+          <Route path="landing-pages" element={<Navigate to="/referral-program/page-templates" replace />} />
           {/* Legacy /settings/ra list route — redirected to the consolidated
               RA tab inside /settings/team. Detail / review / archive sub-routes
               are still mounted here for stable URLs. */}

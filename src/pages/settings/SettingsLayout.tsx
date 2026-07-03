@@ -13,7 +13,6 @@ import {
   Palette,
   Plug2,
   Lock,
-  LayoutTemplate,
   ScrollText,
   Database,
   Server,
@@ -96,13 +95,6 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Partner & Vendor Settings",
         icon: Handshake,
         description: "External relationship config",
-        allow: ["super_user", "admin"],
-      },
-      {
-        to: "/settings/landing-pages",
-        label: "RA Page Templates",
-        icon: LayoutTemplate,
-        description: "Demo & refer page templates",
         allow: ["super_user", "admin"],
       },
       {

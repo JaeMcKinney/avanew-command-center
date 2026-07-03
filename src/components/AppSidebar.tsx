@@ -24,6 +24,7 @@ import {
   Link2,
   GraduationCap,
   Inbox,
+  LayoutTemplate,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -84,14 +85,17 @@ const CASHFLOW_ITEMS: NavItem[] = [
   { to: "/cashflow/bank-connections", label: "Bank Connections", icon: Landmark },
 ]
 
-// Future home of the RA admin suite. Referral Associates still lives in
-// Settings → Team (the link points there — no transfer yet); the other
-// modules are placeholders until they're built:
-//   Resources — LMS (downloadable docs + videos); program updates get
-//               pushed here too (forum idea dropped 2026-07-03)
-//   Inbox     — centralized RA email (RAs connect their own mail accounts)
+// Future home of the RA admin suite.
+//   Referral Associates — SANDBOX COPY of the Settings → Team RA tab; the
+//                         Settings tab stays the live path until cutover
+//   RA Page Templates   — fully moved here from /settings/landing-pages
+//   Resources           — LMS (docs + videos); program updates get pushed
+//                         here too (forum idea dropped 2026-07-03)
+//   Inbox               — centralized RA email (RAs connect their own
+//                         mail accounts)
 const REFERRAL_PROGRAM_ITEMS: NavItem[] = [
-  { to: "/settings/team", label: "Referral Associates", icon: Link2 },
+  { to: "/referral-program/associates", label: "Referral Associates", icon: Link2 },
+  { to: "/referral-program/page-templates", label: "RA Page Templates", icon: LayoutTemplate },
   { to: "/referral-program/resources", label: "Resources", icon: GraduationCap, comingSoon: true },
   { to: "/referral-program/inbox", label: "Inbox", icon: Inbox, comingSoon: true },
 ]

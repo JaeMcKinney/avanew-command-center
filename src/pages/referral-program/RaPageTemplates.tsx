@@ -54,7 +54,7 @@ const TYPE_META: Record<RaType, { label: string; icon: typeof User }> = {
   company:    { label: "Company",    icon: Building2 },
 }
 
-export function SettingsLandingPages() {
+export function RaPageTemplates() {
   const [templates, setTemplates] = useState<RaLandingTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)

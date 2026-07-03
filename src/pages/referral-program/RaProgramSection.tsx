@@ -201,17 +201,18 @@ function TemplatePicker({
 }
 
 /**
- * LIVE production copy. A sandbox duplicate exists at
- * pages/referral-program/RaProgramSection.tsx (the future Referral Program
- * home) — if you fix a bug here, port it there. New Referral Program
- * features belong in the copy, not here.
+ * SANDBOX COPY of components/RaSection.tsx (copied 2026-07-03) — the future
+ * Referral Program home for RA management, rendered at
+ * /referral-program/associates while the section is built out.
  *
- * Single source of truth for managing Referral Associates. Renders inside
- * the "Referral Associates" tab on /settings/team. Owns the full RA list +
- * filter buckets + invite / bulk-invite + delete + archive entry + per-row
- * actions (Leads drill-down, template assignment, Review dialog).
+ * The LIVE, in-use version is still the "Referral Associates" tab on
+ * /settings/team (components/RaSection.tsx). Until cutover:
+ *   - build new Referral Program behavior HERE, never in RaSection.tsx
+ *   - if a bug is fixed in the live RaSection.tsx, port the fix here too
+ * Both copies operate on the same production data (same tables, same edge
+ * functions) — "sandbox" refers to the UI surface, not the data.
  */
-export function RaSection() {
+export function RaProgramSection() {
   const navigate = useNavigate()
   const [list, setList] = useState<RaAssociate[]>([])
   const [templates, setTemplates] = useState<RaLandingTemplate[]>([])
