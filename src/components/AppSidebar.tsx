@@ -21,6 +21,10 @@ import {
   Landmark,
   ChevronsLeft,
   ChevronsRight,
+  Link2,
+  GraduationCap,
+  Inbox,
+  MessagesSquare,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -62,6 +66,8 @@ interface NavItem {
   to: string
   label: string
   icon: LucideIcon
+  /** Renders as an inert, muted row with a "Soon" pill instead of a link. */
+  comingSoon?: boolean
 }
 
 const CRM_ITEMS: NavItem[] = [
@@ -77,6 +83,19 @@ const CASHFLOW_ITEMS: NavItem[] = [
   { to: "/cashflow", label: "Dashboard", icon: BarChart2 },
   { to: "/cashflow/transactions", label: "Transactions", icon: Receipt },
   { to: "/cashflow/bank-connections", label: "Bank Connections", icon: Landmark },
+]
+
+// Future home of the RA admin suite. Referral Associates still lives in
+// Settings → Team (the link points there — no transfer yet); the other
+// modules are placeholders until they're built:
+//   Resources — LMS (downloadable docs + videos)
+//   Inbox     — centralized RA email (RAs connect their own mail accounts)
+//   RA Chat   — community forum for RAs
+const REFERRAL_PROGRAM_ITEMS: NavItem[] = [
+  { to: "/settings/team", label: "Referral Associates", icon: Link2 },
+  { to: "/referral-program/resources", label: "Resources", icon: GraduationCap, comingSoon: true },
+  { to: "/referral-program/inbox", label: "Inbox", icon: Inbox, comingSoon: true },
+  { to: "/referral-program/chat", label: "RA Chat", icon: MessagesSquare, comingSoon: true },
 ]
 
 const CRM_PATHS = CRM_ITEMS.map((i) => i.to)
@@ -107,7 +126,39 @@ function SidebarLink({
   sub,
   collapsed,
   onNavigate,
+  comingSoon,
 }: NavItem & { sub?: boolean; collapsed?: boolean; onNavigate?: () => void }) {
+  // Coming-soon rows are inert: muted, no navigation, with a "Soon" pill so
+  // the roadmap is visible in the tree without dead-ending anyone on a 404.
+  if (comingSoon) {
+    const row = (
+      <div
+        aria-disabled="true"
+        className={cn(
+          "flex items-center rounded-md py-2 text-sm font-medium text-sidebar-foreground/35 cursor-default select-none",
+          collapsed ? "h-10 w-10 justify-center px-0" : sub ? "gap-3 pl-8 pr-3" : "gap-3 px-3"
+        )}
+      >
+        <Icon className="h-4 w-4 shrink-0 text-sidebar-foreground/25" />
+        {!collapsed && (
+          <>
+            <span className="flex-1">{label}</span>
+            <span className="rounded-full border border-sidebar-border px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-sidebar-foreground/40">
+              Soon
+            </span>
+          </>
+        )}
+      </div>
+    )
+    if (collapsed) {
+      return (
+        <RailTooltip show label={`${label} — coming soon`}>
+          <div className="flex justify-center">{row}</div>
+        </RailTooltip>
+      )
+    }
+    return row
+  }
   // Wrapping the NavLink in a flex centerer when collapsed bypasses two bugs:
   // 1. Radix Slot stringifies className-as-function, polluting the class
   //    attribute with conflicting px-0 / px-3 / pl-8 tokens that drag the
@@ -154,6 +205,7 @@ function SidebarLink({
 
 function ModuleGroup({
   label,
+  note,
   icon: Icon,
   items,
   defaultOpen,
@@ -162,6 +214,8 @@ function ModuleGroup({
   onNavigate,
 }: {
   label: string
+  /** Small muted annotation under the group title (e.g. "Moving here soon"). */
+  note?: string
   icon: LucideIcon
   items: NavItem[]
   defaultOpen?: boolean
@@ -194,7 +248,12 @@ function ModuleGroup({
         className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
       >
         <Icon className="h-4 w-4 shrink-0 text-sidebar-foreground/50" />
-        <span className="flex-1 text-left">{label}</span>
+        <span className="flex-1 text-left leading-tight">
+          {label}
+          {note && (
+            <span className="block text-[10px] font-normal text-sidebar-foreground/40">{note}</span>
+          )}
+        </span>
         <ChevronDown className={cn("h-3.5 w-3.5 transition-transform text-sidebar-foreground/40", open && "rotate-180")} />
       </button>
       {open && (
@@ -348,6 +407,18 @@ export function AppSidebar({
               icon={TrendingUp}
               items={CASHFLOW_ITEMS.filter((i) => i.to !== "/cashflow/bank-connections" || can("cashflow.bank_connections"))}
               defaultOpen={cashflowActive}
+              collapsed={collapsed}
+              onExpand={expand}
+              onNavigate={onNavigate}
+            />
+          )}
+
+          {!isLimitedRole && (
+            <ModuleGroup
+              label="Referral Program"
+              note="Moving here soon"
+              icon={Link2}
+              items={REFERRAL_PROGRAM_ITEMS}
               collapsed={collapsed}
               onExpand={expand}
               onNavigate={onNavigate}
