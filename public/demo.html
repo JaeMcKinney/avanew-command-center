@@ -637,7 +637,7 @@
     <a href="#top" data-section="top">Home</a>
     <a href="#what" data-section="what">What is an Avatar?</a>
     <a href="#avatars" data-section="avatars">Recent Deployments</a>
-    <a href="#why" data-section="why">Why Interactive Avatars?</a>
+    <!-- <a href="#why" data-section="why">Why Interactive Avatars?</a> -->
     <a href="#features" data-section="features">Features &amp; Functionality</a>
     <!-- <a href="#about" data-section="about">About Us</a> -->
     <a href="#investment" data-section="investment">Investment</a>
@@ -680,9 +680,6 @@
       <h1>Meet the next<br><span class="grad">Face</span> of Your Web Presence.</h1>
       <p class="hero-sub">Conversational, on-brand AI concierges that greet your visitors, answer their questions, and routes your prospective clients directly to your team by face or voice 24/7.</p>
       <div class="hero-cta-row">
-        <a href="#avatars" class="btn-primary">See the avatars
-          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-        </a>
         <a href="#" class="btn-secondary" id="hero-learn-more">Get in Touch
           <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
@@ -698,16 +695,29 @@
       <div class="sec-num">01</div>
       <h2 class="sec-title">What are <span class="grad">Interactive Avatars?</span></h2>
       <div class="gold-line"></div>
-      <p class="lede">Picture a face on your website that greets every visitor in your voice, on your brand, ready to answer the question your FAQ never quite covers. It looks back at you. It listens. It speaks. And it remembers what your business is supposed to sound like.</p>
+      <p class="lede">Picture a face on your website that greets every visitor in your voice, on your brand, ready to answer the question your FAQ never quite covers. It looks back at you. It listens. It speaks. And it remembers what your business is supposed to sound like. A person-shaped presence, trained on your content, online before your team has had their coffee. Visitors who would have bounced stay, talk, and tell you exactly what they're looking for.</p>
     </div>
-    <div class="notis-row stagger">
-      <div class="notis"><span class="not">Not a chatbot</span><span class="arrow">→</span><span class="is">A presence</span></div>
-      <div class="notis"><span class="not">Not a video</span><span class="arrow">→</span><span class="is">A conversation</span></div>
-      <div class="notis"><span class="not">Not a form</span><span class="arrow">→</span><span class="is">A relationship</span></div>
-    </div>
-    <div class="callout reveal">
-      <span class="label">The short version</span>
-      <p>A person-shaped presence, trained on your content, voiced in your tone, online before your team has had their coffee. Visitors who would have bounced stay, talk, and tell you exactly what they're looking for. Keep scrolling. The rest of this page is what that actually looks like.</p>
+
+    <!-- Featured prominent avatar (Ava) -->
+    <div class="featured-avatar reveal">
+      <div class="featured-embed">
+        <div class="embed-video featured-video" id="ava-stage">
+          <button type="button" class="embed-thumb-btn" id="ava-poster" aria-label="Start a conversation with Ava">
+            <img class="embed-thumb" src="/avatars/ava.jpg" alt="Ava — Divigner's conversational avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Ava</b></div>
+            <div class="embed-thumb-overlay"></div>
+            <div class="embed-thumb-play"><svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg></div>
+            <span class="embed-thumb-label">Live · Click to talk</span>
+          </button>
+        </div>
+      </div>
+      <div class="featured-content">
+        <span class="featured-badge"><span class="dot"></span>Live now · Ready to answer</span>
+        <h3 class="featured-name">Meet <span class="grad">Ava.</span></h3>
+        <p class="featured-tagline">She explains the value of an avatar by being one.</p>
+        <p class="featured-desc">Ava is here to show you what an Interactive Avatar could do for your business. She'll interview you about what you do, who visits your site, and where your team loses time, then walk you through the benefits and value an avatar would bring to exactly that. Ask her anything along the way: <em>"Would this work for a clinic my size?" "What's involved in launching?" "Can it book appointments / take payments / handle Spanish?"</em> And the whole time, you're experiencing exactly what your visitors would experience on your site.</p>
+        <span class="featured-foot">No signup. No form. Voice or text. Faster than booking a call.</span>
+      </div>
     </div>
   </div>
 </section>
@@ -789,35 +799,13 @@
   </div>
 </section>
 
-<!-- ── Meta avatar: built to answer YOUR questions about avatars (HIDDEN — not ready) ── -->
-<section id="why">
+<!-- ── Why section (HIDDEN — Ava's featured block moved into section #what) ── -->
+<section id="why" style="display:none">
   <div class="wrap">
     <div class="sec-head reveal">
       <div class="sec-num">03</div>
       <h2 class="sec-title">The avatars prior to this one were for other people. <span class="grad">This one is for you!</span></h2>
       <div class="gold-line"></div>
-    </div>
-
-    <!-- Featured prominent avatar -->
-    <div class="featured-avatar reveal">
-      <div class="featured-embed">
-        <div class="embed-video featured-video" id="ava-stage">
-          <button type="button" class="embed-thumb-btn" id="ava-poster" aria-label="Start a conversation with Ava">
-            <img class="embed-thumb" src="/avatars/ava.jpg" alt="Ava — Divigner's conversational avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="embed-thumb-fallback" style="display:none"><b>Ava</b></div>
-            <div class="embed-thumb-overlay"></div>
-            <div class="embed-thumb-play"><svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg></div>
-            <span class="embed-thumb-label">Live · Click to talk</span>
-          </button>
-        </div>
-      </div>
-      <div class="featured-content">
-        <span class="featured-badge"><span class="dot"></span>Live now · Ready to answer</span>
-        <h3 class="featured-name">The avatar that <span class="grad">sells avatars.</span></h3>
-        <p class="featured-tagline">If she can answer your questions, imagine what one could do for yours.</p>
-        <p class="featured-desc">Ava knows everything about Conversational Design from integrations, what we recommend for your industry, where avatars do and don't make sense. Ask questions such as: <em>"Would this work for a clinic my size?" "What's involved in launching?" "Can it book appointments / take payments / handle Spanish?"</em> Get the answer in 30 seconds. And while you're at it, you're experiencing exactly what your visitors would experience on your site.</p>
-        <span class="featured-foot">No signup. No form. Voice or text. Faster than booking a call.</span>
-      </div>
     </div>
 
     <div class="why-proof-grid stagger" style="display:none">
@@ -854,7 +842,7 @@
 <section id="features">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div class="sec-num">04</div>
+      <div class="sec-num">03</div>
       <h2 class="sec-title">Features &amp; <span class="grad">Functionality</span></h2>
       <div class="gold-line"></div>
       <p class="lede">Every Divigner avatar ships with the same conversational core, then dials in the policies, integrations, and tone for the brand it represents.</p>
@@ -964,7 +952,7 @@
 <section id="investment">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div class="sec-num">05</div>
+      <div class="sec-num">04</div>
       <h2 class="sec-title">Your <span class="grad">Investment</span></h2>
       <div class="gold-line"></div>
       <p class="lede">One implementation fee to build, train, and launch your branded avatar. One monthly fee to keep her sharp, supported, and improving every week. No long contracts. No surprises.</p>
@@ -975,6 +963,7 @@
         <span class="pk">One-Time · Implementation</span>
         <div class="amt">$6,000</div>
         <div class="freq">Paid as $3,000 deposit · $3,000 on launch</div>
+        <div class="freq" style="margin-top:4px">Payment plans available</div>
         <p class="desc">Everything required to design, train, and deploy your avatar on your site. Paid once.</p>
         <ul class="incl">
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Live in 2–4 weeks.</b> Full build, training, and deployment to your site</span></li>
@@ -1008,21 +997,7 @@
       <div class="addon-glow-teal" aria-hidden="true"></div>
       <span class="addon-label">Going Further</span>
       <h3 class="addon-heading">Add <span class="grad-gold">deeper automations</span> and agents that act, not just answer.</h3>
-      <p>Ready to go deeper? We extend your avatar with agentic engineering that moves data and takes real action across your business. Deep CRM integrations push session outcomes and qualified leads directly into HubSpot, Salesforce, Zoho, or your platform of choice. Zapier automations trigger downstream workflows from every conversation without writing a line of code. For e-commerce teams, we connect Shopify and WooCommerce order systems so your avatar can handle real customer support: checking order status, tracking shipments, and surfacing account details without a human in the loop. For teams that need autonomous execution behind the scenes, we scope and deploy custom AI agents, including <b>Hermes</b>, <b>OpenClaw</b>, and other purpose-built automations, that research, route, retrieve, and act on behalf of your team.</p>
-      <div class="addon-tags">
-        <span class="a-tag">HubSpot</span>
-        <span class="a-tag">Salesforce</span>
-        <span class="a-tag">Zoho</span>
-        <span class="a-tag">Zapier</span>
-        <span class="a-tag">Shopify Orders</span>
-        <span class="a-tag">WooCommerce</span>
-        <span class="a-tag">Stripe</span>
-        <span class="a-tag">Hermes</span>
-        <span class="a-tag">OpenClaw</span>
-        <span class="a-tag">Custom Agents</span>
-        <span class="a-tag">Agentic Workflows</span>
-        <span class="a-tag">Pipeline Sync</span>
-      </div>
+      <p>Ready to go deeper? We extend your avatar with agentic engineering that takes real action across your business: pushing qualified leads into your CRM, triggering automations from every conversation, and connecting your order systems so your avatar can handle real customer support. For teams that need autonomous execution behind the scenes, we scope and deploy custom AI agents that research, route, retrieve, and act on behalf of your team.</p>
     </div>
 
   </div>
@@ -1032,7 +1007,7 @@
 <section id="ra">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div class="sec-num">06</div>
+      <div class="sec-num">05</div>
       <h2 class="sec-title">Your <span class="grad">Referral Associate</span></h2>
       <div class="gold-line"></div>
       <p class="lede">You were referred to Divigner by the Referral Associate below. They're your direct line. Reach out any time with questions, or use the form to get started and they'll be notified automatically.</p>
@@ -1166,11 +1141,11 @@
   var SECTIONS = [
     {id:'what',       num:'01', label:'What is an Avatar?'},
     {id:'avatars',    num:'02', label:'Recent Deployments'},
-    {id:'why',        num:'03', label:'Why Interactive Avatars?'},
-    {id:'features',   num:'04', label:'Features & Functionality'},
+    // {id:'why',        num:'03', label:'Why Interactive Avatars?'},  // hidden with section#why (Ava moved into #what)
+    {id:'features',   num:'03', label:'Features & Functionality'},
     // {id:'about',      num:'05', label:'About Us'},  // hidden with section#about
-    {id:'investment', num:'05', label:'Investment'},
-    {id:'ra',         num:'06', label:'Your RA'}
+    {id:'investment', num:'04', label:'Investment'},
+    {id:'ra',         num:'05', label:'Your RA'}
   ];
 
   /* ── Progress bar + topbar scroll state ── */
