@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <meta name="theme-color" content="#06101D">
-<title>Divigner AI Automations</title>
+<title>Interactive Avatars for CME &amp; Healthcare · Divigner Group</title>
+<meta name="description" content="Interactive AI avatars for continuing medical education and healthcare practices: clinical consultants, synthetic patients, program guides, and patient concierges, live today.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -78,7 +79,7 @@
   .mob-overlay{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .3s}
   .mob-overlay.open{opacity:1;pointer-events:auto}
 
-  /* ── Section dot nav (right side) — works on desktop AND mobile per requirement ── */
+  /* ── Section dot nav (right side) - works on desktop AND mobile per requirement ── */
   .sec-nav{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;align-items:center;gap:10px}
   .sec-nav .nav-arrow{width:34px;height:34px;border-radius:50%;border:1px solid rgba(120,214,196,.25);background:rgba(9,26,45,.85);backdrop-filter:blur(6px);display:grid;place-items:center;cursor:pointer;transition:.15s;color:var(--muted)}
   .sec-nav .nav-arrow:hover,.sec-nav .nav-arrow:active{border-color:rgba(52,214,194,.6);color:var(--cyan);background:rgba(14,39,65,.95)}
@@ -180,7 +181,7 @@
   .embed-thumb-label::before{content:"";width:7px;height:7px;border-radius:50%;background:#FF3D5A;box-shadow:0 0 10px #FF3D5A;animation:thumbDot 1.2s ease-in-out infinite}
   @keyframes thumbDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
 
-  /* Ava poster: keep her face clear — play affordance sits bottom-right as a badge, not centered */
+  /* Ava poster: keep her face clear - play affordance sits bottom-right as a badge, not centered */
   #ava-poster .embed-thumb-play{left:auto;top:auto;right:16px;bottom:14px;transform:none;width:60px;height:60px}
   #ava-poster .embed-thumb-play svg{width:24px;height:24px}
   #ava-poster:hover .embed-thumb-play{transform:scale(1.1)}
@@ -202,25 +203,25 @@
   .avatar-modal.open{display:flex;opacity:1}
   .avatar-modal-backdrop{position:absolute;inset:0;background:rgba(6,16,29,.55);backdrop-filter:blur(6px) saturate(1.05);-webkit-backdrop-filter:blur(6px) saturate(1.05)}
   /* When modal is open, blur the whole page behind it as well (covers iOS/older browsers) */
-  body.avatar-modal-active > *:not(.avatar-modal){filter:blur(0)}  /* no-op — backdrop layer handles the visual */
+  body.avatar-modal-active > *:not(.avatar-modal){filter:blur(0)}  /* no-op - backdrop layer handles the visual */
   .avatar-modal-stage{position:relative;width:100%;max-width:880px;aspect-ratio:16/9;border-radius:22px;overflow:hidden;background:#06101D;border:1px solid rgba(120,214,196,.25);box-shadow:0 40px 100px -28px rgba(0,0,0,.85), 0 0 80px -28px rgba(52,214,194,.4);transform:scale(.96);transition:transform .4s cubic-bezier(.2,.7,.2,1), max-width .4s, max-height .4s, aspect-ratio .4s}
   .avatar-modal.open .avatar-modal-stage{transform:scale(1)}
   .avatar-modal-stage.ratio-43{max-width:min(820px, 94vw);aspect-ratio:4/3}
   .avatar-modal-stage.size-large{max-width:min(1320px, 96vw);aspect-ratio:auto;height:min(900px, 88vh)}
   .avatar-modal-stage:fullscreen{max-width:none;aspect-ratio:auto;border-radius:0}
   .avatar-modal-stage:-webkit-full-screen{max-width:none;aspect-ratio:auto;border-radius:0}
-  /* In fullscreen the size toggle is meaningless — only that one hides. (Controls
+  /* In fullscreen the size toggle is meaningless - only that one hides. (Controls
      already sit top-left below the app's title bar in every state.) */
   .avatar-modal-stage:fullscreen .avatar-modal-ctrl.resize{display:none}
   .avatar-modal-stage:-webkit-full-screen .avatar-modal-ctrl.resize{display:none}
   /* If the viewport narrows below the mobile breakpoint WHILE fullscreen (device
-     rotation, browser zoom), the mobile hide must not remove the exit affordance —
+     rotation, browser zoom), the mobile hide must not remove the exit affordance -
      without it the only remaining control (X) would end the live session. */
   .avatar-modal-stage:fullscreen .avatar-modal-ctrl.fullscreen{display:grid}
   .avatar-modal-stage:-webkit-full-screen .avatar-modal-ctrl.fullscreen{display:grid}
   .avatar-modal-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
   .avatar-modal-frame iframe{width:100%;height:100%;border:0;display:block}
-  /* Controls live top-left, below the embedded app's title bar — its own interactive
+  /* Controls live top-left, below the embedded app's title bar - its own interactive
      UI owns the top-right (chat header / download) in every layout, so this is the
      one corner that never collides, windowed or fullscreen. */
   .avatar-modal-controls{position:absolute;top:72px;left:16px;display:flex;gap:8px;z-index:5}
@@ -306,7 +307,7 @@
   .pill.green{background:rgba(52,214,194,.16);color:var(--cyan);border:1px solid rgba(52,214,194,.32)}
   .price.svc .pk{color:var(--text)}
 
-  /* ── Investment add-on note (below pricing cards) — prominent treatment ── */
+  /* ── Investment add-on note (below pricing cards) - prominent treatment ── */
   .addon-note{position:relative;margin-top:36px;padding:42px 46px;border-radius:24px;background:linear-gradient(160deg,rgba(201,168,106,.18),rgba(24,185,166,.14) 55%,rgba(14,39,65,.94));border:1px solid rgba(201,168,106,.42);overflow:hidden;box-shadow:0 30px 80px -24px rgba(0,0,0,.65),0 0 70px -22px rgba(201,168,106,.42),0 0 70px -22px rgba(52,214,194,.32)}
   .addon-note::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--teal-bright),var(--cyan),#ffe6b0,var(--gold),var(--teal-bright));background-size:300% 100%;animation:goldShimmer 3.4s linear infinite}
   .addon-note::after{content:"";position:absolute;right:-180px;top:-180px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.26),rgba(52,214,194,.18) 45%,transparent 70%);pointer-events:none;z-index:0;animation:goldHalo 7s ease-in-out infinite}
@@ -336,7 +337,7 @@
   .addon-tags .a-tag:hover{background:rgba(201,168,106,.18);border-color:rgba(201,168,106,.6);transform:translateY(-1px)}
   @media(max-width:680px){.addon-note{padding:30px 24px}}
 
-  /* ── Featured (prominent) avatar — Interactive Avatar section ── */
+  /* ── Featured (prominent) avatar - Interactive Avatar section ── */
   .featured-avatar{position:relative;display:grid;grid-template-columns:1.15fr 1fr;gap:44px;align-items:stretch;margin-top:14px;margin-bottom:64px;padding:40px;border-radius:28px;background:linear-gradient(160deg,rgba(24,185,166,.14),rgba(14,39,65,.94));border:1px solid var(--line);overflow:hidden;box-shadow:0 30px 80px -28px rgba(0,0,0,.65),0 0 70px -22px rgba(52,214,194,.35)}
   .featured-avatar::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--teal),var(--gold))}
   .featured-avatar::after{content:"";position:absolute;right:-200px;top:-200px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(52,214,194,.32),transparent 60%);pointer-events:none;z-index:0;animation:featuredHalo 6s ease-in-out infinite}
@@ -395,7 +396,7 @@
   .why-item h4{font-family:'Manrope';font-size:15.5px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:.01em}
   .why-item p{color:var(--muted);font-size:14.5px;line-height:1.7}
 
-  /* ── Section 03 (#why) — prominent backdrop ── */
+  /* ── Section 03 (#why) - prominent backdrop ── */
   section#why{position:relative;overflow:hidden}
   section#why::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
     background:
@@ -580,8 +581,8 @@
   }
 
   /* ── Typography hardening: no orphaned single words on any line, any screen.
-        text-wrap inherits, so the body rule covers ALL text — including copy
-        injected by JS (RA name/title/bio) — without maintaining an allowlist.
+        text-wrap inherits, so the body rule covers ALL text - including copy
+        injected by JS (RA name/title/bio) - without maintaining an allowlist.
         Headings and short display lines get balance for even line lengths. ── */
   body { text-wrap: pretty; }
   h1, h2, h3, h4,
@@ -591,7 +592,7 @@
     text-wrap: balance;
   }
   /* The hero title's forced <br> defeats balance on narrow screens and
-     strands the last word — let balance control all breaks on mobile */
+     strands the last word - let balance control all breaks on mobile */
   @media(max-width:640px){ .hero h1 br{display:none} }
 
   /* ── Mobile (<520px): CTAs full-width, tighter form-card padding, prevent
@@ -623,10 +624,61 @@
     .price .incl li{font-size:13.5px}
   }
 
+
+  /* ── Night sky: fixed starfield behind everything, deepens as you scroll ── */
+  .sky{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.4}
+  .stars{position:absolute;inset:0;background-repeat:repeat}
+  .stars.s1{background-image:radial-gradient(1px 1px at 169px 81px, rgba(234,242,249,.6) 50%, transparent 100%),radial-gradient(1px 1px at 41px 424px, rgba(190,215,235,.75) 50%, transparent 100%),radial-gradient(1px 1px at 191px 302px, rgba(234,242,249,.9) 50%, transparent 100%),radial-gradient(1px 1px at 23px 48px, rgba(234,242,249,.6) 50%, transparent 100%),radial-gradient(1px 1px at 39px 127px, rgba(234,242,249,.9) 50%, transparent 100%),radial-gradient(1px 1px at 34px 427px, rgba(190,215,235,.75) 50%, transparent 100%),radial-gradient(1px 1px at 118px 326px, rgba(190,215,235,.75) 50%, transparent 100%),radial-gradient(1px 1px at 299px 303px, rgba(234,242,249,.6) 50%, transparent 100%),radial-gradient(1px 1px at 117px 27px, rgba(190,215,235,.75) 50%, transparent 100%),radial-gradient(1px 1px at 152px 218px, rgba(234,242,249,.9) 50%, transparent 100%);background-size:460px 460px;animation:twinkle 7s ease-in-out infinite alternate}
+  .stars.s2{background-image:radial-gradient(1px 1px at 588px 319px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(1px 1px at 109px 599px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(1px 1px at 385px 103px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(1px 1px at 581px 65px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(2px 2px at 512px 700px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(2px 2px at 325px 480px, rgba(52,214,194,.65) 50%, transparent 100%),radial-gradient(1px 1px at 374px 310px, rgba(234,242,249,.6) 50%, transparent 100%),radial-gradient(2px 2px at 253px 87px, rgba(52,214,194,.65) 50%, transparent 100%);background-size:720px 720px;animation:twinkle 5s ease-in-out 1.4s infinite alternate}
+  .stars.s3{background-image:radial-gradient(3px 3px at 1079px 1017px, rgba(190,215,235,.75) 50%, transparent 100%),radial-gradient(3px 3px at 593px 153px, rgba(234,242,249,.9) 50%, transparent 100%),radial-gradient(3px 3px at 341px 704px, rgba(234,242,249,.6) 50%, transparent 100%),radial-gradient(2px 2px at 867px 84px, rgba(201,168,106,.75) 50%, transparent 100%),radial-gradient(3px 3px at 646px 700px, rgba(201,168,106,.75) 50%, transparent 100%),radial-gradient(2px 2px at 1021px 938px, rgba(234,242,249,.9) 50%, transparent 100%);background-size:1100px 1100px;animation:twinkle 9s ease-in-out 2.6s infinite alternate}
+  @keyframes twinkle{0%{opacity:.45}50%{opacity:1}100%{opacity:.6}}
+  .comet{position:absolute;height:1.5px;border-radius:2px;opacity:0;background:linear-gradient(90deg,rgba(95,227,210,0),rgba(95,227,210,.9) 55%,rgba(255,255,255,.95));filter:drop-shadow(0 0 6px rgba(95,227,210,.7))}
+  .comet.c1{top:14%;left:68%;width:170px;animation:shoot 17s linear 5s infinite}
+  .comet.c2{top:42%;left:24%;width:120px;animation:shoot 23s linear 13s infinite}
+  .comet.c3{top:68%;left:78%;width:140px;animation:shoot 29s linear 21s infinite}
+  @keyframes shoot{0%,93%{opacity:0;transform:rotate(-26deg) translateX(0)}94.5%{opacity:1}100%{opacity:0;transform:rotate(-26deg) translateX(-360px) translateY(10px)}}
+
+  /* ── Section separation: gradient hairlines + per-section ambient glows ── */
+  section{padding:120px 0}
+  @media(max-width:880px){section{padding:84px 0}}
+  #what::after,#avatars::after,#features::after,#about::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(52,214,194,.13) 25%,rgba(201,168,106,.15) 50%,rgba(52,214,194,.13) 75%,transparent)}
+  section#why::after{background:linear-gradient(90deg,transparent,rgba(52,214,194,.12) 20%,rgba(201,168,106,.12) 50%,rgba(52,214,194,.12) 80%,transparent)}
+  #what .wrap,#avatars .wrap,#features .wrap,#about .wrap{position:relative;z-index:1}
+  #avatars{overflow:hidden}
+  #avatars::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:
+    radial-gradient(1000px 700px at 92% 4%, rgba(52,214,194,.10), transparent 60%),
+    radial-gradient(900px 700px at 2% 96%, rgba(28,90,140,.22), transparent 55%)}
+  #features{overflow:hidden}
+  #features::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:
+    radial-gradient(900px 650px at 6% 10%, rgba(95,227,210,.07), transparent 60%),
+    radial-gradient(800px 600px at 95% 85%, rgba(167,139,250,.08), transparent 60%)}
+  #about{overflow:hidden}
+  #about::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:
+    radial-gradient(900px 650px at 88% 12%, rgba(201,168,106,.10), transparent 60%),
+    radial-gradient(800px 600px at 8% 90%, rgba(52,214,194,.07), transparent 60%)}
+
+  /* ── Extra gradient accents ── */
+  .embed-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;z-index:2;opacity:.5;background:linear-gradient(90deg,var(--teal-bright),var(--cyan) 40%,var(--gold) 80%,var(--teal-bright));background-size:240% 100%;animation:cardSheen 8s linear infinite;transition:opacity .4s}
+  .embed-card:hover::before{opacity:1}
+  @keyframes cardSheen{0%{background-position:0% 50%}100%{background-position:240% 50%}}
+  .topbar.scrolled{border-image:linear-gradient(90deg,transparent,rgba(52,214,194,.45) 30%,rgba(201,168,106,.45) 70%,transparent) 1}
+  .gold-line{width:84px;background:linear-gradient(90deg,var(--gold),var(--teal-bright) 70%,transparent)}
+  .final-cta{position:relative;overflow:hidden;padding:84px 0 30px}
+  .final-cta::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,106,.15) 30%,rgba(52,214,194,.15) 70%,transparent)}
+  .final-cta::after{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:min(920px,92vw);height:100%;pointer-events:none;background:radial-gradient(ellipse at 50% 0%, rgba(52,214,194,.13), transparent 65%)}
+  .final-cta .wrap{position:relative;z-index:1}
 </style>
 </head>
 <body>
-<script>window.__RA_DEMO_SLUG__='a2ai';</script>
+
+<div class="sky" id="sky" aria-hidden="true">
+  <div class="stars s1"></div>
+  <div class="stars s2"></div>
+  <div class="stars s3"></div>
+  <div class="comet c1"></div>
+  <div class="comet c2"></div>
+  <div class="comet c3"></div>
+</div>
 
 <div class="progress" id="prog"></div>
 
@@ -638,15 +690,9 @@
   <nav class="navlinks" id="navlinks">
     <a href="#top" data-section="top">Home</a>
     <a href="#what" data-section="what">What is an Avatar?</a>
-    <a href="#avatars" data-section="avatars">Recent Deployments</a>
-    <!-- <a href="#why" data-section="why">Why Interactive Avatars?</a> -->
-    <a href="#features" data-section="features">Features &amp; Functionality</a>
-    <!-- <a href="#about" data-section="about">About Us</a> -->
-    <a href="#investment" data-section="investment">Investment</a>
-    <a href="#ra" data-section="ra">Your RA</a>
-    <a href="#" id="qr-btn" aria-label="Show QR code">QR
-      <svg viewBox="0 0 24 24" style="display:inline-block;vertical-align:-3px;width:14px;height:14px;margin-left:6px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17"/><line x1="14" y1="20" x2="14" y2="21"/><line x1="17" y1="14" x2="21" y2="14"/><line x1="17" y1="17" x2="17" y2="21"/><line x1="20" y1="17" x2="21" y2="17"/><line x1="20" y1="20" x2="21" y2="20"/></svg>
-    </a>
+    <a href="#avatars" data-section="avatars">Live Avatars</a>
+    <a href="#why" data-section="why">Why Invest</a>
+    <a href="#features" data-section="features">Features</a>
     <a href="#" class="cta" id="learn-more-btn">Get in Touch</a>
   </nav>
   <button class="mob-toggle" id="mob-open" aria-label="Open menu">
@@ -678,10 +724,13 @@
   </div>
   <div class="wrap">
     <div class="hero-content reveal">
-      <span class="eyebrow">Interactive Avatars by Divigner Group</span>
-      <h1>Meet the next<br><span class="grad">Face</span> of Your Web&nbsp;Presence.</h1>
-      <p class="hero-sub">Conversational, on-brand AI concierges that greet your visitors, answer their questions, and routes your prospective clients directly to your team by face or voice 24/7.</p>
+      <span class="eyebrow">Interactive Avatars for Medical Education &amp; Healthcare</span>
+      <h1>Medical education and patient care, <span class="grad">now with a face.</span></h1>
+      <p class="hero-sub">Clinical consultants, synthetic patients, program guides, and patient concierges: conversational AI personas that turn your approved content into dialogue. Built for CME providers and healthcare practices alike. Live for your learners and patients 24/7.</p>
       <div class="hero-cta-row">
+        <a href="#avatars" class="btn-primary">Meet the avatars
+          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </a>
         <a href="#" class="btn-secondary" id="hero-learn-more">Get in Touch
           <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
@@ -690,14 +739,14 @@
   </div>
 </header>
 
-<!-- ── What are Interactive Avatars? (intrigue intro) ── -->
+<!-- ── 01 · What are Interactive Avatars? ── -->
 <section id="what">
   <div class="wrap">
     <div class="sec-head reveal">
       <div class="sec-num">01</div>
       <h2 class="sec-title">What are <span class="grad">Interactive Avatars?</span></h2>
       <div class="gold-line"></div>
-      <p class="lede">Picture a face on your website that greets every visitor in your voice, on your brand, ready to answer the question your FAQ never quite covers. It looks back at you. It listens. It speaks. And it remembers what your business is supposed to sound like. A person-shaped presence, trained on your content, online before your team has had their coffee. Visitors who would have bounced stay, talk, and tell you exactly what they're looking for.</p>
+      <p class="lede">Picture a face inside your CME activity, or right on your practice's website, that greets every learner and patient, answers in your team's voice, and never goes off-label. It looks back at you. It listens. It speaks. And it answers only from the approved content you gave it.</p>
     </div>
 
     <!-- Featured prominent avatar (Ava) -->
@@ -705,7 +754,7 @@
       <div class="featured-embed">
         <div class="embed-video featured-video" id="ava-stage">
           <button type="button" class="embed-thumb-btn" id="ava-poster" aria-label="Start a conversation with Ava">
-            <img class="embed-thumb" src="/avatars/ava.jpg" alt="Ava — Divigner's conversational avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <img class="embed-thumb" src="/avatars/ava.jpg" alt="Ava, Divigner's conversational avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="embed-thumb-fallback" style="display:none"><b>Ava</b></div>
             <div class="embed-thumb-overlay"></div>
             <div class="embed-thumb-play"><svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg></div>
@@ -717,295 +766,351 @@
         <span class="featured-badge"><span class="dot"></span>Live now · Ready to answer</span>
         <h3 class="featured-name">Meet <span class="grad">Ava.</span></h3>
         <p class="featured-tagline">She explains the value of an avatar by being one.</p>
-        <p class="featured-desc">Ava is here to show you what an Interactive Avatar could do for your business. She'll interview you about what you do, who visits your site, and where your team loses time, then walk you through the benefits and value an avatar would bring to exactly that. Ask her anything along the way: <em>"Would this work for a clinic my size?" "What's involved in launching?" "Can it book appointments / take payments / handle Spanish?"</em> And the whole time, you're experiencing exactly what your visitors would experience on your site.</p>
+        <p class="featured-desc">Ava is here to show you what an Interactive Avatar could do for your program or practice. She'll ask about your activity or your practice, who your learners and patients are, and where your team loses time, then walk you through the value an avatar would bring to exactly that. Ask her anything along the way: <em>"Would this work for an activity like mine?" "What's involved in launching?" "Can it handle Spanish?"</em> And the whole time, you're experiencing exactly what your learners and patients would experience.</p>
         <span class="featured-foot">No signup. No form. Voice or text. Faster than booking a call.</span>
       </div>
+    </div>
+
+    <div class="notis-row stagger">
+      <div class="notis"><span class="not">Not a module</span><span class="arrow">→</span><span class="is">A conversation</span></div>
+      <div class="notis"><span class="not">Not a chatbot</span><span class="arrow">→</span><span class="is">A presence</span></div>
+      <div class="notis"><span class="not">Not a post-test</span><span class="arrow">→</span><span class="is">A dialogue</span></div>
+    </div>
+    <div class="callout reveal">
+      <span class="label">The short version</span>
+      <p>A person-shaped presence trained on your approved content, voiced in your program's or practice's tone, available to everyone in every time zone. People who would have clicked past a slide deck or bounced off a contact form stay, talk, and show you exactly where their questions are. Keep scrolling: nine of them are below, every one live on a real program or practice right now.</p>
     </div>
   </div>
 </section>
 
-<!-- ── Recently Deployed Interactive Avatars (6 live embeds) ── -->
+<!-- ── 02 · Live deployments across CME and healthcare ── -->
 <section id="avatars">
   <div class="wrap">
     <div class="sec-head reveal">
       <div class="sec-num">02</div>
-      <h2 class="sec-title">Recently Deployed <span class="grad">Interactive Avatars</span></h2>
+      <h2 class="sec-title">Deployed and <span class="grad">live today.</span></h2>
       <div class="gold-line"></div>
-      <p class="lede">Every avatar below is live right now on the client's own site. Not a mockup, not a video. Pick one and try it. You'll be talking to the same conversational AI their visitors talk to every day.</p>
-      <p class="lede" style="margin-top:10px;font-size:clamp(13px,1.6vw,15px);opacity:.7">Look for the avatar on the bottom right of the page — click to expand and start a conversation.</p>
+      <p class="lede">Every linked avatar below is live right now: some on continuing medical education programs, others on the websites of working healthcare practices. Not a mockup, not a video. Pick one, open it in a new tab, and have the same conversation their learners and patients are having today.</p>
     </div>
 
+    <div class="callout reveal" style="margin-bottom:44px;margin-top:0">
+      <span class="label">Before you click through</span>
+      <p>Chrome and Safari work best. Find a quiet spot, allow your microphone when the browser asks, and speak to the avatar as you would a colleague, or just type. When you're done, press “End Call” to close the session.</p>
+    </div>
+
+    <div class="tier-divider reveal"><span class="tier-label">For continuing medical education</span></div>
     <div class="embed-grid stagger">
-      <!-- Embed 1 — Victoria -->
       <article class="embed-card">
         <div class="embed-video">
-          <a href="https://divigner.com/californiadermatology-com/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Victoria's live site">
-            <img class="embed-thumb" src="/avatars/victoria.png" alt="Victoria — Patient Concierge" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="embed-thumb-fallback" style="display:none"><b>Victoria</b></div>
+          <a href="https://catalyst-skincancers.com/cscc-4/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Ruby's live program">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/ruby.jpg" alt="Ruby, AI Clinical Consultant · cSCC" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Ruby</b><span>Headshot coming soon</span></div>
+            <div class="embed-thumb-overlay"></div>
+            <span class="embed-thumb-label">Live</span>
+          </a>
+        </div>
+        <div class="embed-body">
+          <div class="embed-name">Ruby</div>
+          <div class="embed-label">AI Clinical Consultant · cSCC</div>
+          <p class="embed-desc">An AI clinical consultant for the Catalyst cutaneous squamous cell carcinoma initiative. Clinicians consult Ruby on risk stratification, immunotherapy, adverse-event awareness, and multidisciplinary care, grounded in clinical guidelines, selected literature, and faculty-developed content.</p>
+          <a href="https://catalyst-skincancers.com/cscc-4/" target="_blank" rel="noopener" class="embed-link">Consult Ruby on the live site
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </article>
+      <article class="embed-card">
+        <div class="embed-video">
+          <a href="https://preparecognition.com/prepare-digital-assistant/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Dexter's live program">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/dexter.jpg" alt="Dexter, Digital Assistant · Cognitive Health" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Dexter</b><span>Headshot coming soon</span></div>
+            <div class="embed-thumb-overlay"></div>
+            <span class="embed-thumb-label">Live</span>
+          </a>
+        </div>
+        <div class="embed-body">
+          <div class="embed-name">Dexter</div>
+          <div class="embed-label">Digital Assistant · Cognitive Health</div>
+          <p class="embed-desc">The PREPARE digital assistant. Dexter greets visitors, answers questions about cognitive health, and guides learners to evidence-based recommendations and curated resources across the PREPARE site, by voice or text.</p>
+          <a href="https://preparecognition.com/prepare-digital-assistant/" target="_blank" rel="noopener" class="embed-link">Talk to Dexter on the live site
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </article>
+      <article class="embed-card">
+        <div class="embed-video">
+          <a href="https://conquer-t2.com/conquer-ai-community-coach/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Connie's live program">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/connie.jpg" alt="Connie, AI Community Coach · Type 2 Inflammation" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Connie</b><span>Headshot coming soon</span></div>
+            <div class="embed-thumb-overlay"></div>
+            <span class="embed-thumb-label">Live</span>
+          </a>
+        </div>
+        <div class="embed-body">
+          <div class="embed-name">Connie</div>
+          <div class="embed-label">AI Community Coach · Type 2 Inflammation</div>
+          <p class="embed-desc">The CONQUER T2 community coach and navigator. Connie helps physicians and other healthcare professionals find exactly what they need across the clinical and patient portals. Ask her a question and she routes you to the right education in real time.</p>
+          <a href="https://conquer-t2.com/conquer-ai-community-coach/" target="_blank" rel="noopener" class="embed-link">Meet Connie on the live site
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </article>
+      <article class="embed-card">
+        <div class="embed-video">
+          <a href="https://preparecognition.com/synthetic-patient/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Ellie's live program">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/ellie.jpg" alt="Ellie, Synthetic Patient · Cognitive Impairment" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Ellie</b><span>Headshot coming soon</span></div>
+            <div class="embed-thumb-overlay"></div>
+            <span class="embed-thumb-label">Live</span>
+          </a>
+        </div>
+        <div class="embed-body">
+          <div class="embed-name">Ellie</div>
+          <div class="embed-label">Synthetic Patient · Cognitive Impairment</div>
+          <p class="embed-desc">An AI synthetic patient living with mild cognitive impairment. Learners practice their approach to the patient, cognitive assessment, and patient-centered counseling with a patient who listens, responds, and remembers, like the real thing.</p>
+          <a href="https://preparecognition.com/synthetic-patient/" target="_blank" rel="noopener" class="embed-link">Practice with Ellie on the live site
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </article>
+      <article class="embed-card">
+        <div class="embed-video">
+          <a href="https://www.medlearninggroup.com/atopic-dermatitis-patient-avatar/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Joe's live program">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/joe.jpg" alt="Joe, AI Patient · Atopic Dermatitis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Joe</b><span>Headshot coming soon</span></div>
+            <div class="embed-thumb-overlay"></div>
+            <span class="embed-thumb-label">Live</span>
+          </a>
+        </div>
+        <div class="embed-body">
+          <div class="embed-name">Joe</div>
+          <div class="embed-label">AI Patient · Atopic Dermatitis</div>
+          <p class="embed-desc">An AI patient living with atopic dermatitis, built for Med Learning Group. Physicians and clinical learners practice patient-centered communication and shared decision-making around disease control and treatment options, all in a safe, simulated environment.</p>
+          <a href="https://www.medlearninggroup.com/atopic-dermatitis-patient-avatar/" target="_blank" rel="noopener" class="embed-link">Practice with Joe on the live site
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </article>
+      <article class="embed-card">
+        <div class="embed-video">
+          <a href="https://www.medlearninggroup.com/mcrpc-patient-avatar-profile/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Steve's live program">
+            <img class="embed-thumb" src="/cme-avatars/assets/avatars/steve.jpg" alt="Steve, AI Patient · mCRPC" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Steve</b><span>Headshot coming soon</span></div>
+            <div class="embed-thumb-overlay"></div>
+            <span class="embed-thumb-label">Live</span>
+          </a>
+        </div>
+        <div class="embed-body">
+          <div class="embed-name">Steve</div>
+          <div class="embed-label">AI Patient · mCRPC</div>
+          <p class="embed-desc">An AI patient with metastatic castration-resistant prostate cancer, built for Med Learning Group. Learners get hands-on practice discussing evidence-based treatment sequencing and shared decision-making with a patient who asks questions and pushes back.</p>
+          <a href="https://www.medlearninggroup.com/mcrpc-patient-avatar-profile/" target="_blank" rel="noopener" class="embed-link">Practice with Steve on the live site
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </article>
+    </div>
+
+    <div class="tier-divider reveal"><span class="tier-label">For healthcare providers &amp; practices</span></div>
+    <div class="embed-grid stagger">
+      <article class="embed-card">
+        <div class="embed-video">
+          <a href="https://divigner.com/californiadermatology-com/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Victoria's live program">
+            <img class="embed-thumb" src="/avatars/victoria.png" alt="Victoria, Patient Concierge · Dermatology" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Victoria</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
           </a>
         </div>
         <div class="embed-body">
           <div class="embed-name">Victoria</div>
-          <div class="embed-label">Patient Concierge</div>
-          <p class="embed-desc">A virtual patient concierge for California Dermatology &amp; Mohs Surgery Specialists. She greets website visitors, explains medical, surgical, and cosmetic dermatology services, and helps patients find the right next step by voice or text, with a clear educational disclaimer and routing of personal medical questions to the practice.</p>
+          <div class="embed-label">Patient Concierge · Dermatology</div>
+          <p class="embed-desc">A patient concierge for California Dermatology &amp; Mohs Surgery Specialists. Victoria greets website visitors, explains medical, surgical, and cosmetic dermatology services, and helps patients find the right next step by voice or text, with a clear educational disclaimer and personal medical questions routed to the practice.</p>
           <a href="https://divigner.com/californiadermatology-com/" target="_blank" rel="noopener" class="embed-link">View the live concierge
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
         </div>
       </article>
-
-      <!-- Embed 2 — Zoey -->
       <article class="embed-card">
         <div class="embed-video">
-          <a href="https://reviveprivatecare.com/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Zoey's live site">
-            <img class="embed-thumb" src="/avatars/zoey.png" alt="Zoey — Patient Concierge" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="embed-thumb-fallback" style="display:none"><b>Zoey</b></div>
+          <a href="https://reviveprivatecare.com/" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Zoey's live program">
+            <img class="embed-thumb" src="/avatars/zoey.png" alt="Zoey, Patient Concierge · Private Care" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Zoey</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
           </a>
         </div>
         <div class="embed-body">
           <div class="embed-name">Zoey</div>
-          <div class="embed-label">Patient Concierge</div>
-          <p class="embed-desc">A virtual patient concierge for Revive Private Care. She welcomes visitors, walks them through the practice's personalized approach to private healthcare, and helps patients explore services and connect with the care team by voice or text — always with a warm, professional tone.</p>
+          <div class="embed-label">Patient Concierge · Private Care</div>
+          <p class="embed-desc">A patient concierge for Revive Private Care. Zoey welcomes visitors, walks them through the practice's personalized approach to private healthcare, and helps patients explore services and reach the care team by voice or text, always in a warm, professional tone.</p>
           <a href="https://reviveprivatecare.com/" target="_blank" rel="noopener" class="embed-link">View the live concierge
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
         </div>
       </article>
-
-      <!-- Embed 3 — Zayla -->
       <article class="embed-card">
         <div class="embed-video">
-          <a href="https://ohsnj.com" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Zayla's live site">
-            <img class="embed-thumb" src="/avatars/zayla.png" alt="Zayla — Patient Concierge" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="embed-thumb-fallback" style="display:none"><b>Zayla</b></div>
+          <a href="https://ohsnj.com" target="_blank" rel="noopener" class="embed-thumb-btn" aria-label="Visit Zayla's live program">
+            <img class="embed-thumb" src="/avatars/zayla.png" alt="Zayla, Patient Concierge · Oncology" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Zayla</b><span>Headshot coming soon</span></div>
             <div class="embed-thumb-overlay"></div>
             <span class="embed-thumb-label">Live</span>
           </a>
         </div>
         <div class="embed-body">
           <div class="embed-name">Zayla</div>
-          <div class="embed-label">Patient Concierge</div>
-          <p class="embed-desc">A virtual patient concierge for Oncology &amp; Hematology Specialists, P.A., a cancer care center in Mountain Lakes, New Jersey. She greets website visitors, explains the practice's oncology and hematology services, and helps patients find their next step by voice or text, with clinical questions routed directly to the care team.</p>
+          <div class="embed-label">Patient Concierge · Oncology</div>
+          <p class="embed-desc">A patient concierge for Oncology &amp; Hematology Specialists, a cancer care center in Mountain Lakes, New Jersey. Zayla greets visitors, explains the practice's oncology and hematology services, and helps patients find their next step by voice or text, with clinical questions routed straight to the care team.</p>
           <a href="https://ohsnj.com" target="_blank" rel="noopener" class="embed-link">View the live concierge
             <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
         </div>
       </article>
+    </div>
 
+    <div class="portal-note reveal" style="text-align:center;margin-top:52px;padding:0 20px">
+      <p style="font-family:'Manrope',sans-serif;font-size:16.5px;line-height:1.85;color:rgba(232,236,240,.58);max-width:640px;margin:0 auto">
+        <span style="color:var(--cyan);font-weight:600">Every portal you just clicked into was also designed and&nbsp;built&nbsp;by&nbsp;Divigner.</span><br>
+        From the avatar to the platform it lives on, we build the full&nbsp;experience.
+      </p>
+      <p style="margin:14px auto 0">
+        <a href="https://ai-automation.divigner.com/refer/a2ai" class="portal-cta" style="font-family:'Manrope',sans-serif;font-size:16.5px;color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,168,106,.35);transition:border-color .3s" onmouseover="this.style.borderColor='rgba(201,168,106,.7)'" onmouseout="this.style.borderColor='rgba(201,168,106,.35)'">Let's talk about&nbsp;yours&nbsp;→</a>
+      </p>
     </div>
 
   </div>
 </section>
 
-<!-- ── Why section (HIDDEN — Ava's featured block moved into section #what) ── -->
-<section id="why" style="display:none">
+<!-- ── 03 · Why CME organizations are investing ── -->
+<section id="why">
   <div class="wrap">
     <div class="sec-head reveal">
       <div class="sec-num">03</div>
-      <h2 class="sec-title">The avatars prior to this one were for other people. <span class="grad">This one is for you!</span></h2>
+      <h2 class="sec-title">Why medical education and healthcare teams are <span class="grad">investing in avatars.</span></h2>
       <div class="gold-line"></div>
+      <p class="lede">Learners and patients increasingly expect experiences that are interactive, personalized, and available on demand. Interactive avatars let CME providers and healthcare practices meet that expectation while generating the engagement and outcomes data your stakeholders ask for.</p>
     </div>
-
-    <div class="why-proof-grid stagger" style="display:none">
-      <div class="why-proof-card">
-        <div class="why-proof-num">01</div>
-        <div class="why-proof-icon">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M5 5l-2 2M19 5l2 2"/></svg>
-        </div>
-        <h4 class="why-proof-head">Skip the discovery call</h4>
-        <p class="why-proof-body">She answers the questions you'd normally put on a 30-minute calendar invite: pricing, timelines, what works for your industry, what doesn't. Right now. No form, no wait.</p>
+    <div class="grid g3 stagger">
+      <div class="card"><span class="idx">i</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg></div>
+        <h3>Scale your expertise</h3>
+        <p>Extend the reach of your faculty, content, and care team across audiences, geographies, and time zones, without scaling headcount or front-desk load.</p>
       </div>
-      <div class="why-proof-card">
-        <div class="why-proof-num">02</div>
-        <div class="why-proof-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 2l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-1.5z"/></svg>
-        </div>
-        <h4 class="why-proof-head">You're experiencing the product</h4>
-        <p class="why-proof-body">This isn't a mockup or a screenshare. The avatar above is the same technology your visitors would use on your site. If it answered your question, it will answer theirs.</p>
+      <div class="card"><span class="idx">ii</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>Consistent, compliant messaging</h3>
+        <p>Every interaction is grounded in approved content with closed-loop knowledge sources: safeguards that help prevent hallucinations, off-label discussion, and non-compliant responses.</p>
       </div>
-      <div class="why-proof-card">
-        <div class="why-proof-num">03</div>
-        <div class="why-proof-icon">
-          <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
-        </div>
-        <h4 class="why-proof-head">Every conversation is measured</h4>
-        <p class="why-proof-body">Sessions are tagged by intent, summarized by AI, and routed into your CRM. You see which conversations turned into leads, not just sessions.</p>
+      <div class="card"><span class="idx">iii</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+        <h3>Personalized for everyone</h3>
+        <p>Each learner or patient gets answers matched to their questions, interests, and level of understanding. Far more engaging than a static page or enduring material.</p>
+      </div>
+      <div class="card"><span class="idx">iv</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <h3>Outcomes data you can report</h3>
+        <p>Conversation analytics reveal knowledge gaps, emerging interests, and engagement trends in real time: evidence you can fold straight into outcomes reporting for supporters.</p>
+      </div>
+      <div class="card"><span class="idx">v</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+        <h3>Reinforce live activities</h3>
+        <p>Extend congress symposia, launch education, and disease-state awareness with an avatar that keeps the conversation going long after the session ends.</p>
+      </div>
+      <div class="card"><span class="idx">vi</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+        <h3>Any language, any time zone</h3>
+        <p>Avatars auto-detect and respond in the learner's native language: Spanish, Mandarin, Arabic, and many more. No selector, no configuration. Just conversation.</p>
       </div>
     </div>
-
   </div>
 </section>
 
-<!-- ── Features & Functionality ── -->
+<!-- ── 04 · Features & compliance ── -->
 <section id="features">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div class="sec-num">03</div>
+      <div class="sec-num">04</div>
       <h2 class="sec-title">Features &amp; <span class="grad">Functionality</span></h2>
       <div class="gold-line"></div>
-      <p class="lede">Every Divigner avatar ships with the same conversational core, then dials in the policies, integrations, and tone for the brand it represents.</p>
+      <p class="lede">Every Divigner avatar ships with the same conversational core, then dials in the persona, guardrails, and tone for the program or practice it serves.</p>
     </div>
     <div class="grid g3 stagger">
       <div class="card"><span class="idx">i</span>
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M19 4v16"/><path d="M5 8v8"/></svg></div>
         <h3>Voice &amp; text in one</h3>
-        <p>Visitors can speak or type. The avatar replies in either modality, with natural lip-sync and a brand-matched voice profile.</p>
+        <p>Learners can speak or type. The avatar replies in either modality, with natural lip-sync and a program-matched voice profile.</p>
       </div>
       <div class="card"><span class="idx">ii</span>
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
         <h3>Trained on your content</h3>
-        <p>We pull from your website, knowledge base, and approved documents. The avatar answers from your sources, not the open internet.</p>
+        <p>You state the knowledge base and approved documentation. The avatar answers from your sources, not the open internet.</p>
       </div>
       <div class="card"><span class="idx">iii</span>
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
         <h3>Smart routing</h3>
-        <p>Questions outside the avatar's scope (billing, clinical, escalation) get routed back to a real human on your team, with full transcript context.</p>
+        <p>Questions outside the avatar's scope are routed to your designee with full transcript context, personal medical questions included.</p>
       </div>
       <div class="card"><span class="idx">iv</span>
         <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
         <h3>Compliance built-in</h3>
-        <p>Educational disclaimers, PHI guardrails, and refusal policies are wired in by default and reviewed for every regulated vertical.</p>
+        <p>Educational disclaimers, PHI guardrails, and refusal policies are wired in by default and reviewed for every regulated program.</p>
       </div>
       <div class="card"><span class="idx">v</span>
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></div>
         <h3>Drop-in embed</h3>
-        <p>One snippet on your site, hosted on your subdomain, with no plugin or rebuild required. Updates push instantly from the Divigner Portal.</p>
+        <p>One snippet on your activity page or microsite, hosted on your domain, with no plugin or rebuild required. Updates push instantly.</p>
       </div>
       <div class="card"><span class="idx">vi</span>
         <div class="ic"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
         <h3>Analytics &amp; transcripts</h3>
-        <p>Every conversation is logged, summarized, and tagged by intent, so you can see what visitors actually ask, week over week.</p>
+        <p>Every conversation is logged, summarized, and tagged by intent, so you can see what learners actually ask, activity after activity.</p>
       </div>
     </div>
 
     <div class="tier-divider">
-      <span class="tier-label">And here's what it does for your business</span>
+      <span class="tier-label">And it's engineered for regulated environments</span>
     </div>
 
     <div class="why-list stagger">
       <div class="why-item">
         <div class="why-num">01</div>
         <div>
-          <h4>Talk to your visitors before they bounce</h4>
-          <p>Most of your traffic leaves without ever raising their hand. An avatar opens a low-friction door (voice or text, on their schedule) and captures the intent that contact forms miss.</p>
+          <h4>Controlled knowledge sources</h4>
+          <p>The avatar answers only from approved content. Closed-loop knowledge sources prevent hallucinations and off-label conversation. By design, not by hope.</p>
         </div>
       </div>
       <div class="why-item">
         <div class="why-num">02</div>
         <div>
-          <h4>Speak the visitor's language, every time</h4>
-          <p>The same avatar handles routine questions across multiple languages with consistent brand voice, freeing your team from repetitive replies.</p>
+          <h4>Medical-legal-regulatory review support</h4>
+          <p>Persona scripts, knowledge bases, and guardrail policies are packaged so your MLR and compliance teams can review exactly what the avatar knows and how it behaves.</p>
         </div>
       </div>
       <div class="why-item">
         <div class="why-num">03</div>
         <div>
-          <h4>Educate without&nbsp;overcommitting</h4>
-          <p>For regulated practices (medical, legal, financial), the avatar answers educational questions with the right disclaimers and routes personal questions to a human, fast.</p>
+          <h4>Escalation pathways</h4>
+          <p>Out-of-scope inquiries (personal medical questions, adverse-event mentions, anything sensitive) are routed to your designated contact with full context.</p>
         </div>
       </div>
       <div class="why-item">
         <div class="why-num">04</div>
         <div>
-          <h4>A face the brand can scale</h4>
-          <p>One avatar can be on the homepage, in the resource center, embedded in a campaign landing page, and inside a partner microsite. All consistent, all trained on the same source of truth.</p>
+          <h4>HIPAA-conscious design</h4>
+          <p>Educational disclaimers up front, PHI guardrails throughout, and conversation de-identification for educational assessment.</p>
         </div>
       </div>
       <div class="why-item">
         <div class="why-num">05</div>
         <div>
-          <h4>Real measurable lift</h4>
-          <p>Avatar sessions are tagged, summarized, and routed back into your CRM, so you can see which conversations turned into appointments, applications, or qualified inbound leads.</p>
+          <h4>Conversation logging &amp; analytics</h4>
+          <p>Sessions, engagement, and conversation paths are logged and summarized monthly: the raw material for outcomes reporting and continuous optimization.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── About Divigner Group ── -->
-<section id="about" style="display:none">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="sec-num">05</div>
-      <h2 class="sec-title">About <span class="grad">Divigner Group</span></h2>
-      <div class="gold-line"></div>
-      <p class="lede">Divigner Group designs and deploys conversational AI experiences for healthcare, education, and consumer brands, built on top of the websites, knowledge bases, and people that already work.</p>
-    </div>
-    <div class="grid g2 stagger">
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2"/></svg></div>
-        <h3>Built around your people</h3>
-        <p>Every avatar is voiced, styled, and scoped to your brand. We start with your existing content, train against your policies, and route questions Divigner can't answer back to the humans who can.</p>
-      </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 3v9h9"/></svg></div>
-        <h3>Always learning, always on</h3>
-        <p>Your avatar improves with every conversation. We monitor transcripts weekly, retrain on what visitors actually ask, and tighten the disclaimers and routing so the experience gets better, without you having to think about it.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── Investment ── -->
-<section id="investment">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="sec-num">04</div>
-      <h2 class="sec-title">Your <span class="grad">Investment</span></h2>
-      <div class="gold-line"></div>
-      <p class="lede">One implementation fee to build, train, and launch your branded avatar. One monthly fee to keep her sharp, supported, and improving every week. No long contracts. No surprises.</p>
-    </div>
-
-    <div class="price-grid stagger">
-      <div class="price one">
-        <span class="pk">One-Time · Implementation</span>
-        <div class="amt">$6,000</div>
-        <div class="freq">Paid as $3,000 deposit · $3,000 on launch</div>
-        <div class="freq" style="margin-top:4px">Payment plans available</div>
-        <p class="desc">Everything required to design, train, and deploy your avatar on your site. Paid once.</p>
-        <ul class="incl">
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Live in 2–4 weeks.</b> Full build, training, and deployment to your site</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Brand-matched voice and visual</b> avatar build</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Custom avatar or digital clone.</b> Design a brand-new face, or build a likeness from you or a team member</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Trained on your content:</b> site, knowledge base, and approved docs</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Compliance and routing</b> rules reviewed for your vertical</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Embedded on your website as a floating widget,</b> compatible with WordPress, Shopify, Wix, Squarespace, Webflow, and custom-built sites, served under your own domain</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Calendar and email integration included.</b> Choose one pairing: Google Calendar with Gmail, or Microsoft 365 Calendar with Office 365 Email. Cal.com and Calendly are also supported as standalone booking platforms</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Voice-only option available</b> at no additional cost. Customer support without a visual avatar, offered as an&nbsp;add-on</span></li>
-        </ul>
-      </div>
-
-      <div class="price svc">
-        <span class="pk">Recurring · Monthly Service</span>
-        <div class="amt">$600<span> / month</span></div>
-        <div class="freq">Complimentary Social Promotion · First 30 Days</div>
-        <p class="desc">Hosting, support, monthly review, and continuous optimization to keep your avatar sharper over time.</p>
-        <ul class="incl">
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>480 minutes / month</b> of interactive talk time (8 hours)</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Hosting &amp; uptime</b> attached to your domain</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Usage analytics:</b> sessions, engagement, and conversion paths<ul><li>Session volume, duration, and trends</li><li>Top topics and engagement depth</li><li>Conversion events: submissions, referrals, bookings</li></ul></span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Monthly transcripts and AI insights</b> on what visitors are really asking<ul><li>Full transcripts delivered monthly</li><li>AI summary of top questions and themes</li><li>Knowledge gaps identified automatically</li><li>Training updates applied on request</li></ul></span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Live human support</b> from the Divigner team</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Continued social media promotion</b> of your avatar available as an optional ongoing service. Pricing TBD</span></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="addon-note reveal">
-      <div class="addon-glow-teal" aria-hidden="true"></div>
-      <span class="addon-label">Going Further</span>
-      <h3 class="addon-heading">Add <span class="grad-gold">deeper automations</span> and agents that act, not just answer.</h3>
-      <p>Ready to go deeper? We extend your avatar with agentic engineering that takes real action across your business: pushing qualified leads into your CRM, triggering automations from every conversation, and connecting your order systems so your avatar can handle real customer support. For teams that need autonomous execution behind the scenes, we scope and deploy custom AI agents that research, route, retrieve, and act on behalf of your team.</p>
-    </div>
-
-  </div>
-</section>
-
-<!-- ── Your RA bio ── -->
 <section id="ra">
   <div class="wrap">
     <div class="sec-head reveal">
@@ -1044,7 +1149,7 @@
         </div>
         <p class="ra-bio" id="ra-bio">Short bio goes here. 2–3 sentences about the Referral Associate's background, the kinds of clients they've worked with, and why they're recommending Divigner.</p>
 
-        <!-- Partnership statement — hidden by default, shown when partner_company_name exists -->
+        <!-- Partnership statement - hidden by default, shown when partner_company_name exists -->
         <div class="ra-partnership" id="ra-partnership">
           <p class="ra-partnership-text"><b id="ra-partnership-company">Partner</b> <span class="has">has partnered with</span> <b>Divigner</b> <span class="offer">to offer you this product.</span></p>
           <div class="ra-partnership-logos">
@@ -1060,14 +1165,13 @@
 <!-- ── Final CTA ── -->
 <div class="final-cta">
   <div class="wrap">
-    <h3>Ready to put one on <span class="grad">your site?</span></h3>
-    <p>Get in touch and your Referral Associate will be looped in automatically. We'll scope your avatar, walk through pricing, and have you live in 2–3 weeks.</p>
+    <h3>Ready to give your program or practice <span class="grad">a face?</span></h3>
+    <p>Tell us about your next activity or your practice: the audience, the objectives, the questions you field every day. We'll scope the avatar, walk through the options, and put a working persona in front of your team in weeks, not quarters.</p>
     <button type="button" class="btn-primary" id="footer-learn-more">Get in Touch
       <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
     </button>
   </div>
 </div>
-
 <!-- ── Footer ── -->
 <footer>
   <div class="wrap">
@@ -1095,17 +1199,6 @@
   </div>
 </div>
 
-<!-- ── QR code modal ── -->
-<div class="modal-overlay qr-modal" id="qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" aria-hidden="true">
-  <div class="modal">
-    <button class="modal-close" id="qr-close" aria-label="Close">
-      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <h3 class="qr-title" id="qr-modal-title">Scan to <span class="grad">open this page.</span></h3>
-    <div class="qr-canvas" id="qr-canvas" aria-hidden="true"></div>
-  </div>
-</div>
-
 <!-- ── Avatar conversation modal ── -->
 <div class="avatar-modal" id="avatar-modal" role="dialog" aria-modal="true" aria-hidden="true">
   <div class="avatar-modal-backdrop" id="avatar-modal-backdrop"></div>
@@ -1127,8 +1220,6 @@
   </div>
 </div>
 
-<!-- QR code library (pinned). ~5KB, loads lazily on first open if not preloaded. -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
 <!-- Lead capture moved to a separate page: ra-lead.html -->
 <!-- All "Learn More!" / "Start the consultation" buttons navigate there with the RA slug preserved. -->
@@ -1141,13 +1232,11 @@
 
   /* ── Sections (used by header nav, mob menu, dot nav) ── */
   var SECTIONS = [
-    {id:'what',       num:'01', label:'What is an Avatar?'},
-    {id:'avatars',    num:'02', label:'Recent Deployments'},
-    // {id:'why',        num:'03', label:'Why Interactive Avatars?'},  // hidden with section#why (Ava moved into #what)
-    {id:'features',   num:'03', label:'Features & Functionality'},
-    // {id:'about',      num:'05', label:'About Us'},  // hidden with section#about
-    {id:'investment', num:'04', label:'Investment'},
-    {id:'ra',         num:'05', label:'Your RA'}
+    {id:'what',     num:'01', label:'What is an Avatar?'},
+    {id:'avatars',  num:'02', label:'Live Avatars'},
+    {id:'why',      num:'03', label:'Why Invest'},
+    {id:'features', num:'04', label:'Features & Compliance'},
+    {id:'ra',       num:'05', label:'Referral Associate'}
   ];
 
   /* ── Progress bar + topbar scroll state ── */
@@ -1194,12 +1283,6 @@
     });
     mobLinks.appendChild(a);
   });
-  /* QR code menu item — appears at end of mobile menu */
-  var qrLink = document.createElement('a');
-  qrLink.href = '#';
-  qrLink.innerHTML = '<span class="mob-num" style="font-size:14px">&#9633;</span>QR Code';
-  qrLink.addEventListener('click', function(e){ e.preventDefault(); closeMobMenu(); openQrModal(); });
-  mobLinks.appendChild(qrLink);
 
   function openMobMenu(){
     document.getElementById('mob-menu').classList.add('open');
@@ -1216,7 +1299,7 @@
   document.getElementById('mob-close').addEventListener('click', closeMobMenu);
   document.getElementById('mob-overlay').addEventListener('click', closeMobMenu);
 
-  /* ── Section dot nav (right side) — visible on desktop AND mobile ── */
+  /* ── Section dot nav (right side) - visible on desktop AND mobile ── */
   var nav = document.createElement('nav');
   nav.className = 'sec-nav';
   nav.setAttribute('aria-label','Section navigation');
@@ -1265,17 +1348,11 @@
   });
 
   /* ── Slug resolution ──
-     1) window.__RA_DEMO_SLUG__ — injected when this markup is rendered as a
+     1) window.__RA_DEMO_SLUG__ - injected when this markup is rendered as a
         template body inside a srcdoc iframe (no query string available there)
      2) ?ra=slug query string
      3) /demo/<slug> path */
-  var raSlug = (function(){
-    if (window.__RA_DEMO_SLUG__) return window.__RA_DEMO_SLUG__;
-    var q = new URLSearchParams(window.location.search).get('ra');
-    if(q) return q;
-    var m = window.location.pathname.match(/\/demo\/([^/?#]+)/);
-    return m ? decodeURIComponent(m[1]) : '';
-  })();
+  var raSlug = 'a2ai';
 
   /* ── Lead form lives on ai-automation.divigner.com. All CTAs navigate there. ── */
   function leadFormUrl(){
@@ -1296,7 +1373,7 @@
   document.getElementById('mob-learn-more').addEventListener('click', function(){ closeMobMenu(); goToLeadForm(); });
   document.getElementById('hero-learn-more').addEventListener('click', function(e){ e.preventDefault(); goToLeadForm(); });
   document.getElementById('footer-learn-more').addEventListener('click', goToLeadForm);
-  /* Featured "Ava" avatar — opens in the avatar modal (slightly blurred backdrop,
+  /* Featured "Ava" avatar - opens in the avatar modal (slightly blurred backdrop,
      resizable, fullscreen control, full-bleed on mobile). No link-out, and no
      auto-start: a live camera/mic session begins only when the visitor clicks.
      Both the video poster and the CTA open the same modal; closing it ends the
@@ -1364,7 +1441,7 @@
         fallbackEl.textContent = initials;
       }
 
-      /* Title — only render when the RA has one in DB. Otherwise hide the
+      /* Title - only render when the RA has one in DB. Otherwise hide the
          element so we don't leak the page-author's hardcoded fallback title. */
       var titleEl = document.getElementById('ra-title');
       if(titleEl){
@@ -1450,7 +1527,7 @@
 
   /* ── Communications consent overlay ── */
   var cookiePopup = document.getElementById('cookie-popup');
-  var COOKIE_KEY = 'divigner_ra_demo_cookies';
+  var COOKIE_KEY = 'divigner_cme_demo_cookies';
   function showConsent(){ requestAnimationFrame(function(){ cookiePopup.classList.add('visible'); }); }
   function hideConsent(){ cookiePopup.classList.remove('visible'); }
   if(!localStorage.getItem(COOKIE_KEY)){
@@ -1464,7 +1541,7 @@
     hideConsent();
   });
 
-  /* Embed-card "View the live ___" stubs — until real avatar URLs are wired, route to the lead form. */
+  /* Embed-card "View the live ___" stubs - until real avatar URLs are wired, route to the lead form. */
   document.querySelectorAll('.embed-link').forEach(function(a){
     a.addEventListener('click', function(e){
       var href = a.getAttribute('href');
@@ -1472,60 +1549,6 @@
     });
   });
 
-  /* ── QR code modal ─────────────────────────────────────────────────────── */
-  var qrModal      = document.getElementById('qr-modal');
-  var qrCanvas     = document.getElementById('qr-canvas');
-  var qrRendered   = false;
-
-  function shareUrl(){
-    // Prefer the top-level URL (the parent /demo/<slug> page, not the iframe).
-    try { if(window.top && window.top !== window) return window.top.location.href; }
-    catch(e){ /* cross-origin shouldn't happen here, fall through */ }
-    // Fallback: build canonically from the slug if we have one.
-    if(raSlug) return 'https://ai-automation.divigner.com/demo/' + encodeURIComponent(raSlug);
-    return window.location.href;
-  }
-
-  function renderQr(){
-    if(qrRendered || typeof window.qrcode !== 'function') return;
-    var url = shareUrl();
-    try {
-      // qrcode-generator: error correction 'M' is a good balance for URLs.
-      var qr = window.qrcode(0, 'M');
-      qr.addData(url);
-      qr.make();
-      qrCanvas.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
-      qrRendered = true;
-    } catch(err){
-      qrCanvas.innerHTML = '<div style="color:#06101D;font-family:Manrope;font-size:13px;padding:20px;text-align:center">Couldn\'t generate QR code. Share this link instead:<br><br><strong>' + url + '</strong></div>';
-    }
-  }
-
-  function openQrModal(){
-    renderQr();
-    qrModal.classList.add('open');
-    qrModal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeQrModal(){
-    qrModal.classList.remove('open');
-    qrModal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  }
-
-  // Trigger: topbar "QR" link
-  var qrBtn = document.getElementById('qr-btn');
-  if(qrBtn) qrBtn.addEventListener('click', function(e){ e.preventDefault(); openQrModal(); });
-
-  // Close: X button, backdrop click, Escape key
-  document.getElementById('qr-close').addEventListener('click', closeQrModal);
-  qrModal.addEventListener('click', function(e){ if(e.target === qrModal) closeQrModal(); });
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && qrModal.classList.contains('open')) closeQrModal();
-  });
-
-  // Expose for mobile-menu handler (defined earlier in this same IIFE)
-  window.openQrModal = openQrModal;
 
   /* ── Tavus avatar modal (thumbnail click → open modal → mint conversation) ── */
   var TAVUS_FN_URL  = 'https://cbmcyffvsebrxkmxufxx.supabase.co/functions/v1/tavus-start-conversation';
@@ -1569,12 +1592,12 @@
   avatarModalBack.addEventListener('click', closeAvatarModal);
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape' && avatarModal.classList.contains('open')){
-      // Held-key auto-repeat must never fall through to close — a single held
+      // Held-key auto-repeat must never fall through to close - a single held
       // ESC would otherwise exit fullscreen AND end the live session.
       if(e.repeat) return;
       // ESC in fullscreen only exits fullscreen. Browsers disagree on whether
       // that keydown arrives before or after the exit, so also honor a short
-      // grace window — otherwise the same keystroke would close the modal
+      // grace window - otherwise the same keystroke would close the modal
       // and end a live session.
       if(document.fullscreenElement || document.webkitFullscreenElement) return;
       if(Date.now() - lastFsExitAt < 800) return;
@@ -1587,7 +1610,7 @@
     if(e.key === 'Escape') lastFsExitAt = 0;
   });
   /* The deployer app posts {type:'avatar-widget-close'} to its parent when the
-     visitor closes / ends the conversation inside the iframe — return them to
+     visitor closes / ends the conversation inside the iframe - return them to
      the page instead of stranding them on the app's idle screen. */
   window.addEventListener('message', function(e){
     var host = '';
@@ -1605,7 +1628,7 @@
   var pageInitiatedFsExit = false;
   avatarModalFs.addEventListener('click', function(){
     if(document.fullscreenElement || document.webkitFullscreenElement){
-      // Exiting via our own button is unambiguous — don't arm the ESC grace window.
+      // Exiting via our own button is unambiguous - don't arm the ESC grace window.
       pageInitiatedFsExit = true;
       try { var p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if(p && p.catch) p.catch(function(){}); } catch(e){}
     } else {
@@ -1613,14 +1636,14 @@
       try { var q = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if(q && q.catch) q.catch(function(){}); } catch(e){}
     }
   });
-  // Element fullscreen isn't available everywhere (e.g. iPhone Safari) — hide the
+  // Element fullscreen isn't available everywhere (e.g. iPhone Safari) - hide the
   // button where it can't work instead of letting taps silently no-op.
   if(!(avatarModalStage.requestFullscreen || avatarModalStage.webkitRequestFullscreen)){
     avatarModalFs.style.display = 'none';
   }
   /* Track fullscreen state: swap the button between enter/exit affordances, and
      remember when fullscreen ended (some browsers deliver the ESC keydown only
-     AFTER fullscreen has exited — without this, that same keystroke would fall
+     AFTER fullscreen has exited - without this, that same keystroke would fall
      through to closeAvatarModal and kill a live session). */
   var lastFsExitAt = 0;
   function onAvatarFsChange(){
@@ -1648,13 +1671,13 @@
     var name      = stage.dataset.tavusName    || 'Avatar';
 
     if(!personaId){
-      // No persona wired yet — show a friendly "coming soon" inside the modal
+      // No persona wired yet - show a friendly "coming soon" inside the modal
       openAvatarModal(name);
       setTimeout(function(){
         avatarModalFrame.innerHTML =
           '<div class="embed-error">' +
             '<b>' + name + ' is coming soon</b>' +
-            '<div>This avatar isn\'t wired up yet. Victoria is live — try her first.</div>' +
+            '<div>This avatar isn\'t wired up yet. Victoria is live - try her first.</div>' +
             '<button type="button" id="avatar-modal-back-btn">Close</button>' +
           '</div>';
         document.getElementById('avatar-modal-back-btn').addEventListener('click', closeAvatarModal);
@@ -1711,5 +1734,18 @@
 })();
 </script>
 
+<script>
+(function(){
+  /* Night sky deepens as you travel down the page */
+  var sky = document.getElementById('sky');
+  if(!sky) return;
+  function update(){
+    var o = Math.min(1, 0.4 + (window.scrollY / 1600) * 0.6);
+    sky.style.opacity = o.toFixed(3);
+  }
+  window.addEventListener('scroll', update, {passive:true});
+  update();
+})();
+</script>
 </body>
 </html>

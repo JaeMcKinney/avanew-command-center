@@ -693,7 +693,6 @@
     <a href="#avatars" data-section="avatars">Live Avatars</a>
     <a href="#why" data-section="why">Why Invest</a>
     <a href="#features" data-section="features">Features</a>
-    <a href="#about" data-section="about">About Us</a>
     <a href="#" class="cta" id="learn-more-btn">Get in Touch</a>
   </nav>
   <button class="mob-toggle" id="mob-open" aria-label="Open menu">
@@ -749,6 +748,29 @@
       <div class="gold-line"></div>
       <p class="lede">Picture a face inside your CME activity, or right on your practice's website, that greets every learner and patient, answers in your team's voice, and never goes off-label. It looks back at you. It listens. It speaks. And it answers only from the approved content you gave it.</p>
     </div>
+
+    <!-- Featured prominent avatar (Ava) -->
+    <div class="featured-avatar reveal">
+      <div class="featured-embed">
+        <div class="embed-video featured-video" id="ava-stage">
+          <button type="button" class="embed-thumb-btn" id="ava-poster" aria-label="Start a conversation with Ava">
+            <img class="embed-thumb" src="/avatars/ava.jpg" alt="Ava, Divigner's conversational avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="embed-thumb-fallback" style="display:none"><b>Ava</b></div>
+            <div class="embed-thumb-overlay"></div>
+            <div class="embed-thumb-play"><svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg></div>
+            <span class="embed-thumb-label">Live · Click to talk</span>
+          </button>
+        </div>
+      </div>
+      <div class="featured-content">
+        <span class="featured-badge"><span class="dot"></span>Live now · Ready to answer</span>
+        <h3 class="featured-name">Meet <span class="grad">Ava.</span></h3>
+        <p class="featured-tagline">She explains the value of an avatar by being one.</p>
+        <p class="featured-desc">Ava is here to show you what an Interactive Avatar could do for your program or practice. She'll ask about your activity or your practice, who your learners and patients are, and where your team loses time, then walk you through the value an avatar would bring to exactly that. Ask her anything along the way: <em>"Would this work for an activity like mine?" "What's involved in launching?" "Can it handle Spanish?"</em> And the whole time, you're experiencing exactly what your learners and patients would experience.</p>
+        <span class="featured-foot">No signup. No form. Voice or text. Faster than booking a call.</span>
+      </div>
+    </div>
+
     <div class="notis-row stagger">
       <div class="notis"><span class="not">Not a module</span><span class="arrow">→</span><span class="is">A conversation</span></div>
       <div class="notis"><span class="not">Not a chatbot</span><span class="arrow">→</span><span class="is">A presence</span></div>
@@ -1089,29 +1111,6 @@
   </div>
 </section>
 
-<!-- ── 05 · About Divigner Group ── -->
-<section id="about">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="sec-num">05</div>
-      <h2 class="sec-title">About <span class="grad">Divigner Group</span></h2>
-      <div class="gold-line"></div>
-      <p class="lede">Every avatar on this page was designed, developed, and deployed by Divigner Group. We build conversational AI experiences for medical education companies, healthcare practices, and consumer brands, on top of the content, faculty, and compliance processes that already work.</p>
-    </div>
-    <div class="grid g2 stagger">
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2"/></svg></div>
-        <h3>Built around your program</h3>
-        <p>Every avatar is voiced, styled, and scoped to your activity. We start from your approved content, train against your policies, and route what the avatar can't answer back to the humans who can.</p>
-      </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 3v9h9"/></svg></div>
-        <h3>Always learning, always on</h3>
-        <p>Your avatar improves with every conversation. We review transcripts monthly, retrain on what learners actually ask, and tighten disclaimers and routing, so the experience keeps getting better without you having to think about it.</p>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- ── Final CTA ── -->
 <div class="final-cta">
@@ -1263,8 +1262,7 @@
     {id:'what',     num:'01', label:'What is an Avatar?'},
     {id:'avatars',  num:'02', label:'Live Avatars'},
     {id:'why',      num:'03', label:'Why Invest'},
-    {id:'features', num:'04', label:'Features & Compliance'},
-    {id:'about',    num:'05', label:'About Divigner'}
+    {id:'features', num:'04', label:'Features & Compliance'}
   ];
 
   /* ── Progress bar + topbar scroll state ── */
