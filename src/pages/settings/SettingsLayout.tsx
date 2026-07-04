@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
 import type { LucideIcon } from "lucide-react"
 import {
@@ -281,7 +281,6 @@ function MobileNav({ role }: { role: TeamRole | null }) {
 
 export function SettingsLayout() {
   const { role } = useRole()
-  const location = useLocation()
   const [collapsed, setCollapsed] = useState(
     () => typeof window !== "undefined" && localStorage.getItem(COLLAPSE_KEY) === "1"
   )
@@ -294,7 +293,6 @@ export function SettingsLayout() {
       try { localStorage.setItem(COLLAPSE_KEY, next ? "1" : "0") } catch { /* ignore */ }
       return next
     })
-    setAutoCollapsed(false)
   }
 
   return (
