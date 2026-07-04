@@ -181,6 +181,11 @@
   .embed-thumb-label::before{content:"";width:7px;height:7px;border-radius:50%;background:#FF3D5A;box-shadow:0 0 10px #FF3D5A;animation:thumbDot 1.2s ease-in-out infinite}
   @keyframes thumbDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
 
+  /* Ava poster: keep her face clear - play affordance sits bottom-right as a badge, not centered */
+  #ava-poster .embed-thumb-play{left:auto;top:auto;right:16px;bottom:14px;transform:none;width:60px;height:60px}
+  #ava-poster .embed-thumb-play svg{width:24px;height:24px}
+  #ava-poster:hover .embed-thumb-play{transform:scale(1.1)}
+
   /* Fallback when no thumbnail file is present (broken img or missing src) */
   .embed-thumb-fallback{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:radial-gradient(ellipse at 50% 35%, rgba(52,214,194,.22), rgba(11,33,56,.6) 55%, rgba(6,16,29,.95) 100%);color:var(--muted);font-family:'Manrope',sans-serif;font-size:12px;letter-spacing:.06em}
   .embed-thumb-fallback b{font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:24px;color:var(--cyan);letter-spacing:-.01em}
@@ -196,15 +201,30 @@
   /* ── Avatar fullscreen modal (blurs background, resizable, mobile-aware) ── */
   .avatar-modal{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .35s ease}
   .avatar-modal.open{display:flex;opacity:1}
-  .avatar-modal-backdrop{position:absolute;inset:0;background:rgba(6,16,29,.72);backdrop-filter:blur(18px) saturate(1.1);-webkit-backdrop-filter:blur(18px) saturate(1.1)}
+  .avatar-modal-backdrop{position:absolute;inset:0;background:rgba(6,16,29,.55);backdrop-filter:blur(6px) saturate(1.05);-webkit-backdrop-filter:blur(6px) saturate(1.05)}
   /* When modal is open, blur the whole page behind it as well (covers iOS/older browsers) */
   body.avatar-modal-active > *:not(.avatar-modal){filter:blur(0)}  /* no-op - backdrop layer handles the visual */
   .avatar-modal-stage{position:relative;width:100%;max-width:880px;aspect-ratio:16/9;border-radius:22px;overflow:hidden;background:#06101D;border:1px solid rgba(120,214,196,.25);box-shadow:0 40px 100px -28px rgba(0,0,0,.85), 0 0 80px -28px rgba(52,214,194,.4);transform:scale(.96);transition:transform .4s cubic-bezier(.2,.7,.2,1), max-width .4s, max-height .4s, aspect-ratio .4s}
   .avatar-modal.open .avatar-modal-stage{transform:scale(1)}
+  .avatar-modal-stage.ratio-43{max-width:min(820px, 94vw);aspect-ratio:4/3}
   .avatar-modal-stage.size-large{max-width:min(1320px, 96vw);aspect-ratio:auto;height:min(900px, 88vh)}
+  .avatar-modal-stage:fullscreen{max-width:none;aspect-ratio:auto;border-radius:0}
+  .avatar-modal-stage:-webkit-full-screen{max-width:none;aspect-ratio:auto;border-radius:0}
+  /* In fullscreen the size toggle is meaningless - only that one hides. (Controls
+     already sit top-left below the app's title bar in every state.) */
+  .avatar-modal-stage:fullscreen .avatar-modal-ctrl.resize{display:none}
+  .avatar-modal-stage:-webkit-full-screen .avatar-modal-ctrl.resize{display:none}
+  /* If the viewport narrows below the mobile breakpoint WHILE fullscreen (device
+     rotation, browser zoom), the mobile hide must not remove the exit affordance -
+     without it the only remaining control (X) would end the live session. */
+  .avatar-modal-stage:fullscreen .avatar-modal-ctrl.fullscreen{display:grid}
+  .avatar-modal-stage:-webkit-full-screen .avatar-modal-ctrl.fullscreen{display:grid}
   .avatar-modal-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
   .avatar-modal-frame iframe{width:100%;height:100%;border:0;display:block}
-  .avatar-modal-controls{position:absolute;top:14px;right:14px;display:flex;gap:8px;z-index:5}
+  /* Controls live top-left, below the embedded app's title bar - its own interactive
+     UI owns the top-right (chat header / download) in every layout, so this is the
+     one corner that never collides, windowed or fullscreen. */
+  .avatar-modal-controls{position:absolute;top:72px;left:16px;display:flex;gap:8px;z-index:5}
   .avatar-modal-ctrl{width:38px;height:38px;border-radius:50%;border:1px solid rgba(120,214,196,.35);background:rgba(6,16,29,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;cursor:pointer;display:grid;place-items:center;transition:.2s}
   .avatar-modal-ctrl:hover{border-color:var(--teal-bright);background:rgba(24,185,166,.35);color:var(--cyan)}
   .avatar-modal-ctrl svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -213,9 +233,9 @@
   .avatar-modal-loading .spin{width:42px;height:42px;border:3px solid rgba(52,214,194,.2);border-top-color:var(--teal-bright);border-radius:50%;animation:embedSpin .8s linear infinite}
   @media(max-width:780px){
     .avatar-modal{padding:0}
-    .avatar-modal-stage,.avatar-modal-stage.size-large{max-width:100%;width:100%;height:100vh;aspect-ratio:auto;border-radius:0;border-left:0;border-right:0}
-    .avatar-modal-ctrl.resize{display:none}
-    .avatar-modal-controls{top:max(12px, env(safe-area-inset-top, 12px));right:12px}
+    .avatar-modal-stage,.avatar-modal-stage.size-large,.avatar-modal-stage.ratio-43{max-width:100%;width:100%;height:100vh;height:100dvh;aspect-ratio:auto;border-radius:0;border-left:0;border-right:0}
+    .avatar-modal-ctrl.resize,.avatar-modal-ctrl.fullscreen{display:none}
+    .avatar-modal-controls{top:calc(env(safe-area-inset-top, 0px) + 64px);left:12px;right:auto}
   }
 
   /* Card body */
@@ -280,6 +300,9 @@
   .price .incl li{list-style:none;display:flex;gap:12px;font-size:14px;color:var(--muted);line-height:1.55}
   .price .incl li b{color:var(--text);font-weight:600}
   .price .incl svg{flex:0 0 auto;width:17px;height:17px;margin-top:3px;stroke:var(--teal-bright);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .price .incl li ul{margin-top:7px;padding-left:2px;display:grid;gap:5px;list-style:none}
+  .price .incl li ul li{color:var(--muted);display:flex;gap:8px;line-height:1.45;opacity:.85}
+  .price .incl li ul li::before{content:'·';color:var(--teal-bright);flex:0 0 auto;font-size:18px;line-height:1.2}
   .pill{display:inline-block;padding:5px 14px;border-radius:20px;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;margin-bottom:14px;font-family:'Manrope',sans-serif}
   .pill.green{background:rgba(52,214,194,.16);color:var(--cyan);border:1px solid rgba(52,214,194,.32)}
   .price.svc .pk{color:var(--text)}
@@ -557,19 +580,20 @@
     .hero{padding:120px 0 50px}
   }
 
-  /* ── Typography hardening: stop orphans / single-word last lines on every screen ── */
+  /* ── Typography hardening: no orphaned single words on any line, any screen.
+        text-wrap inherits, so the body rule covers ALL text - including copy
+        injected by JS (RA name/title/bio) - without maintaining an allowlist.
+        Headings and short display lines get balance for even line lengths. ── */
+  body { text-wrap: pretty; }
   h1, h2, h3, h4,
   .sec-title, .form-title, .featured-name, .embed-name, .modal-title,
   .qr-title, .featured-tagline, .addon-heading, .price .amt,
-  .ra-name, .ra-label, .final-cta h3, .success h2 {
+  .ra-name, .ra-label, .ra-title, .final-cta h3, .success h2 {
     text-wrap: balance;
   }
-  p, .lede, .hero-sub, .form-sub, .ra-bio, .embed-desc,
-  .featured-desc, .featured-foot, .card p, .why-item p, .notis,
-  .price .desc, .addon-note p, .modal-sub, .footer-text,
-  .form-foot, .consent-label, .modal-foot, .cookie-popup-card p {
-    text-wrap: pretty;
-  }
+  /* The hero title's forced <br> defeats balance on narrow screens and
+     strands the last word - let balance control all breaks on mobile */
+  @media(max-width:640px){ .hero h1 br{display:none} }
 
   /* ── Mobile (<520px): CTAs full-width, tighter form-card padding, prevent
         small buttons from sitting on their own line ── */
@@ -1214,6 +1238,9 @@
       <button type="button" class="avatar-modal-ctrl resize" id="avatar-modal-resize" aria-label="Toggle size" title="Toggle size">
         <svg id="avatar-modal-resize-icon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
       </button>
+      <button type="button" class="avatar-modal-ctrl fullscreen" id="avatar-modal-fullscreen" aria-label="Fullscreen" title="Fullscreen">
+        <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+      </button>
       <button type="button" class="avatar-modal-ctrl close" id="avatar-modal-close" aria-label="Close">
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -1348,8 +1375,13 @@
     });
   });
 
-  /* ── Slug from query string (?ra=slug) or path (/demo/<slug>) ── */
+  /* ── Slug resolution ──
+     1) window.__RA_DEMO_SLUG__ - injected when this markup is rendered as a
+        template body inside a srcdoc iframe (no query string available there)
+     2) ?ra=slug query string
+     3) /demo/<slug> path */
   var raSlug = (function(){
+    if (window.__RA_DEMO_SLUG__) return window.__RA_DEMO_SLUG__;
     var q = new URLSearchParams(window.location.search).get('ra');
     if(q) return q;
     var m = window.location.pathname.match(/\/demo\/([^/?#]+)/);
@@ -1363,6 +1395,33 @@
   document.getElementById('mob-learn-more').addEventListener('click', function(){ closeMobMenu(); goToLeadForm(); });
   document.getElementById('hero-learn-more').addEventListener('click', function(e){ e.preventDefault(); goToLeadForm(); });
   document.getElementById('footer-learn-more').addEventListener('click', goToLeadForm);
+  /* Featured "Ava" avatar - opens in the avatar modal (slightly blurred backdrop,
+     resizable, fullscreen control, full-bleed on mobile). No link-out, and no
+     auto-start: a live camera/mic session begins only when the visitor clicks.
+     Both the video poster and the CTA open the same modal; closing it ends the
+     session, and the poster stays in place so Ava can be reopened. */
+  var AVA_EMBED_URL = 'https://deployer-dev.avanew.ai/avatar/6a46faad14bc331056de01be?personaId=paae044d1b3b&replicaId=rcc28da86847&context=Test%0A%0ATest&name=Ava&v=1783036630154&autostart=true';
+  function startAva(){
+    openAvatarModal('Ava');
+    avatarModalStage.classList.add('ratio-43');
+    var f = document.createElement('iframe');
+    f.src = AVA_EMBED_URL;
+    f.allow = 'camera; microphone; fullscreen; display-capture; autoplay';
+    f.setAttribute('allowfullscreen', '');
+    f.title = 'Ava';
+    f.addEventListener('load', function(){
+      var l = avatarModalFrame.querySelector('.avatar-modal-loading');
+      if(l) l.remove();
+    });
+    avatarModalFrame.appendChild(f);
+  }
+  var avaPoster = document.getElementById('ava-poster');
+  if(avaPoster){
+    avaPoster.addEventListener('click', startAva);
+    avaPoster.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); startAva(); } });
+  }
+  var featuredCta = document.getElementById('featured-cta');
+  if(featuredCta){ featuredCta.addEventListener('click', function(e){ e.preventDefault(); startAva(); }); }
 
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape') closeMobMenu();
@@ -1406,12 +1465,16 @@
   var avatarModalBack   = document.getElementById('avatar-modal-backdrop');
 
   function openAvatarModal(name){
+    // A reopen within 350ms of a close must cancel the pending frame wipe,
+    // or the stale timer would kill the brand-new session mid-connect.
+    clearTimeout(frameWipeTimer);
     avatarModalText.textContent = 'Connecting to ' + name + '…';
     avatarModalFrame.innerHTML = '<div class="avatar-modal-loading"><div class="spin"></div><div>' + avatarModalText.textContent + '</div></div>';
     avatarModal.classList.add('open');
     avatarModal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('avatar-modal-active');
     document.body.style.overflow = 'hidden';
+    avatarModalClose.focus();
   }
   function closeAvatarModal(){
     avatarModal.classList.remove('open');
@@ -1419,17 +1482,90 @@
     document.body.classList.remove('avatar-modal-active');
     document.body.style.overflow = '';
     avatarModalStage.classList.remove('size-large');
-    // Empty the frame so the iframe disconnects and any Tavus session ends client-side
-    setTimeout(function(){ avatarModalFrame.innerHTML = ''; }, 350);
+    avatarModalStage.classList.remove('ratio-43');
+    if(document.fullscreenElement || document.webkitFullscreenElement){
+      pageInitiatedFsExit = true;
+      try { var p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if(p && p.catch) p.catch(function(){}); } catch(e){}
+    }
+    // Empty the frame so the iframe disconnects and any live session ends client-side
+    frameWipeTimer = setTimeout(function(){ avatarModalFrame.innerHTML = ''; }, 350);
   }
   avatarModalClose.addEventListener('click', closeAvatarModal);
   avatarModalBack.addEventListener('click', closeAvatarModal);
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && avatarModal.classList.contains('open')) closeAvatarModal();
+    if(e.key === 'Escape' && avatarModal.classList.contains('open')){
+      // Held-key auto-repeat must never fall through to close - a single held
+      // ESC would otherwise exit fullscreen AND end the live session.
+      if(e.repeat) return;
+      // ESC in fullscreen only exits fullscreen. Browsers disagree on whether
+      // that keydown arrives before or after the exit, so also honor a short
+      // grace window - otherwise the same keystroke would close the modal
+      // and end a live session.
+      if(document.fullscreenElement || document.webkitFullscreenElement) return;
+      if(Date.now() - lastFsExitAt < 800) return;
+      closeAvatarModal();
+    }
+  });
+  // The keyup of the ESC press that exited fullscreen ends the grace early, so a
+  // second, deliberate ESC closes the modal without waiting out the window.
+  document.addEventListener('keyup', function(e){
+    if(e.key === 'Escape') lastFsExitAt = 0;
+  });
+  /* The deployer app posts {type:'avatar-widget-close'} to its parent when the
+     visitor closes / ends the conversation inside the iframe - return them to
+     the page instead of stranding them on the app's idle screen. */
+  window.addEventListener('message', function(e){
+    var host = '';
+    try { host = new URL(e.origin).hostname; } catch(err){ return; }
+    if(!/(^|\.)avanew\.ai$|(^|\.)divigner\.com$/.test(host)) return;
+    if(e.data && e.data.type === 'avatar-widget-close' && avatarModal.classList.contains('open')){
+      closeAvatarModal();
+    }
   });
   avatarModalResize.addEventListener('click', function(){
     avatarModalStage.classList.toggle('size-large');
   });
+  var avatarModalFs = document.getElementById('avatar-modal-fullscreen');
+  var frameWipeTimer;
+  var pageInitiatedFsExit = false;
+  avatarModalFs.addEventListener('click', function(){
+    if(document.fullscreenElement || document.webkitFullscreenElement){
+      // Exiting via our own button is unambiguous - don't arm the ESC grace window.
+      pageInitiatedFsExit = true;
+      try { var p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if(p && p.catch) p.catch(function(){}); } catch(e){}
+    } else {
+      var el = avatarModalStage;
+      try { var q = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if(q && q.catch) q.catch(function(){}); } catch(e){}
+    }
+  });
+  // Element fullscreen isn't available everywhere (e.g. iPhone Safari) - hide the
+  // button where it can't work instead of letting taps silently no-op.
+  if(!(avatarModalStage.requestFullscreen || avatarModalStage.webkitRequestFullscreen)){
+    avatarModalFs.style.display = 'none';
+  }
+  /* Track fullscreen state: swap the button between enter/exit affordances, and
+     remember when fullscreen ended (some browsers deliver the ESC keydown only
+     AFTER fullscreen has exited - without this, that same keystroke would fall
+     through to closeAvatarModal and kill a live session). */
+  var lastFsExitAt = 0;
+  function onAvatarFsChange(){
+    var fs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    if(!fs){
+      // Grace only protects keyboard/browser-initiated exits; exits from our own
+      // buttons shouldn't swallow a follow-up ESC meant to close the modal.
+      if(!pageInitiatedFsExit) lastFsExitAt = Date.now();
+      pageInitiatedFsExit = false;
+      // Return keyboard control to the page after fullscreen so ESC-to-close works.
+      if(avatarModal.classList.contains('open')) avatarModalClose.focus();
+    }
+    avatarModalFs.innerHTML = fs
+      ? '<svg viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M16 3v3a2 2 0 0 0 2 2h3"/><path d="M8 21v-3a2 2 0 0 0-2-2H3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+    avatarModalFs.setAttribute('aria-label', fs ? 'Exit fullscreen' : 'Fullscreen');
+    avatarModalFs.setAttribute('title', fs ? 'Exit fullscreen' : 'Fullscreen');
+  }
+  document.addEventListener('fullscreenchange', onAvatarFsChange);
+  document.addEventListener('webkitfullscreenchange', onAvatarFsChange);
 
   function startTavusConversation(stage){
     var personaId = stage.dataset.tavusPersona;
@@ -1492,6 +1628,7 @@
   }
 
   document.querySelectorAll('.embed-video button.embed-thumb-btn').forEach(function(btn){
+    if(btn.id === 'ava-poster') return; // Ava opens via her own modal wiring above
     var stage = btn.closest('.embed-video');
     if(!stage) return;
     btn.addEventListener('click', function(){ startTavusConversation(stage); });
