@@ -148,7 +148,7 @@ export function LeadDetail() {
             {lead.ra_slug && (
               <>
                 {" · "}
-                <Link to={`/settings/ra/${lead.ra_slug}`} className="text-primary hover:underline">
+                <Link to={`/referral-program/associates/${lead.ra_slug}`} className="text-primary hover:underline">
                   Referred by /demo/{lead.ra_slug}
                 </Link>
               </>

@@ -85,10 +85,9 @@ const CASHFLOW_ITEMS: NavItem[] = [
   { to: "/cashflow/bank-connections", label: "Bank Connections", icon: Landmark },
 ]
 
-// Future home of the RA admin suite.
-//   Referral Associates — SANDBOX COPY of the Settings → Team RA tab; the
-//                         Settings tab stays the live path until cutover
-//   RA Page Templates   — fully moved here from /settings/landing-pages
+// The RA admin suite (moved out of Settings at the 2026-07-04 cutover).
+//   Referral Associates — RA list / invites / review / archive
+//   RA Page Templates   — demo & refer page template editor
 //   Resources           — LMS (docs + videos); program updates get pushed
 //                         here too (forum idea dropped 2026-07-03)
 //   Inbox               — centralized RA email (RAs connect their own
@@ -418,7 +417,6 @@ export function AppSidebar({
           {!isLimitedRole && (
             <ModuleGroup
               label="Referral Program"
-              note="Moving here soon"
               icon={Link2}
               items={REFERRAL_PROGRAM_ITEMS}
               collapsed={collapsed}

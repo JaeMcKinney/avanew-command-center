@@ -139,7 +139,7 @@ function buildProgramAdminEmail(
         `<p style="color:#A2B6C9;font-size:.95rem;line-height:1.6;margin:0 0 12px"><strong style="color:#EAF2F9">${escapeHtml(raDisplayName)}</strong> (${escapeHtml(raEmail)}) addressed the changes you requested and re-submitted their application for review.</p>
          <p style="color:#A2B6C9;font-size:.9rem;line-height:1.5;margin:0">Please review the updates and approve, request additional changes, or decline.</p>`,
         "Review updated application",
-        `${appUrl}/settings/ra/${encodeURIComponent(raSlug)}/review`,
+        `${appUrl}/referral-program/associates/${encodeURIComponent(raSlug)}/review`,
       ),
     }
   }
@@ -152,7 +152,7 @@ function buildProgramAdminEmail(
       `<p style="color:#A2B6C9;font-size:.95rem;line-height:1.6;margin:0 0 12px"><strong style="color:#EAF2F9">${escapeHtml(raDisplayName)}</strong> (${escapeHtml(raEmail)}) has submitted their onboarding application and is waiting on your decision.</p>
        <p style="color:#A2B6C9;font-size:.9rem;line-height:1.5;margin:0">Open the review page to approve, request changes, or decline.</p>`,
       "Review application",
-      `${appUrl}/settings/ra/${encodeURIComponent(raSlug)}/review`,
+      `${appUrl}/referral-program/associates/${encodeURIComponent(raSlug)}/review`,
     ),
   }
 }
@@ -172,9 +172,9 @@ function buildChangeRequestEmail(
       orgName,
       "An RA submitted a change request",
       `<p style="color:#A2B6C9;font-size:.95rem;line-height:1.6;margin:0 0 12px"><strong style="color:#EAF2F9">${escapeHtml(raDisplayName)}</strong> requested a change to their <strong style="color:#EAF2F9">${escapeHtml(typeLabel)}</strong>.</p>
-       <p style="color:#A2B6C9;font-size:.9rem;line-height:1.5;margin:0">Open the Referral Associates tab to review and approve or decline it. Nothing changes on their record until you approve.</p>`,
+       <p style="color:#A2B6C9;font-size:.9rem;line-height:1.5;margin:0">Open Referral Associates to review and approve or decline it. Nothing changes on their record until you approve.</p>`,
       "Review the request",
-      `${appUrl}/settings/team`,
+      `${appUrl}/referral-program/associates`,
     ),
   }
 }

@@ -58,7 +58,7 @@ const SECTIONS: SectionMeta[] = [
   { key: "w9",        label: "IRS Form W-9", icon: <FileText className="h-4 w-4 text-muted-foreground" /> },
 ]
 
-export function SettingsRAReview() {
+export function RaAssociateReview() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const [ra, setRa] = useState<RaAssociate | null>(null)
@@ -109,7 +109,7 @@ export function SettingsRAReview() {
   if (!ra) return (
     <div className="p-6 space-y-3">
       <p className="text-sm">Associate not found.</p>
-      <Button variant="outline" size="sm" onClick={() => navigate("/settings/team")}>
+      <Button variant="outline" size="sm" onClick={() => navigate("/referral-program/associates")}>
         <ArrowLeft className="h-3.5 w-3.5" /> Back to list
       </Button>
     </div>
@@ -142,7 +142,7 @@ export function SettingsRAReview() {
       })
       toast.success(`${ra!.display_name} notified of requested changes`)
       setRequestOpen(false)
-      navigate("/settings/team")
+      navigate("/referral-program/associates")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed")
     } finally {
@@ -156,7 +156,7 @@ export function SettingsRAReview() {
       await updateRaStatus(ra!.id, { status: "declined" })
       toast.success(`${ra!.display_name} declined`)
       setDeclineOpen(false)
-      navigate("/settings/team")
+      navigate("/referral-program/associates")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed")
     } finally {
@@ -172,7 +172,7 @@ export function SettingsRAReview() {
     <div className="space-y-6 max-w-6xl">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Link to="/settings/team" className="hover:text-foreground">Referral Associates</Link>
+        <Link to="/referral-program/associates" className="hover:text-foreground">Referral Associates</Link>
         <span>›</span>
         <span className="text-foreground">Review · {ra.display_name}</span>
       </div>
@@ -540,7 +540,7 @@ export function SettingsRAReview() {
       </Dialog>
 
       {/* Approval confirmation */}
-      <Dialog open={!!approvedSummary} onOpenChange={(v) => !v && navigate("/settings/team")}>
+      <Dialog open={!!approvedSummary} onOpenChange={(v) => !v && navigate("/referral-program/associates")}>
         <DialogContent className="sm:max-w-md">
           <div className="flex flex-col items-center text-center space-y-3 py-4">
             <div className="rounded-full bg-primary/10 p-3">
@@ -565,10 +565,10 @@ export function SettingsRAReview() {
             </p>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => navigate(`/settings/ra/${approvedSummary!.slug}`)}>
+            <Button variant="outline" onClick={() => navigate(`/referral-program/associates/${approvedSummary!.slug}`)}>
               View RA detail
             </Button>
-            <Button onClick={() => navigate("/settings/team")}>Back to list</Button>
+            <Button onClick={() => navigate("/referral-program/associates")}>Back to list</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

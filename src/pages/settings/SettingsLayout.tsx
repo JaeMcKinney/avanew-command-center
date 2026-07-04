@@ -279,40 +279,14 @@ function MobileNav({ role }: { role: TeamRole | null }) {
   )
 }
 
-const RA_TAB_KEY = "avanew-crm.settings-team.tab"
-
 export function SettingsLayout() {
   const { role } = useRole()
   const location = useLocation()
   const [collapsed, setCollapsed] = useState(
     () => typeof window !== "undefined" && localStorage.getItem(COLLAPSE_KEY) === "1"
   )
-
-  // Auto-collapse the settings sidebar when the RA tab is active on the
-  // Team page — the RA table needs the horizontal room. Restore the user's
-  // saved preference when they navigate away.
-  const onTeamPage = location.pathname === "/settings/team" || location.pathname.startsWith("/settings/team/")
-  const [teamTab, setTeamTab] = useState(() => localStorage.getItem(RA_TAB_KEY) ?? "team")
-  const [autoCollapsed, setAutoCollapsed] = useState(false)
-
-  useEffect(() => {
-    const handler = (e: Event) => setTeamTab((e as CustomEvent).detail)
-    window.addEventListener("team-tab-change", handler)
-    return () => window.removeEventListener("team-tab-change", handler)
-  }, [])
-
-  const raTabActive = onTeamPage && teamTab === "ra"
-
-  useEffect(() => {
-    if (raTabActive && !collapsed) {
-      setCollapsed(true)
-      setAutoCollapsed(true)
-    } else if (!raTabActive && autoCollapsed) {
-      const saved = localStorage.getItem(COLLAPSE_KEY) === "1"
-      setCollapsed(saved)
-      setAutoCollapsed(false)
-    }
-  }, [raTabActive]) // eslint-disable-line react-hooks/exhaustive-deps
+  // (The RA-tab auto-collapse machinery that lived here went away with the
+  // 2026-07-04 move of Referral Associates to /referral-program/associates.)
 
   function toggleCollapsed() {
     setCollapsed((v) => {

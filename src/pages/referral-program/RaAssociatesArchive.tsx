@@ -209,10 +209,10 @@ const STATUS_LABELS: Record<RaStatus, string> = {
  * Read-only viewer for permanently deleted RAs and the prospect/client data
  * preserved at the moment of deletion. Two views, routed via ?id= query param:
  *
- *   • List view (no id):     /settings/ra/archive
- *   • Detail view (?id=…):   /settings/ra/archive?id=<archive_id>
+ *   • List view (no id):     /referral-program/associates/archive
+ *   • Detail view (?id=…):   /referral-program/associates/archive?id=<archive_id>
  */
-export function SettingsRAArchive() {
+export function RaAssociatesArchive() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const archiveId = params.get("id")
@@ -222,14 +222,14 @@ export function SettingsRAArchive() {
       <ArchiveDetail
         id={archiveId}
         onBack={() => setParams({})}
-        onRestored={() => navigate("/settings/team")}
+        onRestored={() => navigate("/referral-program/associates")}
       />
     )
   }
   return (
     <ArchiveList
       onOpen={(id) => setParams({ id })}
-      onBackToList={() => navigate("/settings/team")}
+      onBackToList={() => navigate("/referral-program/associates")}
       onRestored={() => {}}
     />
   )

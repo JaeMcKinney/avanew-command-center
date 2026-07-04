@@ -201,16 +201,11 @@ function TemplatePicker({
 }
 
 /**
- * SANDBOX COPY of components/RaSection.tsx (copied 2026-07-03) — the future
- * Referral Program home for RA management, rendered at
- * /referral-program/associates while the section is built out.
- *
- * The LIVE, in-use version is still the "Referral Associates" tab on
- * /settings/team (components/RaSection.tsx). Until cutover:
- *   - build new Referral Program behavior HERE, never in RaSection.tsx
- *   - if a bug is fixed in the live RaSection.tsx, port the fix here too
- * Both copies operate on the same production data (same tables, same edge
- * functions) — "sandbox" refers to the UI surface, not the data.
+ * Single source of truth for managing Referral Associates, rendered at
+ * /referral-program/associates (moved out of Settings → Team at the
+ * 2026-07-04 cutover). Owns the full RA list + filter buckets + invite /
+ * bulk-invite + delete + archive entry + per-row actions (Leads drill-down,
+ * template assignment, Review dialog).
  */
 export function RaProgramSection() {
   const navigate = useNavigate()
@@ -300,7 +295,7 @@ export function RaProgramSection() {
       ra.photo_completed && ra.contact_completed && ra.banking_completed
     if (!complete) {
       toast.info(`${ra.display_name}'s onboarding is incomplete — review before activating`)
-      navigate(`/settings/ra/${ra.slug}/review`)
+      navigate(`/referral-program/associates/${ra.slug}/review`)
       return
     }
     try {
@@ -421,7 +416,7 @@ export function RaProgramSection() {
         {
           action: {
             label: "View archive",
-            onClick: () => navigate("/settings/ra/archive"),
+            onClick: () => navigate("/referral-program/associates/archive"),
           },
         }
       )
@@ -466,7 +461,7 @@ export function RaProgramSection() {
                   Export
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={() => navigate("/settings/ra/archive")}>
+              <Button variant="outline" size="sm" onClick={() => navigate("/referral-program/associates/archive")}>
                 <Archive className="h-3.5 w-3.5" />
                 Archive
               </Button>
@@ -546,7 +541,7 @@ export function RaProgramSection() {
                     <TableRow
                       key={ra.id}
                       className="group cursor-pointer"
-                      onClick={() => navigate(isReview ? `/settings/ra/${ra.slug}/review` : `/settings/ra/${ra.slug}`)}
+                      onClick={() => navigate(isReview ? `/referral-program/associates/${ra.slug}/review` : `/referral-program/associates/${ra.slug}`)}
                     >
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2.5">
@@ -607,7 +602,7 @@ export function RaProgramSection() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => navigate(`/settings/ra/${ra.slug}/review`)}>
+                              <DropdownMenuItem onClick={() => navigate(`/referral-program/associates/${ra.slug}/review`)}>
                                 <Eye className="h-3.5 w-3.5" />
                                 View detail
                               </DropdownMenuItem>
@@ -690,7 +685,7 @@ export function RaProgramSection() {
         onInvited={() => { void refresh() }}
       />
 
-      {/* Inline review dialog (alternative to navigating to /settings/ra/:slug/review) */}
+      {/* Inline review dialog (alternative to navigating to /referral-program/associates/:slug/review) */}
       <RaVerificationDialog
         ra={reviewTarget}
         open={!!reviewTarget}

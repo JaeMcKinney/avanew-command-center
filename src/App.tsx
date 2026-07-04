@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom"
+import { Routes, Route, Navigate, useLocation, useParams } from "react-router-dom"
 import type { ReactNode } from "react"
 import { Login } from "@/pages/auth/Login"
 import { Signup } from "@/pages/auth/Signup"
@@ -106,10 +106,22 @@ import { SettingsAuditLogs } from "@/pages/settings/SettingsAuditLogs"
 import { SettingsData } from "@/pages/settings/SettingsData"
 import { SettingsBranding } from "@/pages/settings/SettingsBranding"
 import { SettingsSystem } from "@/pages/settings/SettingsSystem"
-import { SettingsRAArchive } from "@/pages/settings/SettingsRAArchive"
-import { SettingsRAReview } from "@/pages/settings/SettingsRAReview"
-import { SettingsRADetail } from "@/pages/settings/SettingsRADetail"
+import { RaAssociatesArchive } from "@/pages/referral-program/RaAssociatesArchive"
+import { RaAssociateReview } from "@/pages/referral-program/RaAssociateReview"
+import { RaAssociateDetail } from "@/pages/referral-program/RaAssociateDetail"
 import { RaStoryboard } from "@/pages/mockups/RaStoryboard"
+
+/** Param-preserving redirect for legacy /settings/ra/:slug(/review) URLs —
+ * Navigate can't interpolate route params on its own. */
+function LegacyRaRedirect({ review }: { review?: boolean }) {
+  const { slug } = useParams()
+  return (
+    <Navigate
+      to={`/referral-program/associates/${slug}${review ? "/review" : ""}`}
+      replace
+    />
+  )
+}
 
 function App() {
   return (
@@ -188,12 +200,14 @@ function App() {
         <Route path="/vendors/new" element={<VendorForm />} />
         <Route path="/vendors/:id/edit" element={<VendorForm />} />
 
-        {/* Referral Program — future home of the RA admin suite.
-            /associates is a SANDBOX COPY of the Settings → Team RA tab (the
-            Settings tab stays the live path until cutover); /page-templates
-            fully moved here from /settings/landing-pages. */}
+        {/* Referral Program — the RA admin suite (moved out of Settings at
+            the 2026-07-04 cutover; /settings/ra/* and the old Settings→Team
+            RA tab redirect here). */}
         <Route path="/referral-program" element={<Navigate to="/referral-program/associates" replace />} />
         <Route path="/referral-program/associates" element={<RoleGate allow={["super_user","admin"]}><ReferralProgramAssociates /></RoleGate>} />
+        <Route path="/referral-program/associates/archive" element={<RoleGate allow={["super_user","admin"]}><RaAssociatesArchive /></RoleGate>} />
+        <Route path="/referral-program/associates/:slug/review" element={<RoleGate allow={["super_user","admin"]}><RaAssociateReview /></RoleGate>} />
+        <Route path="/referral-program/associates/:slug" element={<RoleGate allow={["super_user","admin"]}><RaAssociateDetail /></RoleGate>} />
         <Route path="/referral-program/page-templates" element={<RoleGate allow={["super_user","admin"]}><RaPageTemplates /></RoleGate>} />
 
         {/* Settings — nested module */}
@@ -209,13 +223,14 @@ function App() {
           {/* Moved to the Referral Program section — redirect keeps old
               bookmarks working. */}
           <Route path="landing-pages" element={<Navigate to="/referral-program/page-templates" replace />} />
-          {/* Legacy /settings/ra list route — redirected to the consolidated
-              RA tab inside /settings/team. Detail / review / archive sub-routes
-              are still mounted here for stable URLs. */}
-          <Route path="ra" element={<Navigate to="/settings/team" replace />} />
-          <Route path="ra/archive" element={<RoleGate allow={["super_user","admin"]}><SettingsRAArchive /></RoleGate>} />
-          <Route path="ra/:slug/review" element={<RoleGate allow={["super_user","admin"]}><SettingsRAReview /></RoleGate>} />
-          <Route path="ra/:slug" element={<RoleGate allow={["super_user","admin"]}><SettingsRADetail /></RoleGate>} />
+          {/* Legacy /settings/ra/* routes — the RA admin suite moved to
+              /referral-program/associates/* (2026-07-04 cutover). Permanent
+              redirects: notify-ra-status emails sent before the cutover link
+              to /settings/ra/:slug/review, so these must never be removed. */}
+          <Route path="ra" element={<Navigate to="/referral-program/associates" replace />} />
+          <Route path="ra/archive" element={<Navigate to="/referral-program/associates/archive" replace />} />
+          <Route path="ra/:slug/review" element={<LegacyRaRedirect review />} />
+          <Route path="ra/:slug" element={<LegacyRaRedirect />} />
           <Route path="integrations" element={<RoleGate allow={["super_user","admin"]}><SettingsIntegrations /></RoleGate>} />
           <Route path="notifications" element={<SettingsNotifications />} />
           <Route path="security" element={<RoleGate allow={["super_user","admin"]}><SettingsSecurity /></RoleGate>} />
