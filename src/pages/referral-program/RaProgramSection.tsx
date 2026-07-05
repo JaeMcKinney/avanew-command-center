@@ -570,12 +570,14 @@ export function RaProgramSection() {
                         // Slug / Template / Actions cells stopPropagation, so
                         // this fires for the rest of the row: Active rows jump
                         // into the RA's own portal dashboard (read-only view-as,
-                        // exit via the banner); everything else opens detail.
+                        // exit via the banner); everything else opens the review
+                        // page — the same target as the Actions menu's "View
+                        // detail" item, and what admins mean by "user detail".
                         if (ra.status === "active") {
                           setViewAsRa({ userId: ra.user_id, displayName: ra.display_name, slug: ra.slug })
                           navigate("/ra/dashboard")
                         } else {
-                          navigate(`/referral-program/associates/${ra.slug}`)
+                          navigate(`/referral-program/associates/${ra.slug}/review`)
                         }
                       }}
                     >

@@ -75,7 +75,9 @@ export function RaAssociateReview() {
   useEffect(() => {
     if (!slug) return
     void (async () => {
-      const r = await getRaBySlug(slug)
+      // getRaBySlug guarded so a rejected fetch can't strand the page on
+      // "Loading…" — a null result falls through to the not-found branch.
+      const r = await getRaBySlug(slug).catch(() => null)
       setRa(r)
       if (r) {
         const [c, cr] = await Promise.all([

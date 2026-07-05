@@ -71,11 +71,15 @@ export function RaAssociateDetail() {
   const [annual, setAnnual] = useState<AnnualMinimumStatus | null>(null)
   const [checkinTarget, setCheckinTarget] = useState<{ leadId: string | null; name: string } | null>(null)
 
+  // Every fetch is individually failure-tolerant: a pending/mid-onboarding RA
+  // legitimately has no check-in / payout / annual-minimum data yet, and one
+  // rejected promise in a bare Promise.all left setLoading(false) unreachable
+  // — the page hung on "Loading…" forever (prod bug, 2026-07-04).
   async function refreshCheckinData(s: string) {
     const [ch, ac, am] = await Promise.all([
-      listCheckinsForRaSlug(s),
-      listActiveClientsForRaSlug(s),
-      getAnnualMinimumStatus(s),
+      listCheckinsForRaSlug(s).catch(() => []),
+      listActiveClientsForRaSlug(s).catch(() => []),
+      getAnnualMinimumStatus(s).catch(() => null),
     ])
     setCheckins(ch); setActiveClients(ac); setAnnual(am)
   }
@@ -83,15 +87,16 @@ export function RaAssociateDetail() {
   useEffect(() => {
     if (!slug) return
     void Promise.all([
-      getRaBySlug(slug),
-      listLeadsForRaSlug(slug),
-      listPayoutsForRaSlug(slug),
-      getCommissionConfig(),
-    ]).then(async ([r, l, p, c]) => {
-      setRa(r); setLeads(l); setPayouts(p); setCfg(c)
-      if (slug) await refreshCheckinData(slug)
-      setLoading(false)
-    })
+      getRaBySlug(slug).catch(() => null),
+      listLeadsForRaSlug(slug).catch(() => []),
+      listPayoutsForRaSlug(slug).catch(() => []),
+      getCommissionConfig().catch(() => null),
+    ])
+      .then(async ([r, l, p, c]) => {
+        setRa(r); setLeads(l); setPayouts(p); setCfg(c)
+        if (slug) await refreshCheckinData(slug)
+      })
+      .finally(() => setLoading(false))
   }, [slug])
 
   const [pipelineView, setPipelineView] = usePipelineView("admin-ra-detail")
