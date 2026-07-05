@@ -412,6 +412,28 @@ THEME_OVERRIDE = f"""
     border: 1px solid rgba(56,93,255,0.25) !important;
   }}
 
+  /* July 2026 special pricing additions — light theme (remove with the promo) */
+  .price .start-kicker {{ color: {SKD_MUTED_TEXT} !important; font-family: 'Roboto Slab', Georgia, serif !important; }}
+  .price .amt .was {{ color: {SKD_MUTED_TEXT} !important; text-decoration-color: rgba(220,60,60,.8) !important; }}
+  .price .freq .pipe, .price .freq .reg {{ color: {SKD_MUTED_TEXT} !important; }}
+  .invest-note {{
+    background: linear-gradient(120deg, rgba(255,97,19,0.07), {SKD_CONTENT_BG}) !important;
+    border-left-color: {SKD_ACCENT_ORANGE} !important;
+  }}
+  .invest-note p {{
+    color: {SKD_HEADING_NAVY} !important;
+    font-family: 'Roboto Slab', Georgia, serif !important;
+  }}
+  .price-fineprint {{
+    color: {SKD_HEADING_NAVY} !important;
+    font-family: 'Roboto Slab', Georgia, serif !important;
+    border-color: rgba(255,97,19,0.35) !important;
+    background: linear-gradient(120deg, rgba(255,97,19,0.08), {SKD_CONTENT_BG}) !important;
+  }}
+  .price-fineprint svg {{ stroke: {SKD_ACCENT_ORANGE} !important; }}
+  .price-fineprint svg circle:last-child {{ fill: {SKD_ACCENT_ORANGE} !important; }}
+  /* .july-pill keeps its gold treatment: yellow bg + dark text works on light theme */
+
   /* Investment / pricing list (legacy selectors — harmless if unmatched) */
   .investment-card ul li, .pricing-card ul li {{ color: {SKD_BODY_TEXT} !important; }}
   .investment-card .price, .pricing-card .price {{ color: {SKD_HEADING_NAVY} !important; }}
