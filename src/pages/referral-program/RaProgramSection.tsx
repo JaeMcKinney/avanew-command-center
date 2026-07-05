@@ -22,7 +22,6 @@ import {
   Check,
   Circle,
 } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useViewAsRa } from "@/hooks/useViewAsRa"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -229,6 +228,10 @@ export function RaProgramSection() {
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<RaStatus | "all">("all")
   const [inviteOpen, setInviteOpen] = useState(false)
+  // Row-hover onboarding checklist. Hand-rolled (fixed-position, pointer-
+  // events-none) instead of a Radix Tooltip: wrapping a clickable row in
+  // TooltipTrigger swallowed real pointer clicks on the row.
+  const [onboardingHover, setOnboardingHover] = useState<{ ra: RaAssociate; top: number; left: number } | null>(null)
   const [bulkOpen, setBulkOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [canManage, setCanManage] = useState(false)
@@ -553,11 +556,15 @@ export function RaProgramSection() {
                   const isActiveOrInflight = ra.status !== "declined" && ra.status !== "terminated"
                   // Mid-onboarding rows get a hover checklist of wizard modules.
                   const inOnboarding = ra.status === "pending" || ra.status === "needs_changes"
-                  const doneCount = ONBOARDING_MODULES.filter((m) => Boolean(ra[m.field])).length
-                  const row = (
+                  return (
                     <TableRow
                       key={ra.id}
                       className="group cursor-pointer"
+                      onMouseEnter={inOnboarding ? (e) => {
+                        const r = e.currentTarget.getBoundingClientRect()
+                        setOnboardingHover({ ra, top: r.top, left: r.left })
+                      } : undefined}
+                      onMouseLeave={inOnboarding ? () => setOnboardingHover(null) : undefined}
                       title={ra.status === "active" ? `Open ${ra.display_name}'s RA dashboard (view as)` : undefined}
                       onClick={() => {
                         // Slug / Template / Actions cells stopPropagation, so
@@ -690,37 +697,40 @@ export function RaProgramSection() {
                       </TableCell>
                     </TableRow>
                   )
-                  if (!inOnboarding) return row
-                  return (
-                    <TooltipProvider key={ra.id} delayDuration={250}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>{row}</TooltipTrigger>
-                        <TooltipContent side="top" align="start" sideOffset={4}>
-                          <p className="mb-1.5 text-xs font-semibold">
-                            Onboarding progress · {doneCount}/{ONBOARDING_MODULES.length} done
-                          </p>
-                          <div className="space-y-1">
-                            {ONBOARDING_MODULES.map((m) => {
-                              const done = Boolean(ra[m.field])
-                              return (
-                                <div key={m.label} className="flex items-center gap-1.5 text-xs">
-                                  {done
-                                    ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
-                                    : <Circle className="h-3.5 w-3.5 shrink-0 opacity-40" />}
-                                  <span className={done ? undefined : "opacity-60"}>{m.label}</span>
-                                  {!done && <span className="ml-auto pl-3 text-[10px] uppercase tracking-wide opacity-50">outstanding</span>}
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )
                 })}
               </TableBody>
             </Table>
           </div>
+
+          {/* Onboarding-progress hover popup. pointer-events-none by design:
+              it must never sit between the cursor and the row's onClick. */}
+          {onboardingHover && (() => {
+            const doneCount = ONBOARDING_MODULES.filter((m) => Boolean(onboardingHover.ra[m.field])).length
+            return (
+              <div
+                className="pointer-events-none fixed z-50 -translate-y-full rounded-md border bg-popover px-3 py-2.5 text-popover-foreground shadow-lg"
+                style={{ top: onboardingHover.top - 6, left: onboardingHover.left + 24 }}
+              >
+                <p className="mb-1.5 text-xs font-semibold">
+                  Onboarding progress · {doneCount}/{ONBOARDING_MODULES.length} done
+                </p>
+                <div className="space-y-1">
+                  {ONBOARDING_MODULES.map((m) => {
+                    const done = Boolean(onboardingHover.ra[m.field])
+                    return (
+                      <div key={m.label} className="flex items-center gap-1.5 text-xs">
+                        {done
+                          ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                          : <Circle className="h-3.5 w-3.5 shrink-0 opacity-40" />}
+                        <span className={done ? undefined : "opacity-60"}>{m.label}</span>
+                        {!done && <span className="ml-auto pl-3 text-[10px] uppercase tracking-wide opacity-50">outstanding</span>}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
 
           <div className="text-xs text-muted-foreground">
             {filtered.length} of {list.length} associates
