@@ -20,7 +20,10 @@ import {
   Send,
   LayoutTemplate,
   Check,
+  Circle,
 } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useViewAsRa } from "@/hooks/useViewAsRa"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -207,8 +210,20 @@ function TemplatePicker({
  * bulk-invite + delete + archive entry + per-row actions (Leads drill-down,
  * template assignment, Review dialog).
  */
+// Onboarding checklist shown in the row hover popup for RAs still mid-
+// onboarding — mirrors the six-step wizard's completion flags (Review has no
+// flag; submission is visible via status instead).
+const ONBOARDING_MODULES: { label: string; field: keyof RaAssociate }[] = [
+  { label: "Agreement", field: "agreement_completed" },
+  { label: "Photo",     field: "photo_completed" },
+  { label: "Contact",   field: "contact_completed" },
+  { label: "Banking",   field: "banking_completed" },
+  { label: "W-9",       field: "w9_completed" },
+]
+
 export function RaProgramSection() {
   const navigate = useNavigate()
+  const { setViewAsRa } = useViewAsRa()
   const [list, setList] = useState<RaAssociate[]>([])
   const [templates, setTemplates] = useState<RaLandingTemplate[]>([])
   const [query, setQuery] = useState("")
@@ -535,13 +550,27 @@ export function RaProgramSection() {
                 )}
                 {!loading && filtered.map((ra) => {
                   const meta = STATUS_META[ra.status]
-                  const isReview = ra.status === "verification"
                   const isActiveOrInflight = ra.status !== "declined" && ra.status !== "terminated"
-                  return (
+                  // Mid-onboarding rows get a hover checklist of wizard modules.
+                  const inOnboarding = ra.status === "pending" || ra.status === "needs_changes"
+                  const doneCount = ONBOARDING_MODULES.filter((m) => Boolean(ra[m.field])).length
+                  const row = (
                     <TableRow
                       key={ra.id}
                       className="group cursor-pointer"
-                      onClick={() => navigate(isReview ? `/referral-program/associates/${ra.slug}/review` : `/referral-program/associates/${ra.slug}`)}
+                      title={ra.status === "active" ? `Open ${ra.display_name}'s RA dashboard (view as)` : undefined}
+                      onClick={() => {
+                        // Slug / Template / Actions cells stopPropagation, so
+                        // this fires for the rest of the row: Active rows jump
+                        // into the RA's own portal dashboard (read-only view-as,
+                        // exit via the banner); everything else opens detail.
+                        if (ra.status === "active") {
+                          setViewAsRa({ userId: ra.user_id, displayName: ra.display_name, slug: ra.slug })
+                          navigate("/ra/dashboard")
+                        } else {
+                          navigate(`/referral-program/associates/${ra.slug}`)
+                        }
+                      }}
                     >
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2.5">
@@ -660,6 +689,33 @@ export function RaProgramSection() {
                         </div>
                       </TableCell>
                     </TableRow>
+                  )
+                  if (!inOnboarding) return row
+                  return (
+                    <TooltipProvider key={ra.id} delayDuration={250}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>{row}</TooltipTrigger>
+                        <TooltipContent side="top" align="start" sideOffset={4}>
+                          <p className="mb-1.5 text-xs font-semibold">
+                            Onboarding progress · {doneCount}/{ONBOARDING_MODULES.length} done
+                          </p>
+                          <div className="space-y-1">
+                            {ONBOARDING_MODULES.map((m) => {
+                              const done = Boolean(ra[m.field])
+                              return (
+                                <div key={m.label} className="flex items-center gap-1.5 text-xs">
+                                  {done
+                                    ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                                    : <Circle className="h-3.5 w-3.5 shrink-0 opacity-40" />}
+                                  <span className={done ? undefined : "opacity-60"}>{m.label}</span>
+                                  {!done && <span className="ml-auto pl-3 text-[10px] uppercase tracking-wide opacity-50">outstanding</span>}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )
                 })}
               </TableBody>
