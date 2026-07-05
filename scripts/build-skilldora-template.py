@@ -16,6 +16,7 @@ Writes:
 
 from __future__ import annotations
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "public" / "demo.html"
@@ -61,6 +62,18 @@ REPLACEMENTS: list[tuple[str, str]] = [
      '<a href="https://myskilldora.com" target="_blank" rel="noopener">myskilldora.com</a>'),
     ('© <span id="year"></span> Divigner Group, LLC. All rights reserved.',
      '© <span id="year"></span> Skilldora® Inc. · Avatars powered by <a href="https://divigner.com" target="_blank" rel="noopener" style="color:inherit;border-bottom:1px dotted currentColor">Divigner Group</a>'),
+
+    # Eyebrow — strip "by Divigner Group" attribution from hero
+    ('<span class="eyebrow">Interactive Avatars by Divigner Group</span>',
+     '<span class="eyebrow">Interactive Avatars</span>'),
+
+    # (Renumbering + about dot-nav removal retired 2026-07-05: the canonical
+    # demo.html now ships with #why/#about hidden and 01–05 numbering baked in,
+    # so the base already matches — no per-template renumbering needed.)
+
+    # Final CTA timeline copy
+    ('have you live in 2–3 weeks.',
+     'have you live in 2–4 weeks.'),
 
     # Add Roboto / Roboto Slab to the Google Fonts request
     ("&family=Manrope:wght@300;400;500;600;700&display=swap",
@@ -119,9 +132,13 @@ THEME_OVERRIDE = f"""
     font-weight: 700 !important;
   }}
 
-  /* Kill the dark radial gradients behind the body */
+  /* Replace dark radials with warm orange wash — subtle depth across the page */
   body::before {{
-    background: {SKD_BODY_BG} !important;
+    background:
+      radial-gradient(900px 600px at 80% -5%, rgba(255,97,19,0.08), transparent 60%),
+      radial-gradient(600px 500px at -5% 35%, rgba(255,97,19,0.06), transparent 55%),
+      radial-gradient(800px 700px at 55% 115%, rgba(56,93,255,0.05), transparent 60%),
+      {SKD_BODY_BG} !important;
   }}
   body::after {{ display: none !important; }}
 
@@ -221,15 +238,30 @@ THEME_OVERRIDE = f"""
   }}
   .sec-nav .nav-dot.active::after {{ color: {SKD_PRIMARY_BTN_BG} !important; }}
 
-  /* Decorative orb — soften for light bg */
-  .orb-stage {{ opacity: 0.4 !important; }}
+  /* Decorative orb — Skilldora orange */
+  .orb-stage {{ opacity: 0.45 !important; }}
   .orb {{
-    background: radial-gradient(circle at 30% 30%, rgba(56,93,255,0.35), rgba(255,97,19,0.12) 60%, transparent 80%) !important;
-    box-shadow: 0 0 80px rgba(56,93,255,0.15) !important;
+    background:
+      radial-gradient(circle at 36% 30%, rgba(255,97,19,0.90), rgba(254,111,75,0.55) 28%, rgba(255,140,60,0.18) 55%, transparent 70%),
+      radial-gradient(circle at 65% 70%, rgba(255,140,50,0.28), transparent 55%) !important;
+    filter: blur(2px) !important;
+    box-shadow: 0 0 80px rgba(255,97,19,0.18) !important;
   }}
-  .orb-halo {{ background: radial-gradient(circle, rgba(56,93,255,0.10), transparent 70%) !important; }}
-  .orb-core {{ background: radial-gradient(circle, rgba(255,255,255,0.9), rgba(56,93,255,0.4) 60%, transparent 80%) !important; }}
-  .orb-ring {{ border-color: rgba(56,93,255,0.18) !important; }}
+  .orb-halo {{
+    border: 1px solid rgba(255,97,19,0.14) !important;
+    box-shadow: inset 0 0 120px rgba(255,97,19,0.14) !important;
+    background: none !important;
+  }}
+  .orb-core {{
+    background: radial-gradient(circle at 38% 32%, #fff, rgba(255,130,50,0.85) 45%, rgba(255,97,19,0.75) 80%) !important;
+    box-shadow:
+      0 0 80px 20px rgba(255,97,19,0.38),
+      0 0 160px 40px rgba(255,97,19,0.18) !important;
+  }}
+  .orb-ring {{
+    background: conic-gradient(from 0deg, transparent, rgba(255,97,19,0.55), transparent 38%, rgba(254,111,75,0.42), transparent 70%) !important;
+    filter: blur(26px) !important;
+  }}
 
   /* Eyebrows / sec-num — orange accent */
   .eyebrow, .sec-num {{
@@ -391,6 +423,26 @@ THEME_OVERRIDE = f"""
     box-shadow: 0 22px 60px -22px rgba(18,43,70,0.20) !important;
   }}
   .addon-note::after, .addon-note .addon-glow-teal {{ opacity: 0.25 !important; }}
+  /* Top accent border — Skilldora orange/blue only, slow shimmer */
+  .addon-note::before {{
+    background: linear-gradient(90deg, {SKD_ACCENT_ORANGE}, {SKD_PRIMARY_BTN_BG}, {SKD_ACCENT_ORANGE_SOFT}, {SKD_ACCENT_ORANGE}) !important;
+    background-size: 300% 100% !important;
+    animation-duration: 10s !important;
+  }}
+  /* "Going Further" pill badge — solid orange, white text, no motion */
+  .addon-note .addon-label {{
+    background: {SKD_ACCENT_ORANGE} !important;
+    background-size: initial !important;
+    border: 1px solid {SKD_ACCENT_ORANGE} !important;
+    color: #fff !important;
+    animation: none !important;
+    box-shadow: 0 4px 14px -4px rgba(255,97,19,0.45) !important;
+    text-shadow: none !important;
+  }}
+  .addon-note .addon-label::before {{
+    background: #fff !important;
+    box-shadow: 0 0 8px rgba(255,255,255,0.9) !important;
+  }}
   .addon-note h3.addon-heading {{ color: {SKD_HEADING_NAVY} !important; }}
   .addon-note h3.addon-heading .grad-gold {{
     background: none !important;
@@ -480,24 +532,39 @@ THEME_OVERRIDE = f"""
     max-height: 52px !important;
   }}
 
-  /* Final CTA — light bg w/ blue button (already covered) */
+  /* Final CTA — warm orange tint + adequate padding so heading never clips */
   .final-cta {{
-    background: linear-gradient(180deg, {SKD_CONTENT_BG} 0%, {SKD_SUBTLE_BG} 100%) !important;
-    border-top: 1px solid {SKD_LINE};
-    border-bottom: 1px solid {SKD_LINE};
+    background: linear-gradient(180deg, rgba(255,97,19,0.05) 0%, {SKD_SUBTLE_BG} 100%) !important;
+    border-top: 1px solid rgba(255,97,19,0.12) !important;
+    border-bottom: 1px solid {SKD_LINE} !important;
+    padding: 60px 0 56px !important;
   }}
-  .final-cta h3 {{ color: {SKD_HEADING_NAVY} !important; }}
+  /* Extra line-height + overflow:visible stops italic descenders being clipped */
+  .final-cta h3 {{
+    color: {SKD_HEADING_NAVY} !important;
+    line-height: 1.35 !important;
+    overflow: visible !important;
+    padding-bottom: 6px !important;
+  }}
+  .final-cta h3 .grad {{
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: {SKD_ACCENT_ORANGE} !important;
+    color: {SKD_ACCENT_ORANGE} !important;
+    font-style: italic !important;
+  }}
   .final-cta p {{ color: {SKD_BODY_TEXT} !important; }}
 
-  /* Footer — tightened spacing (base had 64/88 padding + 60 margin-top) */
+  /* Footer — tight spacing */
   footer {{
     background: #fff !important;
     border-top: 1px solid {SKD_LINE} !important;
     color: {SKD_MUTED_TEXT} !important;
-    margin-top: 28px !important;
-    padding: 36px 0 44px !important;
+    margin-top: 12px !important;
+    padding: 20px 0 24px !important;
   }}
-  .footer-logo-img {{ filter: none !important; height: 46px; }}
+  .footer-logo-img {{ filter: none !important; height: 38px; }}
   .footer-text {{ color: {SKD_MUTED_TEXT} !important; }}
   .footer-text a {{ color: {SKD_PRIMARY_BTN_BG} !important; }}
   .footer-meta {{ color: {SKD_MUTED_TEXT} !important; }}
@@ -635,27 +702,17 @@ THEME_OVERRIDE = f"""
     border: 1px solid #ffcdd2 !important;
   }}
 
-  /* Cookie popup overlay — light bar, doesn't obscure the Final CTA button.
-   * Position-sticky on small screens so content scrolls under it cleanly. */
-  .cookie-popup {{
-    background: rgba(255,255,255,0.98) !important;
-    border-top: 1px solid {SKD_LINE} !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    box-shadow: 0 -8px 24px -10px rgba(18,43,70,0.18) !important;
+  /* Cookie popup — hidden entirely on Skilldora template */
+  .cookie-popup {{ display: none !important; }}
+  body {{ padding-bottom: 0 !important; }}
+
+  /* Subtle orange gradient accents between sections to break up the white */
+  section#what, section#features {{
+    background: linear-gradient(180deg, rgba(255,97,19,0.03) 0%, transparent 40%) !important;
   }}
-  .cookie-popup-card p {{ color: {SKD_BODY_TEXT} !important; }}
-  .cookie-popup-card p a {{ color: {SKD_PRIMARY_BTN_BG} !important; }}
-
-  /* Reserve space for the cookie bar so the final CTA's button never sits
-   * underneath it. Measured: bar is ~76px desktop, ~120px mobile when text
-   * wraps; pad just enough and let it collapse if dismissed. */
-  body {{ padding-bottom: 80px !important; }}
-  @media (max-width: 600px) {{ body {{ padding-bottom: 140px !important; }} }}
-  body:has(.cookie-popup:not(.visible)) {{ padding-bottom: 0 !important; }}
-
-  /* Final CTA spacing — small bottom pad; tightened footer carries the rest */
-  .final-cta {{ padding: 60px 0 32px !important; }}
+  section#about {{
+    background: linear-gradient(180deg, transparent 0%, rgba(255,97,19,0.03) 100%) !important;
+  }}
 
   /* ── Mobile responsive audit ─────────────────────────────────────────── */
   @media (max-width: 880px) {{
@@ -696,6 +753,17 @@ def main() -> None:
             print(f"[warn] replacement target not found: {old[:80]!r}")
             continue
         html = html.replace(old, new, 1)
+
+    # Remove the "About Divigner Group" section — Skilldora-branded pages
+    # don't need Divigner's company description. The canonical demo.html now
+    # ships it hidden (`<section id="about" style="display:none">`), so match
+    # the tag with any attributes.
+    html = re.sub(
+        r'\n?<!-- ── About Divigner Group ── -->\n<section id="about"[^>]*>.*?</section>\n',
+        '\n',
+        html,
+        flags=re.DOTALL,
+    )
 
     if "</style>" not in html:
         raise SystemExit("</style> not found — cannot append theme override")

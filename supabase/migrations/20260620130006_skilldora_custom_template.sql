@@ -1,4 +1,682 @@
-<!DOCTYPE html>
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Custom Skilldora-branded RA templates (demo + refer)
+--
+-- demo_html  → /demo/skilldora  — full interactive avatar demo page
+-- html       → /refer/skilldora — Skilldora-branded lead-capture form
+--
+-- Sources:
+--   public/demo-skilldora.html  (build-skilldora-template.py)
+--   public/refer-skilldora.html (build-skilldora-refer-template.py)
+-- Re-running this migration UPSERTs the same row by its pinned id.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+DO $migration$
+DECLARE
+  v_divigner_org uuid := 'dddddddd-dddd-dddd-dddd-dddddddddddd';
+  v_template_id  uuid := 'c5a11d04-5d11-4d04-9c5a-5d115d04c5a1';
+BEGIN
+
+  -- 1) Upsert the template row with both demo_html and html columns set.
+  INSERT INTO public.ra_landing_templates (
+    id, organization_id, name, html, demo_html
+  ) VALUES (
+    v_template_id,
+    v_divigner_org,
+    'Skilldora Custom (Company)',
+    $SKD_REFER$<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="theme-color" content="#06101D">
+<title>Skilldora · Book a Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Manrope:wght@300;400;500;600;700&family=Roboto+Slab:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#06101D; --bg:#091A2D; --bg-2:#0B2138;
+    --surface:#0E2741; --surface-2:#123150;
+    --line:rgba(120,214,196,.16); --line-soft:rgba(160,190,215,.12);
+    --gold:#C9A86A; --teal:#18B9A6; --teal-bright:#34D6C2; --cyan:#5FE3D2;
+    --text:#EAF2F9; --muted:#A2B6C9; --muted-2:#6E8499;
+    --maxw:820px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative;min-height:100vh;display:flex;flex-direction:column;font-size:16px}
+
+  /* ── Decorative orb (behind content) ── */
+  .orb-stage{position:fixed;right:-180px;top:42%;transform:translateY(-50%);width:560px;height:560px;pointer-events:none;z-index:-1;opacity:.6}
+  .orb{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 36% 30%, rgba(150,255,240,.95), rgba(52,214,194,.55) 26%, rgba(20,120,150,.25) 48%, transparent 64%),radial-gradient(circle at 60% 70%, rgba(40,160,200,.45), transparent 55%);filter:blur(2px);animation:float 9s ease-in-out infinite}
+  .orb-ring{position:absolute;inset:60px;border-radius:50%;background:conic-gradient(from 0deg, transparent, rgba(95,227,210,.5), transparent 38%, rgba(201,168,106,.4), transparent 70%);filter:blur(26px);opacity:.7;animation:spin 22s linear infinite}
+  .orb-core{position:absolute;left:50%;top:50%;width:70px;height:70px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 38% 32%, #fff, var(--cyan) 45%, var(--teal) 80%);box-shadow:0 0 80px 20px rgba(52,214,194,.5),0 0 160px 40px rgba(52,214,194,.25);animation:pulse 5s ease-in-out infinite}
+  .orb-halo{position:absolute;inset:-40px;border-radius:50%;border:1px solid rgba(95,227,210,.12);box-shadow:inset 0 0 120px rgba(52,214,194,.2)}
+  @keyframes float{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 18px))}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:1}50%{transform:translate(-50%,-50%) scale(1.12);opacity:.85}}
+  @media(max-width:680px){.orb-stage{width:380px;height:380px;right:-160px;opacity:.5}}
+  body::before{content:"";position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(900px 600px at 78% -5%, rgba(52,214,194,.16), transparent 60%),
+      radial-gradient(800px 700px at -10% 12%, rgba(28,90,140,.30), transparent 55%),
+      radial-gradient(1000px 900px at 50% 110%, rgba(20,80,110,.22), transparent 60%),
+      linear-gradient(180deg,#06101D 0%, #091A2D 40%, #08182A 100%);}
+  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  a{color:inherit}
+  img{max-width:100%;display:block}
+
+  .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 32px}
+
+  /* ── Main layout ── */
+  main{flex:1;padding:0;display:flex;flex-direction:column;align-items:center}
+
+  /* ── RA hero ── */
+  .ra-hero{text-align:center;padding:60px 32px 32px;max-width:680px;width:100%;margin:0 auto;position:relative;z-index:1}
+  @keyframes raGlow{0%,100%{box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 24px 60px -12px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 10px rgba(52,214,194,.13),0 0 56px -4px rgba(52,214,194,.52),0 24px 60px -12px rgba(0,0,0,.55)}}
+  .ra-avatar,.ra-avatar-initials{animation:raGlow 3.8s ease-in-out infinite}
+  @media(prefers-reduced-motion:reduce){.ra-avatar,.ra-avatar-initials{animation:none}}
+  .ra-avatar{width:170px;height:170px;border-radius:50%;object-fit:cover;margin:0 auto 24px;border:2px solid var(--line);box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 24px 60px -12px rgba(0,0,0,.55)}
+  .ra-avatar-initials{width:170px;height:170px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:700;color:#06101D;margin:0 auto 24px;background:linear-gradient(135deg,#18B9A6,#34D6C2);border:2px solid var(--line);box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 24px 60px -12px rgba(0,0,0,.55)}
+  .ra-eyebrow{font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:12px}
+  .ra-name{font-family:'Fraunces',serif;font-size:clamp(34px,6vw,52px);font-weight:300;color:var(--text);letter-spacing:-.015em;line-height:1.1}
+
+  /* ── Form hero ── */
+  .form-hero{text-align:center;margin:0 auto 34px;max-width:680px;padding:0 32px;position:relative;z-index:1}
+  .eyebrow{display:inline-flex;align-items:center;justify-content:center;gap:12px;font-size:13px;letter-spacing:.28em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:24px}
+  .eyebrow::before,.eyebrow::after{content:"";width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent)}
+  h1.form-title{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(42px,6.2vw,68px);line-height:1.05;letter-spacing:-.015em;color:var(--text);text-wrap:balance}
+  h1.form-title .grad{background:linear-gradient(110deg,var(--cyan),var(--teal-bright) 45%,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:italic;font-weight:400}
+  .form-sub{font-family:'Fraunces',serif;font-style:italic;font-size:20px;color:var(--muted);font-weight:300;margin-top:20px;line-height:1.55;max-width:580px;margin-left:auto;margin-right:auto;text-wrap:pretty}
+
+  /* ── Form card — floats above footer ── */
+  .form-card{width:100%;max-width:680px;margin:0 auto -70px;position:relative;background:linear-gradient(170deg,rgba(14,39,65,.97),rgba(9,26,45,.97));border:1px solid var(--line);border-radius:24px;padding:48px 44px 40px;box-shadow:0 40px 100px -20px rgba(0,0,0,.75),0 0 0 1px rgba(120,214,196,.06) inset;overflow:hidden;z-index:1}
+  .form-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan),var(--gold))}
+  @media(max-width:520px){.wrap{padding:0 14px}.form-card{padding:32px 18px 28px;border-radius:20px;margin-bottom:-50px}}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .form-grid .full{grid-column:1 / -1}
+  @media(max-width:520px){.form-grid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);font-weight:700}
+  .field input,.field textarea{font-family:'Manrope';font-size:16px;color:var(--text);background:rgba(6,16,29,.55);border:1px solid rgba(120,214,196,.18);border-radius:10px;padding:15px 16px;outline:none;transition:border-color .2s,background .2s,box-shadow .2s;width:100%}
+  .field textarea{resize:vertical;min-height:108px;line-height:1.6}
+  .field input::placeholder,.field textarea::placeholder{color:var(--muted-2)}
+  .field input:focus,.field textarea:focus{border-color:var(--teal-bright);background:rgba(6,16,29,.75);box-shadow:0 0 0 3px rgba(52,214,194,.12)}
+  .field-error{color:#ff7d7d;font-size:11.5px;letter-spacing:.04em;margin-top:2px;display:none}
+  .field.invalid input,.field.invalid textarea{border-color:rgba(255,125,125,.6)}
+  .field.invalid .field-error{display:block}
+
+  .intent-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:26px}
+  @media(max-width:520px){.intent-row{grid-template-columns:1fr}}
+  .intent-btn{position:relative;padding:18px 20px;border-radius:12px;font-family:'Manrope';font-size:13.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border:1px solid;transition:transform .25s,box-shadow .3s,background .3s,border-color .3s,color .3s;display:flex;align-items:center;justify-content:center;gap:10px}
+  .intent-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .intent-btn.interested{background:rgba(14,39,65,.7);border-color:rgba(120,214,196,.35);color:var(--muted)}
+  .intent-btn.interested:hover{background:rgba(24,185,166,.12);border-color:var(--teal-bright);color:var(--text)}
+  .intent-btn.sold{background:rgba(14,39,65,.7);border-color:rgba(120,214,196,.35);color:var(--muted)}
+  .intent-btn.sold:hover{background:rgba(24,185,166,.12);border-color:var(--teal-bright);color:var(--text)}
+  .intent-btn.selected.interested{background:rgba(24,185,166,.2);border-color:var(--teal-bright);color:var(--text);box-shadow:0 0 0 2px rgba(52,214,194,.2)}
+  .intent-btn.selected.sold{background:linear-gradient(120deg,var(--teal-bright),var(--cyan));color:#06101D;border-color:var(--cyan);box-shadow:0 10px 28px -10px rgba(52,214,194,.55)}
+  .intent-btn:disabled{opacity:.6;pointer-events:none}
+  .intent-error{color:#ff7d7d;font-size:11.5px;text-align:center;margin-top:10px;display:none}
+  .intent-error.shown{display:block}
+
+  /* ── Submit button ── */
+  .submit-row{margin-top:20px;display:flex;justify-content:center}
+  .submit-btn{min-width:220px;padding:17px 40px;background:rgba(14,39,65,.8);border:1px solid rgba(120,214,196,.35);color:var(--text);border-radius:12px;font-family:'Manrope';font-size:13.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:.25s}
+  .submit-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .submit-btn:hover{border-color:var(--teal-bright);background:rgba(24,185,166,.12);color:var(--cyan);transform:translateY(-1px)}
+  .submit-btn:disabled{opacity:.5;pointer-events:none}
+
+  /* ── RA hero bio ── */
+  .ra-bio{font-family:'Fraunces',serif;font-style:italic;font-size:18px;color:var(--muted);line-height:1.65;max-width:480px;margin:14px auto 0}
+
+  /* ── Consent / opt-out ── */
+  .consent-row{margin-top:24px;padding:20px 22px;background:rgba(6,16,29,.4);border:1px solid var(--line-soft);border-radius:12px}
+  .consent-label{display:flex;align-items:flex-start;gap:12px;cursor:pointer;font-size:13.5px;color:var(--muted);line-height:1.65}
+  .consent-label input[type="checkbox"]{width:18px;height:18px;min-width:18px;margin-top:2px;accent-color:var(--teal-bright);cursor:pointer}
+  .consent-label a{color:var(--cyan);text-decoration:underline;text-underline-offset:2px}
+  .form-foot{margin-top:14px;font-size:11.5px;color:var(--muted-2);text-align:center;letter-spacing:.04em}
+
+  /* ── Success state ── */
+  .success{display:none;width:100%;max-width:520px;text-align:center;padding:30px 30px 36px;margin:0 auto}
+  .success.shown{display:block;animation:fadeUp .55s cubic-bezier(.2,.7,.2,1)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .success .check-wrap{width:88px;height:88px;border-radius:50%;background:linear-gradient(160deg,rgba(24,185,166,.22),rgba(14,39,65,.85));border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 24px;box-shadow:0 0 50px -8px rgba(52,214,194,.45)}
+  .success .check-wrap svg{width:42px;height:42px;stroke:var(--cyan);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .success h2{font-family:'Fraunces',serif;font-weight:400;font-size:clamp(28px,4.4vw,40px);line-height:1.1;color:var(--text);letter-spacing:-.01em;margin-bottom:14px;text-wrap:balance}
+  .success h2 .grad{background:linear-gradient(110deg,var(--cyan),var(--teal-bright) 50%,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:italic}
+  .success p{color:var(--muted);font-size:16px;line-height:1.7;max-width:440px;margin:0 auto;text-wrap:pretty}
+  .success .post-cta{margin-top:30px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+  .success .post-cta a{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:11px;font-family:'Manrope';font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;text-decoration:none;transition:.25s}
+  .success .post-cta a.secondary{background:rgba(14,39,65,.6);color:var(--text);border:1px solid var(--line)}
+  .success .post-cta a.secondary:hover{background:rgba(24,185,166,.12);border-color:var(--teal-bright);color:var(--cyan)}
+  .success .post-cta a svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  body.submitted .form-hero,body.submitted .form-card{display:none}
+
+  /* ── Footer ── */
+  footer{padding:100px 0 48px;border-top:1px solid var(--line-soft);position:relative;z-index:0}
+  .footer-row{display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
+  .footer-logo-img{height:84px;width:auto;display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.45))}
+  .footer-text{color:var(--muted-2);font-size:12.5px;line-height:1.75}
+  .footer-text a{color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;transition:.2s}
+  .footer-text a:hover{color:var(--cyan);border-bottom-color:rgba(52,214,194,.35)}
+  .footer-meta{font-size:11.5px;color:var(--muted-2);margin-top:8px;letter-spacing:.04em}
+
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ── Typography hardening: prevent orphans / single-word last lines ── */
+  h1, h2, h3, h4,
+  .form-title, .ra-name, .ra-eyebrow, .success h2 { text-wrap: balance; }
+  p, .form-sub, .ra-bio, .success p, .consent-label, .form-foot { text-wrap: pretty; }
+
+  /* ── Mobile (<520px): readable type, full-width submit, tighter spacing ── */
+  @media(max-width:520px){
+    body{font-size:15.5px}
+    .ra-hero{padding:40px 22px 22px}
+    .ra-avatar,.ra-avatar-initials{width:130px;height:130px}
+    .ra-avatar-initials{font-size:38px}
+    .ra-name{font-size:clamp(28px,7vw,36px)}
+    .ra-bio{font-size:16px;max-width:none}
+    .form-hero{margin:0 auto 24px;padding:0 22px}
+    h1.form-title{font-size:clamp(34px,8vw,46px)}
+    .form-sub{font-size:17px;max-width:none}
+    .field input,.field textarea{font-size:15.5px;padding:13px 14px}
+    .field label{font-size:11.5px}
+    .submit-btn{width:100%;min-width:0;padding:16px 24px}
+    .intent-btn{padding:16px 14px;font-size:12.5px;letter-spacing:.16em}
+    .consent-row{padding:16px 18px}
+    .consent-label{font-size:13px;line-height:1.6}
+    .form-foot{font-size:11.5px}
+  }
+
+
+  /* ════════════════════════════════════════════════════════════════════════
+   * SKILLDORA THEME OVERRIDE — refer page
+   * Converts the dark-navy Divigner form to Skilldora's light, orange-accent
+   * brand. Orange orb, Roboto Slab headings, white form card.
+   * ════════════════════════════════════════════════════════════════════════ */
+  :root {
+    --ink: #122B46;
+    --bg: #EFEFEF;
+    --bg-2: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-2: #F2F4F5;
+    --line: #E2E5EA;
+    --line-soft: rgba(0,0,0,0.05);
+    --gold: #FF6113;
+    --teal: #385DFF;
+    --teal-bright: #385DFF;
+    --cyan: #1E42DD;
+    --text: #122B46;
+    --muted: #3D3D3D;
+    --muted-2: #7A7A7A;
+  }
+
+  /* Fonts */
+  body {
+    font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
+    background: #EFEFEF !important;
+    color: #3D3D3D !important;
+  }
+  h1, h2, h3, h4, .ra-name {
+    font-family: 'Roboto Slab', Georgia, serif !important;
+    color: #122B46 !important;
+    font-weight: 700 !important;
+    font-style: normal !important;
+  }
+  .form-sub {
+    font-family: 'Roboto', sans-serif !important;
+    font-style: normal !important;
+    color: #7A7A7A !important;
+    font-size: 17px !important;
+  }
+  .ra-bio {
+    font-family: 'Roboto', sans-serif !important;
+    font-style: normal !important;
+    color: #7A7A7A !important;
+  }
+
+  /* Heading grad → solid orange */
+  h1.form-title .grad {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #FF6113 !important;
+    color: #FF6113 !important;
+    font-style: normal !important;
+  }
+  .success h2 .grad {
+    background: linear-gradient(110deg, #FF6113, #FE6F4B 50%, #385DFF) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    font-style: normal !important;
+  }
+
+  /* Background — warm orange radial wash on light bg */
+  body::before {
+    background:
+      radial-gradient(900px 600px at 80% -5%, rgba(255,97,19,0.08), transparent 60%),
+      radial-gradient(600px 500px at -5% 35%, rgba(255,97,19,0.06), transparent 55%),
+      radial-gradient(800px 700px at 55% 115%, rgba(56,93,255,0.05), transparent 60%),
+      #EFEFEF !important;
+  }
+  body::after { display: none !important; }
+
+  /* Orb — orange */
+  .orb-stage { opacity: 0.45 !important; }
+  .orb {
+    background:
+      radial-gradient(circle at 36% 30%, rgba(255,97,19,0.90), rgba(254,111,75,0.55) 28%, rgba(255,140,60,0.18) 55%, transparent 70%),
+      radial-gradient(circle at 65% 70%, rgba(255,140,50,0.28), transparent 55%) !important;
+    filter: blur(2px) !important;
+  }
+  .orb-halo {
+    border: 1px solid rgba(255,97,19,0.14) !important;
+    box-shadow: inset 0 0 120px rgba(255,97,19,0.14) !important;
+    background: none !important;
+  }
+  .orb-core {
+    background: radial-gradient(circle at 38% 32%, #fff, rgba(255,130,50,0.85) 45%, rgba(255,97,19,0.75) 80%) !important;
+    box-shadow: 0 0 80px 20px rgba(255,97,19,0.38), 0 0 160px 40px rgba(255,97,19,0.18) !important;
+  }
+  .orb-ring {
+    background: conic-gradient(from 0deg, transparent, rgba(255,97,19,0.55), transparent 38%, rgba(254,111,75,0.42), transparent 70%) !important;
+    filter: blur(26px) !important;
+  }
+
+  /* Avatar glow — orange */
+  @keyframes raGlow {
+    0%, 100% { box-shadow: 0 0 0 5px rgba(255,97,19,0.07), 0 0 28px -4px rgba(255,97,19,0.22), 0 24px 60px -12px rgba(0,0,0,0.18) }
+    50%       { box-shadow: 0 0 0 10px rgba(255,97,19,0.13), 0 0 56px -4px rgba(255,97,19,0.48), 0 24px 60px -12px rgba(0,0,0,0.18) }
+  }
+  .ra-avatar {
+    border-color: rgba(255,97,19,0.2) !important;
+    box-shadow: 0 0 0 5px rgba(255,97,19,0.07), 0 0 28px -4px rgba(255,97,19,0.22), 0 24px 60px -12px rgba(0,0,0,0.18) !important;
+  }
+  .ra-avatar-initials {
+    background: linear-gradient(135deg, #FF6113, #FE6F4B) !important;
+    color: #fff !important;
+    border-color: rgba(255,97,19,0.2) !important;
+    box-shadow: 0 0 0 5px rgba(255,97,19,0.07), 0 0 28px -4px rgba(255,97,19,0.22), 0 24px 60px -12px rgba(0,0,0,0.18) !important;
+  }
+
+  /* Eyebrow / form hero labels */
+  .ra-eyebrow { color: #FF6113 !important; }
+  .eyebrow { color: #FF6113 !important; }
+  .eyebrow::before, .eyebrow::after {
+    background: linear-gradient(90deg, transparent, #FF6113, transparent) !important;
+  }
+
+  /* Form card — light, fully opaque so body gradient can't bleed through */
+  .form-card {
+    background: #FFFFFF !important;
+    border: 1px solid #E2E5EA !important;
+    box-shadow: 0 20px 60px -12px rgba(0,0,0,0.10), 0 0 0 1px rgba(255,97,19,0.06) inset !important;
+  }
+  .form-card::before {
+    background: linear-gradient(90deg, #FF6113, #385DFF, #FF6113) !important;
+  }
+
+  /* Inputs — light mode */
+  .field label { color: #7A7A7A !important; }
+  .field input, .field textarea {
+    font-family: 'Roboto', sans-serif !important;
+    color: #122B46 !important;
+    background: rgba(255,255,255,0.9) !important;
+    border-color: #E2E5EA !important;
+  }
+  .field input::placeholder, .field textarea::placeholder { color: #B0B8C4 !important; }
+  .field input:focus, .field textarea:focus {
+    border-color: #FF6113 !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(255,97,19,0.10) !important;
+  }
+  .field-error { color: #D93025 !important; }
+  .field.invalid input, .field.invalid textarea { border-color: rgba(217,48,37,0.6) !important; }
+  .intent-error { color: #D93025 !important; }
+
+  /* Intent buttons — light mode */
+  .intent-btn.interested, .intent-btn.sold {
+    background: rgba(255,255,255,0.8) !important;
+    border-color: #E2E5EA !important;
+    color: #7A7A7A !important;
+  }
+  .intent-btn.interested:hover, .intent-btn.sold:hover {
+    background: rgba(56,93,255,0.06) !important;
+    border-color: #385DFF !important;
+    color: #122B46 !important;
+  }
+  .intent-btn.selected.interested {
+    background: rgba(56,93,255,0.10) !important;
+    border-color: #385DFF !important;
+    color: #122B46 !important;
+    box-shadow: 0 0 0 2px rgba(56,93,255,0.20) !important;
+  }
+  .intent-btn.selected.sold {
+    background: linear-gradient(120deg, #FF6113, #FE6F4B) !important;
+    color: #fff !important;
+    border-color: #FF6113 !important;
+    box-shadow: 0 10px 28px -10px rgba(255,97,19,0.55) !important;
+  }
+
+  /* Submit button — orange (Skilldora primary action color) */
+  .submit-btn {
+    background: #FF6113 !important;
+    border-color: #FF6113 !important;
+    color: #fff !important;
+    font-family: 'Roboto', sans-serif !important;
+  }
+  .submit-btn:hover {
+    background: #E5550F !important;
+    border-color: #E5550F !important;
+    color: #fff !important;
+    box-shadow: 0 8px 22px -8px rgba(255,97,19,0.5) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* Consent row */
+  .consent-row {
+    background: rgba(0,0,0,0.02) !important;
+    border-color: #E2E5EA !important;
+  }
+  .consent-label { color: #7A7A7A !important; font-family: 'Roboto', sans-serif !important; }
+  .consent-label input[type="checkbox"] { accent-color: #385DFF !important; }
+  .consent-label a { color: #385DFF !important; }
+  .form-foot { color: #B0B8C4 !important; font-family: 'Roboto', sans-serif !important; }
+
+  /* Success state */
+  .success .check-wrap {
+    background: linear-gradient(160deg, rgba(255,97,19,0.12), rgba(255,255,255,0.95)) !important;
+    border-color: #E2E5EA !important;
+    box-shadow: 0 0 50px -8px rgba(255,97,19,0.35) !important;
+  }
+  .success .check-wrap svg { stroke: #FF6113 !important; }
+  .success h2 { color: #122B46 !important; }
+  .success p { color: #7A7A7A !important; font-family: 'Roboto', sans-serif !important; }
+  .success .post-cta a.secondary {
+    background: #fff !important;
+    color: #122B46 !important;
+    border-color: #E2E5EA !important;
+  }
+  .success .post-cta a.secondary:hover {
+    background: rgba(56,93,255,0.06) !important;
+    border-color: #385DFF !important;
+    color: #385DFF !important;
+  }
+
+  /* Footer — solid bg blocks body gradient from showing through */
+  footer {
+    padding: 40px 0 32px !important;
+    border-top: 1px solid #E2E5EA !important;
+    background: #EFEFEF !important;
+  }
+  .footer-logo-img {
+    height: 40px !important;
+    filter: none !important;
+  }
+  .footer-text { color: #7A7A7A !important; font-family: 'Roboto', sans-serif !important; }
+  .footer-text a { color: #3D3D3D !important; }
+  .footer-text a:hover { color: #385DFF !important; border-bottom-color: rgba(56,93,255,0.35) !important; }
+  .footer-meta { color: #B0B8C4 !important; }
+</style>
+</head>
+<body>
+
+<!-- ── Decorative orb (behind everything) ── -->
+<div class="orb-stage" aria-hidden="true">
+  <div class="orb-halo"></div>
+  <div class="orb-ring"></div>
+  <div class="orb"></div>
+  <div class="orb-core"></div>
+</div>
+
+<main>
+  <div class="wrap">
+
+    <!-- ── RA hero ── -->
+    <div class="ra-hero" id="ra-hero">
+      <div id="ra-avatar-wrap"></div>
+      <div class="ra-eyebrow">Referred by</div>
+      <div class="ra-name" id="ra-hero-name">{{ra_first_name}} {{ra_last_name}}</div>
+      <div class="ra-bio" id="ra-hero-bio">{{ra_bio}}</div>
+    </div>
+
+    <div class="form-hero" id="form-hero">
+      <span class="eyebrow">Get Started</span>
+      <h1 class="form-title">Tell us about <span class="grad">you.</span></h1>
+      <p class="form-sub">Drop your details and let us know where you are. We'll respond from the Divigner team, and your Referral Associate will be notified automatically.</p>
+    </div>
+
+    <form class="form-card" id="lead-form" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="lead-first-name">First Name *</label>
+          <input id="lead-first-name" name="first_name" type="text" placeholder="Jane" autocomplete="given-name" required>
+          <div class="field-error">Please enter your first name.</div>
+        </div>
+        <div class="field">
+          <label for="lead-last-name">Last Name *</label>
+          <input id="lead-last-name" name="last_name" type="text" placeholder="Doe" autocomplete="family-name" required>
+          <div class="field-error">Please enter your last name.</div>
+        </div>
+        <div class="field">
+          <label for="lead-email">Email *</label>
+          <input id="lead-email" name="email" type="email" placeholder="jane@company.com" autocomplete="email" required>
+          <div class="field-error">A valid email is required.</div>
+        </div>
+        <div class="field">
+          <label for="lead-phone">Phone *</label>
+          <input id="lead-phone" name="phone" type="tel" placeholder="(555) 555-0142" autocomplete="tel" required>
+          <div class="field-error">Please enter a phone number.</div>
+        </div>
+        <div class="field">
+          <label for="lead-company">Business Name *</label>
+          <input id="lead-company" name="company" type="text" placeholder="Your business" autocomplete="organization" required>
+          <div class="field-error">Please enter your business name.</div>
+        </div>
+        <div class="field">
+          <label for="lead-website">Website</label>
+          <input id="lead-website" name="website" type="url" placeholder="https://yourbusiness.com" autocomplete="url">
+          <div class="field-error">Please enter a valid URL.</div>
+        </div>
+        <div class="field full">
+          <label for="lead-message">Anything you'd like us to know?</label>
+          <textarea id="lead-message" name="message" placeholder="Tell us about your goals, your timeline, or any questions you have…" rows="4"></textarea>
+        </div>
+      </div>
+
+      <input type="hidden" name="prospect_intent" id="lead-intent" value="">
+
+      <div class="intent-row">
+        <button type="button" class="intent-btn interested" data-intent="interested">
+          I'm Interested
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </button>
+        <button type="button" class="intent-btn sold" data-intent="sold">
+          I'm Sold
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+      <div class="intent-error" id="intent-error">Please select how you'd like to proceed above.</div>
+
+      <div class="submit-row">
+        <button type="submit" class="submit-btn" id="submit-btn">
+          Submit
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <!-- Marketing consent (opt-in by default) -->
+      <div class="consent-row" id="consent-row">
+        <label class="consent-label">
+          <input type="checkbox" id="lead-consent" checked>
+          <span>It's okay to email me about Divigner updates, offers, and helpful resources. You can opt out anytime by emailing <a href="mailto:info@divigner.com">info@divigner.com</a> or clicking "unsubscribe" in any email we send. Uncheck this if you'd prefer we only contact you about this inquiry.</span>
+        </label>
+      </div>
+
+      <div class="form-foot">Your information is kept secure and never sold to third parties.</div>
+    </form>
+
+    <div class="success" id="success">
+      <div class="check-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+      </div>
+      <h2>Thanks — <span class="grad">we've got it.</span></h2>
+      <p>Your Referral Associate has been notified and the Divigner team will reach out shortly.</p>
+      <div class="post-cta">
+        <a class="secondary" href="https://myskilldora.com" target="_blank" rel="noopener">Visit myskilldora.com
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-row">
+      <img class="footer-logo-img" src="https://myskilldora.com/wp-content/uploads/2024/09/Logo2024.png" alt="Skilldora">
+      <div class="footer-text">
+        <a href="https://myskilldora.com" target="_blank" rel="noopener">myskilldora.com</a>
+        <div class="footer-meta">&#169; <span id="year"></span> Skilldora® Inc. &nbsp;·&nbsp; Powered by <a href="https://divigner.com" target="_blank" rel="noopener" style="color:inherit;border-bottom:1px dotted currentColor">Divigner Group</a></div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  /* ── RA avatar: photo with initials fallback ── */
+  var avatarWrap = document.getElementById('ra-avatar-wrap');
+  var photoUrl = '{{ra_photo}}';
+  var nameEl = document.getElementById('ra-hero-name');
+  var nameParts = (nameEl ? nameEl.textContent : '').trim().split(/\s+/);
+  var initials = nameParts.slice(0,2).map(function(w){ return w.charAt(0).toUpperCase(); }).join('') || '?';
+
+  if(photoUrl) {
+    var img = document.createElement('img');
+    img.className = 'ra-avatar';
+    img.src = photoUrl;
+    img.alt = nameEl ? nameEl.textContent : '';
+    img.onerror = function(){
+      avatarWrap.innerHTML = '';
+      var d = document.createElement('div');
+      d.className = 'ra-avatar-initials';
+      d.textContent = initials;
+      avatarWrap.appendChild(d);
+    };
+    avatarWrap.appendChild(img);
+  } else {
+    var d = document.createElement('div');
+    d.className = 'ra-avatar-initials';
+    d.textContent = initials;
+    avatarWrap.appendChild(d);
+  }
+
+  /* ── Form ── */
+  var form = document.getElementById('lead-form');
+  var intentInput = document.getElementById('lead-intent');
+  var intentError = document.getElementById('intent-error');
+  var busy = false;
+
+  form.querySelectorAll('.intent-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var val = btn.dataset.intent;
+      if(intentInput.value === val){
+        intentInput.value = '';
+        form.querySelectorAll('.intent-btn').forEach(function(b){ b.classList.remove('selected'); });
+      } else {
+        intentInput.value = val;
+        form.querySelectorAll('.intent-btn').forEach(function(b){ b.classList.remove('selected'); });
+        btn.classList.add('selected');
+      }
+      intentError.classList.remove('shown');
+    });
+  });
+
+  function setSubmitting(v){
+    busy = v;
+    var sb = document.getElementById('submit-btn');
+    if(sb) sb.disabled = v;
+  }
+
+  function validateForm(){
+    var ok = true;
+    form.querySelectorAll('.field').forEach(function(f){ f.classList.remove('invalid'); });
+    intentError.classList.remove('shown');
+
+    form.querySelectorAll('input[required]:not([type="checkbox"])').forEach(function(inp){
+      var val = (inp.value || '').trim();
+      var valid = val.length > 0;
+      if(inp.type === 'email') valid = valid && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      if(!valid){ inp.closest('.field').classList.add('invalid'); ok = false; }
+    });
+
+    var website = document.getElementById('lead-website');
+    if(website.value.trim().length > 0){
+      try { new URL(website.value.trim().match(/^https?:\/\//) ? website.value.trim() : 'https://'+website.value.trim()); }
+      catch(e){ website.closest('.field').classList.add('invalid'); ok = false; }
+    }
+
+    if(!intentInput.value){
+      intentError.classList.add('shown'); ok = false;
+    }
+
+    return ok;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(busy) return;
+    if(!validateForm()) return;
+    setSubmitting(true);
+
+    var payload = {
+      slug:              '{{ra_slug}}',
+      first_name:        (document.getElementById('lead-first-name').value || '').trim(),
+      last_name:         (document.getElementById('lead-last-name').value || '').trim(),
+      email:             (document.getElementById('lead-email').value || '').trim(),
+      phone:             (document.getElementById('lead-phone').value || '').trim(),
+      company:           (document.getElementById('lead-company').value || '').trim(),
+      website:           (document.getElementById('lead-website').value || '').trim() || undefined,
+      message:           (document.getElementById('lead-message').value || '').trim() || undefined,
+      prospect_intent:   intentInput.value,
+      marketing_consent: document.getElementById('lead-consent').checked
+    };
+
+    fetch('{{functions_url}}', {
+      method:  'POST',
+      headers: {'Content-Type':'application/json'},
+      body:    JSON.stringify(payload)
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.id){
+        document.body.classList.add('submitted');
+        document.getElementById('success').classList.add('shown');
+        window.scrollTo({top:0,behavior:'smooth'});
+      } else {
+        alert((res && res.error) || 'Something went wrong — please try again.');
+        setSubmitting(false);
+      }
+    })
+    .catch(function(){
+      alert('Something went wrong — please try again.');
+      setSubmitting(false);
+    });
+  });
+})();
+</script>
+</body>
+</html>$SKD_REFER$,
+    $SKD_DEMO$<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -180,11 +858,6 @@
   .embed-thumb-label::before{content:"";width:7px;height:7px;border-radius:50%;background:#FF3D5A;box-shadow:0 0 10px #FF3D5A;animation:thumbDot 1.2s ease-in-out infinite}
   @keyframes thumbDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
 
-  /* Ava poster: keep her face clear — play affordance sits bottom-right as a badge, not centered */
-  #ava-poster .embed-thumb-play{left:auto;top:auto;right:16px;bottom:14px;transform:none;width:60px;height:60px}
-  #ava-poster .embed-thumb-play svg{width:24px;height:24px}
-  #ava-poster:hover .embed-thumb-play{transform:scale(1.1)}
-
   /* Fallback when no thumbnail file is present (broken img or missing src) */
   .embed-thumb-fallback{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:radial-gradient(ellipse at 50% 35%, rgba(52,214,194,.22), rgba(11,33,56,.6) 55%, rgba(6,16,29,.95) 100%);color:var(--muted);font-family:'Manrope',sans-serif;font-size:12px;letter-spacing:.06em}
   .embed-thumb-fallback b{font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:24px;color:var(--cyan);letter-spacing:-.01em}
@@ -200,30 +873,15 @@
   /* ── Avatar fullscreen modal (blurs background, resizable, mobile-aware) ── */
   .avatar-modal{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .35s ease}
   .avatar-modal.open{display:flex;opacity:1}
-  .avatar-modal-backdrop{position:absolute;inset:0;background:rgba(6,16,29,.55);backdrop-filter:blur(6px) saturate(1.05);-webkit-backdrop-filter:blur(6px) saturate(1.05)}
+  .avatar-modal-backdrop{position:absolute;inset:0;background:rgba(6,16,29,.72);backdrop-filter:blur(18px) saturate(1.1);-webkit-backdrop-filter:blur(18px) saturate(1.1)}
   /* When modal is open, blur the whole page behind it as well (covers iOS/older browsers) */
   body.avatar-modal-active > *:not(.avatar-modal){filter:blur(0)}  /* no-op — backdrop layer handles the visual */
   .avatar-modal-stage{position:relative;width:100%;max-width:880px;aspect-ratio:16/9;border-radius:22px;overflow:hidden;background:#06101D;border:1px solid rgba(120,214,196,.25);box-shadow:0 40px 100px -28px rgba(0,0,0,.85), 0 0 80px -28px rgba(52,214,194,.4);transform:scale(.96);transition:transform .4s cubic-bezier(.2,.7,.2,1), max-width .4s, max-height .4s, aspect-ratio .4s}
   .avatar-modal.open .avatar-modal-stage{transform:scale(1)}
-  .avatar-modal-stage.ratio-43{max-width:min(820px, 94vw);aspect-ratio:4/3}
   .avatar-modal-stage.size-large{max-width:min(1320px, 96vw);aspect-ratio:auto;height:min(900px, 88vh)}
-  .avatar-modal-stage:fullscreen{max-width:none;aspect-ratio:auto;border-radius:0}
-  .avatar-modal-stage:-webkit-full-screen{max-width:none;aspect-ratio:auto;border-radius:0}
-  /* In fullscreen the size toggle is meaningless — only that one hides. (Controls
-     already sit top-left below the app's title bar in every state.) */
-  .avatar-modal-stage:fullscreen .avatar-modal-ctrl.resize{display:none}
-  .avatar-modal-stage:-webkit-full-screen .avatar-modal-ctrl.resize{display:none}
-  /* If the viewport narrows below the mobile breakpoint WHILE fullscreen (device
-     rotation, browser zoom), the mobile hide must not remove the exit affordance —
-     without it the only remaining control (X) would end the live session. */
-  .avatar-modal-stage:fullscreen .avatar-modal-ctrl.fullscreen{display:grid}
-  .avatar-modal-stage:-webkit-full-screen .avatar-modal-ctrl.fullscreen{display:grid}
   .avatar-modal-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
   .avatar-modal-frame iframe{width:100%;height:100%;border:0;display:block}
-  /* Controls live top-left, below the embedded app's title bar — its own interactive
-     UI owns the top-right (chat header / download) in every layout, so this is the
-     one corner that never collides, windowed or fullscreen. */
-  .avatar-modal-controls{position:absolute;top:72px;left:16px;display:flex;gap:8px;z-index:5}
+  .avatar-modal-controls{position:absolute;top:14px;right:14px;display:flex;gap:8px;z-index:5}
   .avatar-modal-ctrl{width:38px;height:38px;border-radius:50%;border:1px solid rgba(120,214,196,.35);background:rgba(6,16,29,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;cursor:pointer;display:grid;place-items:center;transition:.2s}
   .avatar-modal-ctrl:hover{border-color:var(--teal-bright);background:rgba(24,185,166,.35);color:var(--cyan)}
   .avatar-modal-ctrl svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -232,9 +890,9 @@
   .avatar-modal-loading .spin{width:42px;height:42px;border:3px solid rgba(52,214,194,.2);border-top-color:var(--teal-bright);border-radius:50%;animation:embedSpin .8s linear infinite}
   @media(max-width:780px){
     .avatar-modal{padding:0}
-    .avatar-modal-stage,.avatar-modal-stage.size-large,.avatar-modal-stage.ratio-43{max-width:100%;width:100%;height:100vh;height:100dvh;aspect-ratio:auto;border-radius:0;border-left:0;border-right:0}
-    .avatar-modal-ctrl.resize,.avatar-modal-ctrl.fullscreen{display:none}
-    .avatar-modal-controls{top:calc(env(safe-area-inset-top, 0px) + 64px);left:12px;right:auto}
+    .avatar-modal-stage,.avatar-modal-stage.size-large{max-width:100%;width:100%;height:100vh;aspect-ratio:auto;border-radius:0;border-left:0;border-right:0}
+    .avatar-modal-ctrl.resize{display:none}
+    .avatar-modal-controls{top:max(12px, env(safe-area-inset-top, 12px));right:12px}
   }
 
   /* Card body */
@@ -579,20 +1237,19 @@
     .hero{padding:120px 0 50px}
   }
 
-  /* ── Typography hardening: no orphaned single words on any line, any screen.
-        text-wrap inherits, so the body rule covers ALL text — including copy
-        injected by JS (RA name/title/bio) — without maintaining an allowlist.
-        Headings and short display lines get balance for even line lengths. ── */
-  body { text-wrap: pretty; }
+  /* ── Typography hardening: stop orphans / single-word last lines on every screen ── */
   h1, h2, h3, h4,
   .sec-title, .form-title, .featured-name, .embed-name, .modal-title,
   .qr-title, .featured-tagline, .addon-heading, .price .amt,
-  .ra-name, .ra-label, .ra-title, .final-cta h3, .success h2 {
+  .ra-name, .ra-label, .final-cta h3, .success h2 {
     text-wrap: balance;
   }
-  /* The hero title's forced <br> defeats balance on narrow screens and
-     strands the last word — let balance control all breaks on mobile */
-  @media(max-width:640px){ .hero h1 br{display:none} }
+  p, .lede, .hero-sub, .form-sub, .ra-bio, .embed-desc,
+  .featured-desc, .featured-foot, .card p, .why-item p, .notis,
+  .price .desc, .addon-note p, .modal-sub, .footer-text,
+  .form-foot, .consent-label, .modal-foot, .cookie-popup-card p {
+    text-wrap: pretty;
+  }
 
   /* ── Mobile (<520px): CTAs full-width, tighter form-card padding, prevent
         small buttons from sitting on their own line ── */
@@ -1296,7 +1953,7 @@
     <a href="#avatars" data-section="avatars">Recent Deployments</a>
     <!-- <a href="#why" data-section="why">Why Interactive Avatars?</a> -->
     <a href="#features" data-section="features">Features &amp; Functionality</a>
-    <!-- <a href="#about" data-section="about">About Us</a> -->
+    <a href="#about" data-section="about">About Us</a>
     <a href="#investment" data-section="investment">Investment</a>
     <a href="#ra" data-section="ra">Your RA</a>
     <a href="#" id="qr-btn" aria-label="Show QR code">QR
@@ -1334,9 +1991,12 @@
   <div class="wrap">
     <div class="hero-content reveal">
       <span class="eyebrow">Interactive Avatars</span>
-      <h1>Meet the next<br><span class="grad">Face</span> of Your Web&nbsp;Presence.</h1>
+      <h1>Meet the next<br><span class="grad">Face</span> of Your Web Presence.</h1>
       <p class="hero-sub">Conversational, on-brand AI concierges that greet your visitors, answer their questions, and routes your prospective clients directly to your team by face or voice 24/7.</p>
       <div class="hero-cta-row">
+        <a href="#avatars" class="btn-primary">See the avatars
+          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </a>
         <a href="#" class="btn-secondary" id="hero-learn-more">Get in Touch
           <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
@@ -1352,29 +2012,16 @@
       <div class="sec-num">01</div>
       <h2 class="sec-title">What are <span class="grad">Interactive Avatars?</span></h2>
       <div class="gold-line"></div>
-      <p class="lede">Picture a face on your website that greets every visitor in your voice, on your brand, ready to answer the question your FAQ never quite covers. It looks back at you. It listens. It speaks. And it remembers what your business is supposed to sound like. A person-shaped presence, trained on your content, online before your team has had their coffee. Visitors who would have bounced stay, talk, and tell you exactly what they're looking for.</p>
+      <p class="lede">Picture a face on your website that greets every visitor in your voice, on your brand, ready to answer the question your FAQ never quite covers. It looks back at you. It listens. It speaks. And it remembers what your business is supposed to sound like.</p>
     </div>
-
-    <!-- Featured prominent avatar (Ava) -->
-    <div class="featured-avatar reveal">
-      <div class="featured-embed">
-        <div class="embed-video featured-video" id="ava-stage">
-          <button type="button" class="embed-thumb-btn" id="ava-poster" aria-label="Start a conversation with Ava">
-            <img class="embed-thumb" src="/avatars/ava.jpg" alt="Ava — Divigner's conversational avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="embed-thumb-fallback" style="display:none"><b>Ava</b></div>
-            <div class="embed-thumb-overlay"></div>
-            <div class="embed-thumb-play"><svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg></div>
-            <span class="embed-thumb-label">Live · Click to talk</span>
-          </button>
-        </div>
-      </div>
-      <div class="featured-content">
-        <span class="featured-badge"><span class="dot"></span>Live now · Ready to answer</span>
-        <h3 class="featured-name">Meet <span class="grad">Ava.</span></h3>
-        <p class="featured-tagline">She explains the value of an avatar by being one.</p>
-        <p class="featured-desc">Ava is here to show you what an Interactive Avatar could do for your business. She'll interview you about what you do, who visits your site, and where your team loses time, then walk you through the benefits and value an avatar would bring to exactly that. Ask her anything along the way: <em>"Would this work for a clinic my size?" "What's involved in launching?" "Can it book appointments / take payments / handle Spanish?"</em> And the whole time, you're experiencing exactly what your visitors would experience on your site.</p>
-        <span class="featured-foot">No signup. No form. Voice or text. Faster than booking a call.</span>
-      </div>
+    <div class="notis-row stagger">
+      <div class="notis"><span class="not">Not a chatbot</span><span class="arrow">→</span><span class="is">A presence</span></div>
+      <div class="notis"><span class="not">Not a video</span><span class="arrow">→</span><span class="is">A conversation</span></div>
+      <div class="notis"><span class="not">Not a form</span><span class="arrow">→</span><span class="is">A relationship</span></div>
+    </div>
+    <div class="callout reveal">
+      <span class="label">The short version</span>
+      <p>A person-shaped presence, trained on your content, voiced in your tone, online before your team has had their coffee. Visitors who would have bounced stay, talk, and tell you exactly what they're looking for. Keep scrolling. The rest of this page is what that actually looks like.</p>
     </div>
   </div>
 </section>
@@ -1456,16 +2103,42 @@
   </div>
 </section>
 
-<!-- ── Why section (HIDDEN — Ava's featured block moved into section #what) ── -->
+<!-- ── Meta avatar: built to answer YOUR questions about avatars (HIDDEN — not ready) ── -->
 <section id="why" style="display:none">
   <div class="wrap">
     <div class="sec-head reveal">
       <div class="sec-num">03</div>
       <h2 class="sec-title">The avatars prior to this one were for other people. <span class="grad">This one is for you!</span></h2>
       <div class="gold-line"></div>
+      <p class="lede">You just saw avatars built for a dermatology practice, an education platform, and four other brands. They answer <em>their</em> visitors' questions. The avatar below answers <em>yours</em>: whether an interactive avatar makes sense for your business, your industry, your budget, your timeline. Skip the discovery call. Ask her directly.</p>
     </div>
 
-    <div class="why-proof-grid stagger" style="display:none">
+    <!-- Featured prominent avatar -->
+    <div class="featured-avatar reveal">
+      <div class="featured-embed">
+        <div class="embed-video featured-video">
+          <div class="embed-placeholder">
+            <div class="embed-placeholder-inner">
+              <svg viewBox="0 0 24 24"><polygon points="10 8 16 12 10 16 10 8"/><circle cx="12" cy="12" r="10"/></svg>
+              <b>Click to start →</b>
+              <span>Live · ready to talk</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="featured-content">
+        <span class="featured-badge"><span class="dot"></span>Live now · Ready to answer</span>
+        <h3 class="featured-name">The avatar that <span class="grad">sells avatars.</span></h3>
+        <p class="featured-tagline">If she can answer your questions, imagine what one could do for yours.</p>
+        <p class="featured-desc">She knows everything Divigner does: pricing, timelines, integrations, what we recommend for your industry, where avatars do and don't make sense. Ask the questions you'd ask a salesperson on a 30-minute call: <em>"Would this work for a clinic my size?" "What's involved in launching?" "Can it book appointments / take payments / handle Spanish?"</em> Get the answer in 30 seconds. And while you're at it, you're experiencing exactly what your visitors would experience on your site.</p>
+        <button type="button" class="featured-cta" id="featured-cta">Click here to talk to her
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </button>
+        <span class="featured-foot">No signup. No form. Voice or text. Faster than booking a call.</span>
+      </div>
+    </div>
+
+    <div class="why-proof-grid stagger">
       <div class="why-proof-card">
         <div class="why-proof-num">01</div>
         <div class="why-proof-icon">
@@ -1559,7 +2232,7 @@
       <div class="why-item">
         <div class="why-num">03</div>
         <div>
-          <h4>Educate without&nbsp;overcommitting</h4>
+          <h4>Educate without overcommitting</h4>
           <p>For regulated practices (medical, legal, financial), the avatar answers educational questions with the right disclaimers and routes personal questions to a human, fast.</p>
         </div>
       </div>
@@ -1586,7 +2259,7 @@
 <section id="investment">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div class="sec-num">04</div>
+      <div class="sec-num">05</div>
       <h2 class="sec-title">Your <span class="grad">Investment</span></h2>
       <div class="gold-line"></div>
       <p class="lede">One implementation fee to build, train, and launch your branded avatar. One monthly fee to keep her sharp, supported, and improving every week. No long contracts. No surprises.</p>
@@ -1597,7 +2270,6 @@
         <span class="pk">One-Time · Implementation</span>
         <div class="amt">$6,000</div>
         <div class="freq">Paid as $3,000 deposit · $3,000 on launch</div>
-        <div class="freq" style="margin-top:4px">Payment plans available</div>
         <p class="desc">Everything required to design, train, and deploy your avatar on your site. Paid once.</p>
         <ul class="incl">
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Live in 2–4 weeks.</b> Full build, training, and deployment to your site</span></li>
@@ -1607,7 +2279,7 @@
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Compliance and routing</b> rules reviewed for your vertical</span></li>
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Embedded on your website as a floating widget,</b> compatible with WordPress, Shopify, Wix, Squarespace, Webflow, and custom-built sites, served under your own domain</span></li>
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Calendar and email integration included.</b> Choose one pairing: Google Calendar with Gmail, or Microsoft 365 Calendar with Office 365 Email. Cal.com and Calendly are also supported as standalone booking platforms</span></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Voice-only option available</b> at no additional cost. Customer support without a visual avatar, offered as an&nbsp;add-on</span></li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span><b>Voice-only option available</b> at no additional cost. Customer support without a visual avatar, offered as an add-on</span></li>
         </ul>
       </div>
 
@@ -1631,7 +2303,21 @@
       <div class="addon-glow-teal" aria-hidden="true"></div>
       <span class="addon-label">Going Further</span>
       <h3 class="addon-heading">Add <span class="grad-gold">deeper automations</span> and agents that act, not just answer.</h3>
-      <p>Ready to go deeper? We extend your avatar with agentic engineering that takes real action across your business: pushing qualified leads into your CRM, triggering automations from every conversation, and connecting your order systems so your avatar can handle real customer support. For teams that need autonomous execution behind the scenes, we scope and deploy custom AI agents that research, route, retrieve, and act on behalf of your team.</p>
+      <p>Ready to go deeper? We extend your avatar with agentic engineering that moves data and takes real action across your business. Deep CRM integrations push session outcomes and qualified leads directly into HubSpot, Salesforce, Zoho, or your platform of choice. Zapier automations trigger downstream workflows from every conversation without writing a line of code. For e-commerce teams, we connect Shopify and WooCommerce order systems so your avatar can handle real customer support: checking order status, tracking shipments, and surfacing account details without a human in the loop. For teams that need autonomous execution behind the scenes, we scope and deploy custom AI agents, including <b>Hermes</b>, <b>OpenClaw</b>, and other purpose-built automations, that research, route, retrieve, and act on behalf of your team.</p>
+      <div class="addon-tags">
+        <span class="a-tag">HubSpot</span>
+        <span class="a-tag">Salesforce</span>
+        <span class="a-tag">Zoho</span>
+        <span class="a-tag">Zapier</span>
+        <span class="a-tag">Shopify Orders</span>
+        <span class="a-tag">WooCommerce</span>
+        <span class="a-tag">Stripe</span>
+        <span class="a-tag">Hermes</span>
+        <span class="a-tag">OpenClaw</span>
+        <span class="a-tag">Custom Agents</span>
+        <span class="a-tag">Agentic Workflows</span>
+        <span class="a-tag">Pipeline Sync</span>
+      </div>
     </div>
 
   </div>
@@ -1641,7 +2327,7 @@
 <section id="ra">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div class="sec-num">05</div>
+      <div class="sec-num">06</div>
       <h2 class="sec-title">Your <span class="grad">Referral Associate</span></h2>
       <div class="gold-line"></div>
       <p class="lede">You were referred to Divigner by the Referral Associate below. They're your direct line. Reach out any time with questions, or use the form to get started and they'll be notified automatically.</p>
@@ -1748,9 +2434,6 @@
       <button type="button" class="avatar-modal-ctrl resize" id="avatar-modal-resize" aria-label="Toggle size" title="Toggle size">
         <svg id="avatar-modal-resize-icon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
       </button>
-      <button type="button" class="avatar-modal-ctrl fullscreen" id="avatar-modal-fullscreen" aria-label="Fullscreen" title="Fullscreen">
-        <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-      </button>
       <button type="button" class="avatar-modal-ctrl close" id="avatar-modal-close" aria-label="Close">
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -1774,11 +2457,11 @@
   var SECTIONS = [
     {id:'what',       num:'01', label:'What is an Avatar?'},
     {id:'avatars',    num:'02', label:'Recent Deployments'},
-    // {id:'why',        num:'03', label:'Why Interactive Avatars?'},  // hidden with section#why (Ava moved into #what)
+    // {id:'why',        num:'03', label:'Why Interactive Avatars?'},
     {id:'features',   num:'03', label:'Features & Functionality'},
-    // {id:'about',      num:'05', label:'About Us'},  // hidden with section#about
-    {id:'investment', num:'04', label:'Investment'},
-    {id:'ra',         num:'05', label:'Your RA'}
+    {id:'about',      num:'04', label:'About Us'},
+    {id:'investment', num:'05', label:'Investment'},
+    {id:'ra',         num:'06', label:'Your RA'}
   ];
 
   /* ── Progress bar + topbar scroll state ── */
@@ -1927,33 +2610,9 @@
   document.getElementById('mob-learn-more').addEventListener('click', function(){ closeMobMenu(); goToLeadForm(); });
   document.getElementById('hero-learn-more').addEventListener('click', function(e){ e.preventDefault(); goToLeadForm(); });
   document.getElementById('footer-learn-more').addEventListener('click', goToLeadForm);
-  /* Featured "Ava" avatar — opens in the avatar modal (slightly blurred backdrop,
-     resizable, fullscreen control, full-bleed on mobile). No link-out, and no
-     auto-start: a live camera/mic session begins only when the visitor clicks.
-     Both the video poster and the CTA open the same modal; closing it ends the
-     session, and the poster stays in place so Ava can be reopened. */
-  var AVA_EMBED_URL = 'https://deployer-dev.avanew.ai/avatar/6a46faad14bc331056de01be?personaId=paae044d1b3b&replicaId=rcc28da86847&context=Test%0A%0ATest&name=Ava&v=1783036630154&autostart=true';
-  function startAva(){
-    openAvatarModal('Ava');
-    avatarModalStage.classList.add('ratio-43');
-    var f = document.createElement('iframe');
-    f.src = AVA_EMBED_URL;
-    f.allow = 'camera; microphone; fullscreen; display-capture; autoplay';
-    f.setAttribute('allowfullscreen', '');
-    f.title = 'Ava';
-    f.addEventListener('load', function(){
-      var l = avatarModalFrame.querySelector('.avatar-modal-loading');
-      if(l) l.remove();
-    });
-    avatarModalFrame.appendChild(f);
-  }
-  var avaPoster = document.getElementById('ava-poster');
-  if(avaPoster){
-    avaPoster.addEventListener('click', startAva);
-    avaPoster.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); startAva(); } });
-  }
-  var featuredCta = document.getElementById('featured-cta');
-  if(featuredCta){ featuredCta.addEventListener('click', function(e){ e.preventDefault(); startAva(); }); }
+  /* Featured "Start the consultation" CTA — wire to the live avatar trigger when ready.
+     Until then it routes to the lead form. */
+  document.getElementById('featured-cta').addEventListener('click', goToLeadForm);
 
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape') closeMobMenu();
@@ -1995,13 +2654,9 @@
         fallbackEl.textContent = initials;
       }
 
-      /* Title — only render when the RA has one in DB. Otherwise hide the
-         element so we don't leak the page-author's hardcoded fallback title. */
+      /* Title */
       var titleEl = document.getElementById('ra-title');
-      if(titleEl){
-        if(ra.ra_title) titleEl.innerHTML = ra.ra_title;
-        else titleEl.style.display = 'none';
-      }
+      if(titleEl && ra.ra_title) titleEl.innerHTML = ra.ra_title;
 
       /* Bio */
       var bioEl = document.getElementById('ra-bio');
@@ -2171,16 +2826,12 @@
   var avatarModalBack   = document.getElementById('avatar-modal-backdrop');
 
   function openAvatarModal(name){
-    // A reopen within 350ms of a close must cancel the pending frame wipe,
-    // or the stale timer would kill the brand-new session mid-connect.
-    clearTimeout(frameWipeTimer);
     avatarModalText.textContent = 'Connecting to ' + name + '…';
     avatarModalFrame.innerHTML = '<div class="avatar-modal-loading"><div class="spin"></div><div>' + avatarModalText.textContent + '</div></div>';
     avatarModal.classList.add('open');
     avatarModal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('avatar-modal-active');
     document.body.style.overflow = 'hidden';
-    avatarModalClose.focus();
   }
   function closeAvatarModal(){
     avatarModal.classList.remove('open');
@@ -2188,90 +2839,17 @@
     document.body.classList.remove('avatar-modal-active');
     document.body.style.overflow = '';
     avatarModalStage.classList.remove('size-large');
-    avatarModalStage.classList.remove('ratio-43');
-    if(document.fullscreenElement || document.webkitFullscreenElement){
-      pageInitiatedFsExit = true;
-      try { var p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if(p && p.catch) p.catch(function(){}); } catch(e){}
-    }
-    // Empty the frame so the iframe disconnects and any live session ends client-side
-    frameWipeTimer = setTimeout(function(){ avatarModalFrame.innerHTML = ''; }, 350);
+    // Empty the frame so the iframe disconnects and any Tavus session ends client-side
+    setTimeout(function(){ avatarModalFrame.innerHTML = ''; }, 350);
   }
   avatarModalClose.addEventListener('click', closeAvatarModal);
   avatarModalBack.addEventListener('click', closeAvatarModal);
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && avatarModal.classList.contains('open')){
-      // Held-key auto-repeat must never fall through to close — a single held
-      // ESC would otherwise exit fullscreen AND end the live session.
-      if(e.repeat) return;
-      // ESC in fullscreen only exits fullscreen. Browsers disagree on whether
-      // that keydown arrives before or after the exit, so also honor a short
-      // grace window — otherwise the same keystroke would close the modal
-      // and end a live session.
-      if(document.fullscreenElement || document.webkitFullscreenElement) return;
-      if(Date.now() - lastFsExitAt < 800) return;
-      closeAvatarModal();
-    }
-  });
-  // The keyup of the ESC press that exited fullscreen ends the grace early, so a
-  // second, deliberate ESC closes the modal without waiting out the window.
-  document.addEventListener('keyup', function(e){
-    if(e.key === 'Escape') lastFsExitAt = 0;
-  });
-  /* The deployer app posts {type:'avatar-widget-close'} to its parent when the
-     visitor closes / ends the conversation inside the iframe — return them to
-     the page instead of stranding them on the app's idle screen. */
-  window.addEventListener('message', function(e){
-    var host = '';
-    try { host = new URL(e.origin).hostname; } catch(err){ return; }
-    if(!/(^|\.)avanew\.ai$|(^|\.)divigner\.com$/.test(host)) return;
-    if(e.data && e.data.type === 'avatar-widget-close' && avatarModal.classList.contains('open')){
-      closeAvatarModal();
-    }
+    if(e.key === 'Escape' && avatarModal.classList.contains('open')) closeAvatarModal();
   });
   avatarModalResize.addEventListener('click', function(){
     avatarModalStage.classList.toggle('size-large');
   });
-  var avatarModalFs = document.getElementById('avatar-modal-fullscreen');
-  var frameWipeTimer;
-  var pageInitiatedFsExit = false;
-  avatarModalFs.addEventListener('click', function(){
-    if(document.fullscreenElement || document.webkitFullscreenElement){
-      // Exiting via our own button is unambiguous — don't arm the ESC grace window.
-      pageInitiatedFsExit = true;
-      try { var p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if(p && p.catch) p.catch(function(){}); } catch(e){}
-    } else {
-      var el = avatarModalStage;
-      try { var q = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if(q && q.catch) q.catch(function(){}); } catch(e){}
-    }
-  });
-  // Element fullscreen isn't available everywhere (e.g. iPhone Safari) — hide the
-  // button where it can't work instead of letting taps silently no-op.
-  if(!(avatarModalStage.requestFullscreen || avatarModalStage.webkitRequestFullscreen)){
-    avatarModalFs.style.display = 'none';
-  }
-  /* Track fullscreen state: swap the button between enter/exit affordances, and
-     remember when fullscreen ended (some browsers deliver the ESC keydown only
-     AFTER fullscreen has exited — without this, that same keystroke would fall
-     through to closeAvatarModal and kill a live session). */
-  var lastFsExitAt = 0;
-  function onAvatarFsChange(){
-    var fs = !!(document.fullscreenElement || document.webkitFullscreenElement);
-    if(!fs){
-      // Grace only protects keyboard/browser-initiated exits; exits from our own
-      // buttons shouldn't swallow a follow-up ESC meant to close the modal.
-      if(!pageInitiatedFsExit) lastFsExitAt = Date.now();
-      pageInitiatedFsExit = false;
-      // Return keyboard control to the page after fullscreen so ESC-to-close works.
-      if(avatarModal.classList.contains('open')) avatarModalClose.focus();
-    }
-    avatarModalFs.innerHTML = fs
-      ? '<svg viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M16 3v3a2 2 0 0 0 2 2h3"/><path d="M8 21v-3a2 2 0 0 0-2-2H3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>'
-      : '<svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
-    avatarModalFs.setAttribute('aria-label', fs ? 'Exit fullscreen' : 'Fullscreen');
-    avatarModalFs.setAttribute('title', fs ? 'Exit fullscreen' : 'Fullscreen');
-  }
-  document.addEventListener('fullscreenchange', onAvatarFsChange);
-  document.addEventListener('webkitfullscreenchange', onAvatarFsChange);
 
   function startTavusConversation(stage){
     var personaId = stage.dataset.tavusPersona;
@@ -2334,7 +2912,6 @@
   }
 
   document.querySelectorAll('.embed-video button.embed-thumb-btn').forEach(function(btn){
-    if(btn.id === 'ava-poster') return; // Ava opens via her own modal wiring above
     var stage = btn.closest('.embed-video');
     if(!stage) return;
     btn.addEventListener('click', function(){ startTavusConversation(stage); });
@@ -2344,3 +2921,19 @@
 
 </body>
 </html>
+$SKD_DEMO$
+  )
+  ON CONFLICT (id) DO UPDATE
+    SET name       = EXCLUDED.name,
+        html       = EXCLUDED.html,
+        demo_html  = EXCLUDED.demo_html,
+        updated_at = now();
+
+  -- 2) Point Skilldora's ra_associates row at this template.
+  UPDATE public.ra_associates
+     SET template_id = v_template_id
+   WHERE slug = 'skilldora';
+
+  RAISE NOTICE 'Skilldora custom template upserted (id=%)', v_template_id;
+END
+$migration$;
