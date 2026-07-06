@@ -43,12 +43,15 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [sent, setSent] = useState<Sent | null>(null)
 
+  // Auto-fill the slug from the name, or — for email-only invites — from the
+  // email's local part (jordan.lee@… → jordan-lee), until the admin edits it.
   useEffect(() => {
     if (!slugTouched) {
-      const base = [firstName, lastName].filter(Boolean).join(" ").trim()
+      const nameBase = [firstName, lastName].filter(Boolean).join(" ").trim()
+      const base = nameBase || email.split("@")[0] || ""
       setSlug(base ? slugify(base) : "")
     }
-  }, [firstName, lastName, slugTouched])
+  }, [firstName, lastName, email, slugTouched])
 
   function reset() {
     setFirstName(""); setLastName(""); setEmail(""); setSlug("")
@@ -64,7 +67,9 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   const slugValid = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug) && slug.length >= 2 && slug.length <= 60
-  const formValid = firstName.trim().length > 0 && lastName.trim().length > 0 && emailValid && slugValid
+  // Email + slug are the only requirements; name is optional and captured
+  // during onboarding.
+  const formValid = emailValid && slugValid
 
   async function handleSubmit() {
     if (!formValid) return
@@ -77,7 +82,7 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
         slug,
         ra_type: raType,
       })
-      setSent({ name: created.display_name, email: created.email, slug: created.slug })
+      setSent({ name: created.display_name || created.email, email: created.email, slug: created.slug })
       onInvited()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send invite")
@@ -188,7 +193,7 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="firstName" className="text-xs">First name</Label>
+              <Label htmlFor="firstName" className="text-xs">First name <span className="text-muted-foreground font-normal">(optional)</span></Label>
               <Input
                 id="firstName"
                 value={firstName}
@@ -198,7 +203,7 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="lastName" className="text-xs">Last name</Label>
+              <Label htmlFor="lastName" className="text-xs">Last name <span className="text-muted-foreground font-normal">(optional)</span></Label>
               <Input
                 id="lastName"
                 value={lastName}
@@ -210,7 +215,7 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-xs">Email</Label>
+            <Label htmlFor="email" className="text-xs">Email <span className="text-destructive">*</span></Label>
             <Input
               id="email"
               type="email"
@@ -229,7 +234,12 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
                 id="slug"
                 value={slug}
                 onChange={(e) => { setSlug(slugify(e.target.value)); setSlugTouched(true) }}
-                onBlur={() => { if (!slug && firstName) setSlug(slugify(`${firstName} ${lastName}`)) }}
+                onBlur={() => {
+                  if (!slug) {
+                    const base = [firstName, lastName].filter(Boolean).join(" ").trim() || email.split("@")[0]
+                    if (base) setSlug(slugify(base))
+                  }
+                }}
                 disabled={submitting}
                 placeholder="jordan-lee"
                 className="font-mono"

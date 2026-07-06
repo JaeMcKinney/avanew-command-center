@@ -170,13 +170,18 @@ export function RaAssociateReview() {
   const commentsBySection = comments
   const onCommentsChange = (next: RaSectionComment[]) => setComments(next)
 
+  // Email-only invites have no name until they sign the agreement; fall back
+  // to the email so the review header/breadcrumb are never blank.
+  const hasName = Boolean(ra.display_name?.trim())
+  const raName = hasName ? ra.display_name : ra.email
+
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Link to="/referral-program/associates" className="hover:text-foreground">Referral Associates</Link>
         <span>›</span>
-        <span className="text-foreground">Review · {ra.display_name}</span>
+        <span className="text-foreground">Review · {raName}</span>
       </div>
 
       {/* Header */}
@@ -186,12 +191,12 @@ export function RaAssociateReview() {
             <img src={ra.photo_url} alt="" className="h-14 w-14 rounded-full object-cover border" />
           ) : (
             <div className="h-14 w-14 rounded-full bg-muted border flex items-center justify-center text-base font-medium">
-              {ra.display_name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+              {raName.split(/[\s@.]+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase()}
             </div>
           )}
           <div>
-            <h1 className="text-xl font-semibold">{ra.display_name}</h1>
-            <p className="text-xs text-muted-foreground">{ra.email} · /demo/{ra.slug}</p>
+            <h1 className="text-xl font-semibold">{raName}</h1>
+            <p className="text-xs text-muted-foreground">{hasName ? `${ra.email} · ` : ""}/demo/{ra.slug}</p>
           </div>
         </div>
         <Badge variant={ra.status === "verification" ? "secondary" : "outline"}>

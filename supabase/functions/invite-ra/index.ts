@@ -28,8 +28,12 @@ import { signInviteToken, buildAcceptUrl, inviteEmailHtml } from "../_shared/inv
 
 type InviteRaPayload = {
   email: string
-  first_name: string
-  last_name: string
+  // first/last name are optional now — email is the only required identity
+  // field. When omitted, display_name is empty until the RA completes it
+  // during onboarding (they type their legal name to sign the agreement,
+  // which accept-agreement backfills into display_name).
+  first_name?: string
+  last_name?: string
   slug: string
   ra_type?: "individual" | "company"
   organization_id: string
@@ -115,16 +119,18 @@ Deno.serve(async (req) => {
   }
 
   const email = payload.email?.trim().toLowerCase()
-  const first_name = payload.first_name?.trim()
-  const last_name = payload.last_name?.trim()
+  const first_name = payload.first_name?.trim() ?? ""
+  const last_name = payload.last_name?.trim() ?? ""
+  // May be "" for email-only invites — backfilled from the agreement legal
+  // name at accept-agreement time. Admin displays fall back to email meanwhile.
   const display_name = [first_name, last_name].filter(Boolean).join(" ")
   const slug = payload.slug?.trim().toLowerCase()
   const organization_id = payload.organization_id
   const ra_type = payload.ra_type === "company" ? "company" : "individual"
 
   if (!email) return json(400, { error: "email is required" })
-  if (!first_name) return json(400, { error: "first_name is required" })
-  if (!last_name) return json(400, { error: "last_name is required" })
+  // first_name / last_name intentionally NOT required — email-only invites are
+  // allowed; the RA fills in their name during onboarding.
   if (!slug || !SLUG_RE.test(slug) || slug.length < 2 || slug.length > 60) {
     return json(400, { error: "Slug must be 2–60 lowercase letters, numbers, or hyphens" })
   }

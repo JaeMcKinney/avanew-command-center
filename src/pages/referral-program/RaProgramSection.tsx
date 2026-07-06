@@ -556,6 +556,10 @@ export function RaProgramSection() {
                   const isActiveOrInflight = ra.status !== "declined" && ra.status !== "terminated"
                   // Mid-onboarding rows get a hover checklist of wizard modules.
                   const inOnboarding = ra.status === "pending" || ra.status === "needs_changes"
+                  // Email-only invites have no name until onboarding; fall back
+                  // to the email for the label and avatar initials.
+                  const hasName = Boolean(ra.display_name?.trim())
+                  const raLabel = hasName ? ra.display_name : ra.email
                   return (
                     <TableRow
                       key={ra.id}
@@ -585,14 +589,18 @@ export function RaProgramSection() {
                         <div className="flex items-center gap-2.5">
                           <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                             {ra.photo_url ? (
-                              <img src={ra.photo_url} alt={ra.display_name} className="h-full w-full object-cover" />
+                              <img src={ra.photo_url} alt={raLabel} className="h-full w-full object-cover" />
                             ) : (
                               <span className="text-[10px] font-medium text-muted-foreground">
-                                {ra.display_name.slice(0, 2).toUpperCase()}
+                                {raLabel.slice(0, 2).toUpperCase()}
                               </span>
                             )}
                           </div>
-                          <span>{ra.display_name}</span>
+                          {/* Email-only invites have no name yet — show the email
+                              (muted) until they complete it during onboarding. */}
+                          {hasName
+                            ? <span>{ra.display_name}</span>
+                            : <span className="text-muted-foreground">{ra.email}</span>}
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{ra.email}</TableCell>

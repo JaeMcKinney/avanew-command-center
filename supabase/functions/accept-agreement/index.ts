@@ -80,10 +80,12 @@ Deno.serve(async (req) => {
   // Service-role client for the audit write + RA patch.
   const admin = createClient(supabaseUrl, serviceKey)
 
-  // Confirm the RA row belongs to the caller.
+  // Confirm the RA row belongs to the caller. display_name is pulled too so we
+  // can backfill it from the signed legal name for email-only invites (see the
+  // patch below).
   const { data: raRow, error: raErr } = await admin
     .from("ra_associates")
-    .select("id, user_id")
+    .select("id, user_id, display_name")
     .eq("id", payload.ra_associate_id)
     .maybeSingle()
   if (raErr) return json(500, { error: raErr.message })
@@ -109,6 +111,13 @@ Deno.serve(async (req) => {
     })
   if (auditErr) return json(500, { error: `audit insert failed: ${auditErr.message}` })
 
+  // Email-only invites arrive with a blank display_name; the agreement legal
+  // name is the RA's own first real name entry, so adopt it as the display
+  // name (and full_name, which the public landing-page RPC splits into
+  // first/last). Only when currently blank — never clobber an admin-provided
+  // name. profiles.full_name is likewise backfilled so staff-side lookups match.
+  const needsName = !(raRow.display_name ?? "").trim()
+
   // 2. Patch ra_associates with the latest acceptance.
   const { error: patchErr } = await admin
     .from("ra_associates")
@@ -119,9 +128,15 @@ Deno.serve(async (req) => {
       agreement_ip_address: ip,
       agreement_user_agent: ua,
       agreement_signed_name: signedName,
+      ...(needsName ? { display_name: signedName, full_name: signedName } : {}),
     })
     .eq("id", payload.ra_associate_id)
   if (patchErr) return json(500, { error: `ra patch failed: ${patchErr.message}` })
+
+  if (needsName) {
+    // Best-effort — a failed profile backfill shouldn't fail agreement capture.
+    await admin.from("profiles").update({ full_name: signedName }).eq("id", userId)
+  }
 
   return json(200, {
     agreement_completed: true,

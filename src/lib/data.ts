@@ -1878,8 +1878,10 @@ export async function canManageRaProgram(): Promise<boolean> {
 
 export async function inviteRa(input: {
   email: string
-  first_name: string
-  last_name: string
+  // Optional — email is the only required identity field. Empty names produce
+  // a blank display_name that the RA fills in during onboarding.
+  first_name?: string
+  last_name?: string
   slug: string
   ra_type?: import("@/types/db").RaType
 }): Promise<import("@/types/db").RaAssociate> {
@@ -1889,8 +1891,8 @@ export async function inviteRa(input: {
     {
       body: {
         email: input.email,
-        first_name: input.first_name,
-        last_name: input.last_name,
+        first_name: input.first_name ?? "",
+        last_name: input.last_name ?? "",
         slug: input.slug,
         ra_type: input.ra_type ?? "individual",
         organization_id: requireOrg(),
@@ -3887,8 +3889,8 @@ function savePreviewRaList(list: import("@/types/db").RaAssociate[]) {
 
 async function invitePreviewRa(input: {
   email: string
-  first_name: string
-  last_name: string
+  first_name?: string
+  last_name?: string
   slug: string
 }): Promise<import("@/types/db").RaAssociate> {
   const list = listPreviewRaAssociates()
@@ -3896,7 +3898,7 @@ async function invitePreviewRa(input: {
   if (list.some((r) => r.email.toLowerCase() === input.email.toLowerCase())) {
     throw new Error(`${input.email} has already been invited`)
   }
-  const display = `${input.first_name} ${input.last_name}`.trim()
+  const display = [input.first_name, input.last_name].filter(Boolean).join(" ").trim()
   const created: import("@/types/db").RaAssociate = {
     id: crypto.randomUUID(),
     organization_id: "preview-org",

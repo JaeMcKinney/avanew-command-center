@@ -135,12 +135,16 @@ export function RaAssociateDetail() {
   const oneTimePer = cfg ? calcOneTimeCommission(cfg) : 1000
   const recurringPer = cfg ? calcRecurringCommissionPerMonth(cfg) : 50
 
+  // Email-only invites have no name until onboarding; fall back to the email.
+  const hasName = Boolean(ra.display_name?.trim())
+  const raName = hasName ? ra.display_name : ra.email
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Link to="/referral-program/associates" className="hover:text-foreground">Referral Associates</Link>
         <span>›</span>
-        <span className="text-foreground">{ra.display_name}</span>
+        <span className="text-foreground">{raName}</span>
       </div>
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -149,13 +153,13 @@ export function RaAssociateDetail() {
             <img src={ra.photo_url} alt="" className="h-14 w-14 rounded-full object-cover border" />
           ) : (
             <div className="h-14 w-14 rounded-full bg-muted border flex items-center justify-center text-base font-medium">
-              {ra.display_name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+              {raName.split(/[\s@.]+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase()}
             </div>
           )}
           <div>
-            <h1 className="text-xl font-semibold">{ra.display_name}</h1>
+            <h1 className="text-xl font-semibold">{raName}</h1>
             <p className="text-xs text-muted-foreground">
-              {ra.email} · <span className="font-mono">/demo/{ra.slug}</span>
+              {hasName ? `${ra.email} · ` : ""}<span className="font-mono">/demo/{ra.slug}</span>
             </p>
           </div>
         </div>

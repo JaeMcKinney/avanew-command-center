@@ -30,7 +30,7 @@ type Row = {
   email: string
   slug: string
   ra_type: RaType
-  status: "valid" | "duplicate-email" | "duplicate-slug" | "invalid-email" | "invalid-slug" | "missing-name"
+  status: "valid" | "duplicate-email" | "duplicate-slug" | "invalid-email" | "invalid-slug"
   message?: string
 }
 
@@ -128,7 +128,10 @@ export function BulkInviteRaModal({ open, onClose, onInvited }: Props) {
       const first = (r.first_name ?? "").trim()
       const last = (r.last_name ?? "").trim()
       const email = (r.email ?? "").trim().toLowerCase()
-      const slug = r.slug?.trim() ? slugify(r.slug.trim()) : slugify(`${first} ${last}`)
+      // Name is optional; slug falls back to the email local part when no name
+      // and no explicit slug are given.
+      const nameBase = [first, last].filter(Boolean).join(" ").trim()
+      const slug = r.slug?.trim() ? slugify(r.slug.trim()) : slugify(nameBase || email.split("@")[0] || "")
       const ra_type: RaType = r.ra_type === "company" || r.ra_type === "individual"
         ? r.ra_type
         : parseRaType(typeof r.ra_type === "string" ? r.ra_type : undefined)
@@ -137,8 +140,7 @@ export function BulkInviteRaModal({ open, onClose, onInvited }: Props) {
         first_name: first, last_name: last, email, slug, ra_type,
         status: "valid",
       }
-      if (!first || !last) { row.status = "missing-name"; row.message = "Missing first/last name" }
-      else if (!emailValid(email)) { row.status = "invalid-email"; row.message = "Email is invalid" }
+      if (!emailValid(email)) { row.status = "invalid-email"; row.message = "Email is invalid" }
       else if (existingEmails.has(email) || seenEmail.has(email)) {
         row.status = "duplicate-email"; row.message = "Email already invited"
       } else if (!slugValidShape(slug)) { row.status = "invalid-slug"; row.message = "Slug is invalid" }
@@ -176,9 +178,24 @@ export function BulkInviteRaModal({ open, onClose, onInvited }: Props) {
     if (!lines.length) { setRows([]); return }
     const splitCols = (line: string) =>
       line.includes("\t") ? line.split("\t") : line.includes(",") ? line.split(",") : line.split(/\s+/)
+    // Email-anchored parse (not strict positional) so a bare list of emails —
+    // one per line — is the simplest valid input. Whatever precedes the email
+    // is the name; whatever follows is slug then ra_type.
     const raw = lines.map((line) => {
-      const [first, last, email, slug, type] = splitCols(line).map((c) => c.trim())
-      return { first_name: first, last_name: last, email, slug, ra_type: parseRaType(type) }
+      const cols = splitCols(line).map((c) => c.trim()).filter(Boolean)
+      const emailIdx = cols.findIndex((c) => emailValid(c))
+      if (emailIdx === -1) {
+        return { first_name: "", last_name: "", email: cols[0] ?? "", slug: "", ra_type: parseRaType(undefined) }
+      }
+      const before = cols.slice(0, emailIdx)
+      const after = cols.slice(emailIdx + 1)
+      return {
+        first_name: before[0] ?? "",
+        last_name: before.slice(1).join(" "),
+        email: cols[emailIdx],
+        slug: after[0] ?? "",
+        ra_type: parseRaType(after[1]),
+      }
     })
     setRows(validate(raw))
   }
@@ -252,7 +269,7 @@ export function BulkInviteRaModal({ open, onClose, onInvited }: Props) {
                 <Upload className="h-7 w-7 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm font-medium">Click to upload a CSV</p>
                 <p className="text-xs text-muted-foreground">
-                  Headers: <code>first_name, last_name, email, slug, ra_type</code> (slug and ra_type optional)
+                  Headers: <code>first_name, last_name, email, slug, ra_type</code> — only <code>email</code> is required
                 </p>
               </div>
               <input
@@ -263,18 +280,18 @@ export function BulkInviteRaModal({ open, onClose, onInvited }: Props) {
                 <p className="font-mono">first_name,last_name,email,slug,ra_type</p>
                 <p className="font-mono">Jordan,Lee,jordan@example.com,jordan-lee,individual</p>
                 <p className="font-mono">Acme,Partners,team@acme.com,acme,company</p>
-                <p className="font-mono">Avery,Smith,avery@example.com,,</p>
-                <p className="mt-2 italic">ra_type defaults to individual. Accepted values: individual, company.</p>
+                <p className="font-mono">,,avery@example.com,,</p>
+                <p className="mt-2 italic">Name optional — captured during onboarding. Slug defaults to the email name; ra_type defaults to individual.</p>
               </div>
             </TabsContent>
 
             <TabsContent value="paste" className="space-y-3 mt-0">
-              <Label className="text-xs">Paste rows (tab or comma separated). One per line: <span className="font-mono">first last email slug ra_type</span> (ra_type optional)</Label>
+              <Label className="text-xs">Paste one email per line — that's the minimum. Optionally add columns (tab or comma separated): <span className="font-mono">first last email slug ra_type</span></Label>
               <Textarea
                 value={pasted}
                 onChange={(e) => setPasted(e.target.value)}
                 rows={8}
-                placeholder="Jordan&#9;Lee&#9;jordan@example.com&#9;jordan-lee&#9;individual&#10;Acme&#9;Partners&#9;team@acme.com&#9;acme&#9;company"
+                placeholder="solo@example.com&#10;another@example.com&#10;Jordan&#9;Lee&#9;jordan@example.com&#9;jordan-lee&#9;individual&#10;Acme&#9;Partners&#9;team@acme.com&#9;acme&#9;company"
                 className="font-mono text-xs"
               />
               <Button variant="outline" size="sm" onClick={parsePastedTable} disabled={!pasted.trim()}>
