@@ -113,9 +113,11 @@ Deno.serve(async (req) => {
 
   // Email-only invites arrive with a blank display_name; the agreement legal
   // name is the RA's own first real name entry, so adopt it as the display
-  // name (and full_name, which the public landing-page RPC splits into
-  // first/last). Only when currently blank — never clobber an admin-provided
-  // name. profiles.full_name is likewise backfilled so staff-side lookups match.
+  // name. Only when currently blank — never clobber an admin-provided name.
+  // profiles.full_name is backfilled separately below (that's the column the
+  // public landing-page RPC splits into first/last — ra_associates has NO
+  // full_name column, and including one here made this entire patch fail
+  // silently for every email-only RA).
   const needsName = !(raRow.display_name ?? "").trim()
 
   // 2. Patch ra_associates with the latest acceptance.
@@ -128,7 +130,7 @@ Deno.serve(async (req) => {
       agreement_ip_address: ip,
       agreement_user_agent: ua,
       agreement_signed_name: signedName,
-      ...(needsName ? { display_name: signedName, full_name: signedName } : {}),
+      ...(needsName ? { display_name: signedName } : {}),
     })
     .eq("id", payload.ra_associate_id)
   if (patchErr) return json(500, { error: `ra patch failed: ${patchErr.message}` })

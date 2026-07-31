@@ -224,17 +224,31 @@ export function BulkInviteRaModal({ open, onClose, onInvited }: Props) {
     if (!validRows.length) return
     setSubmitting(true)
     let success = 0
+    let emailFailures = 0
+    let lastEmailError: string | null = null
     const failures: { row: Row; message: string }[] = []
     for (const r of validRows) {
       try {
-        await inviteRa({ first_name: r.first_name, last_name: r.last_name, email: r.email, slug: r.slug, ra_type: r.ra_type })
+        const created = await inviteRa({ first_name: r.first_name, last_name: r.last_name, email: r.email, slug: r.slug, ra_type: r.ra_type })
         success++
+        // RA row created but the invite email itself didn't send (e.g. SendGrid
+        // out of credits) — count separately so the admin isn't misled.
+        if (created.email_sent === false) {
+          emailFailures++
+          lastEmailError = created.email_error ?? lastEmailError
+        }
       } catch (err) {
         failures.push({ row: r, message: err instanceof Error ? err.message : "Unknown error" })
       }
     }
     setSubmitting(false)
-    if (success) toast.success(`Sent ${success} invite${success === 1 ? "" : "s"}`)
+    if (success && !emailFailures) toast.success(`Sent ${success} invite${success === 1 ? "" : "s"}`)
+    if (emailFailures) {
+      toast.error(`${emailFailures} of ${success} invite email${emailFailures === 1 ? "" : "s"} did NOT send`, {
+        description: `${lastEmailError ?? "Email provider error"}. The RA records were created — fix email delivery, then use Re-invite.`,
+        duration: 12000,
+      })
+    }
     if (failures.length) {
       toast.error(`${failures.length} invite${failures.length === 1 ? "" : "s"} failed`)
     }

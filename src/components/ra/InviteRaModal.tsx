@@ -83,6 +83,15 @@ export function InviteRaModal({ open, onClose, onInvited }: Props) {
         ra_type: raType,
       })
       setSent({ name: created.display_name || created.email, email: created.email, slug: created.slug })
+      // The RA record was created either way, but if the invite email itself
+      // failed to send (e.g. SendGrid out of credits), the admin must know —
+      // otherwise the RA waits on an email that never arrives.
+      if (created.email_sent === false) {
+        toast.error(`RA created, but the invite email did NOT send`, {
+          description: `${created.email_error ?? "Email provider error"}. Fix email delivery, then use Re-invite on their row.`,
+          duration: 12000,
+        })
+      }
       onInvited()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send invite")

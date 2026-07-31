@@ -10,7 +10,7 @@ import { ContactStep } from "@/components/ra/steps/ContactStep"
 import { BankingStep } from "@/components/ra/steps/BankingStep"
 import { W9Step } from "@/components/ra/steps/W9Step"
 import { SubmitStep } from "@/components/ra/steps/SubmitStep"
-import { getLocalAgreementAcceptance, getLocalW9 } from "@/lib/data"
+import { getLocalW9 } from "@/lib/data"
 import {
   DIVIGNER_LOGO_SRC,
   DIVIGNER_NOISE_SVG,
@@ -75,12 +75,14 @@ export function RaOnboardingSteps() {
         navigate("/ra/dashboard", { replace: true }); return
       }
 
-      // Merge localStorage agreement + W-9 acceptance (until PR-3 wires real columns).
-      const localAgreement = getLocalAgreementAcceptance(record.id)
+      // Merge localStorage W-9 acceptance (written in preview mode only; real
+      // mode W-9 state lives on the row). The agreement is deliberately NOT
+      // merged from localStorage anymore: the server row is authoritative.
+      // The old merge let a locally-cached "signed" state mask accept-agreement
+      // server failures — the RA saw a completed step the admin couldn't see.
       const localW9 = getLocalW9(record.id)
       const hydrated: RaAssociate = {
         ...record,
-        ...(localAgreement ?? {}),
         ...(localW9 ?? {}),
       }
 

@@ -206,9 +206,13 @@ Deno.serve(async (req) => {
     )
   if (memberErr) return json(500, { error: memberErr.message })
 
-  // Branded invite email — best-effort, non-blocking. A SendGrid hiccup
-  // shouldn't fail an otherwise-successful invite; the admin can always
-  // re-invite from the RA list.
+  // Branded invite email. A SendGrid failure doesn't roll back the invite (the
+  // RA row exists; the admin can re-invite once email delivery is restored) —
+  // but it is REPORTED via email_sent/email_error rather than silently
+  // swallowed. A fire-and-forget send here once hid a dead SendGrid account
+  // for weeks of invites.
+  let emailSent = false
+  let emailError: string | null = null
   const sendgridKey = Deno.env.get("SENDGRID_API_KEY")
   const inviteSecret = Deno.env.get("INVITE_TOKEN_SECRET")
   if (sendgridKey && inviteSecret) {
@@ -227,8 +231,18 @@ Deno.serve(async (req) => {
     )
     const acceptUrl = buildAcceptUrl(appUrl, token)
     const html = inviteEmailHtml(first_name, orgName, acceptUrl)
-    void sendGridSend(sendgridKey, email, `You're invited to join ${orgName}'s Referral Associate Program`, html)
+    const r = await sendGridSend(sendgridKey, email, `You're invited to join ${orgName}'s Referral Associate Program`, html)
+    emailSent = r.ok
+    if (!r.ok) {
+      let detail = r.error ?? ""
+      try {
+        const parsed = JSON.parse(detail) as { errors?: { message?: string }[] }
+        detail = parsed.errors?.map((e) => e.message).filter(Boolean).join("; ") || detail
+      } catch { /* keep raw text */ }
+      emailError = `SendGrid ${r.status ?? ""}: ${detail || "unknown error"}`.trim()
+    }
   } else {
+    emailError = "SENDGRID_API_KEY or INVITE_TOKEN_SECRET not set"
     console.warn("SENDGRID_API_KEY or INVITE_TOKEN_SECRET not set; RA invited but no email sent")
   }
 
@@ -243,5 +257,7 @@ Deno.serve(async (req) => {
     created_at: raRow.created_at,
     invite_expires_at: inviteExpiresAt,
     onboarding_deadline_at: onboardingDeadlineAt,
+    email_sent: emailSent,
+    email_error: emailError,
   })
 })

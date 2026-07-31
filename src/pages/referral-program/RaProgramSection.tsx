@@ -21,6 +21,7 @@ import {
   LayoutTemplate,
   Check,
   Circle,
+  Timer,
 } from "lucide-react"
 import { useViewAsRa } from "@/hooks/useViewAsRa"
 import { Button } from "@/components/ui/button"
@@ -70,6 +71,7 @@ import {
   listRaLandingTemplates,
   setRaTemplate,
   getRaW9SignedUrl,
+  resetRaOnboardingDeadline,
 } from "@/lib/data"
 import { toast } from "sonner"
 import type { RaAssociate, RaStatus, RaType, RaLandingTemplate, Lead } from "@/types/db"
@@ -336,6 +338,24 @@ export function RaProgramSection() {
       void refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to decline")
+    }
+  }
+
+  /** Restart the 14-day onboarding clock for an in-progress (or expired) RA.
+   *  No email is sent and nothing they've entered is touched — an expired RA
+   *  just signs back in and picks up where they left off. */
+  async function resetDeadline(ra: RaAssociate) {
+    try {
+      const r = await resetRaOnboardingDeadline(ra.id)
+      const dateStr = formatDate(r.onboarding_deadline_at)
+      toast.success(`Onboarding window restarted for ${ra.display_name || ra.email}`, {
+        description: r.reactivated
+          ? `They were expired — their account is unlocked again and they now have until ${dateStr} to finish. Everything they already entered is preserved.`
+          : `New deadline: ${dateStr}. Everything they already entered is preserved.`,
+      })
+      void refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to reset deadline")
     }
   }
 
@@ -662,6 +682,12 @@ export function RaProgramSection() {
                                 <DropdownMenuItem onClick={() => setReinviteTarget(ra)}>
                                   <Send className="h-3.5 w-3.5" />
                                   Re-invite
+                                </DropdownMenuItem>
+                              )}
+                              {canManage && (ra.status === "pending" || ra.status === "onboarding_expired" || ra.status === "needs_changes") && (
+                                <DropdownMenuItem onClick={() => resetDeadline(ra)}>
+                                  <Timer className="h-3.5 w-3.5" />
+                                  Restart onboarding window
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />

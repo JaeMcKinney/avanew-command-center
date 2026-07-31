@@ -1876,6 +1876,22 @@ export async function canManageRaProgram(): Promise<boolean> {
   return member?.role === "admin" && member?.is_program_admin === true
 }
 
+/** supabase.functions.invoke buries the edge function's JSON error body inside
+ *  FunctionsHttpError.context (a Response) and surfaces only the useless
+ *  "Edge Function returned a non-2xx status code". Pull the real message out
+ *  so admins see e.g. "Invite email failed — SendGrid 401: Maximum credits
+ *  exceeded" instead of the generic line. */
+async function unwrapEdgeFnError(error: unknown): Promise<Error> {
+  const ctx = (error as { context?: unknown })?.context
+  if (ctx instanceof Response) {
+    try {
+      const body = await ctx.clone().json() as { error?: string }
+      if (body?.error) return new Error(body.error)
+    } catch { /* non-JSON body — fall through */ }
+  }
+  return error instanceof Error ? error : new Error(String(error))
+}
+
 export async function inviteRa(input: {
   email: string
   // Optional — email is the only required identity field. Empty names produce
@@ -1884,9 +1900,9 @@ export async function inviteRa(input: {
   last_name?: string
   slug: string
   ra_type?: import("@/types/db").RaType
-}): Promise<import("@/types/db").RaAssociate> {
+}): Promise<import("@/types/db").RaAssociate & { email_sent?: boolean; email_error?: string | null }> {
   if (PREVIEW_MODE) return invitePreviewRa(input)
-  const { data, error } = await supabase.functions.invoke<import("@/types/db").RaAssociate>(
+  const { data, error } = await supabase.functions.invoke<import("@/types/db").RaAssociate & { email_sent?: boolean; email_error?: string | null }>(
     "invite-ra",
     {
       body: {
@@ -1900,7 +1916,7 @@ export async function inviteRa(input: {
       },
     }
   )
-  if (error) throw error
+  if (error) throw await unwrapEdgeFnError(error)
   if (!data) throw new Error("No data returned from invite-ra")
   return data
 }
@@ -1928,9 +1944,47 @@ export async function reinviteRa(input: {
       },
     }
   )
-  if (error) throw error
+  if (error) throw await unwrapEdgeFnError(error)
   if (!data) throw new Error("No data returned from reinvite-ra")
   return data
+}
+
+/** Restart an RA's 14-day onboarding window from now, WITHOUT touching any of
+ *  their entered data (agreement, photo, contact, banking, W-9 all persist on
+ *  the row). If the deadline cron already flipped them to onboarding_expired,
+ *  they're reverted to pending so the portal gates let them back in to finish.
+ *  Direct table update (staff RLS), so it works even while email delivery is
+ *  down — no message is sent, the RA just signs back in with their password. */
+export async function resetRaOnboardingDeadline(
+  raId: string
+): Promise<{ onboarding_deadline_at: string; reactivated: boolean }> {
+  const deadline = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+  if (PREVIEW_MODE) {
+    const list = listPreviewRaAssociates()
+    const target = list.find((r) => r.id === raId)
+    const reactivated = target?.status === "onboarding_expired"
+    savePreviewRaList(list.map((r) => r.id === raId
+      ? { ...r, onboarding_deadline_at: deadline, ...(reactivated ? { status: "pending" as const } : {}) }
+      : r))
+    return { onboarding_deadline_at: deadline, reactivated }
+  }
+  const { data: current, error: readErr } = await supabase
+    .from("ra_associates")
+    .select("status")
+    .eq("id", raId)
+    .maybeSingle<{ status: string }>()
+  if (readErr) throw readErr
+  if (!current) throw new Error("RA not found")
+  const reactivated = current.status === "onboarding_expired"
+  const { error } = await supabase
+    .from("ra_associates")
+    .update({
+      onboarding_deadline_at: deadline,
+      ...(reactivated ? { status: "pending" } : {}),
+    } as never)
+    .eq("id", raId)
+  if (error) throw error
+  return { onboarding_deadline_at: deadline, reactivated }
 }
 
 /** Change an RA's type (individual ⇄ company) after creation. */
@@ -3621,33 +3675,35 @@ export async function saveRaAgreement(
     agreement_user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     agreement_signed_name: data.signed_name,
   }
-  if (typeof localStorage !== "undefined") {
-    try {
-      localStorage.setItem(AGREEMENT_LS_PREFIX + raId, JSON.stringify(acceptance))
-    } catch {
-      /* ignore quota */
+  if (PREVIEW_MODE) {
+    if (typeof localStorage !== "undefined") {
+      try { localStorage.setItem(AGREEMENT_LS_PREFIX + raId, JSON.stringify(acceptance)) } catch { /* ignore quota */ }
     }
-  }
-  if (PREVIEW_MODE) return acceptance
-  try {
-    // Edge function captures IP from request headers and writes the audit row + ra_associates patch.
-    const { data: result, error } = await supabase.functions.invoke<AgreementAcceptance>(
-      "accept-agreement",
-      {
-        body: {
-          ra_associate_id: raId,
-          agreement_version: data.agreement_version,
-          signed_legal_name: data.signed_name,
-        },
-      }
-    )
-    if (error) throw error
-    return result ?? acceptance
-  } catch (err) {
-    // Surface but don't block — localStorage holds the optimistic state.
-    console.warn("[saveRaAgreement] edge function failed; client copy retained.", err)
     return acceptance
   }
+  // Edge function captures IP from request headers and writes the audit row +
+  // ra_associates patch. A failure here MUST surface to the RA — the previous
+  // "surface but don't block" fallback returned optimistic success on server
+  // failure, which let RAs believe (and screenshot) a signed agreement the
+  // admin never saw. The signature is only real once the server confirms it.
+  const { data: result, error } = await supabase.functions.invoke<AgreementAcceptance>(
+    "accept-agreement",
+    {
+      body: {
+        ra_associate_id: raId,
+        agreement_version: data.agreement_version,
+        signed_legal_name: data.signed_name,
+      },
+    }
+  )
+  if (error) throw await unwrapEdgeFnError(error)
+  const confirmed = result ?? acceptance
+  // Local copy only AFTER server confirmation, so the wizard's completion
+  // state can never outrun the database again.
+  if (typeof localStorage !== "undefined") {
+    try { localStorage.setItem(AGREEMENT_LS_PREFIX + raId, JSON.stringify(confirmed)) } catch { /* ignore quota */ }
+  }
+  return confirmed
 }
 
 // ── Preview-mode RA record ───────────────────────────────────────────────────

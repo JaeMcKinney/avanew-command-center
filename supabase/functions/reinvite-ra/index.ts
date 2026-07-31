@@ -206,13 +206,30 @@ Deno.serve(async (req) => {
     )
     const html = inviteEmailHtml(firstName, orgName, buildAcceptUrl(appUrl, token))
     const r = await sendGridSend(sendgridKey, newEmail, `You're invited to join ${orgName}'s Referral Associate Program`, html)
-    if (!r.ok) return json(502, { error: "Failed to send invite email" })
+    if (!r.ok) {
+      // Surface the provider's reason — "Maximum credits exceeded", bad sender,
+      // etc. — so the admin sees WHY instead of a generic failure. (SendGrid
+      // errors arrive as {"errors":[{"message":...}]}.)
+      let detail = r.error ?? ""
+      try {
+        const parsed = JSON.parse(detail) as { errors?: { message?: string }[] }
+        detail = parsed.errors?.map((e) => e.message).filter(Boolean).join("; ") || detail
+      } catch { /* keep raw text */ }
+      return json(502, {
+        error: `Invite email failed — SendGrid ${r.status ?? ""}: ${detail || "unknown error"}`.trim(),
+      })
+    }
     mode = "invite"
   } else {
     // Past the invite stage — recovery email so they can sign back in.
     mode = "recovery"
     const { error: recErr } = await admin.auth.resetPasswordForEmail(newEmail, { redirectTo })
-    if (recErr) return json(500, { error: `Recovery email failed: ${recErr.message}` })
+    if (recErr) {
+      // AuthError.message can be empty on SMTP relay failures (it stringifies
+      // to "{}") — fall back to code/status so the admin sees something real.
+      const detail = recErr.message || `${recErr.name ?? "AuthError"} status=${(recErr as { status?: number }).status ?? "?"} code=${(recErr as { code?: string }).code ?? "?"}`
+      return json(500, { error: `Recovery email failed: ${detail}. If this mentions email/SMTP, check the SendGrid account.` })
+    }
   }
 
   return json(200, {
