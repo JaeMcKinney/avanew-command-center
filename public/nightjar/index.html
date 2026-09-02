@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premier Dispensaries in New Jersey &amp; Connecticut | NIGHTJAR CANNABIS</title>
+<meta name="description" content="Nightjar is a women-owned cannabis dispensary brand serving New Jersey and Connecticut. Shop flower, pre-rolls, vapes, edibles and more in Bloomfield NJ, East Lyme CT and Hamden CT.">
+<!--
+  Nightjar homepage replica (draft) with embedded Avis avatar.
+  NOTE: direct access to nightjarcannabis.com was blocked by this environment's
+  network policy, so this layout is a faithful reconstruction from indexed data,
+  not a pixel copy. Re-run the crawl once the network policy is open to true it up.
+
+  Avatar wiring: set data-tavus-persona / data-tavus-replica on #avis-launcher
+  once the Avis PAL is created in Tavus (use the Library PAL's replica for the face).
+-->
+<style>
+  :root{
+    --night:#0d0b14;        /* deep night sky */
+    --night-2:#161225;
+    --ink:#f4efe6;
+    --gold:#d9a441;         /* nightjar gold */
+    --gold-soft:#e8c37a;
+    --moss:#7f9b6d;
+    --card:#1d1830;
+    --line:rgba(244,239,230,.14);
+    --radius:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Georgia', 'Times New Roman', serif;
+    background:var(--night); color:var(--ink); line-height:1.6;
+  }
+  .sans{font-family:'Helvetica Neue', Arial, sans-serif}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+
+  /* ---------- age gate ---------- */
+  #age-gate{
+    position:fixed;inset:0;z-index:100;background:rgba(8,6,14,.96);
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  #age-gate.hidden{display:none}
+  .gate-card{
+    background:var(--night-2);border:1px solid var(--line);border-radius:var(--radius);
+    max-width:430px;width:100%;padding:42px 36px;text-align:center;
+  }
+  .gate-card .mark{font-size:44px;line-height:1;margin-bottom:14px}
+  .gate-card h2{font-size:26px;letter-spacing:.04em;margin-bottom:8px}
+  .gate-card p{opacity:.75;font-size:15px;margin-bottom:24px}
+  .gate-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{
+    display:inline-block;padding:13px 28px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--gold);font-size:14px;letter-spacing:.12em;text-transform:uppercase;
+    font-family:'Helvetica Neue', Arial, sans-serif;transition:all .2s ease;
+  }
+  .btn-gold{background:var(--gold);color:#1b1408;font-weight:700}
+  .btn-gold:hover{background:var(--gold-soft)}
+  .btn-ghost{background:transparent;color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--ink)}
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky;top:0;z-index:50;background:rgba(13,11,20,.92);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;height:74px}
+  .logo{display:flex;align-items:center;gap:10px;font-size:22px;letter-spacing:.34em;font-weight:700}
+  .logo .bird{color:var(--gold);font-size:24px}
+  nav ul{display:flex;gap:30px;list-style:none;font-size:13px;letter-spacing:.16em;text-transform:uppercase}
+  nav ul a{opacity:.85;padding:6px 0;border-bottom:2px solid transparent}
+  nav ul a:hover{opacity:1;border-color:var(--gold)}
+  .nav-cta{font-size:12px;padding:11px 22px}
+  @media(max-width:840px){nav ul{display:none}}
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;overflow:hidden;text-align:center;
+    padding:110px 24px 120px;
+    background:
+      radial-gradient(1000px 460px at 50% -10%, rgba(217,164,65,.16), transparent 60%),
+      radial-gradient(700px 400px at 85% 110%, rgba(127,155,109,.12), transparent 60%),
+      var(--night);
+  }
+  .stars{position:absolute;inset:0;pointer-events:none;opacity:.5}
+  .stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:var(--ink);opacity:.6}
+  .hero .kicker{font-size:13px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:20px}
+  .hero h1{font-size:clamp(34px,6vw,64px);line-height:1.12;font-weight:400;max-width:820px;margin:0 auto 22px}
+  .hero h1 em{font-style:italic;color:var(--gold-soft)}
+  .hero p{max-width:600px;margin:0 auto 34px;opacity:.8;font-size:18px}
+  .hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+  /* ---------- sections ---------- */
+  section{padding:84px 0}
+  .sec-head{text-align:center;margin-bottom:48px}
+  .sec-head .kicker{font-size:12px;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+  .sec-head h2{font-size:clamp(26px,4vw,40px);font-weight:400}
+  .grid{display:grid;gap:22px}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:900px){.grid-3{grid-template-columns:1fr}}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:32px 28px;transition:transform .25s ease, border-color .25s ease;
+  }
+  .card:hover{transform:translateY(-4px);border-color:rgba(217,164,65,.5)}
+  .card .tag{font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--moss);margin-bottom:10px}
+  .card h3{font-size:24px;font-weight:400;margin-bottom:10px}
+  .card p{font-size:15px;opacity:.78;margin-bottom:8px}
+  .card .meta{font-size:14px;opacity:.9}
+  .card .meta b{color:var(--gold-soft);font-weight:600}
+  .card .shop-link{display:inline-block;margin-top:16px;color:var(--gold);font-size:13px;letter-spacing:.14em;text-transform:uppercase;border-bottom:1px solid var(--gold)}
+
+  /* categories */
+  .cats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  @media(max-width:900px){.cats{grid-template-columns:repeat(2,1fr)}}
+  .cat{
+    background:var(--night-2);border:1px solid var(--line);border-radius:14px;
+    padding:26px 14px;text-align:center;font-size:14px;letter-spacing:.14em;text-transform:uppercase;
+  }
+  .cat span{display:block;font-size:26px;margin-bottom:10px}
+  .cat:hover{border-color:var(--gold)}
+
+  /* brands strip */
+  .brands{background:var(--night-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:44px 0;text-align:center}
+  .brands .row{display:flex;flex-wrap:wrap;gap:14px 34px;justify-content:center;font-size:17px;letter-spacing:.08em;opacity:.85;font-style:italic}
+
+  /* flight club */
+  .club{
+    text-align:center;
+    background:radial-gradient(700px 320px at 50% 0%, rgba(217,164,65,.14), transparent 65%);
+  }
+  .club .big{font-size:clamp(26px,4vw,40px);margin-bottom:14px;font-weight:400}
+  .club p{max-width:560px;margin:0 auto 28px;opacity:.8}
+
+  footer{border-top:1px solid var(--line);padding:54px 0 80px;font-size:14px}
+  .foot{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:30px}
+  @media(max-width:840px){.foot{grid-template-columns:1fr 1fr}}
+  footer h4{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+  footer li{list-style:none;margin-bottom:9px;opacity:.8}
+  footer li a:hover{opacity:1;color:var(--gold-soft)}
+  .legal{margin-top:44px;padding-top:22px;border-top:1px solid var(--line);opacity:.55;font-size:12px;text-align:center}
+
+  /* ---------- Avis avatar ---------- */
+  #avis-launcher{
+    position:fixed;right:26px;bottom:26px;z-index:60;
+    display:flex;align-items:center;gap:12px;cursor:pointer;
+    background:var(--card);border:1px solid var(--gold);border-radius:999px;
+    padding:10px 20px 10px 10px;box-shadow:0 10px 34px rgba(0,0,0,.55);
+    transition:transform .2s ease;
+  }
+  #avis-launcher:hover{transform:translateY(-3px)}
+  #avis-launcher .face{
+    width:52px;height:52px;border-radius:50%;overflow:hidden;flex:0 0 auto;
+    border:2px solid var(--gold);background:#000;
+  }
+  #avis-launcher .face img{width:100%;height:100%;object-fit:cover}
+  #avis-launcher .txt{font-family:'Helvetica Neue', Arial, sans-serif}
+  #avis-launcher .txt b{display:block;font-size:14px;letter-spacing:.06em}
+  #avis-launcher .txt span{font-size:12px;opacity:.7}
+  .pulse{position:absolute;top:6px;right:14px;width:9px;height:9px;border-radius:50%;background:#57d97a;box-shadow:0 0 0 0 rgba(87,217,122,.6);animation:pulse 2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 12px rgba(87,217,122,0)}100%{box-shadow:0 0 0 0 rgba(87,217,122,0)}}
+
+  #avis-modal{
+    position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
+    background:rgba(8,6,14,.85);padding:20px;
+  }
+  #avis-modal.open{display:flex}
+  .avis-box{
+    width:min(920px,96vw);background:var(--night-2);border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;
+  }
+  .avis-top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line)}
+  .avis-top b{letter-spacing:.08em}
+  .avis-top button{background:none;border:none;color:var(--ink);font-size:22px;cursor:pointer;opacity:.7}
+  .avis-top button:hover{opacity:1}
+  .avis-frame{position:relative;aspect-ratio:16/9;background:#000}
+  .avis-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .avis-msg{
+    position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;
+    align-items:center;justify-content:center;text-align:center;padding:30px;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+  }
+  .avis-msg b{font-size:18px}
+  .avis-msg div{opacity:.75;max-width:420px;font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- ===== 21+ age gate ===== -->
+<div id="age-gate">
+  <div class="gate-card">
+    <div class="mark">🌙</div>
+    <h2>NIGHTJAR</h2>
+    <p class="sans">You must be 21 years or older (or a valid medical patient) to enter this site.</p>
+    <div class="gate-actions">
+      <button class="btn btn-gold" id="gate-yes">I'm 21 or older</button>
+      <a class="btn btn-ghost" href="https://www.google.com">I'm under 21</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== header ===== -->
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#"><span class="bird">𓅃</span>NIGHTJAR</a>
+    <nav>
+      <ul class="sans">
+        <li><a href="#shop">Shop</a></li>
+        <li><a href="#locations">Locations</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#club">Flight Club</a></li>
+        <li><a href="mailto:whatsgood@nightjarcannabis.com">Contact</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn-gold nav-cta" href="#shop">Order Pickup</a>
+  </div>
+</header>
+
+<!-- ===== hero ===== -->
+<div class="hero">
+  <div class="stars" id="stars"></div>
+  <div class="kicker sans">Women-Owned · Independent · NJ &amp; CT</div>
+  <h1>Premier dispensaries in<br>New Jersey &amp; <em>Connecticut</em></h1>
+  <p>Run by real cannabis lovers. Hospitality, transparency, and exceptional vibes — whether it's your first visit or your five-hundredth.</p>
+  <div class="hero-actions">
+    <a class="btn btn-gold" href="#locations">Find Your Nightjar</a>
+    <a class="btn btn-ghost" href="#shop">Browse the Menu</a>
+  </div>
+</div>
+
+<!-- ===== locations ===== -->
+<section id="locations">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker sans">Visit Us</div>
+      <h2>Three nests. One flock.</h2>
+    </div>
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="tag sans">New Jersey</div>
+        <h3>Bloomfield</h3>
+        <p>549 Bloomfield Avenue<br>Bloomfield, NJ</p>
+        <p class="meta"><b>(973) 707-2915</b><br>Mon–Sat 9am–9pm · Sun 11am–7pm</p>
+        <p>Serving Bloomfield, Montclair, Maplewood &amp; East Orange.</p>
+        <a class="shop-link sans" href="https://nightjarcannabis.com/stores/nightjar-bloomfield-nj" target="_blank" rel="noopener">Shop Bloomfield →</a>
+      </div>
+      <div class="card">
+        <div class="tag sans">Connecticut</div>
+        <h3>East Lyme</h3>
+        <p>15 Colton Road<br>East Lyme, CT</p>
+        <p class="meta"><b>Off I-95, Exit 71</b><br>Four Mile River Rd → Colton Rd</p>
+        <p>Serving the shoreline — New London, Mystic &amp; beyond.</p>
+        <a class="shop-link sans" href="https://nightjarcannabis.com/stores/nightjar-east-lyme-ct" target="_blank" rel="noopener">Shop East Lyme →</a>
+      </div>
+      <div class="card">
+        <div class="tag sans">Connecticut</div>
+        <h3>Hamden</h3>
+        <p>1409 Dixwell Avenue<br>Hamden, CT 06514</p>
+        <p class="meta"><b>(203) 691-1707</b><br>Medical &amp; adult-use · On-site parking</p>
+        <p>Hamden's first dispensary — serving New Haven, North Haven &amp; Woodbridge.</p>
+        <a class="shop-link sans" href="https://nightjarcannabis.com/stores/nightjar-hamden-ct" target="_blank" rel="noopener">Shop Hamden →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== shop categories ===== -->
+<section id="shop" style="padding-top:20px">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker sans">The Menu</div>
+      <h2>Thoughtfully curated, endlessly good</h2>
+    </div>
+    <div class="cats sans">
+      <a class="cat" href="#"><span>🌿</span>Flower</a>
+      <a class="cat" href="#"><span>🚬</span>Pre-Rolls</a>
+      <a class="cat" href="#"><span>💨</span>Vapes</a>
+      <a class="cat" href="#"><span>🍯</span>Concentrates</a>
+      <a class="cat" href="#"><span>🍬</span>Edibles</a>
+      <a class="cat" href="#"><span>🧴</span>Topicals</a>
+      <a class="cat" href="#"><span>🥤</span>Drinks</a>
+      <a class="cat" href="#"><span>🛍️</span>Accessories</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== brands ===== -->
+<div class="brands">
+  <div class="wrap">
+    <div class="kicker sans" style="font-size:12px;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);margin-bottom:18px">Brands We Love</div>
+    <div class="row">
+      <span>Garden Greens</span><span>Clade9</span><span>Miss Grass</span><span>Wyld</span>
+      <span>Fernway</span><span>Camino</span><span>ButACake</span><span>Wana</span><span>All Hours</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== about ===== -->
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker sans">About Nightjar</div>
+      <h2>Named for the bird that thrives after dark</h2>
+    </div>
+    <p style="max-width:720px;margin:0 auto;text-align:center;opacity:.82;font-size:17px">
+      Nightjar is a licensed, independent, women-owned cannabis retail brand proudly serving
+      New Jersey and Connecticut. Our dispensaries are designed and operated by real cannabis
+      lovers — people who believe a dispensary should feel like a place you actually want to be.
+      New to cannabis? A seasoned consumer? A medical patient? You're home.
+    </p>
+  </div>
+</section>
+
+<!-- ===== flight club ===== -->
+<section id="club" class="club">
+  <div class="wrap">
+    <div class="kicker sans" style="color:var(--gold);letter-spacing:.35em;text-transform:uppercase;font-size:12px;margin-bottom:12px">Loyalty</div>
+    <div class="big">Join Flight Club Rewards</div>
+    <p>Every purchase brings you closer to bigger discounts. Ask in-store or sign up at checkout.</p>
+    <a class="btn btn-gold" href="#shop">Start Earning</a>
+  </div>
+</section>
+
+<!-- ===== footer ===== -->
+<footer>
+  <div class="wrap">
+    <div class="foot sans">
+      <div>
+        <div class="logo" style="font-size:18px;margin-bottom:14px"><span class="bird">𓅃</span>NIGHTJAR</div>
+        <p style="opacity:.7;font-size:13px;max-width:280px">Women-owned. Independent. Serving New Jersey &amp; Connecticut with exceptional vibes.</p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="https://nightjarcannabis.com/stores/nightjar-bloomfield-nj" target="_blank" rel="noopener">Bloomfield, NJ</a></li>
+          <li><a href="https://nightjarcannabis.com/stores/nightjar-east-lyme-ct" target="_blank" rel="noopener">East Lyme, CT</a></li>
+          <li><a href="https://nightjarcannabis.com/stores/nightjar-hamden-ct" target="_blank" rel="noopener">Hamden, CT</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#about">About</a></li>
+          <li><a href="#club">Flight Club</a></li>
+          <li><a href="#locations">Locations</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Say Hey</h4>
+        <ul>
+          <li><a href="mailto:whatsgood@nightjarcannabis.com">whatsgood@nightjarcannabis.com</a></li>
+          <li><a href="tel:+19737072915">(973) 707-2915</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="legal sans">
+      For adults 21+ (or valid medical patients) only. Keep out of reach of children. Do not operate a vehicle or machinery under the influence of cannabis.
+      This page is a demo replica for avatar embedding — not the official Nightjar Cannabis website.
+    </div>
+  </div>
+</footer>
+
+<!-- ===== Avis launcher + modal ===== -->
+<!-- TODO: fill data-tavus-persona with the Avis PAL persona_id and
+     data-tavus-replica with the Library PAL's replica_id (same face). -->
+<div id="avis-launcher"
+     data-tavus-persona=""
+     data-tavus-replica=""
+     data-tavus-name="Avis">
+  <span class="pulse"></span>
+  <div class="face"><img src="/avatars/ava.jpg" alt="Avis" onerror="this.parentElement.innerHTML='🦉'"></div>
+  <div class="txt"><b>Chat with Avis</b><span>Your Nightjar guide</span></div>
+</div>
+
+<div id="avis-modal" role="dialog" aria-modal="true" aria-label="Avis avatar">
+  <div class="avis-box">
+    <div class="avis-top sans"><b>Avis · Nightjar Guide</b><button type="button" id="avis-close" aria-label="Close">×</button></div>
+    <div class="avis-frame" id="avis-frame">
+      <div class="avis-msg"><b>Waking Avis…</b><div>One moment while we start your conversation.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* age gate */
+  var gate = document.getElementById('age-gate');
+  try{ if(localStorage.getItem('nj_age_ok')==='1') gate.classList.add('hidden'); }catch(e){}
+  document.getElementById('gate-yes').addEventListener('click', function(){
+    gate.classList.add('hidden');
+    try{ localStorage.setItem('nj_age_ok','1'); }catch(e){}
+  });
+
+  /* hero stars */
+  var stars = document.getElementById('stars');
+  for(var i=0;i<60;i++){
+    var s=document.createElement('i');
+    s.style.left=(Math.random()*100)+'%';
+    s.style.top=(Math.random()*100)+'%';
+    s.style.opacity=(0.2+Math.random()*0.6);
+    stars.appendChild(s);
+  }
+
+  /* ---- Avis (Tavus) ---- */
+  var TAVUS_FN_URL = 'https://cbmcyffvsebrxkmxufxx.supabase.co/functions/v1/tavus-start-conversation';
+  var TAVUS_FN_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibWN5ZmZ2c2VicnhrbXh1Znh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjU3MTMsImV4cCI6MjA5MzA0MTcxM30.Uxh5aWShe3YkrBkjjBe8WcP0fqQH-4pp6P8NyqKRt7A';
+
+  var launcher = document.getElementById('avis-launcher');
+  var modal    = document.getElementById('avis-modal');
+  var frame    = document.getElementById('avis-frame');
+  var closeBtn = document.getElementById('avis-close');
+
+  function openModal(){ modal.classList.add('open'); document.body.style.overflow='hidden'; }
+  function closeModal(){
+    modal.classList.remove('open'); document.body.style.overflow='';
+    frame.innerHTML = '<div class="avis-msg"><b>Waking Avis…</b><div>One moment while we start your conversation.</div></div>';
+  }
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', function(e){ if(e.target===modal) closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && modal.classList.contains('open')) closeModal(); });
+
+  launcher.addEventListener('click', function(){
+    var personaId = launcher.dataset.tavusPersona;
+    var replicaId = launcher.dataset.tavusReplica || '';
+    openModal();
+
+    if(!personaId){
+      frame.innerHTML =
+        '<div class="avis-msg"><b>Avis is coming soon</b>' +
+        '<div>The Avis PAL hasn\'t been wired up yet. Add its persona_id (and the Library replica_id) to the launcher element to bring her to life.</div></div>';
+      return;
+    }
+
+    fetch(TAVUS_FN_URL, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer ' + TAVUS_FN_KEY,
+        'apikey': TAVUS_FN_KEY
+      },
+      body: JSON.stringify({
+        persona_id: personaId,
+        replica_id: replicaId || undefined,
+        conversation_name: 'nightjar:avis'
+      })
+    })
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, data:d}; }); })
+    .then(function(res){
+      if(!res.ok || !res.data.conversation_url){
+        throw new Error((res.data && res.data.error) || 'No conversation URL returned');
+      }
+      var iframe = document.createElement('iframe');
+      iframe.src = res.data.conversation_url;
+      iframe.allow = 'camera; microphone; autoplay; display-capture';
+      iframe.setAttribute('allowfullscreen','');
+      frame.innerHTML = '';
+      frame.appendChild(iframe);
+    })
+    .catch(function(err){
+      frame.innerHTML =
+        '<div class="avis-msg"><b>Couldn\'t connect</b><div>' +
+        (err && err.message ? err.message : 'Unknown error') +
+        '</div></div>';
+    });
+  });
+})();
+</script>
+</body>
+</html>
