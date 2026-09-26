@@ -649,6 +649,63 @@
     .ind-tile{font-size:14px;padding:12px 13px}
     .ind-pop{left:16px !important;right:16px;top:auto !important;bottom:12px;width:auto;max-height:62vh;overflow:auto;pointer-events:auto}
   }
+
+  /* ════ Design pass 2026-09-26 ════
+     One voice: Fraunces carries display and labels, Manrope carries UI.
+     One accent: gold. One moving object: the hero orb. Everything else
+     holds still until the visitor acts. */
+
+  /* Content is present; no per-section entrance choreography. */
+  .reveal,.stagger>*{opacity:1 !important;transform:none !important;transition:none !important}
+
+  /* Headlines speak in one voice; the gradient-word treatment is retired. */
+  .grad,.grad-gold{background:none !important;-webkit-background-clip:initial !important;background-clip:initial !important;-webkit-text-fill-color:currentColor !important;color:inherit !important;font-style:inherit !important;font-weight:inherit !important}
+
+  /* Labels: small serif italics in place of tracked caps. */
+  .eyebrow,.embed-label,.price .pk,.ra-label,.modal-eyebrow,.qr-eyebrow,.callout .label,.mob-menu-head span,.pill,.addon-note .addon-label,.featured-badge{
+    font-family:'Fraunces',serif !important;font-style:italic !important;font-weight:400 !important;
+    text-transform:none !important;letter-spacing:.01em !important}
+  .eyebrow{font-size:16px !important;color:var(--gold) !important}
+  .embed-label{font-size:15px !important;color:var(--gold) !important}
+  .price .pk{font-size:16.5px !important;color:var(--muted) !important;margin-bottom:10px !important}
+  .ra-label{font-size:15px !important}
+  .modal-eyebrow,.qr-eyebrow{font-size:15px !important;color:var(--gold) !important}
+  .mob-menu-head span{font-size:14px !important}
+  .pill{font-size:13px !important}
+  .price .freq{text-transform:none !important;letter-spacing:.02em !important;font-weight:500 !important;font-size:13.5px !important;color:var(--muted) !important}
+  .field label{text-transform:none !important;letter-spacing:.02em !important;font-size:12.5px !important}
+  .embed-thumb-label{text-transform:none !important;letter-spacing:.04em !important;font-weight:600 !important;font-size:12.5px !important}
+
+  /* Navigation: sentence case, quiet. */
+  .navlinks a{text-transform:none !important;letter-spacing:.03em !important;font-size:13.5px !important}
+  .navlinks a.cta{animation:none !important;letter-spacing:.03em !important}
+  .mob-menu-links a{text-transform:none !important;letter-spacing:.02em !important}
+  .mob-menu-foot .cta-btn{text-transform:none !important;letter-spacing:.03em !important;font-size:14px !important}
+
+  /* Buttons: plain words, steady color response, no appended arrows. */
+  .btn-primary,.btn-secondary,.featured-cta,.cookie-btn,.intent-btn,.submit-btn{text-transform:none !important;letter-spacing:.03em !important;font-weight:600 !important}
+  .btn-primary,.featured-cta{font-size:14.5px !important;background:var(--teal-bright) !important;box-shadow:0 14px 34px -18px rgba(0,0,0,.7) !important}
+  .btn-primary:hover,.featured-cta:hover{transform:none !important;background:var(--cyan) !important;box-shadow:0 14px 34px -18px rgba(0,0,0,.7) !important;gap:10px !important}
+  .btn-secondary:hover{transform:none !important}
+  .btn-primary svg,.btn-secondary svg,.featured-cta svg{display:none !important}
+
+  /* Cards hold still; hairlines carry the structure. */
+  .embed-card,.card,.why-proof-card,.price,.addon-note{box-shadow:none !important}
+  .embed-card:hover,.card:hover,.why-proof-card:hover,.notis:hover{transform:none !important;box-shadow:none !important}
+  .price.svc{box-shadow:none !important}
+  .featured-avatar{box-shadow:0 30px 70px -34px rgba(0,0,0,.75) !important}
+  .featured-avatar::after{animation:none !important;opacity:.45}
+  .why-proof-card::before{animation:none !important}
+
+  /* Ambient shimmer and pulsing retired; the red live dot may breathe. */
+  .addon-note::before{animation:none !important;background:var(--gold) !important;height:1px !important}
+  .addon-note::after,.addon-note .addon-glow-teal{animation:none !important;opacity:.22 !important}
+  .addon-note .addon-label{animation:none !important;background:none !important;border:none !important;box-shadow:none !important;color:var(--gold) !important;padding:0 !important;font-size:16px !important}
+  .addon-note .addon-label::before{animation:none !important;box-shadow:none !important}
+  .featured-badge{animation:none !important;background:none !important;border:none !important;box-shadow:none !important;color:var(--gold) !important;text-shadow:none !important;padding:0 !important;font-size:16px !important;align-self:flex-start !important}
+  .featured-badge .dot{box-shadow:0 0 10px #FF3D5A !important}
+  .embed-thumb-play{animation:none !important}
+  .ra-photo{animation:none !important;border-color:rgba(232,181,74,.35) !important;box-shadow:0 20px 50px -16px rgba(0,0,0,.6) !important}
 </style>
 </head>
 <body>
@@ -672,7 +729,7 @@
     <a href="#" id="qr-btn" aria-label="Show QR code">QR
       <svg viewBox="0 0 24 24" style="display:inline-block;vertical-align:-3px;width:14px;height:14px;margin-left:6px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17"/><line x1="14" y1="20" x2="14" y2="21"/><line x1="17" y1="14" x2="21" y2="14"/><line x1="17" y1="17" x2="17" y2="21"/><line x1="20" y1="17" x2="21" y2="17"/><line x1="20" y1="20" x2="21" y2="20"/></svg>
     </a>
-    <a href="#" class="cta" id="learn-more-btn">Get in Touch</a>
+    <a href="#" class="cta" id="learn-more-btn">Get in touch</a>
   </nav>
   <button class="mob-toggle" id="mob-open" aria-label="Open menu">
     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -689,7 +746,7 @@
   </div>
   <div class="mob-menu-links" id="mob-links"></div>
   <div class="mob-menu-foot">
-    <button class="cta-btn" id="mob-learn-more">Get in Touch</button>
+    <button class="cta-btn" id="mob-learn-more">Get in touch</button>
   </div>
 </nav>
 
@@ -704,10 +761,10 @@
   <div class="wrap">
     <div class="hero-content reveal">
       <span class="eyebrow">Interactive Avatars by Divigner Group</span>
-      <h1>Meet the next<br><span class="grad">Face</span> of Your Web&nbsp;Presence.</h1>
+      <h1>Meet the next<br><span class="grad">face</span> of your web&nbsp;presence.</h1>
       <p class="hero-sub">Conversational, on-brand AI concierges that greet your visitors, answer their questions, and routes your prospective clients directly to your team by face or voice 24/7.</p>
       <div class="hero-cta-row">
-        <a href="#" class="btn-secondary" id="hero-learn-more">Get in Touch
+        <a href="#" class="btn-secondary" id="hero-learn-more">Get in touch
           <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
       </div>
@@ -733,12 +790,12 @@
             <div class="embed-thumb-fallback" style="display:none"><b>Ava</b></div>
             <div class="embed-thumb-overlay"></div>
             <div class="embed-thumb-play"><svg viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></svg></div>
-            <span class="embed-thumb-label">Live · Click to talk</span>
+            <span class="embed-thumb-label">Live, click to talk</span>
           </button>
         </div>
       </div>
       <div class="featured-content">
-        <span class="featured-badge"><span class="dot"></span>Live now · Ready to answer</span>
+        <span class="featured-badge"><span class="dot"></span>Live now, ready to answer</span>
         <h3 class="featured-name">Meet <span class="grad">Ava.</span></h3>
         <p class="featured-tagline">She explains the value of an avatar by being one.</p>
         <p class="featured-desc">Ava is here to show you what an Interactive Avatar could do for your business. She'll interview you about what you do, who visits your site, and where your team loses time, then walk you through the benefits and value an avatar would bring to exactly that. Ask her anything along the way: <em>"Would this work for a clinic my size?" "What's involved in launching?" "Can it book appointments / take payments / handle Spanish?"</em> And the whole time, you're experiencing exactly what your visitors would experience on your site.</p>
@@ -1079,7 +1136,7 @@
 
     <div class="price-grid stagger">
       <div class="price one">
-        <span class="pk">One-Time · Implementation</span>
+        <span class="pk">One-time implementation</span>
         <div class="amt">$6,000</div>
         <div class="freq">Paid as a $3,000 deposit <span class="pipe">|</span> $3,000 on launch</div>
         <div class="freq" style="margin-top:4px">Payment plans available</div>
@@ -1097,7 +1154,7 @@
       </div>
 
       <div class="price svc">
-        <span class="pk">Recurring · Monthly Service</span>
+        <span class="pk">Monthly service</span>
         <div class="amt">$600<span> / month</span></div>
         <div class="freq">Social posting available as an optional continuation</div>
         <p class="desc">Hosting, support, monthly review, and continuous optimization to keep your avatar sharper over time.</p>
@@ -1180,7 +1237,7 @@
   <div class="wrap">
     <h3>Ready to put one on <span class="grad">your site?</span></h3>
     <p>Get in touch and your Referral Associate will be looped in automatically. We'll scope your avatar, walk through pricing, and have you live in 2–4 weeks.</p>
-    <button type="button" class="btn-primary" id="footer-learn-more">Get in Touch
+    <button type="button" class="btn-primary" id="footer-learn-more">Get in touch
       <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
     </button>
   </div>
@@ -1523,7 +1580,7 @@
     if(e.key === 'Escape') closeMobMenu();
   });
 
-  /* Jae's own demo has no Get in Touch banner; every other slug keeps it. */
+  /* Jae's own demo has no Get in touch banner; every other slug keeps it. */
   if(raSlug === 'jae'){
     var fc = document.getElementById('final-cta');
     if(fc) fc.remove();
