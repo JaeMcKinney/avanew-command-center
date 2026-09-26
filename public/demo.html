@@ -788,6 +788,11 @@
     .ind-pills{gap:11px !important}
     .ind-pill{font-size:14.5px !important;padding:13px 16px !important}
     .ind-pop p{font-size:14.5px !important}
+    .ind-inline p{font-size:14.5px !important}
+  }
+  /* Any touch device gets the bottom sheet, whatever its width. */
+  @media(hover:none){
+    .ind-pop{left:16px !important;right:16px !important;top:auto !important;bottom:12px !important;width:auto !important;max-height:62vh;overflow:auto;pointer-events:auto}
   }
 </style>
 </head>
@@ -1524,10 +1529,12 @@
       if(t && !(e.relatedTarget && e.relatedTarget.closest('.ind-pill'))) hidePop();
     });
     accs.addEventListener('focusin', function(e){
+      if(touch) return;
       var t = e.target.closest('.ind-pill');
       if(t) show(t);
     });
     accs.addEventListener('focusout', function(e){
+      if(touch) return;
       if(!(e.relatedTarget && e.relatedTarget.closest('.ind-pill'))) hidePop();
     });
     accs.addEventListener('click', function(e){
