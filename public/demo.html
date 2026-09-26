@@ -632,12 +632,28 @@
   .price-fineprint svg{width:17px;height:17px;flex:none;stroke:var(--gold);fill:none;stroke-width:1.8;stroke-linecap:round}
   .price-fineprint svg circle:last-child{fill:var(--gold)}
 
-  /* ── Industries: tile board with hover popover ── */
-  .ind-board{display:grid;gap:34px;margin-top:6px}
-  .ind-set-name{font-family:'Fraunces',serif;font-weight:300;font-style:italic;font-size:18px;color:var(--gold);margin:0 0 12px}
-  .ind-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px}
-  .ind-tile{font-family:'Fraunces',serif;font-weight:300;font-size:16.5px;line-height:1.35;color:var(--muted);background:linear-gradient(160deg,rgba(255,255,255,.025),rgba(255,255,255,0));border:1px solid var(--line-soft);border-radius:12px;padding:16px 18px;cursor:default;transition:color .2s,border-color .2s,background .25s;text-wrap:balance}
-  .ind-tile:hover,.ind-tile:focus-visible,.ind-tile.on{color:var(--text);border-color:rgba(232,181,74,.45);background:linear-gradient(160deg,rgba(232,181,74,.07),rgba(255,255,255,0))}
+  /* ── Industries: group accordions -> centered pills -> hover popover ── */
+  .ind-accs{margin-top:10px;border-top:1px solid var(--line)}
+  .ind-acc{border-bottom:1px solid var(--line)}
+  .ind-acc-head{display:flex;align-items:center;gap:22px;width:100%;background:none;border:0;padding:26px 4px;cursor:pointer;text-align:left}
+  .ind-acc-name{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(22px,3vw,29px);line-height:1.25;color:var(--text);flex:1;transition:color .2s}
+  .ind-acc-head:hover .ind-acc-name{color:var(--gold)}
+  .ind-acc-count{font-family:'Fraunces',serif;font-style:italic;font-size:14.5px;color:var(--muted-2);flex:none}
+  .ind-acc-toggle{position:relative;width:14px;height:14px;flex:none;align-self:center}
+  .ind-acc-toggle::before,.ind-acc-toggle::after{content:"";position:absolute;background:var(--muted-2);transition:transform .3s,background .2s}
+  .ind-acc-toggle::before{left:0;right:0;top:6.5px;height:1.5px}
+  .ind-acc-toggle::after{top:0;bottom:0;left:6.5px;width:1.5px}
+  .ind-acc-head:hover .ind-acc-toggle::before,.ind-acc-head:hover .ind-acc-toggle::after{background:var(--gold)}
+  .ind-acc-head[aria-expanded="true"] .ind-acc-toggle::after{transform:scaleY(0)}
+  .ind-acc-body{padding:2px 4px 30px}
+  .ind-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;max-width:880px;margin:0 auto}
+  .ind-pill{display:inline-flex;align-items:center;gap:10px;font-family:'Manrope';font-size:14.5px;font-weight:500;color:var(--muted);background:linear-gradient(160deg,rgba(255,255,255,.03),rgba(255,255,255,0));border:1px solid var(--line-soft);border-radius:100px;padding:11px 18px;cursor:default;transition:color .2s,border-color .2s,background .25s;text-wrap:balance;text-align:left}
+  .ind-pill:hover,.ind-pill:focus-visible,.ind-pill.on{color:var(--text);border-color:rgba(232,181,74,.5);background:linear-gradient(160deg,rgba(232,181,74,.08),rgba(255,255,255,0))}
+  .ind-hint{display:grid;place-items:center;width:19px;height:19px;flex:none}
+  .ind-hint svg{width:17px;height:17px;stroke:var(--gold);fill:none;stroke-width:1.6;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(232,181,74,.75));animation:indHintGlow 2.6s ease-in-out infinite}
+  .ind-hint svg circle:last-child{fill:var(--gold)}
+  .ind-pill:hover .ind-hint svg{animation:none;filter:drop-shadow(0 0 7px rgba(232,181,74,.95))}
+  @keyframes indHintGlow{0%,100%{filter:drop-shadow(0 0 2px rgba(232,181,74,.35))}50%{filter:drop-shadow(0 0 7px rgba(232,181,74,.9))}}
   .ind-pop{position:fixed;z-index:70;width:min(440px,calc(100vw - 32px));background:linear-gradient(170deg,#102c4c,#0B2038);border:1px solid var(--line);border-top:2px solid var(--gold);border-radius:14px;padding:20px 22px;box-shadow:0 30px 70px -20px rgba(0,0,0,.7);pointer-events:none}
   .ind-pop h4{font-family:'Fraunces',serif;font-weight:300;font-size:19px;color:var(--text);margin:0 0 10px}
   .ind-pop p{font-size:13px;line-height:1.65;color:var(--muted);margin:0 0 9px}
@@ -645,8 +661,10 @@
   .ind-pop b{color:var(--text);font-weight:600}
   .ind-pop .ind-guard b{color:var(--gold)}
   @media(max-width:640px){
-    .ind-tiles{grid-template-columns:1fr 1fr;gap:8px}
-    .ind-tile{font-size:14px;padding:12px 13px}
+    .ind-acc-head{padding:20px 0;gap:14px}
+    .ind-acc-count{display:none}
+    .ind-pills{gap:9px}
+    .ind-pill{font-size:13.5px;padding:10px 14px}
     .ind-pop{left:16px !important;right:16px;top:auto !important;bottom:12px;width:auto;max-height:62vh;overflow:auto;pointer-events:auto}
   }
 
@@ -888,86 +906,134 @@
     <div class="sec-head reveal">
       <h2 class="sec-title">Built for <span class="grad">Your Industry</span></h2>
       <div class="gold-line"></div>
-      <p class="lede">39 industries across eight groups, and counting. Rest on any tile to see what an avatar does there, what visitors ask, and the guardrails we build in.</p>
+      <p class="lede">39 industries across eight groups, and counting. Open a group, then rest on any industry to see what an avatar does there, what visitors ask, and the guardrails we build in.</p>
     </div>
-    <div class="ind-board reveal">
-      <div class="ind-set">
-        <h3 class="ind-set-name">Healthcare and Life Sciences</h3>
-        <div class="ind-tiles">
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="med-practices">Medical practices</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="pharma">Pharma (Medical Affairs and Commercial)</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="cme">Continuing medical education (CME)</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="med-devices">Medical devices</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="med-spas">Med spas and aesthetics</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="behavioral">Behavioral health</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="home-care">Home care and private care</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="veterinary">Veterinary</div>
+    <div class="ind-accs reveal">
+      <div class="ind-acc">
+        <button type="button" class="ind-acc-head" aria-expanded="false">
+          <span class="ind-acc-name">Healthcare and Life Sciences</span>
+          <span class="ind-acc-count">8 industries</span>
+          <span class="ind-acc-toggle" aria-hidden="true"></span>
+        </button>
+        <div class="ind-acc-body" hidden>
+          <div class="ind-pills">
+          <button type="button" class="ind-pill" data-ind="med-practices"><span class="ind-pill-name">Medical practices</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="pharma"><span class="ind-pill-name">Pharma (Medical Affairs and Commercial)</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="cme"><span class="ind-pill-name">Continuing medical education (CME)</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="med-devices"><span class="ind-pill-name">Medical devices</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="med-spas"><span class="ind-pill-name">Med spas and aesthetics</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="behavioral"><span class="ind-pill-name">Behavioral health</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="home-care"><span class="ind-pill-name">Home care and private care</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="veterinary"><span class="ind-pill-name">Veterinary</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          </div>
         </div>
       </div>
-      <div class="ind-set">
-        <h3 class="ind-set-name">Insurance, Financial and Professional Services</h3>
-        <div class="ind-tiles">
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="insurance">Insurance (carriers, MGAs, brokers, agencies)</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="cybersecurity">Cybersecurity</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="consulting">Consulting and advisory firms</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="legal">Legal</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="accounting">Accounting and tax</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="banking">Banking and credit unions</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="wealth">Wealth management and financial advisors</div>
+      <div class="ind-acc">
+        <button type="button" class="ind-acc-head" aria-expanded="false">
+          <span class="ind-acc-name">Insurance, Financial and Professional Services</span>
+          <span class="ind-acc-count">7 industries</span>
+          <span class="ind-acc-toggle" aria-hidden="true"></span>
+        </button>
+        <div class="ind-acc-body" hidden>
+          <div class="ind-pills">
+          <button type="button" class="ind-pill" data-ind="insurance"><span class="ind-pill-name">Insurance (carriers, MGAs, brokers, agencies)</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="cybersecurity"><span class="ind-pill-name">Cybersecurity</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="consulting"><span class="ind-pill-name">Consulting and advisory firms</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="legal"><span class="ind-pill-name">Legal</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="accounting"><span class="ind-pill-name">Accounting and tax</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="banking"><span class="ind-pill-name">Banking and credit unions</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="wealth"><span class="ind-pill-name">Wealth management and financial advisors</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          </div>
         </div>
       </div>
-      <div class="ind-set">
-        <h3 class="ind-set-name">Construction, Property and Home Services</h3>
-        <div class="ind-tiles">
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="commercial-contractors">Commercial contractors</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="residential-contractors">Residential contractors and remodelers</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="home-services">Home services (HVAC, roofing, plumbing, electrical, solar, landscaping)</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="architects">Architects and design-build firms</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="property-mgmt">Property management</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="real-estate">Real estate and mortgage</div>
+      <div class="ind-acc">
+        <button type="button" class="ind-acc-head" aria-expanded="false">
+          <span class="ind-acc-name">Construction, Property and Home Services</span>
+          <span class="ind-acc-count">6 industries</span>
+          <span class="ind-acc-toggle" aria-hidden="true"></span>
+        </button>
+        <div class="ind-acc-body" hidden>
+          <div class="ind-pills">
+          <button type="button" class="ind-pill" data-ind="commercial-contractors"><span class="ind-pill-name">Commercial contractors</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="residential-contractors"><span class="ind-pill-name">Residential contractors and remodelers</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="home-services"><span class="ind-pill-name">Home services (HVAC, roofing, plumbing, electrical, solar, landscaping)</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="architects"><span class="ind-pill-name">Architects and design-build firms</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="property-mgmt"><span class="ind-pill-name">Property management</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="real-estate"><span class="ind-pill-name">Real estate and mortgage</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          </div>
         </div>
       </div>
-      <div class="ind-set">
-        <h3 class="ind-set-name">Sales, Support and Technology</h3>
-        <div class="ind-tiles">
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="sales-teams">Sales teams (any B2B)</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="support">Customer support (any industry)</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="saas">SaaS and technology companies</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="ecommerce">E-commerce and retail</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="automotive">Automotive dealerships</div>
+      <div class="ind-acc">
+        <button type="button" class="ind-acc-head" aria-expanded="false">
+          <span class="ind-acc-name">Sales, Support and Technology</span>
+          <span class="ind-acc-count">5 industries</span>
+          <span class="ind-acc-toggle" aria-hidden="true"></span>
+        </button>
+        <div class="ind-acc-body" hidden>
+          <div class="ind-pills">
+          <button type="button" class="ind-pill" data-ind="sales-teams"><span class="ind-pill-name">Sales teams (any B2B)</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="support"><span class="ind-pill-name">Customer support (any industry)</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="saas"><span class="ind-pill-name">SaaS and technology companies</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="ecommerce"><span class="ind-pill-name">E-commerce and retail</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="automotive"><span class="ind-pill-name">Automotive dealerships</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          </div>
         </div>
       </div>
-      <div class="ind-set">
-        <h3 class="ind-set-name">Hospitality and Local Services</h3>
-        <div class="ind-tiles">
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="hotels">Hotels, resorts and venues</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="restaurants">Restaurants and catering</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="travel">Travel and tourism</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="fitness">Fitness studios and gyms</div>
+      <div class="ind-acc">
+        <button type="button" class="ind-acc-head" aria-expanded="false">
+          <span class="ind-acc-name">Hospitality and Local Services</span>
+          <span class="ind-acc-count">4 industries</span>
+          <span class="ind-acc-toggle" aria-hidden="true"></span>
+        </button>
+        <div class="ind-acc-body" hidden>
+          <div class="ind-pills">
+          <button type="button" class="ind-pill" data-ind="hotels"><span class="ind-pill-name">Hotels, resorts and venues</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="restaurants"><span class="ind-pill-name">Restaurants and catering</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="travel"><span class="ind-pill-name">Travel and tourism</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="fitness"><span class="ind-pill-name">Fitness studios and gyms</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          </div>
         </div>
       </div>
-      <div class="ind-set">
-        <h3 class="ind-set-name">Regulated and Specialty Industries</h3>
-        <div class="ind-tiles">
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="cannabis">Cannabis dispensaries and brands</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="cbd">CBD and hemp products</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="manufacturing">Manufacturing and industrial</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="energy">Energy and utilities</div>
+      <div class="ind-acc">
+        <button type="button" class="ind-acc-head" aria-expanded="false">
+          <span class="ind-acc-name">Regulated and Specialty Industries</span>
+          <span class="ind-acc-count">4 industries</span>
+          <span class="ind-acc-toggle" aria-hidden="true"></span>
+        </button>
+        <div class="ind-acc-body" hidden>
+          <div class="ind-pills">
+          <button type="button" class="ind-pill" data-ind="cannabis"><span class="ind-pill-name">Cannabis dispensaries and brands</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="cbd"><span class="ind-pill-name">CBD and hemp products</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="manufacturing"><span class="ind-pill-name">Manufacturing and industrial</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="energy"><span class="ind-pill-name">Energy and utilities</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          </div>
         </div>
       </div>
-      <div class="ind-set">
-        <h3 class="ind-set-name">Public Sector and Nonprofit</h3>
-        <div class="ind-tiles">
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="municipalities">Municipalities and local government</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="nonprofits">Nonprofits</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="associations">Associations and member organizations</div>
+      <div class="ind-acc">
+        <button type="button" class="ind-acc-head" aria-expanded="false">
+          <span class="ind-acc-name">Public Sector and Nonprofit</span>
+          <span class="ind-acc-count">3 industries</span>
+          <span class="ind-acc-toggle" aria-hidden="true"></span>
+        </button>
+        <div class="ind-acc-body" hidden>
+          <div class="ind-pills">
+          <button type="button" class="ind-pill" data-ind="municipalities"><span class="ind-pill-name">Municipalities and local government</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="nonprofits"><span class="ind-pill-name">Nonprofits</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="associations"><span class="ind-pill-name">Associations and member organizations</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          </div>
         </div>
       </div>
-      <div class="ind-set">
-        <h3 class="ind-set-name">Recruiting and HR</h3>
-        <div class="ind-tiles">
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="staffing">Staffing and recruiting firms</div>
-        <div class="ind-tile" tabindex="0" role="button" aria-haspopup="true" data-ind="internal-hr">Internal HR and employee experience</div>
+      <div class="ind-acc">
+        <button type="button" class="ind-acc-head" aria-expanded="false">
+          <span class="ind-acc-name">Recruiting and HR</span>
+          <span class="ind-acc-count">2 industries</span>
+          <span class="ind-acc-toggle" aria-hidden="true"></span>
+        </button>
+        <div class="ind-acc-body" hidden>
+          <div class="ind-pills">
+          <button type="button" class="ind-pill" data-ind="staffing"><span class="ind-pill-name">Staffing and recruiting firms</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          <button type="button" class="ind-pill" data-ind="internal-hr"><span class="ind-pill-name">Internal HR and employee experience</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
+          </div>
         </div>
       </div>
     </div>
@@ -1317,12 +1383,12 @@
   /* ── Sections (used by header nav, mob menu, dot nav) ── */
 
   var IND_DATA = {"med-practices": {"name": "Medical practices", "star": "Victoria, Zayla", "does": ["Greets patients, explains services and procedures, answers insurance and first-visit questions, routes clinical questions to staff, books consultations."], "asks": ["\"Do you take my insurance?\" \"What happens at a first visit?\" \"Is this procedure right for me?\""], "asksLabel": "Visitors ask", "outcome": "Fewer front-desk calls, more booked consults, coverage after hours.", "guard": "Educational disclaimers, no diagnosis, no protected health information in the conversation, personal medical questions routed to the practice."}, "pharma": {"name": "Pharma (Medical Affairs and Commercial)", "star": "", "does": ["For Medical Science Liaisons (MSLs): an on-demand scientific partner that answers from approved medical information, trial data and publications. It preps MSLs for conversations with key opinion leaders and physicians, lets them practice discussing new data before congresses and launches, and keeps field medical teams on the same approved talking points.", "For sales reps: role-play with realistic AI physicians (skeptical, busy, data-driven), objection handling, launch and new-indication training, product knowledge checks, practice with on-label messaging before field calls."], "asks": ["\"How do I explain the subgroup data to a skeptical oncologist?\" \"Let me practice the call before tomorrow.\" \"What did the phase 3 show for this endpoint?\""], "asksLabel": "Users ask", "outcome": "MSLs and reps ready faster for launches and new data, consistent approved messaging across the field, practice at scale without pulling people out of territory.", "guard": "Approved content only, separate knowledge bases for medical (MSL) and promotional (sales) content, no off-label promotion, support for medical-legal-regulatory review, conversation logs for compliance."}, "cme": {"name": "Continuing medical education (CME)", "star": "Ruby, Dexter, Connie, Ellie, Joe, Steve", "does": ["Synthetic patients for clinical communication practice, AI clinical consultants for clinician education, program guides that walk learners through portals."], "asks": ["\"How should I sequence treatment for this patient?\" \"What are the key adverse events to watch?\""], "asksLabel": "Users ask", "outcome": "Learning that continues after live events, outcomes data for grant reporting.", "guard": "Controlled knowledge sources, no off-label discussion, independence from commercial influence."}, "med-devices": {"name": "Medical devices", "star": "", "does": ["Trains and supports physicians as they learn new device features, surgical and procedural techniques, and updated methods. Walks through setup and settings step by step, answers technique questions between in-person trainings, gives a refresher before a case, and supports clinical staff and OR teams."], "asks": ["\"What changed in the new software version?\" \"Walk me through the technique for this approach.\" \"What are the recommended settings for this patient type?\""], "asksLabel": "Users ask", "outcome": "Physicians adopt new features and techniques faster, fewer calls to clinical specialists, consistent training across every account.", "guard": "Answers limited to cleared indications, approved labeling and instructions for use; complex cases go to the company's clinical specialists."}, "med-spas": {"name": "Med spas and aesthetics", "star": "", "does": ["Treatment menu guide, price ranges if the client allows, aftercare questions, booking."], "asks": ["\"What's the difference between these fillers?\" \"How long do results last?\""], "asksLabel": "Visitors ask", "outcome": "More visitors turned into booked treatments, fewer repeat aftercare calls.", "guard": ""}, "behavioral": {"name": "Behavioral health", "star": "", "does": ["Explains programs and levels of care, admissions steps, insurance verification."], "asks": ["\"What does intensive outpatient involve?\" \"How do I start?\""], "asksLabel": "Visitors ask", "outcome": "A gentle, private first step for people hesitant to call.", "guard": "General information only, immediate crisis routing (988 in the U.S.), no clinical advice."}, "home-care": {"name": "Home care and private care", "star": "Zoey (Revive Private Care)", "does": ["Welcomes families, explains the personalized approach to private and in-home care, walks through services, answers first questions, connects families with the care team."], "asks": ["\"What services do you provide at home?\" \"How do we get started?\" \"Can someone call me back today?\""], "asksLabel": "Visitors ask", "outcome": "Families supported at any hour, more care inquiries reaching the team.", "guard": "No clinical advice, personal health questions routed to the care team."}, "veterinary": {"name": "Veterinary", "star": "", "does": ["Appointment requests, general pet care questions, after-hours routing to emergency clinics."], "asks": ["\"Is this an emergency?\" \"When is my dog due for vaccines?\""], "asksLabel": "Visitors ask", "outcome": "Fewer phone interruptions, clear direction after hours.", "guard": "No diagnosis, urgent cases routed immediately."}, "insurance": {"name": "Insurance (carriers, MGAs, brokers, agencies)", "star": "CLAIR", "does": ["Translates policy language, answers coverage and exclusion questions with citations, prepares information ready for submission, supports brokers, underwriters and insureds."], "asks": ["\"Does this policy cover ransomware?\" \"What controls lower my premium?\""], "asksLabel": "Visitors ask", "outcome": "Faster quoting, cleaner submissions, better-informed insureds.", "guard": "Answers traceable to policy forms, coverage decisions stay with licensed people."}, "cybersecurity": {"name": "Cybersecurity", "star": "CLAIR", "does": ["Explains risks and controls in plain language, qualifies prospects, supports sales conversations with CISOs and IT leaders."], "asks": ["\"Do we need MFA everywhere?\" \"What does your service include?\""], "asksLabel": "Visitors ask", "outcome": "Shorter sales cycles, better-educated buyers.", "guard": ""}, "consulting": {"name": "Consulting and advisory firms", "star": "CLAIR", "does": ["Puts your expertise on call, runs intake before an engagement, answers client questions between meetings, turns your frameworks into an interactive advisor."], "asks": ["\"How would you approach our situation?\" \"What does an engagement look like?\""], "asksLabel": "Visitors ask", "outcome": "Better-qualified first meetings, thought leadership that talks back.", "guard": ""}, "legal": {"name": "Legal", "star": "", "does": ["Explains practice areas and process, screens intake, books consultations."], "asks": ["\"Do I have a case?\" \"What does a consultation cost?\""], "asksLabel": "Visitors ask", "outcome": "Faster intake, fewer unqualified calls.", "guard": "General information only, no legal advice, no attorney-client relationship formed."}, "accounting": {"name": "Accounting and tax", "star": "", "does": ["Seasonal Q&A, document checklists, client onboarding, service explanations."], "asks": ["\"What documents do I need to file?\" \"Do you handle multi-state returns?\""], "asksLabel": "Visitors ask", "outcome": "Relief for staff during tax season.", "guard": "No individual tax advice."}, "banking": {"name": "Banking and credit unions", "star": "", "does": ["Product guides, help opening accounts, branch and service questions."], "asks": ["\"Which checking account fits me?\" \"How do I open an account online?\""], "asksLabel": "Visitors ask", "outcome": "More accounts opened online, fewer routine calls.", "guard": "No account-specific data unless securely integrated."}, "wealth": {"name": "Wealth management and financial advisors", "star": "", "does": ["Introduces the advisors and their philosophy, explains services, books discovery meetings."], "asks": ["\"What's your minimum?\" \"How are you paid?\""], "asksLabel": "Visitors ask", "outcome": "More discovery meetings with right-fit clients.", "guard": "General education only, no investment advice."}, "commercial-contractors": {"name": "Commercial contractors", "star": "", "does": ["Bid and RFP intake, questions about capabilities and project types, prequalification documents, subcontractor and vendor inquiries."], "asks": ["\"Do you handle tenant fit-outs?\" \"Where do I send bid documents?\""], "asksLabel": "Visitors ask", "outcome": "Faster response to bid opportunities, organized intake for estimators.", "guard": ""}, "residential-contractors": {"name": "Residential contractors and remodelers", "star": "", "does": ["Scopes projects, gathers estimate details, explains materials and finishes, sets timeline expectations, books site visits."], "asks": ["\"What does a kitchen remodel cost?\" \"How long will a bathroom take?\""], "asksLabel": "Visitors ask", "outcome": "Better-qualified estimate requests, fewer wasted site visits.", "guard": ""}, "home-services": {"name": "Home services (HVAC, roofing, plumbing, electrical, solar, landscaping)", "star": "", "does": ["Quote intake, emergency routing, scheduling, maintenance plan questions."], "asks": ["\"My AC stopped working, can someone come today?\" \"Do you offer financing?\""], "asksLabel": "Visitors ask", "outcome": "After-hours emergencies captured, more booked jobs.", "guard": ""}, "architects": {"name": "Architects and design-build firms", "star": "", "does": ["Portfolio guide, explains the process and its phases, books consultations."], "asks": ["\"How does design-build work?\" \"What size projects do you take?\""], "asksLabel": "Visitors ask", "outcome": "Prospects who understand the process before the first meeting.", "guard": ""}, "property-mgmt": {"name": "Property management", "star": "", "does": ["Tenant questions, maintenance requests, leasing inquiries, scheduling showings."], "asks": ["\"How do I submit a repair request?\" \"Is the two-bedroom still available?\""], "asksLabel": "Visitors ask", "outcome": "Fewer calls to the office, faster leasing.", "guard": ""}, "real-estate": {"name": "Real estate and mortgage", "star": "", "does": ["Listing questions, buyer and seller guides, pre-qualification steps, agent matching."], "asks": ["\"What's my home worth?\" \"How much can I afford?\""], "asksLabel": "Visitors ask", "outcome": "More leads captured from listing traffic.", "guard": "No lending decisions, responses compliant with fair housing rules."}, "sales-teams": {"name": "Sales teams (any B2B)", "star": "Ava", "does": ["Website sales rep, product Q&A, guided demos, lead qualification, meeting booking."], "asks": ["\"Would this work for a company my size?\" \"Can I see how it works?\""], "asksLabel": "Visitors ask", "outcome": "More qualified meetings, no lead left waiting for a callback.", "guard": ""}, "support": {"name": "Customer support (any industry)", "star": "", "does": ["24/7 front line, answers from your documentation and policies, setup and troubleshooting, handoff to a person with the transcript."], "asks": ["\"How do I reset my password?\" \"What's your return policy?\""], "asksLabel": "Visitors ask", "outcome": "Fewer tickets, shorter waits.", "guard": ""}, "saas": {"name": "SaaS and technology companies", "star": "", "does": ["Onboarding guide, feature walkthroughs, front door to the help center, nudges from free trial to paid."], "asks": ["\"How do I connect my calendar?\" \"What's in the Pro plan?\""], "asksLabel": "Visitors ask", "outcome": "Faster activation, fewer support tickets.", "guard": ""}, "ecommerce": {"name": "E-commerce and retail", "star": "", "does": ["Product finder, sizing and fit, order and shipping questions, returns."], "asks": ["\"Which size should I order?\" \"Where is my order?\""], "asksLabel": "Visitors ask", "outcome": "Higher conversion, fewer returns.", "guard": ""}, "automotive": {"name": "Automotive dealerships", "star": "", "does": ["Inventory questions, trade-in steps, financing overview, test drive booking, service scheduling."], "asks": ["\"Do you have this model in blue?\" \"What's my trade worth?\""], "asksLabel": "Visitors ask", "outcome": "More showroom and test drive appointments.", "guard": ""}, "hotels": {"name": "Hotels, resorts and venues", "star": "", "does": ["Virtual front desk, amenities and policies, event and wedding inquiries, guest help in multiple languages."], "asks": ["\"Is breakfast included?\" \"Can you host 150 guests?\""], "asksLabel": "Visitors ask", "outcome": "More direct bookings and event leads.", "guard": ""}, "restaurants": {"name": "Restaurants and catering", "star": "", "does": ["Menu and allergen questions, private events, catering orders, reservations."], "asks": ["\"Do you have gluten-free options?\" \"Can we book the private room?\""], "asksLabel": "Visitors ask", "outcome": "More private event revenue.", "guard": "Allergen answers from approved menus only, with a \"confirm with staff\" note."}, "travel": {"name": "Travel and tourism", "star": "", "does": ["Destination guide, itinerary questions, booking help."], "asks": ["\"What should we do on day two?\" \"Is this tour kid-friendly?\""], "asksLabel": "Visitors ask", "outcome": "Visitors stay engaged longer, more bookings.", "guard": ""}, "fitness": {"name": "Fitness studios and gyms", "star": "", "does": ["Membership questions, class schedules, trial booking."], "asks": ["\"What's the difference between memberships?\" \"Can I try a class free?\""], "asksLabel": "Visitors ask", "outcome": "More trial sign-ups.", "guard": ""}, "cannabis": {"name": "Cannabis dispensaries and brands", "star": "", "does": ["Product and strain education, dispensary concierge, menu and deals, local rules and hours, loyalty program questions, guidance for first-time visitors."], "asks": ["\"What's the difference between indica and sativa?\" \"What should a first-timer try?\" \"What are your hours?\""], "asksLabel": "Visitors ask", "outcome": "Better-educated customers, bigger orders, budtenders freed for in-store service.", "guard": "21+ age gate (medical card rules where they apply), no medical claims, compliance by state, no advertising to minors."}, "cbd": {"name": "CBD and hemp products", "star": "", "does": ["Explains product types (tinctures, gummies, topicals; full spectrum, broad spectrum, isolate), matches visitors to products, reads lab results in plain language, answers shipping and subscription questions."], "asks": ["\"What's the difference between full spectrum and isolate?\" \"Will this show up on a drug test?\" \"Where's the lab report for this batch?\""], "asksLabel": "Visitors ask", "outcome": "Higher online conversion, fewer returns, more subscriptions.", "guard": "No claims that CBD treats, cures or prevents any condition (FDA and FTC rules), age gate where required, state-by-state shipping rules, answers limited to approved product information and published lab results."}, "manufacturing": {"name": "Manufacturing and industrial", "star": "", "does": ["Spec and compatibility questions, distributor locator, technical support, quote request intake."], "asks": ["\"Is this part rated for high temperature?\" \"Who distributes near me?\""], "asksLabel": "Visitors ask", "outcome": "Faster quotes, engineers freed from repeat questions.", "guard": ""}, "energy": {"name": "Energy and utilities", "star": "", "does": ["Outage information, program enrollment, billing questions, efficiency rebates."], "asks": ["\"Is there an outage on my street?\" \"Do I qualify for the rebate?\""], "asksLabel": "Visitors ask", "outcome": "Fewer calls to the call center during peaks.", "guard": ""}, "municipalities": {"name": "Municipalities and local government", "star": "", "does": ["Resident services, permits and licenses, \"where do I go\" questions, access in multiple languages."], "asks": ["\"How do I get a building permit?\" \"When is bulk pickup?\""], "asksLabel": "Visitors ask", "outcome": "24/7 resident service without adding staff.", "guard": ""}, "nonprofits": {"name": "Nonprofits", "star": "", "does": ["Program information, volunteer sign-up, donor questions, impact storytelling."], "asks": ["\"How can I volunteer?\" \"Where does my donation go?\""], "asksLabel": "Visitors ask", "outcome": "More volunteers and donors.", "guard": ""}, "associations": {"name": "Associations and member organizations", "star": "", "does": ["Member benefits, event registration, continuing education credits, renewals."], "asks": ["\"How do I earn CE credits?\" \"When does membership renew?\""], "asksLabel": "Visitors ask", "outcome": "More renewals, higher event attendance.", "guard": ""}, "staffing": {"name": "Staffing and recruiting firms", "star": "", "does": ["Candidate screening, job matching, application help, interview scheduling."], "asks": ["\"Which roles fit my experience?\" \"What's the next step?\""], "asksLabel": "Visitors ask", "outcome": "Faster screening, a better candidate experience.", "guard": "The same questions for every candidate, hiring decisions stay with people."}, "internal-hr": {"name": "Internal HR and employee experience", "star": "", "does": ["Benefits questions, policy answers, new-hire onboarding, help during open enrollment."], "asks": ["\"How do I add a dependent?\" \"What's the PTO policy?\""], "asksLabel": "Employees ask", "outcome": "HR teams freed from repeat questions.", "guard": ""}};
-  /* ── Industries: hover popover. Desktop shows it beside the tile on hover
-     or keyboard focus; touch taps toggle it as a bottom sheet. ── */
+  /* ── Industries: group accordions open to centered pills; resting on a
+     pill (or focusing it) floats the detail popover; touch taps toggle. ── */
   (function(){
-    var board = document.querySelector('.ind-board');
+    var accs = document.querySelector('.ind-accs');
     var pop = document.getElementById('ind-pop');
-    if(!board || !pop) return;
+    if(!accs || !pop) return;
     var current = null;
     function esc(s){ var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
     function para(label, items, cls){
@@ -1332,18 +1398,18 @@
         return '<p class="' + (cls || '') + '">' + lead + esc(t) + '</p>';
       }).join('');
     }
-    function show(tile){
-      var d = IND_DATA[tile.dataset.ind];
+    function show(pill){
+      var d = IND_DATA[pill.dataset.ind];
       if(!d) return;
       if(current) current.classList.remove('on');
-      current = tile; tile.classList.add('on');
+      current = pill; pill.classList.add('on');
       pop.innerHTML = '<h4>' + esc(d.name) + '</h4>' +
         para('What it does', d.does) +
         para(d.asksLabel, d.asks) +
         para('Outcome', [d.outcome]) +
         (d.guard ? para('Guardrails', [d.guard], 'ind-guard') : '');
       pop.hidden = false;
-      var r = tile.getBoundingClientRect();
+      var r = pill.getBoundingClientRect();
       var pw = pop.offsetWidth, ph = pop.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
       var x = r.right + 14, y = r.top;
       if(x + pw > vw - 16) x = r.left - pw - 14;
@@ -1352,39 +1418,48 @@
       pop.style.left = x + 'px';
       pop.style.top = y + 'px';
     }
-    function hide(){
+    function hidePop(){
       pop.hidden = true;
       if(current){ current.classList.remove('on'); current = null; }
     }
+    accs.addEventListener('click', function(e){
+      var head = e.target.closest('.ind-acc-head');
+      if(head){
+        var open = head.getAttribute('aria-expanded') === 'true';
+        head.setAttribute('aria-expanded', open ? 'false' : 'true');
+        head.nextElementSibling.hidden = open;
+        hidePop();
+        return;
+      }
+    });
     var touch = window.matchMedia('(hover: none)').matches;
-    board.addEventListener('mouseover', function(e){
+    accs.addEventListener('mouseover', function(e){
       if(touch) return;
-      var t = e.target.closest('.ind-tile');
+      var t = e.target.closest('.ind-pill');
       if(t && t !== current) show(t);
     });
-    board.addEventListener('mouseout', function(e){
+    accs.addEventListener('mouseout', function(e){
       if(touch) return;
-      var t = e.target.closest('.ind-tile');
-      if(t && !board.contains(e.relatedTarget)) hide();
-      else if(t && !(e.relatedTarget && e.relatedTarget.closest('.ind-tile'))) hide();
+      var t = e.target.closest('.ind-pill');
+      if(t && !(e.relatedTarget && e.relatedTarget.closest('.ind-pill'))) hidePop();
     });
-    board.addEventListener('focusin', function(e){
-      var t = e.target.closest('.ind-tile');
+    accs.addEventListener('focusin', function(e){
+      var t = e.target.closest('.ind-pill');
       if(t) show(t);
     });
-    board.addEventListener('focusout', function(e){
-      if(!(e.relatedTarget && e.relatedTarget.closest('.ind-tile'))) hide();
+    accs.addEventListener('focusout', function(e){
+      if(!(e.relatedTarget && e.relatedTarget.closest('.ind-pill'))) hidePop();
     });
-    board.addEventListener('click', function(e){
+    accs.addEventListener('click', function(e){
       if(!touch) return;
-      var t = e.target.closest('.ind-tile');
+      var t = e.target.closest('.ind-pill');
       if(!t) return;
-      if(t === current){ hide(); } else { show(t); }
+      if(t === current){ hidePop(); } else { show(t); }
     });
     document.addEventListener('click', function(e){
-      if(touch && current && !e.target.closest('.ind-tile') && !e.target.closest('.ind-pop')) hide();
+      if(touch && current && !e.target.closest('.ind-pill') && !e.target.closest('.ind-pop')) hidePop();
     });
-    window.addEventListener('scroll', function(){ if(current && !touch) hide(); }, {passive:true});
+    window.addEventListener('scroll', function(){ if(current && !touch) hidePop(); }, {passive:true});
   })();
 
   var SECTIONS = [
