@@ -724,6 +724,60 @@
   .featured-badge .dot{box-shadow:0 0 10px #FF3D5A !important}
   .embed-thumb-play{animation:none !important}
   .ra-photo{animation:none !important;border-color:rgba(232,181,74,.35) !important;box-shadow:0 20px 50px -16px rgba(0,0,0,.6) !important}
+
+  /* ════ Industries restyle 2026-09-26 (RA Demo 11) ════
+     The accent-card treatment moves from the business list to the
+     industry group boxes; the business list goes quiet and generic. */
+
+  /* Industry groups wear the accent cards. */
+  .ind-accs{border-top:0 !important;display:grid;gap:14px}
+  .ind-acc{position:relative;border:1px solid var(--line-soft) !important;border-radius:14px;background:linear-gradient(165deg,rgba(14,39,65,.7),rgba(9,26,45,.55));overflow:hidden;transition:border-color .35s, box-shadow .45s}
+  .ind-acc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--gold));opacity:.55;transition:opacity .35s, width .35s;z-index:1}
+  .ind-acc::after{content:"";position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,var(--accent-glow,rgba(201,168,106,.18)),transparent 65%);pointer-events:none;opacity:.7;transition:opacity .45s, transform .45s}
+  .ind-acc:hover{border-color:var(--line) !important;box-shadow:0 18px 40px -22px rgba(0,0,0,.6),0 0 30px -10px var(--accent-glow,rgba(201,168,106,.35))}
+  .ind-acc:hover::before{width:4px;opacity:.95}
+  .ind-acc:hover::after{opacity:1;transform:scale(1.12)}
+  .ind-acc:nth-child(1){--accent:var(--teal-bright);--accent-glow:rgba(52,214,194,.22)}
+  .ind-acc:nth-child(2){--accent:var(--gold);--accent-glow:rgba(201,168,106,.22)}
+  .ind-acc:nth-child(3){--accent:var(--cyan);--accent-glow:rgba(95,227,210,.22)}
+  .ind-acc:nth-child(4){--accent:#A78BFA;--accent-glow:rgba(167,139,250,.22)}
+  .ind-acc:nth-child(5){--accent:#FF9E6E;--accent-glow:rgba(255,158,110,.22)}
+  .ind-acc:nth-child(6){--accent:var(--gold);--accent-glow:rgba(201,168,106,.22)}
+  .ind-acc:nth-child(7){--accent:var(--teal-bright);--accent-glow:rgba(52,214,194,.22)}
+  .ind-acc:nth-child(8){--accent:#A78BFA;--accent-glow:rgba(167,139,250,.22)}
+  .ind-acc-head{padding:24px 26px !important}
+  .ind-acc-body{padding:2px 26px 30px !important}
+
+  /* Pills: squared, bigger, flashier. */
+  .ind-pills{gap:14px !important;max-width:960px !important}
+  .ind-pill{border-radius:10px !important;font-size:16px !important;font-weight:600 !important;color:var(--text) !important;padding:15px 20px !important;gap:12px !important;
+    background:linear-gradient(160deg,rgba(232,181,74,.10),rgba(14,39,65,.45)) !important;border:1px solid rgba(232,181,74,.28) !important;
+    box-shadow:0 12px 28px -20px rgba(0,0,0,.8);transition:color .2s,border-color .2s,background .25s,box-shadow .3s,transform .2s !important}
+  .ind-pill:hover,.ind-pill:focus-visible,.ind-pill.on{border-color:rgba(232,181,74,.8) !important;background:linear-gradient(160deg,rgba(232,181,74,.18),rgba(14,39,65,.55)) !important;
+    box-shadow:0 12px 28px -20px rgba(0,0,0,.8),0 0 26px -6px rgba(232,181,74,.4);transform:translateY(-2px)}
+  .ind-hint{width:22px !important;height:22px !important}
+  .ind-hint svg{width:20px !important;height:20px !important}
+
+  /* Detail popover: larger, easier to read. */
+  .ind-pop{width:min(520px,calc(100vw - 32px)) !important;padding:26px 28px !important}
+  .ind-pop h4{font-size:23px !important;margin-bottom:14px !important}
+  .ind-pop p{font-size:15.5px !important;line-height:1.75 !important;color:#C3D2E2 !important;margin-bottom:12px !important}
+  .ind-pop b{color:var(--text) !important}
+
+  /* Business list goes generic: quiet hairline rows, no accents. */
+  .why-list{gap:0 !important}
+  .why-item{background:none !important;border:0 !important;border-bottom:1px solid var(--line-soft) !important;border-radius:0 !important;padding:22px 4px !important}
+  .why-item::before,.why-item::after{display:none !important}
+  .why-item:hover{transform:none !important;box-shadow:none !important;border-color:var(--line-soft) !important}
+  .why-item .why-num{color:var(--gold) !important;text-shadow:none !important;font-size:20px !important}
+
+  @media(max-width:680px){
+    .ind-acc-head{padding:20px 18px !important}
+    .ind-acc-body{padding:2px 16px 24px !important}
+    .ind-pills{gap:11px !important}
+    .ind-pill{font-size:14.5px !important;padding:13px 16px !important}
+    .ind-pop p{font-size:14.5px !important}
+  }
 </style>
 </head>
 <body>
