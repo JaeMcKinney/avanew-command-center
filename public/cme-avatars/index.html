@@ -1385,16 +1385,20 @@
   document.getElementById('footer-learn-more').addEventListener('click', goToLeadForm);
   /* Featured "Ava" avatar - opens in the avatar modal (slightly blurred backdrop,
      resizable, fullscreen control, full-bleed on mobile). No link-out, and no
-     auto-start: a live camera/mic session begins only when the visitor clicks.
+     auto-start: a live mic-only session begins only when the visitor clicks.
      Both the video poster and the CTA open the same modal; closing it ends the
      session, and the poster stays in place so Ava can be reopened. */
-  var AVA_EMBED_URL = 'https://deployer-dev.avanew.ai/avatar/6a46faad14bc331056de01be?personaId=paae044d1b3b&replicaId=rcc28da86847&context=Test%0A%0ATest&name=Ava&v=1783036630154&autostart=true';
+  /* Tavus embed deployment (2026-09-26; replaced the Avanew deployer, which is
+     down): same-origin wrapper /ava-embed.html hosts <tavus-embed> with Magic
+     Canvas. Voice + click only: chat is disabled on the deployment and the
+     wrapper strips video from getUserMedia, so no camera and no typed input. */
+  var AVA_EMBED_URL = '/ava-embed.html?v=1';
   function startAva(){
     openAvatarModal('Ava');
     avatarModalStage.classList.add('ratio-43');
     var f = document.createElement('iframe');
     f.src = AVA_EMBED_URL;
-    f.allow = 'camera; microphone; fullscreen; display-capture; autoplay';
+    f.allow = 'microphone; fullscreen; autoplay';
     f.setAttribute('allowfullscreen', '');
     f.title = 'Ava';
     f.addEventListener('load', function(){
