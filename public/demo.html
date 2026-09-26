@@ -764,6 +764,9 @@
   .ind-pop p{font-size:15.5px !important;line-height:1.75 !important;color:#C3D2E2 !important;margin-bottom:12px !important}
   .ind-pop b{color:var(--text) !important}
 
+  /* Prices lead with "Starting at". */
+  .amt-kicker{font-family:'Fraunces',serif;font-style:italic;font-size:16.5px;color:var(--gold);margin:2px 0 4px}
+
   /* Business list goes generic: quiet hairline rows, no accents. */
   .why-list{gap:0 !important}
   .why-item{background:none !important;border:0 !important;border-bottom:1px solid var(--line-soft) !important;border-radius:0 !important;padding:22px 4px !important}
@@ -1257,6 +1260,7 @@
     <div class="price-grid stagger">
       <div class="price one">
         <span class="pk">One-time implementation</span>
+        <div class="amt-kicker">Starting at</div>
         <div class="amt">$6,000</div>
         <div class="freq">Paid as a $3,000 deposit <span class="pipe">|</span> $3,000 on launch</div>
         <div class="freq" style="margin-top:4px">Payment plans available</div>
@@ -1275,6 +1279,7 @@
 
       <div class="price svc">
         <span class="pk">Monthly service</span>
+        <div class="amt-kicker">Starting at</div>
         <div class="amt">$600<span> / month</span></div>
         <div class="freq">Social posting available as an optional continuation</div>
         <p class="desc">Hosting, support, monthly review, and continuous optimization to keep your avatar sharper over time.</p>
