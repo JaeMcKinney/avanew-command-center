@@ -1,13 +1,701 @@
-<!DOCTYPE html>
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Custom Skilldora-branded RA templates (demo + refer)
+--
+-- demo_html  → /demo/skilldora  — full interactive avatar demo page
+-- html       → /refer/skilldora — Skilldora-branded lead-capture form
+--
+-- Sources:
+--   public/demo-skilldora.html  (build-skilldora-template.py)
+--   public/refer-skilldora.html (build-skilldora-refer-template.py)
+-- Re-running this migration UPSERTs the same row by its pinned id.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+DO $migration$
+DECLARE
+  v_divigner_org uuid := 'dddddddd-dddd-dddd-dddd-dddddddddddd';
+  v_template_id  uuid := 'c5a11d04-5d11-4d04-9c5a-5d115d04c5a1';
+BEGIN
+
+  -- 1) Upsert the template row with both demo_html and html columns set.
+  INSERT INTO public.ra_landing_templates (
+    id, organization_id, name, html, demo_html
+  ) VALUES (
+    v_template_id,
+    v_divigner_org,
+    'Skilldora Custom (Company)',
+    $SKD_REFER$<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <meta name="theme-color" content="#06101D">
-<title>Divigner AI Automations</title>
+<title>Skilldora · Book a Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Manrope:wght@300;400;500;600;700&family=Roboto+Slab:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#06101D; --bg:#091A2D; --bg-2:#0B2138;
+    --surface:#0E2741; --surface-2:#123150;
+    --line:rgba(120,214,196,.16); --line-soft:rgba(160,190,215,.12);
+    --gold:#C9A86A; --teal:#18B9A6; --teal-bright:#34D6C2; --cyan:#5FE3D2;
+    --text:#EAF2F9; --muted:#A2B6C9; --muted-2:#6E8499;
+    --maxw:820px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative;min-height:100vh;display:flex;flex-direction:column;font-size:16px}
+
+  /* ── Decorative orb (behind content) ── */
+  .orb-stage{position:fixed;right:-180px;top:42%;transform:translateY(-50%);width:560px;height:560px;pointer-events:none;z-index:-1;opacity:.6}
+  .orb{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 36% 30%, rgba(150,255,240,.95), rgba(52,214,194,.55) 26%, rgba(20,120,150,.25) 48%, transparent 64%),radial-gradient(circle at 60% 70%, rgba(40,160,200,.45), transparent 55%);filter:blur(2px);animation:float 9s ease-in-out infinite}
+  .orb-ring{position:absolute;inset:60px;border-radius:50%;background:conic-gradient(from 0deg, transparent, rgba(95,227,210,.5), transparent 38%, rgba(201,168,106,.4), transparent 70%);filter:blur(26px);opacity:.7;animation:spin 22s linear infinite}
+  .orb-core{position:absolute;left:50%;top:50%;width:70px;height:70px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 38% 32%, #fff, var(--cyan) 45%, var(--teal) 80%);box-shadow:0 0 80px 20px rgba(52,214,194,.5),0 0 160px 40px rgba(52,214,194,.25);animation:pulse 5s ease-in-out infinite}
+  .orb-halo{position:absolute;inset:-40px;border-radius:50%;border:1px solid rgba(95,227,210,.12);box-shadow:inset 0 0 120px rgba(52,214,194,.2)}
+  @keyframes float{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 18px))}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:1}50%{transform:translate(-50%,-50%) scale(1.12);opacity:.85}}
+  @media(max-width:680px){.orb-stage{width:380px;height:380px;right:-160px;opacity:.5}}
+  body::before{content:"";position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(900px 600px at 78% -5%, rgba(52,214,194,.16), transparent 60%),
+      radial-gradient(800px 700px at -10% 12%, rgba(28,90,140,.30), transparent 55%),
+      radial-gradient(1000px 900px at 50% 110%, rgba(20,80,110,.22), transparent 60%),
+      linear-gradient(180deg,#06101D 0%, #091A2D 40%, #08182A 100%);}
+  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  a{color:inherit}
+  img{max-width:100%;display:block}
+
+  .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 32px}
+
+  /* ── Main layout ── */
+  main{flex:1;padding:0;display:flex;flex-direction:column;align-items:center}
+
+  /* ── RA hero ── */
+  .ra-hero{text-align:center;padding:60px 32px 32px;max-width:680px;width:100%;margin:0 auto;position:relative;z-index:1}
+  @keyframes raGlow{0%,100%{box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 24px 60px -12px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 10px rgba(52,214,194,.13),0 0 56px -4px rgba(52,214,194,.52),0 24px 60px -12px rgba(0,0,0,.55)}}
+  .ra-avatar,.ra-avatar-initials{animation:raGlow 3.8s ease-in-out infinite}
+  @media(prefers-reduced-motion:reduce){.ra-avatar,.ra-avatar-initials{animation:none}}
+  .ra-avatar{width:170px;height:170px;border-radius:50%;object-fit:cover;margin:0 auto 24px;border:2px solid var(--line);box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 24px 60px -12px rgba(0,0,0,.55)}
+  .ra-avatar-initials{width:170px;height:170px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:700;color:#06101D;margin:0 auto 24px;background:linear-gradient(135deg,#18B9A6,#34D6C2);border:2px solid var(--line);box-shadow:0 0 0 5px rgba(52,214,194,.07),0 0 28px -4px rgba(52,214,194,.22),0 24px 60px -12px rgba(0,0,0,.55)}
+  .ra-eyebrow{font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:12px}
+  .ra-name{font-family:'Fraunces',serif;font-size:clamp(34px,6vw,52px);font-weight:300;color:var(--text);letter-spacing:-.015em;line-height:1.1}
+
+  /* ── Form hero ── */
+  .form-hero{text-align:center;margin:0 auto 34px;max-width:680px;padding:0 32px;position:relative;z-index:1}
+  .eyebrow{display:inline-flex;align-items:center;justify-content:center;gap:12px;font-size:13px;letter-spacing:.28em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:24px}
+  .eyebrow::before,.eyebrow::after{content:"";width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent)}
+  h1.form-title{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(42px,6.2vw,68px);line-height:1.05;letter-spacing:-.015em;color:var(--text);text-wrap:balance}
+  h1.form-title .grad{background:linear-gradient(110deg,var(--cyan),var(--teal-bright) 45%,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:italic;font-weight:400}
+  .form-sub{font-family:'Fraunces',serif;font-style:italic;font-size:20px;color:var(--muted);font-weight:300;margin-top:20px;line-height:1.55;max-width:580px;margin-left:auto;margin-right:auto;text-wrap:balance}
+
+  /* ── Form card — floats above footer ── */
+  .form-card{width:100%;max-width:680px;margin:0 auto -70px;position:relative;background:linear-gradient(170deg,rgba(14,39,65,.97),rgba(9,26,45,.97));border:1px solid var(--line);border-radius:24px;padding:48px 44px 40px;box-shadow:0 40px 100px -20px rgba(0,0,0,.75),0 0 0 1px rgba(120,214,196,.06) inset;overflow:hidden;z-index:1}
+  .form-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan),var(--gold))}
+  @media(max-width:520px){.wrap{padding:0 14px}.form-card{padding:32px 18px 28px;border-radius:20px;margin-bottom:-50px}}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .form-grid .full{grid-column:1 / -1}
+  @media(max-width:520px){.form-grid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);font-weight:700}
+  .field input,.field textarea{font-family:'Manrope';font-size:16px;color:var(--text);background:rgba(6,16,29,.55);border:1px solid rgba(120,214,196,.18);border-radius:10px;padding:15px 16px;outline:none;transition:border-color .2s,background .2s,box-shadow .2s;width:100%}
+  .field textarea{resize:vertical;min-height:108px;line-height:1.6}
+  .field input::placeholder,.field textarea::placeholder{color:var(--muted-2)}
+  .field input:focus,.field textarea:focus{border-color:var(--teal-bright);background:rgba(6,16,29,.75);box-shadow:0 0 0 3px rgba(52,214,194,.12)}
+  .field-error{color:#ff7d7d;font-size:11.5px;letter-spacing:.04em;margin-top:2px;display:none}
+  .field.invalid input,.field.invalid textarea{border-color:rgba(255,125,125,.6)}
+  .field.invalid .field-error{display:block}
+
+  .intent-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:26px}
+  @media(max-width:520px){.intent-row{grid-template-columns:1fr}}
+  .intent-btn{position:relative;padding:18px 20px;border-radius:12px;font-family:'Manrope';font-size:13.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border:1px solid;transition:transform .25s,box-shadow .3s,background .3s,border-color .3s,color .3s;display:flex;align-items:center;justify-content:center;gap:10px}
+  .intent-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .intent-btn.interested{background:rgba(14,39,65,.7);border-color:rgba(120,214,196,.35);color:var(--muted)}
+  .intent-btn.interested:hover{background:rgba(24,185,166,.12);border-color:var(--teal-bright);color:var(--text)}
+  .intent-btn.sold{background:rgba(14,39,65,.7);border-color:rgba(120,214,196,.35);color:var(--muted)}
+  .intent-btn.sold:hover{background:rgba(24,185,166,.12);border-color:var(--teal-bright);color:var(--text)}
+  .intent-btn.selected.interested{background:rgba(24,185,166,.2);border-color:var(--teal-bright);color:var(--text);box-shadow:0 0 0 2px rgba(52,214,194,.2)}
+  .intent-btn.selected.sold{background:linear-gradient(120deg,var(--teal-bright),var(--cyan));color:#06101D;border-color:var(--cyan);box-shadow:0 10px 28px -10px rgba(52,214,194,.55)}
+  .intent-btn:disabled{opacity:.6;pointer-events:none}
+  .intent-error{color:#ff7d7d;font-size:11.5px;text-align:center;margin-top:10px;display:none}
+  .intent-error.shown{display:block}
+
+  /* ── Submit button ── */
+  .submit-row{margin-top:20px;display:flex;justify-content:center}
+  .submit-btn{min-width:220px;padding:17px 40px;background:rgba(14,39,65,.8);border:1px solid rgba(120,214,196,.35);color:var(--text);border-radius:12px;font-family:'Manrope';font-size:13.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:.25s}
+  .submit-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .submit-btn:hover{border-color:var(--teal-bright);background:rgba(24,185,166,.12);color:var(--cyan);transform:translateY(-1px)}
+  .submit-btn:disabled{opacity:.5;pointer-events:none}
+
+  /* ── RA hero bio ── */
+  .ra-bio{font-family:'Fraunces',serif;font-style:italic;font-size:18px;color:var(--muted);line-height:1.65;max-width:480px;margin:14px auto 0}
+
+  /* ── Consent / opt-out ── */
+  .consent-row{margin-top:24px;padding:20px 22px;background:rgba(6,16,29,.4);border:1px solid var(--line-soft);border-radius:12px}
+  .consent-label{display:flex;align-items:flex-start;gap:12px;cursor:pointer;font-size:13.5px;color:var(--muted);line-height:1.65}
+  .consent-label input[type="checkbox"]{width:18px;height:18px;min-width:18px;margin-top:2px;accent-color:var(--teal-bright);cursor:pointer}
+  .consent-label a{color:var(--cyan);text-decoration:underline;text-underline-offset:2px}
+  .form-foot{margin-top:14px;font-size:11.5px;color:var(--muted-2);text-align:center;letter-spacing:.04em}
+
+  /* ── Success state ── */
+  .success{display:none;width:100%;max-width:520px;text-align:center;padding:30px 30px 36px;margin:0 auto}
+  .success.shown{display:block;animation:fadeUp .55s cubic-bezier(.2,.7,.2,1)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .success .check-wrap{width:88px;height:88px;border-radius:50%;background:linear-gradient(160deg,rgba(24,185,166,.22),rgba(14,39,65,.85));border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 24px;box-shadow:0 0 50px -8px rgba(52,214,194,.45)}
+  .success .check-wrap svg{width:42px;height:42px;stroke:var(--cyan);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .success h2{font-family:'Fraunces',serif;font-weight:400;font-size:clamp(28px,4.4vw,40px);line-height:1.1;color:var(--text);letter-spacing:-.01em;margin-bottom:14px;text-wrap:balance}
+  .success h2 .grad{background:linear-gradient(110deg,var(--cyan),var(--teal-bright) 50%,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:italic}
+  .success p{color:var(--muted);font-size:16px;line-height:1.7;max-width:440px;margin:0 auto;text-wrap:pretty}
+  .success .post-cta{margin-top:30px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+  .success .post-cta a{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:11px;font-family:'Manrope';font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;text-decoration:none;transition:.25s}
+  .success .post-cta a.secondary{background:rgba(14,39,65,.6);color:var(--text);border:1px solid var(--line)}
+  .success .post-cta a.secondary:hover{background:rgba(24,185,166,.12);border-color:var(--teal-bright);color:var(--cyan)}
+  .success .post-cta a svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  body.submitted .form-hero,body.submitted .form-card{display:none}
+
+  /* ── Footer ── */
+  footer{padding:100px 0 48px;border-top:1px solid var(--line-soft);position:relative;z-index:0}
+  .footer-row{display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
+  .footer-logo-img{height:84px;width:auto;display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.45))}
+  .footer-text{color:var(--muted-2);font-size:12.5px;line-height:1.75}
+  .footer-text a{color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;transition:.2s}
+  .footer-text a:hover{color:var(--cyan);border-bottom-color:rgba(52,214,194,.35)}
+  .footer-meta{font-size:11.5px;color:var(--muted-2);margin-top:8px;letter-spacing:.04em}
+
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ── Typography hardening: prevent orphans / single-word last lines ──
+   * balance evens every line so short copy never drops a one/two-word last
+   * line; applied to all headings AND the short paragraphs (sub, bio, foot).
+   * pretty is kept only for any long-form body copy. */
+  h1, h2, h3, h4,
+  .form-title, .ra-name, .ra-eyebrow, .success h2,
+  .form-sub, .ra-bio, .success p, .form-foot { text-wrap: balance; }
+  p { text-wrap: pretty; }
+
+  /* ── Mobile (<520px): readable type, full-width submit, tighter spacing ── */
+  @media(max-width:520px){
+    body{font-size:15.5px}
+    .ra-hero{padding:40px 22px 22px}
+    .ra-avatar,.ra-avatar-initials{width:130px;height:130px}
+    .ra-avatar-initials{font-size:38px}
+    .ra-name{font-size:clamp(28px,7vw,36px)}
+    .ra-bio{font-size:16px;max-width:none}
+    .form-hero{margin:0 auto 24px;padding:0 22px}
+    h1.form-title{font-size:clamp(34px,8vw,46px)}
+    .form-sub{font-size:17px;max-width:none}
+    .field input,.field textarea{font-size:15.5px;padding:13px 14px}
+    .field label{font-size:11.5px}
+    .submit-btn{width:100%;min-width:0;padding:16px 24px}
+    .intent-btn{padding:16px 14px;font-size:12.5px;letter-spacing:.16em}
+    .consent-row{padding:16px 18px}
+    .consent-label{font-size:13px;line-height:1.6}
+    .form-foot{font-size:11.5px}
+  }
+
+
+  /* ════════════════════════════════════════════════════════════════════════
+   * SKILLDORA THEME OVERRIDE — refer page
+   * Converts the dark-navy Divigner form to Skilldora's light, orange-accent
+   * brand. Orange orb, Roboto Slab headings, white form card.
+   * ════════════════════════════════════════════════════════════════════════ */
+  :root {
+    --ink: #122B46;
+    --bg: #EFEFEF;
+    --bg-2: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-2: #F2F4F5;
+    --line: #E2E5EA;
+    --line-soft: rgba(0,0,0,0.05);
+    --gold: #FF6113;
+    --teal: #385DFF;
+    --teal-bright: #385DFF;
+    --cyan: #1E42DD;
+    --text: #122B46;
+    --muted: #3D3D3D;
+    --muted-2: #7A7A7A;
+  }
+
+  /* Fonts */
+  body {
+    font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
+    background: #EFEFEF !important;
+    color: #3D3D3D !important;
+  }
+  h1, h2, h3, h4, .ra-name {
+    font-family: 'Roboto Slab', Georgia, serif !important;
+    color: #122B46 !important;
+    font-weight: 700 !important;
+    font-style: normal !important;
+  }
+  .form-sub {
+    font-family: 'Roboto', sans-serif !important;
+    font-style: normal !important;
+    color: #7A7A7A !important;
+    font-size: 17px !important;
+  }
+  .ra-bio {
+    font-family: 'Roboto', sans-serif !important;
+    font-style: normal !important;
+    color: #7A7A7A !important;
+  }
+
+  /* Heading grad → solid orange */
+  h1.form-title .grad {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #FF6113 !important;
+    color: #FF6113 !important;
+    font-style: normal !important;
+  }
+  .success h2 .grad {
+    background: linear-gradient(110deg, #FF6113, #FE6F4B 50%, #385DFF) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    font-style: normal !important;
+  }
+
+  /* Background — warm orange radial wash on light bg */
+  body::before {
+    background:
+      radial-gradient(900px 600px at 80% -5%, rgba(255,97,19,0.08), transparent 60%),
+      radial-gradient(600px 500px at -5% 35%, rgba(255,97,19,0.06), transparent 55%),
+      radial-gradient(800px 700px at 55% 115%, rgba(56,93,255,0.05), transparent 60%),
+      #EFEFEF !important;
+  }
+  body::after { display: none !important; }
+
+  /* Orb — orange */
+  .orb-stage { opacity: 0.45 !important; }
+  .orb {
+    background:
+      radial-gradient(circle at 36% 30%, rgba(255,97,19,0.90), rgba(254,111,75,0.55) 28%, rgba(255,140,60,0.18) 55%, transparent 70%),
+      radial-gradient(circle at 65% 70%, rgba(255,140,50,0.28), transparent 55%) !important;
+    filter: blur(2px) !important;
+  }
+  .orb-halo {
+    border: 1px solid rgba(255,97,19,0.14) !important;
+    box-shadow: inset 0 0 120px rgba(255,97,19,0.14) !important;
+    background: none !important;
+  }
+  .orb-core {
+    background: radial-gradient(circle at 38% 32%, #fff, rgba(255,130,50,0.85) 45%, rgba(255,97,19,0.75) 80%) !important;
+    box-shadow: 0 0 80px 20px rgba(255,97,19,0.38), 0 0 160px 40px rgba(255,97,19,0.18) !important;
+  }
+  .orb-ring {
+    background: conic-gradient(from 0deg, transparent, rgba(255,97,19,0.55), transparent 38%, rgba(254,111,75,0.42), transparent 70%) !important;
+    filter: blur(26px) !important;
+  }
+
+  /* Avatar glow — orange */
+  @keyframes raGlow {
+    0%, 100% { box-shadow: 0 0 0 5px rgba(255,97,19,0.07), 0 0 28px -4px rgba(255,97,19,0.22), 0 24px 60px -12px rgba(0,0,0,0.18) }
+    50%       { box-shadow: 0 0 0 10px rgba(255,97,19,0.13), 0 0 56px -4px rgba(255,97,19,0.48), 0 24px 60px -12px rgba(0,0,0,0.18) }
+  }
+  .ra-avatar {
+    border-color: rgba(255,97,19,0.2) !important;
+    box-shadow: 0 0 0 5px rgba(255,97,19,0.07), 0 0 28px -4px rgba(255,97,19,0.22), 0 24px 60px -12px rgba(0,0,0,0.18) !important;
+  }
+  .ra-avatar-initials {
+    background: linear-gradient(135deg, #FF6113, #FE6F4B) !important;
+    color: #fff !important;
+    border-color: rgba(255,97,19,0.2) !important;
+    box-shadow: 0 0 0 5px rgba(255,97,19,0.07), 0 0 28px -4px rgba(255,97,19,0.22), 0 24px 60px -12px rgba(0,0,0,0.18) !important;
+  }
+
+  /* Eyebrow / form hero labels */
+  .ra-eyebrow { color: #FF6113 !important; }
+  .eyebrow { color: #FF6113 !important; }
+  .eyebrow::before, .eyebrow::after {
+    background: linear-gradient(90deg, transparent, #FF6113, transparent) !important;
+  }
+
+  /* Form card — light, fully opaque so body gradient can't bleed through.
+   * Drop the base -70px (and -50px mobile) overhang so the card no longer
+   * floats over the footer logo; footer padding below gives clean separation. */
+  .form-card {
+    margin: 0 auto !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E2E5EA !important;
+    box-shadow: 0 20px 60px -12px rgba(0,0,0,0.10), 0 0 0 1px rgba(255,97,19,0.06) inset !important;
+  }
+  .form-card::before {
+    background: linear-gradient(90deg, #FF6113, #385DFF, #FF6113) !important;
+  }
+
+  /* Inputs — light mode */
+  .field label { color: #7A7A7A !important; }
+  .field input, .field textarea {
+    font-family: 'Roboto', sans-serif !important;
+    color: #122B46 !important;
+    background: rgba(255,255,255,0.9) !important;
+    border-color: #E2E5EA !important;
+  }
+  .field input::placeholder, .field textarea::placeholder { color: #B0B8C4 !important; }
+  .field input:focus, .field textarea:focus {
+    border-color: #FF6113 !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(255,97,19,0.10) !important;
+  }
+  .field-error { color: #D93025 !important; }
+  .field.invalid input, .field.invalid textarea { border-color: rgba(217,48,37,0.6) !important; }
+  .intent-error { color: #D93025 !important; }
+
+  /* Intent buttons — light mode */
+  .intent-btn.interested, .intent-btn.sold {
+    background: rgba(255,255,255,0.8) !important;
+    border-color: #E2E5EA !important;
+    color: #7A7A7A !important;
+  }
+  .intent-btn.interested:hover, .intent-btn.sold:hover {
+    background: rgba(56,93,255,0.06) !important;
+    border-color: #385DFF !important;
+    color: #122B46 !important;
+  }
+  .intent-btn.selected.interested {
+    background: rgba(56,93,255,0.10) !important;
+    border-color: #385DFF !important;
+    color: #122B46 !important;
+    box-shadow: 0 0 0 2px rgba(56,93,255,0.20) !important;
+  }
+  .intent-btn.selected.sold {
+    background: linear-gradient(120deg, #FF6113, #FE6F4B) !important;
+    color: #fff !important;
+    border-color: #FF6113 !important;
+    box-shadow: 0 10px 28px -10px rgba(255,97,19,0.55) !important;
+  }
+
+  /* Submit button — orange (Skilldora primary action color) */
+  .submit-btn {
+    background: #FF6113 !important;
+    border-color: #FF6113 !important;
+    color: #fff !important;
+    font-family: 'Roboto', sans-serif !important;
+  }
+  .submit-btn:hover {
+    background: #E5550F !important;
+    border-color: #E5550F !important;
+    color: #fff !important;
+    box-shadow: 0 8px 22px -8px rgba(255,97,19,0.5) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* Consent row */
+  .consent-row {
+    background: rgba(0,0,0,0.02) !important;
+    border-color: #E2E5EA !important;
+  }
+  .consent-label { color: #7A7A7A !important; font-family: 'Roboto', sans-serif !important; }
+  .consent-label input[type="checkbox"] { accent-color: #385DFF !important; }
+  .consent-label a { color: #385DFF !important; }
+  .form-foot { color: #B0B8C4 !important; font-family: 'Roboto', sans-serif !important; }
+
+  /* Success state */
+  .success .check-wrap {
+    background: linear-gradient(160deg, rgba(255,97,19,0.12), rgba(255,255,255,0.95)) !important;
+    border-color: #E2E5EA !important;
+    box-shadow: 0 0 50px -8px rgba(255,97,19,0.35) !important;
+  }
+  .success .check-wrap svg { stroke: #FF6113 !important; }
+  .success h2 { color: #122B46 !important; }
+  .success p { color: #7A7A7A !important; font-family: 'Roboto', sans-serif !important; }
+  .success .post-cta a.secondary {
+    background: #fff !important;
+    color: #122B46 !important;
+    border-color: #E2E5EA !important;
+  }
+  .success .post-cta a.secondary:hover {
+    background: rgba(56,93,255,0.06) !important;
+    border-color: #385DFF !important;
+    color: #385DFF !important;
+  }
+
+  /* Footer — solid bg blocks body gradient from showing through.
+   * Card no longer overhangs, so a normal top pad gives clean separation
+   * between the form bottom and the Skilldora logo. */
+  footer {
+    margin-top: 28px !important;
+    padding: 44px 0 36px !important;
+    border-top: 1px solid #E2E5EA !important;
+    background: #EFEFEF !important;
+  }
+  .footer-logo-img {
+    height: 48px !important;
+    width: auto !important;
+    max-width: 220px !important;
+    display: block !important;
+    filter: none !important;
+    mix-blend-mode: multiply !important;
+    object-fit: contain !important;
+  }
+  @media (max-width: 600px) {
+    .footer-logo-img { height: 38px !important; max-width: 180px !important; }
+  }
+  .footer-text { color: #7A7A7A !important; font-family: 'Roboto', sans-serif !important; }
+  .footer-text a { color: #3D3D3D !important; }
+  .footer-text a:hover { color: #385DFF !important; border-bottom-color: rgba(56,93,255,0.35) !important; }
+  .footer-meta { color: #B0B8C4 !important; }
+</style>
+</head>
+<body>
+
+<!-- ── Decorative orb (behind everything) ── -->
+<div class="orb-stage" aria-hidden="true">
+  <div class="orb-halo"></div>
+  <div class="orb-ring"></div>
+  <div class="orb"></div>
+  <div class="orb-core"></div>
+</div>
+
+<main>
+  <div class="wrap">
+
+    <!-- ── RA hero ── -->
+    <div class="ra-hero" id="ra-hero">
+      <div id="ra-avatar-wrap"></div>
+      <div class="ra-eyebrow">Referred by</div>
+      <div class="ra-name" id="ra-hero-name">{{ra_first_name}} {{ra_last_name}}</div>
+      <div class="ra-bio" id="ra-hero-bio">{{ra_bio}}</div>
+    </div>
+
+    <div class="form-hero" id="form-hero">
+      <span class="eyebrow">Get Started</span>
+      <h1 class="form-title">Tell us about <span class="grad">you.</span></h1>
+      <p class="form-sub">Drop your details and let us know where you are. We'll respond from the Divigner&nbsp;team, and your Referral&nbsp;Associate will be notified&nbsp;automatically.</p>
+    </div>
+
+    <form class="form-card" id="lead-form" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="lead-first-name">First Name *</label>
+          <input id="lead-first-name" name="first_name" type="text" placeholder="Jane" autocomplete="given-name" required>
+          <div class="field-error">Please enter your first name.</div>
+        </div>
+        <div class="field">
+          <label for="lead-last-name">Last Name *</label>
+          <input id="lead-last-name" name="last_name" type="text" placeholder="Doe" autocomplete="family-name" required>
+          <div class="field-error">Please enter your last name.</div>
+        </div>
+        <div class="field">
+          <label for="lead-email">Email *</label>
+          <input id="lead-email" name="email" type="email" placeholder="jane@company.com" autocomplete="email" required>
+          <div class="field-error">A valid email is required.</div>
+        </div>
+        <div class="field">
+          <label for="lead-phone">Phone *</label>
+          <input id="lead-phone" name="phone" type="tel" placeholder="(555) 555-0142" autocomplete="tel" required>
+          <div class="field-error">Please enter a phone number.</div>
+        </div>
+        <div class="field">
+          <label for="lead-company">Business Name *</label>
+          <input id="lead-company" name="company" type="text" placeholder="Your business" autocomplete="organization" required>
+          <div class="field-error">Please enter your business name.</div>
+        </div>
+        <div class="field">
+          <label for="lead-website">Website</label>
+          <input id="lead-website" name="website" type="url" placeholder="https://yourbusiness.com" autocomplete="url">
+          <div class="field-error">Please enter a valid URL.</div>
+        </div>
+        <div class="field full">
+          <label for="lead-message">Anything you'd like us to know?</label>
+          <textarea id="lead-message" name="message" placeholder="Tell us about your goals, your timeline, or any questions you have…" rows="4"></textarea>
+        </div>
+      </div>
+
+      <input type="hidden" name="prospect_intent" id="lead-intent" value="">
+
+      <div class="intent-row">
+        <button type="button" class="intent-btn interested" data-intent="interested">
+          I'm Interested
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </button>
+        <button type="button" class="intent-btn sold" data-intent="sold">
+          I'm Sold
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+      <div class="intent-error" id="intent-error">Please select how you'd like to proceed above.</div>
+
+      <div class="submit-row">
+        <button type="submit" class="submit-btn" id="submit-btn">
+          Submit
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <div class="form-foot">Your information is kept secure and never sold to third&nbsp;parties.</div>
+    </form>
+
+    <div class="success" id="success">
+      <div class="check-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+      </div>
+      <h2>Thanks — <span class="grad">we've got it.</span></h2>
+      <p>Your Referral&nbsp;Associate has been notified and the Divigner&nbsp;team will reach out&nbsp;shortly.</p>
+      <div class="post-cta">
+        <a class="secondary" href="https://myskilldora.com" target="_blank" rel="noopener">Visit myskilldora.com
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-row">
+      <img class="footer-logo-img" src="https://myskilldora.com/wp-content/uploads/2024/09/Logo2024.png" alt="Skilldora">
+      <div class="footer-text">
+        <a href="https://myskilldora.com" target="_blank" rel="noopener">myskilldora.com</a>
+        <div class="footer-meta">&#169; <span id="year"></span> Skilldora® Inc. &nbsp;·&nbsp; Powered by <a href="https://divigner.com" target="_blank" rel="noopener" style="color:inherit;border-bottom:1px dotted currentColor">Divigner Group</a></div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  /* ── RA avatar: photo with initials fallback ── */
+  var avatarWrap = document.getElementById('ra-avatar-wrap');
+  var photoUrl = '{{ra_photo}}';
+  var nameEl = document.getElementById('ra-hero-name');
+  var nameParts = (nameEl ? nameEl.textContent : '').trim().split(/\s+/);
+  var initials = nameParts.slice(0,2).map(function(w){ return w.charAt(0).toUpperCase(); }).join('') || '?';
+
+  if(photoUrl) {
+    var img = document.createElement('img');
+    img.className = 'ra-avatar';
+    img.src = photoUrl;
+    img.alt = nameEl ? nameEl.textContent : '';
+    img.onerror = function(){
+      avatarWrap.innerHTML = '';
+      var d = document.createElement('div');
+      d.className = 'ra-avatar-initials';
+      d.textContent = initials;
+      avatarWrap.appendChild(d);
+    };
+    avatarWrap.appendChild(img);
+  } else {
+    var d = document.createElement('div');
+    d.className = 'ra-avatar-initials';
+    d.textContent = initials;
+    avatarWrap.appendChild(d);
+  }
+
+  /* ── Form ── */
+  var form = document.getElementById('lead-form');
+  var intentInput = document.getElementById('lead-intent');
+  var intentError = document.getElementById('intent-error');
+  var busy = false;
+
+  form.querySelectorAll('.intent-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var val = btn.dataset.intent;
+      if(intentInput.value === val){
+        intentInput.value = '';
+        form.querySelectorAll('.intent-btn').forEach(function(b){ b.classList.remove('selected'); });
+      } else {
+        intentInput.value = val;
+        form.querySelectorAll('.intent-btn').forEach(function(b){ b.classList.remove('selected'); });
+        btn.classList.add('selected');
+      }
+      intentError.classList.remove('shown');
+    });
+  });
+
+  function setSubmitting(v){
+    busy = v;
+    var sb = document.getElementById('submit-btn');
+    if(sb) sb.disabled = v;
+  }
+
+  function validateForm(){
+    var ok = true;
+    form.querySelectorAll('.field').forEach(function(f){ f.classList.remove('invalid'); });
+    intentError.classList.remove('shown');
+
+    form.querySelectorAll('input[required]:not([type="checkbox"])').forEach(function(inp){
+      var val = (inp.value || '').trim();
+      var valid = val.length > 0;
+      if(inp.type === 'email') valid = valid && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      if(!valid){ inp.closest('.field').classList.add('invalid'); ok = false; }
+    });
+
+    var website = document.getElementById('lead-website');
+    if(website.value.trim().length > 0){
+      try { new URL(website.value.trim().match(/^https?:\/\//) ? website.value.trim() : 'https://'+website.value.trim()); }
+      catch(e){ website.closest('.field').classList.add('invalid'); ok = false; }
+    }
+
+    if(!intentInput.value){
+      intentError.classList.add('shown'); ok = false;
+    }
+
+    return ok;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(busy) return;
+    if(!validateForm()) return;
+    setSubmitting(true);
+
+    var payload = {
+      slug:              '{{ra_slug}}',
+      first_name:        (document.getElementById('lead-first-name').value || '').trim(),
+      last_name:         (document.getElementById('lead-last-name').value || '').trim(),
+      email:             (document.getElementById('lead-email').value || '').trim(),
+      phone:             (document.getElementById('lead-phone').value || '').trim(),
+      company:           (document.getElementById('lead-company').value || '').trim(),
+      website:           (document.getElementById('lead-website').value || '').trim() || undefined,
+      message:           (document.getElementById('lead-message').value || '').trim() || undefined,
+      prospect_intent:   intentInput.value,
+      marketing_consent: true
+    };
+
+    fetch('{{functions_url}}', {
+      method:  'POST',
+      headers: {'Content-Type':'application/json'},
+      body:    JSON.stringify(payload)
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.id){
+        document.body.classList.add('submitted');
+        document.getElementById('success').classList.add('shown');
+        window.scrollTo({top:0,behavior:'smooth'});
+      } else {
+        alert((res && res.error) || 'Something went wrong — please try again.');
+        setSubmitting(false);
+      }
+    })
+    .catch(function(){
+      alert('Something went wrong — please try again.');
+      setSubmitting(false);
+    });
+  });
+})();
+</script>
+</body>
+</html>$SKD_REFER$,
+    $SKD_DEMO$<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="theme-color" content="#06101D">
+<title>Skilldora · Interactive Avatars</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Manrope:wght@300;400;500;600;700&family=Roboto+Slab:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#06101D; --bg:#091A2D; --bg-2:#0B2138;
@@ -656,6 +1344,684 @@
     .ind-detail{padding:18px 16px}
     .ind-chip{font-size:12px;padding:7px 12px}
   }
+
+
+  /* ════════════════════════════════════════════════════════════════════════
+   * SKILLDORA THEME OVERRIDE
+   * Redefines the design tokens to Skilldora's brand and patches the bits
+   * that hard-code the dark-navy values.
+   * ════════════════════════════════════════════════════════════════════════ */
+  :root {
+    --ink: #122B46;
+    --bg: #EFEFEF;
+    --bg-2: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-2: #F2F4F5;
+    --line: #E2E5EA;
+    --line-soft: rgba(0,0,0,0.05);
+    --gold: #FF6113;
+    --teal: #385DFF;
+    --teal-bright: #385DFF;
+    --cyan: #1E42DD;
+    --text: #122B46;
+    --muted: #3D3D3D;
+    --muted-2: #7A7A7A;
+  }
+
+  /* Fonts — Roboto Slab for headings, Roboto for body. Falls back to system. */
+  body {
+    font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
+    background: #EFEFEF !important;
+    color: #3D3D3D !important;
+  }
+  h1, h2, h3, h4, h5, h6,
+  .sec-title, .form-title, .featured-name, .embed-name, .modal-title,
+  .ra-name, .hero h1 {
+    font-family: 'Roboto Slab', Georgia, serif !important;
+    color: #122B46 !important;
+    font-weight: 700 !important;
+    font-style: normal !important;
+  }
+  .sec-title .grad, h1 .grad, .qr-title .grad {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #FF6113 !important;
+    color: #FF6113 !important;
+    font-style: normal !important;
+    font-weight: 700 !important;
+  }
+
+  /* Replace dark radials with warm orange wash — subtle depth across the page */
+  body::before {
+    background:
+      radial-gradient(900px 600px at 80% -5%, rgba(255,97,19,0.08), transparent 60%),
+      radial-gradient(600px 500px at -5% 35%, rgba(255,97,19,0.06), transparent 55%),
+      radial-gradient(800px 700px at 55% 115%, rgba(56,93,255,0.05), transparent 60%),
+      #EFEFEF !important;
+  }
+  body::after { display: none !important; }
+
+  /* Topbar — Skilldora orange header strip */
+  .topbar {
+    background: #FF6113 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-bottom-color: rgba(0,0,0,0.08) !important;
+  }
+  .topbar.scrolled {
+    background: #FF6113 !important;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+  }
+  .logo-img {
+    filter: none !important;
+    height: 46px;
+  }
+  .topbar.scrolled .logo-img { height: 36px; }
+  .navlinks a { color: rgba(255,255,255,0.92) !important; }
+  .navlinks a:hover, .navlinks a.active { color: #fff !important; }
+  .navlinks a.cta {
+    background: #fff !important;
+    color: #FF6113 !important;
+    border: 1px solid #fff !important;
+    border-radius: 100px !important;
+    animation: none !important;
+    font-weight: 700 !important;
+  }
+  .navlinks a.cta:hover {
+    background: #385DFF !important;
+    color: #fff !important;
+    border-color: #385DFF !important;
+    box-shadow: 0 8px 22px -8px rgba(56,93,255,0.5) !important;
+  }
+  .mob-toggle {
+    background: rgba(255,255,255,0.18) !important;
+    border-color: rgba(255,255,255,0.4) !important;
+    color: #fff !important;
+  }
+
+  /* Mobile menu — light theme */
+  .mob-menu {
+    background: #fff !important;
+    border-left-color: #E2E5EA !important;
+  }
+  .mob-menu-head { border-bottom-color: #E2E5EA !important; }
+  .mob-menu-head span { color: #7A7A7A !important; }
+  .mob-close { color: #3D3D3D !important; }
+  .mob-menu-links a { color: #3D3D3D !important; }
+  .mob-menu-links a:hover, .mob-menu-links a.active {
+    color: #122B46 !important;
+    background: rgba(56,93,255,0.05) !important;
+    border-left-color: #385DFF !important;
+  }
+  .mob-menu-links a .mob-num {
+    color: #FF6113 !important;
+    font-family: 'Roboto Slab', serif !important;
+    font-style: normal !important;
+  }
+  .mob-menu-foot { border-top-color: #E2E5EA !important; }
+  .mob-menu-foot .cta-btn {
+    background: #385DFF !important;
+    border-color: #385DFF !important;
+    color: #fff !important;
+    border-radius: 100px !important;
+  }
+  .mob-menu-foot .cta-btn:hover {
+    background: #1E42DD !important;
+    border-color: #1E42DD !important;
+  }
+
+  /* Section dot nav — light bg, blue dots */
+  .sec-nav .nav-arrow {
+    background: #fff !important;
+    border-color: #E2E5EA !important;
+    color: #7A7A7A !important;
+  }
+  .sec-nav .nav-arrow:hover {
+    border-color: #385DFF !important;
+    color: #385DFF !important;
+  }
+  .sec-nav .nav-dot {
+    background: rgba(56,93,255,0.18) !important;
+    border-color: rgba(56,93,255,0.3) !important;
+  }
+  .sec-nav .nav-dot:hover { background: #385DFF !important; border-color: #1E42DD !important; }
+  .sec-nav .nav-dot.active {
+    background: #385DFF !important;
+    border-color: #1E42DD !important;
+    box-shadow: 0 0 10px rgba(56,93,255,0.5) !important;
+  }
+  .sec-nav .nav-dot::after {
+    background: #fff !important;
+    border-color: #E2E5EA !important;
+    color: #122B46 !important;
+  }
+  .sec-nav .nav-dot.active::after { color: #385DFF !important; }
+
+  /* Decorative orb — Skilldora orange */
+  .orb-stage { opacity: 0.45 !important; }
+  .orb {
+    background:
+      radial-gradient(circle at 36% 30%, rgba(255,97,19,0.90), rgba(254,111,75,0.55) 28%, rgba(255,140,60,0.18) 55%, transparent 70%),
+      radial-gradient(circle at 65% 70%, rgba(255,140,50,0.28), transparent 55%) !important;
+    filter: blur(2px) !important;
+    box-shadow: 0 0 80px rgba(255,97,19,0.18) !important;
+  }
+  .orb-halo {
+    border: 1px solid rgba(255,97,19,0.14) !important;
+    box-shadow: inset 0 0 120px rgba(255,97,19,0.14) !important;
+    background: none !important;
+  }
+  .orb-core {
+    background: radial-gradient(circle at 38% 32%, #fff, rgba(255,130,50,0.85) 45%, rgba(255,97,19,0.75) 80%) !important;
+    box-shadow:
+      0 0 80px 20px rgba(255,97,19,0.38),
+      0 0 160px 40px rgba(255,97,19,0.18) !important;
+  }
+  .orb-ring {
+    background: conic-gradient(from 0deg, transparent, rgba(255,97,19,0.55), transparent 38%, rgba(254,111,75,0.42), transparent 70%) !important;
+    filter: blur(26px) !important;
+  }
+
+  /* Eyebrows / sec-num — orange accent */
+  .eyebrow, .sec-num {
+    color: #FF6113 !important;
+    font-family: 'Roboto', sans-serif !important;
+    font-style: normal !important;
+    font-weight: 700 !important;
+  }
+  .gold-line { background: linear-gradient(90deg, #FF6113, transparent) !important; }
+
+  /* Hero text */
+  .hero-sub, .lede { color: #3D3D3D !important; }
+
+  /* Buttons — pill, blue primary, white secondary */
+  .btn-primary, .submit-btn, .cookie-btn.accept, .modal-cta, .featured-cta {
+    background: #385DFF !important;
+    color: #fff !important;
+    border: 1px solid #385DFF !important;
+    border-radius: 100px !important;
+    box-shadow: 0 6px 18px -6px rgba(56,93,255,0.5) !important;
+    transition: background .2s, transform .15s, box-shadow .2s !important;
+  }
+  .btn-primary:hover, .submit-btn:hover, .cookie-btn.accept:hover, .modal-cta:hover, .featured-cta:hover {
+    background: #1E42DD !important;
+    border-color: #1E42DD !important;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 26px -6px rgba(56,93,255,0.6) !important;
+  }
+  .btn-secondary {
+    background: #F2F4F5 !important;
+    color: #122B46 !important;
+    border: 1px solid #F2F4F5 !important;
+    border-radius: 100px !important;
+  }
+  .btn-secondary:hover {
+    background: #385DFF !important;
+    color: #fff !important;
+    border-color: #385DFF !important;
+  }
+  .cookie-btn.decline {
+    background: transparent !important;
+    color: #7A7A7A !important;
+    border: 1px solid #E2E5EA !important;
+    border-radius: 100px !important;
+  }
+
+  /* Cards / surfaces */
+  section, footer, .final-cta { background: transparent !important; }
+  .embed-card, .feature-card, .pricing-card, .featured-card,
+  .investment-card, .ra-card {
+    background: #fff !important;
+    border: 1px solid #E2E5EA !important;
+    box-shadow: 0 10px 30px -16px rgba(18,43,70,0.15) !important;
+    color: #3D3D3D !important;
+  }
+  .embed-card .embed-name, .embed-card .featured-name {
+    color: #122B46 !important;
+  }
+  .embed-label, .feature-label, .embed-desc, .featured-desc, .featured-tagline {
+    color: #3D3D3D !important;
+  }
+  /* LIVE label — no pill, just the base red pulsing dot + dark text with halo */
+  .embed-thumb-label {
+    background: transparent !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: #122B46 !important;
+    text-shadow:
+      0 1px 2px rgba(255,255,255,0.85),
+      0 0 8px rgba(255,255,255,0.6) !important;
+  }
+  .embed-thumb-label::before {
+    /* Re-assert the base red pulsing dot so the cascade can't bleed any
+     * green/teal accent into it. */
+    background: #FF3D5A !important;
+    box-shadow: 0 0 10px #FF3D5A !important;
+  }
+  .embed-link { color: #385DFF !important; }
+  .embed-link:hover { color: #1E42DD !important; }
+
+  /* "Not / Is" intrigue row — light card (base had a dark navy gradient bg
+   * with the .notis .is text rendered in --text which is now dark navy too). */
+  .notis {
+    background: #fff !important;
+    border: 1px solid #E2E5EA !important;
+    box-shadow: 0 10px 30px -16px rgba(18,43,70,0.15) !important;
+  }
+  .notis::after { opacity: 0.35 !important; }
+  .notis:hover {
+    border-color: #FF6113 !important;
+    box-shadow: 0 18px 40px -16px rgba(18,43,70,0.22) !important;
+  }
+  .notis .not { color: #7A7A7A !important; }
+  .notis .arrow { color: #FF6113 !important; }
+  .notis .is { color: #122B46 !important; font-weight: 600 !important; }
+
+  /* Callout panel ("The short version") — light surface */
+  .callout {
+    background: linear-gradient(120deg, rgba(56,93,255,0.06), rgba(255,97,19,0.05)) !important;
+    border: 1px solid #E2E5EA !important;
+  }
+  .callout p { color: #122B46 !important; font-style: italic; }
+  .callout .label { color: #FF6113 !important; }
+
+  /* Why-item rows — light cards (base had a dark navy gradient) */
+  .why-item {
+    background: #fff !important;
+    border: 1px solid #E2E5EA !important;
+    box-shadow: 0 8px 22px -14px rgba(18,43,70,0.18) !important;
+  }
+  .why-item::after { opacity: 0.3 !important; }
+  .why-item h4 { color: #122B46 !important; }
+  .why-item p { color: #3D3D3D !important; }
+  .why-item:hover {
+    border-color: #385DFF !important;
+    box-shadow: 0 14px 32px -14px rgba(56,93,255,0.25) !important;
+  }
+
+  /* Pricing cards — base uses .price / .price.one / .price.svc (NOT the
+   * .investment-card/.pricing-card selectors I targeted earlier — those
+   * never matched any element, leaving the whole pricing block dark). */
+  .price.one, .price.svc {
+    background: #fff !important;
+    border: 1px solid #E2E5EA !important;
+    box-shadow: 0 14px 38px -18px rgba(18,43,70,0.18) !important;
+    color: #3D3D3D !important;
+  }
+  .price.svc {
+    background: linear-gradient(160deg, #fff, #F2F4F5) !important;
+    box-shadow: 0 22px 50px -20px rgba(56,93,255,0.25) !important;
+  }
+  .price.svc::after { opacity: 0.25 !important; }
+  .price .pk { color: #7A7A7A !important; }
+  .price.svc .pk { color: #385DFF !important; }
+  .price .amt { color: #122B46 !important; }
+  .price .amt span { color: #7A7A7A !important; }
+  .price .freq { color: #385DFF !important; }
+  .price .desc { color: #3D3D3D !important; border-top-color: #E2E5EA !important; }
+  .price .incl li { color: #3D3D3D !important; }
+  .price .incl li b { color: #122B46 !important; }
+  .price .incl li ul li { color: #7A7A7A !important; }
+  .price .incl svg { stroke: #385DFF !important; }
+  .pill.green {
+    background: rgba(56,93,255,0.10) !important;
+    color: #385DFF !important;
+    border: 1px solid rgba(56,93,255,0.25) !important;
+  }
+
+  /* July 2026 special pricing additions — light theme (remove with the promo) */
+  .price .start-kicker { color: #7A7A7A !important; font-family: 'Roboto Slab', Georgia, serif !important; }
+  .price .amt .was { color: #7A7A7A !important; text-decoration-color: rgba(220,60,60,.8) !important; }
+  .price .freq .pipe, .price .freq .reg { color: #7A7A7A !important; }
+  .invest-note {
+    background: linear-gradient(120deg, rgba(255,97,19,0.07), #FFFFFF) !important;
+    border-left-color: #FF6113 !important;
+  }
+  .invest-note p {
+    color: #122B46 !important;
+    font-family: 'Roboto Slab', Georgia, serif !important;
+  }
+  .price-fineprint {
+    color: #122B46 !important;
+    font-family: 'Roboto Slab', Georgia, serif !important;
+    border-color: rgba(255,97,19,0.35) !important;
+    background: linear-gradient(120deg, rgba(255,97,19,0.08), #FFFFFF) !important;
+  }
+  .price-fineprint svg { stroke: #FF6113 !important; }
+  .price-fineprint svg circle:last-child { fill: #FF6113 !important; }
+  /* .july-pill keeps its gold treatment: yellow bg + dark text works on light theme */
+
+  /* Investment / pricing list (legacy selectors — harmless if unmatched) */
+  .investment-card ul li, .pricing-card ul li { color: #3D3D3D !important; }
+  .investment-card .price, .pricing-card .price { color: #122B46 !important; }
+
+  /* "Going Further" addon-note block — light card */
+  .addon-note {
+    background: linear-gradient(160deg, #fff 0%, #F2F4F5 100%) !important;
+    border: 1px solid #E2E5EA !important;
+    box-shadow: 0 22px 60px -22px rgba(18,43,70,0.20) !important;
+  }
+  .addon-note::after, .addon-note .addon-glow-teal { opacity: 0.25 !important; }
+  /* Top accent border — Skilldora orange/blue only, slow shimmer */
+  .addon-note::before {
+    background: linear-gradient(90deg, #FF6113, #385DFF, #FE6F4B, #FF6113) !important;
+    background-size: 300% 100% !important;
+    animation-duration: 10s !important;
+  }
+  /* "Going Further" pill badge — solid orange, white text, no motion */
+  .addon-note .addon-label {
+    background: #FF6113 !important;
+    background-size: initial !important;
+    border: 1px solid #FF6113 !important;
+    color: #fff !important;
+    animation: none !important;
+    box-shadow: 0 4px 14px -4px rgba(255,97,19,0.45) !important;
+    text-shadow: none !important;
+  }
+  .addon-note .addon-label::before {
+    background: #fff !important;
+    box-shadow: 0 0 8px rgba(255,255,255,0.9) !important;
+  }
+  .addon-note h3.addon-heading { color: #122B46 !important; }
+  .addon-note h3.addon-heading .grad-gold {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #FF6113 !important;
+    color: #FF6113 !important;
+  }
+  .addon-note p { color: #3D3D3D !important; }
+  .addon-note p b { color: #122B46 !important; }
+  .addon-tags .a-tag {
+    color: #122B46 !important;
+    background: #F2F4F5 !important;
+    border: 1px solid #E2E5EA !important;
+  }
+  .addon-tags .a-tag:hover {
+    background: rgba(56,93,255,0.08) !important;
+    border-color: #385DFF !important;
+  }
+
+  /* Lead-capture modal form fields — base inputs were dark-navy bg with navy
+   * text (invisible inside the now-white modal card) */
+  .field label { color: #7A7A7A !important; }
+  .field input {
+    background: #fff !important;
+    color: #122B46 !important;
+    border: 1px solid #E2E5EA !important;
+  }
+  .field input::placeholder { color: #7A7A7A !important; opacity: 0.7; }
+  .field input:focus {
+    background: #fff !important;
+    border-color: #385DFF !important;
+    box-shadow: 0 0 0 3px rgba(56,93,255,0.15) !important;
+  }
+  .modal-eyebrow { color: #FF6113 !important; }
+  .modal-sub { color: #3D3D3D !important; }
+  .modal-foot { color: #7A7A7A !important; }
+  .modal-success h3 { color: #122B46 !important; }
+  .modal-success p { color: #3D3D3D !important; }
+  .modal-success svg { stroke: #385DFF !important; }
+
+  /* Thumbnail click target — base hardcoded background:#06101D (ink black);
+   * neutralize so initial-paint flash matches the light theme. */
+  .embed-thumb-btn {
+    background: linear-gradient(160deg, #F2F4F5, #fff) !important;
+  }
+
+  /* RA card */
+  .ra-card { background: #fff !important; }
+  .ra-photo-placeholder {
+    background: linear-gradient(135deg, #385DFF, #1E42DD) !important;
+    color: #fff !important;
+  }
+  .ra-label { color: #FF6113 !important; font-weight: 700; }
+  .ra-name { color: #122B46 !important; }
+  .ra-title { color: #7A7A7A !important; }
+  .ra-bio { color: #3D3D3D !important; }
+  .ra-contact a {
+    color: #3D3D3D !important;
+    background: #F2F4F5 !important;
+    border: 1px solid #E2E5EA !important;
+    border-radius: 100px !important;
+  }
+  .ra-contact a:hover {
+    color: #fff !important;
+    background: #385DFF !important;
+    border-color: #385DFF !important;
+  }
+  .ra-partner-logo-top { filter: none !important; }
+  /* Partnership banner — dark navy so the partner's white-on-transparent
+   * logos (designed for dark backgrounds) actually read. */
+  .ra-partnership {
+    background: linear-gradient(135deg, #122B46 0%, #1c3a63 100%) !important;
+    border: 1px solid #122B46 !important;
+    border-radius: 18px !important;
+    padding: 28px 32px !important;
+    box-shadow: 0 14px 36px -18px rgba(18,43,70,0.6) !important;
+  }
+  .ra-partnership-text { color: #fff !important; }
+  .ra-partnership-text b { color: #FF6113 !important; }
+  .ra-partnership-text .has, .ra-partnership-text .offer {
+    color: rgba(255,255,255,0.85) !important;
+    font-style: italic !important;
+  }
+  .ra-partnership-logos img {
+    filter: brightness(1.1) !important;
+    max-height: 52px !important;
+  }
+
+  /* Final CTA — warm orange tint + adequate padding so heading never clips */
+  .final-cta {
+    background: linear-gradient(180deg, rgba(255,97,19,0.05) 0%, #F2F4F5 100%) !important;
+    border-top: 1px solid rgba(255,97,19,0.12) !important;
+    border-bottom: 1px solid #E2E5EA !important;
+    padding: 60px 0 56px !important;
+  }
+  /* Extra line-height + overflow:visible stops italic descenders being clipped */
+  .final-cta h3 {
+    color: #122B46 !important;
+    line-height: 1.35 !important;
+    overflow: visible !important;
+    padding-bottom: 6px !important;
+  }
+  .final-cta h3 .grad {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #FF6113 !important;
+    color: #FF6113 !important;
+    font-style: italic !important;
+  }
+  .final-cta p { color: #3D3D3D !important; }
+
+  /* Footer — tight spacing */
+  footer {
+    background: #fff !important;
+    border-top: 1px solid #E2E5EA !important;
+    color: #7A7A7A !important;
+    margin-top: 12px !important;
+    padding: 20px 0 24px !important;
+  }
+  .footer-logo-img { filter: none !important; height: 38px; }
+  .footer-text { color: #7A7A7A !important; }
+  .footer-text a { color: #385DFF !important; }
+  .footer-meta { color: #7A7A7A !important; }
+
+  /* Cookie popup — light card */
+  .cookie-popup-card {
+    background: #fff !important;
+    border: 1px solid #E2E5EA !important;
+    color: #3D3D3D !important;
+    box-shadow: 0 14px 40px -10px rgba(18,43,70,0.2) !important;
+  }
+  .cookie-popup-card a { color: #385DFF !important; }
+
+  /* Modals — white cards on tinted backdrop */
+  .modal-overlay { background: rgba(18,43,70,0.55) !important; }
+  .modal {
+    background: #fff !important;
+    border: 1px solid #E2E5EA !important;
+    color: #3D3D3D !important;
+  }
+  .qr-title { color: #122B46 !important; }
+  .modal-close { color: #3D3D3D !important; }
+  .modal-close:hover { background: #F2F4F5 !important; }
+
+  /* Avatar modal — keep dark, that's a video stage */
+  /* (no changes needed there) */
+
+  /* Progress bar — orange→blue gradient */
+  .progress {
+    background: linear-gradient(90deg, #FF6113, #385DFF) !important;
+    box-shadow: 0 0 10px rgba(56,93,255,0.5) !important;
+  }
+
+  /* Selection */
+  ::selection { background: rgba(56,93,255,0.25); color: #122B46; }
+
+  /* ── Orange glow around the RA photo ─────────────────────────────────── */
+  @keyframes raGlow {
+    0%, 100% {
+      box-shadow:
+        0 0 0 5px rgba(255,97,19,0.10),
+        0 0 28px -4px rgba(255,97,19,0.32),
+        0 20px 50px -16px rgba(18,43,70,0.25);
+    }
+    50% {
+      box-shadow:
+        0 0 0 10px rgba(255,97,19,0.16),
+        0 0 56px -4px rgba(255,97,19,0.55),
+        0 20px 50px -16px rgba(18,43,70,0.3);
+    }
+  }
+  .ra-photo {
+    background: linear-gradient(150deg, rgba(255,97,19,0.18), rgba(255,255,255,0.65)) !important;
+    border: 2px solid rgba(255,97,19,0.55) !important;
+    box-shadow:
+      0 0 0 5px rgba(255,97,19,0.10),
+      0 0 28px -4px rgba(255,97,19,0.32),
+      0 20px 50px -16px rgba(18,43,70,0.25) !important;
+  }
+  .ra-photo .ra-photo-placeholder {
+    color: #FF6113 !important;
+    font-family: 'Roboto Slab', serif !important;
+    font-style: normal !important;
+  }
+
+  /* ── Featured-avatar section (the "Ask her about Divigner" block) ────
+   * Big card around the floating Victoria — base had dark teal/navy gradient.
+   * Light it up for the Skilldora theme so the inner text reads. */
+  .featured-avatar {
+    background: linear-gradient(160deg, #fff 0%, #F2F4F5 100%) !important;
+    border: 1px solid #E2E5EA !important;
+    box-shadow:
+      0 30px 80px -28px rgba(18,43,70,0.22),
+      0 0 0 1px rgba(255,255,255,0.5) inset !important;
+  }
+  .featured-embed {
+    background: #fff !important;
+    border-color: #E2E5EA !important;
+    box-shadow: 0 24px 50px -22px rgba(18,43,70,0.25) !important;
+  }
+  .featured-name { color: #122B46 !important; }
+  .featured-name .grad,
+  .featured-tagline,
+  .featured-desc,
+  .featured-foot {
+    color: #3D3D3D !important;
+    -webkit-text-fill-color: #3D3D3D !important;
+    background: none !important;
+  }
+  .featured-name .grad {
+    color: #FF6113 !important;
+    -webkit-text-fill-color: #FF6113 !important;
+    font-style: normal !important;
+    font-weight: 700 !important;
+  }
+  .featured-badge {
+    background: linear-gradient(120deg, #385DFF, #1E42DD) !important;
+    color: #fff !important;
+    border-color: #1E42DD !important;
+    text-shadow: none !important;
+    box-shadow: 0 8px 22px -8px rgba(56,93,255,0.55) !important;
+  }
+
+  /* Why-proof card (if shown) */
+  .why-proof-card {
+    background: #fff !important;
+    border: 1px solid #E2E5EA !important;
+    color: #3D3D3D !important;
+  }
+
+  /* Generic .card (used in features/about sections) */
+  section .card {
+    background: #fff !important;
+    border: 1px solid #E2E5EA !important;
+    color: #3D3D3D !important;
+    box-shadow: 0 10px 30px -18px rgba(18,43,70,0.18) !important;
+  }
+  section .card h3, section .card h4 { color: #122B46 !important; }
+  section .card p, section .card li { color: #3D3D3D !important; }
+
+  /* Embed video thumbs — soften the dark radial behind images so the LIGHT
+   * badge still reads on the lighter theme. The thumbnails themselves are
+   * photographs so their own background sets the tone — we just neutralize
+   * the placeholder/loading bg. */
+  .embed-video, .embed-placeholder, .embed-loading, .embed-thumb-fallback {
+    background: linear-gradient(160deg, #F2F4F5, #fff) !important;
+    color: #3D3D3D !important;
+  }
+  .embed-thumb-overlay {
+    background: linear-gradient(180deg, rgba(0,0,0,0.04) 0%, transparent 35%, rgba(0,0,0,0.28) 100%) !important;
+  }
+  .embed-error {
+    background: #fff !important;
+    color: #d32f2f !important;
+    border: 1px solid #ffcdd2 !important;
+  }
+
+  /* Cookie popup — hidden entirely on Skilldora template */
+  .cookie-popup { display: none !important; }
+  body { padding-bottom: 0 !important; }
+
+  /* Subtle orange gradient accents between sections to break up the white */
+  section#what, section#features {
+    background: linear-gradient(180deg, rgba(255,97,19,0.03) 0%, transparent 40%) !important;
+  }
+  section#about {
+    background: linear-gradient(180deg, transparent 0%, rgba(255,97,19,0.03) 100%) !important;
+  }
+
+  /* ── Mobile responsive audit ─────────────────────────────────────────── */
+  @media (max-width: 880px) {
+    .topbar { padding: 10px 16px !important; }
+    .logo-img { height: 38px !important; }
+    .topbar.scrolled .logo-img { height: 32px !important; }
+    .wrap { padding-left: 18px !important; padding-right: 18px !important; }
+    .ra-partnership { padding: 22px 20px !important; border-radius: 14px !important; }
+    .ra-partnership-text { font-size: 19px !important; line-height: 1.45 !important; }
+    .ra-partnership-logos { gap: 18px !important; flex-wrap: wrap; justify-content: center; }
+    .ra-partnership-logos img { max-height: 40px !important; }
+    .featured-avatar { padding: 22px !important; grid-template-columns: 1fr !important; gap: 22px !important; }
+    .featured-cta { padding: 14px 22px !important; font-size: 12.5px !important; width: 100%; justify-content: center; }
+    .btn-primary, .btn-secondary { padding: 14px 22px !important; font-size: 13px !important; }
+    .hero-cta-row { flex-direction: column !important; gap: 12px !important; }
+    .hero-cta-row > * { width: 100% !important; justify-content: center !important; }
+  }
+  @media (max-width: 480px) {
+    .navlinks { display: none !important; }
+    .mob-toggle { display: grid !important; }
+    .hero h1 { font-size: clamp(34px, 9vw, 44px) !important; }
+    .sec-title { font-size: clamp(26px, 7vw, 36px) !important; }
+    .ra-name { font-size: clamp(24px, 7vw, 32px) !important; }
+    .ra-photo { width: 140px !important; height: 140px !important; }
+    .featured-badge { font-size: 10.5px !important; padding: 8px 14px !important; letter-spacing: .16em !important; }
+  }
+
 </style>
 </head>
 <body>
@@ -665,7 +2031,7 @@
 <!-- ── Topbar ── -->
 <div class="topbar" id="topbar">
   <a class="logo" href="#top" aria-label="Back to top">
-    <img class="logo-img" src="https://ai-automation.divigner.com/divigner-logo.svg" alt="Divigner Group">
+    <img class="logo-img" src="https://myskilldora.com/wp-content/uploads/2024/09/Logo-White-2024-1.png" alt="Skilldora">
   </a>
   <nav class="navlinks" id="navlinks">
     <a href="#top" data-section="top">Home</a>
@@ -711,7 +2077,7 @@
   </div>
   <div class="wrap">
     <div class="hero-content reveal">
-      <span class="eyebrow">Interactive Avatars by Divigner Group</span>
+      <span class="eyebrow">Interactive Avatars</span>
       <h1>Meet the next<br><span class="grad">Face</span> of Your Web&nbsp;Presence.</h1>
       <p class="hero-sub">Conversational, on-brand AI concierges that greet your visitors, answer their questions, and routes your prospective clients directly to your team by face or voice 24/7.</p>
       <div class="hero-cta-row">
@@ -1053,29 +2419,6 @@
   </div>
 </section>
 
-<!-- ── About Divigner Group ── -->
-<section id="about" style="display:none">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="sec-num">05</div>
-      <h2 class="sec-title">About <span class="grad">Divigner Group</span></h2>
-      <div class="gold-line"></div>
-      <p class="lede">Divigner Group designs and deploys conversational AI experiences for healthcare, education, and consumer brands, built on top of the websites, knowledge bases, and people that already work.</p>
-    </div>
-    <div class="grid g2 stagger">
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2"/></svg></div>
-        <h3>Built around your people</h3>
-        <p>Every avatar is voiced, styled, and scoped to your brand. We start with your existing content, train against your policies, and route questions Divigner can't answer back to the humans who can.</p>
-      </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 3v9h9"/></svg></div>
-        <h3>Always learning, always on</h3>
-        <p>Your avatar improves with every conversation. We monitor transcripts weekly, retrain on what visitors actually ask, and tighten the disclaimers and routing so the experience gets better, without you having to think about it.</p>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- ── Investment ── -->
 <section id="investment">
@@ -1206,12 +2549,11 @@
   <div class="wrap">
     <div class="footer-row">
       <a class="logo" href="#top" aria-label="Back to top">
-        <img class="footer-logo-img" src="https://ai-automation.divigner.com/divigner-logo.svg" alt="Divigner Group">
+        <img class="footer-logo-img" src="https://myskilldora.com/wp-content/uploads/2024/09/Logo2024.png" alt="Skilldora">
       </a>
       <div class="footer-text">
-        <a href="https://divigner.com" target="_blank" rel="noopener">divigner.com</a><br>
-        7 North Willow Street, Suite 8C, Montclair, NJ 07042
-        <div class="footer-meta">© <span id="year"></span> Divigner Group, LLC. All rights reserved.</div>
+        <a href="https://myskilldora.com" target="_blank" rel="noopener">myskilldora.com</a>
+        <div class="footer-meta">© <span id="year"></span> Skilldora® Inc. · Avatars powered by <a href="https://divigner.com" target="_blank" rel="noopener" style="color:inherit;border-bottom:1px dotted currentColor">Divigner Group</a></div>
       </div>
     </div>
   </div>
@@ -1894,3 +3236,19 @@
 
 </body>
 </html>
+$SKD_DEMO$
+  )
+  ON CONFLICT (id) DO UPDATE
+    SET name       = EXCLUDED.name,
+        html       = EXCLUDED.html,
+        demo_html  = EXCLUDED.demo_html,
+        updated_at = now();
+
+  -- 2) Point Skilldora's ra_associates row at this template.
+  UPDATE public.ra_associates
+     SET template_id = v_template_id
+   WHERE slug = 'skilldora';
+
+  RAISE NOTICE 'Skilldora custom template upserted (id=%)', v_template_id;
+END
+$migration$;

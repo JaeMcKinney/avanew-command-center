@@ -71,9 +71,7 @@ REPLACEMENTS: list[tuple[str, str]] = [
     # demo.html now ships with #why/#about hidden and 01–05 numbering baked in,
     # so the base already matches — no per-template renumbering needed.)
 
-    # Final CTA timeline copy
-    ('have you live in 2–3 weeks.',
-     'have you live in 2–4 weeks.'),
+    # (2-3 -> 2-4 weeks replacement retired 2026-09-26: base now ships 2-4 everywhere.)
 
     # Add Roboto / Roboto Slab to the Google Fonts request
     ("&family=Manrope:wght@300;400;500;600;700&display=swap",
