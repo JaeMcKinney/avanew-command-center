@@ -1607,12 +1607,9 @@
       : 'https://ai-automation.divigner.com';
   }
   function goToLeadForm(){
-    // If we're inside an iframe (the React /demo/<slug> route renders this
-    // in a full-screen iframe), navigate the TOP window so the address bar
-    // actually updates. Falls back to window.location for direct visits.
-    var target = (window.top && window.top !== window) ? window.top : window;
-    try { target.location.href = leadFormUrl(); }
-    catch (e) { window.location.href = leadFormUrl(); }
+    // Scroll to the bottom of the page (final CTA / RA form area) instead of
+    // navigating away to the refer page.
+    window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'smooth'});
   }
 
   document.getElementById('learn-more-btn').addEventListener('click', function(e){ e.preventDefault(); goToLeadForm(); });
