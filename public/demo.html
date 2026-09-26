@@ -745,6 +745,14 @@
   .ind-acc:nth-child(6){--accent:var(--gold);--accent-glow:rgba(201,168,106,.22)}
   .ind-acc:nth-child(7){--accent:var(--teal-bright);--accent-glow:rgba(52,214,194,.22)}
   .ind-acc:nth-child(8){--accent:#A78BFA;--accent-glow:rgba(167,139,250,.22)}
+  .ind-acc:nth-child(9){--accent:#FF9E6E;--accent-glow:rgba(255,158,110,.22)}
+
+  /* Inline detail text for groups that expand straight to prose. */
+  .ind-inline{max-width:860px;margin:0 auto;padding:2px 4px}
+  .ind-inline p{font-size:15.5px;line-height:1.75;color:#C3D2E2;margin:0 0 12px}
+  .ind-inline p:last-child{margin-bottom:0}
+  .ind-inline b{color:var(--text);font-weight:600}
+  .ind-inline .ind-guard b{color:var(--gold)}
   .ind-acc-head{padding:24px 26px !important}
   .ind-acc-body{padding:2px 26px 30px !important}
 
@@ -1053,13 +1061,26 @@
       </div>
       <div class="ind-acc">
         <button type="button" class="ind-acc-head" aria-expanded="false">
+          <span class="ind-acc-name">Dispensaries</span>
+          <span class="ind-acc-toggle" aria-hidden="true"></span>
+        </button>
+        <div class="ind-acc-body" hidden>
+          <div class="ind-inline">
+            <p><b>What it does.</b> Product and strain education, dispensary concierge, menu and deals, local rules and hours, loyalty program questions, guidance for first-time visitors.</p>
+            <p><b>Visitors ask.</b> "What's the difference between indica and sativa?" "What should a first-timer try?" "What are your hours?"</p>
+            <p><b>Outcome.</b> Better-educated customers, bigger orders, budtenders freed for in-store service.</p>
+            <p class="ind-guard"><b>Guardrails.</b> 21+ age gate (medical card rules where they apply), no medical claims, compliance by state, no advertising to minors.</p>
+          </div>
+        </div>
+      </div>
+      <div class="ind-acc">
+        <button type="button" class="ind-acc-head" aria-expanded="false">
           <span class="ind-acc-name">Regulated and Specialty Industries</span>
-          <span class="ind-acc-count">4 industries</span>
+          <span class="ind-acc-count">3 industries</span>
           <span class="ind-acc-toggle" aria-hidden="true"></span>
         </button>
         <div class="ind-acc-body" hidden>
           <div class="ind-pills">
-          <button type="button" class="ind-pill" data-ind="cannabis"><span class="ind-pill-name">Cannabis dispensaries and brands</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
           <button type="button" class="ind-pill" data-ind="cbd"><span class="ind-pill-name">CBD and hemp products</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
           <button type="button" class="ind-pill" data-ind="manufacturing"><span class="ind-pill-name">Manufacturing and industrial</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
           <button type="button" class="ind-pill" data-ind="energy"><span class="ind-pill-name">Energy and utilities</span><span class="ind-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="0.6"/></svg></span></button>
