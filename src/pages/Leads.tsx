@@ -41,7 +41,10 @@ import { EmptyState } from "@/components/EmptyState"
 import { Pagination } from "@/components/Pagination"
 import { ConvertLeadDialog } from "@/components/ConvertLeadDialog"
 import { Badge } from "@/components/ui/badge"
-import { deleteLead, listLeads } from "@/lib/data"
+import { Checkbox } from "@/components/ui/checkbox"
+import { BulkActionBar } from "@/components/BulkActionBar"
+import { useRowSelection } from "@/hooks/useRowSelection"
+import { bulkDeleteLeads, deleteLead, listLeads } from "@/lib/data"
 import type { Lead } from "@/types/db"
 
 export function Leads() {
@@ -55,6 +58,8 @@ export function Leads() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [confirmDelete, setConfirmDelete] = useState<Lead | null>(null)
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [convertLead, setConvertLead] = useState<Lead | null>(null)
 
   async function refresh() {
@@ -109,6 +114,9 @@ export function Leads() {
     return filtered.slice(start, start + pageSize)
   }, [filtered, page, pageSize])
 
+  const pagedIds = useMemo(() => paged.map((l) => l.id), [paged])
+  const selection = useRowSelection(pagedIds)
+
   async function handleDelete() {
     if (!confirmDelete) return
     try {
@@ -118,6 +126,23 @@ export function Leads() {
       await refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete")
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0) return
+    setBulkDeleting(true)
+    try {
+      await bulkDeleteLeads(ids)
+      toast.success(`${ids.length} lead${ids.length !== 1 ? "s" : ""} deleted`)
+      selection.clear()
+      setConfirmBulkDelete(false)
+      await refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete")
+    } finally {
+      setBulkDeleting(false)
     }
   }
 
@@ -208,10 +233,24 @@ export function Leads() {
           <p className="text-xs text-muted-foreground mb-2">
             {filtered.length} record{filtered.length !== 1 ? "s" : ""}
           </p>
+          <BulkActionBar
+            count={selection.count}
+            label="lead"
+            onDelete={() => setConfirmBulkDelete(true)}
+            onClear={selection.clear}
+            disabled={bulkDeleting}
+          />
           <Card className="overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={selection.isAllSelected ? true : selection.isSomeSelected ? "indeterminate" : false}
+                    onCheckedChange={selection.toggleAll}
+                    aria-label="Select all leads on this page"
+                  />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead className="hidden md:table-cell">Company</TableHead>
                 <TableHead className="hidden md:table-cell">Email</TableHead>
@@ -223,7 +262,14 @@ export function Leads() {
             </TableHeader>
             <TableBody>
               {paged.map((lead) => (
-                <TableRow key={lead.id}>
+                <TableRow key={lead.id} data-state={selection.isSelected(lead.id) ? "selected" : undefined}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selection.isSelected(lead.id)}
+                      onCheckedChange={() => selection.toggle(lead.id)}
+                      aria-label={`Select ${lead.first_name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       <button
@@ -345,6 +391,33 @@ export function Leads() {
         </AlertDialogContent>
       </AlertDialog>
 
+
+      <AlertDialog
+        open={confirmBulkDelete}
+        onOpenChange={(open) => !open && setConfirmBulkDelete(false)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {selection.count} lead{selection.count !== 1 ? "s" : ""}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              The selected lead{selection.count !== 1 ? "s" : ""} will be removed permanently.
+              This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); void handleBulkDelete() }}
+              disabled={bulkDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bulkDeleting ? "Deleting…" : `Delete ${selection.count}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ConvertLeadDialog
         lead={convertLead}

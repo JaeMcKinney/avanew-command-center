@@ -68,7 +68,11 @@ import { cn } from "@/lib/utils"
 import { PageHeader } from "@/components/PageHeader"
 import { Pagination } from "@/components/Pagination"
 import { StageManager } from "@/components/StageManager"
+import { Checkbox } from "@/components/ui/checkbox"
+import { BulkActionBar } from "@/components/BulkActionBar"
+import { useRowSelection } from "@/hooks/useRowSelection"
 import {
+  bulkDeleteDeals,
   deleteDeal,
   listCompanies,
   listContacts,
@@ -100,6 +104,8 @@ export function Deals() {
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null)
   const [stageManagerOpen, setStageManagerOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<Deal | null>(null)
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [gridSearch, setGridSearch] = useState("")
   const [stageFilter, setStageFilter] = useState(() => searchParams.get("stage") ?? "all")
   const [sortBy, setSortBy] = useState("amount_desc")
@@ -214,6 +220,9 @@ export function Deals() {
     return gridDeals.slice(start, start + gridPageSize)
   }, [gridDeals, gridPage, gridPageSize])
 
+  const pagedGridIds = useMemo(() => pagedGridDeals.map((d) => d.id), [pagedGridDeals])
+  const selection = useRowSelection(pagedGridIds)
+
   useEffect(() => { setGridPage(1) }, [gridSearch, stageFilter, sortBy])
 
   useEffect(() => {
@@ -241,6 +250,23 @@ export function Deals() {
       await refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete")
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0) return
+    setBulkDeleting(true)
+    try {
+      await bulkDeleteDeals(ids)
+      toast.success(`${ids.length} deal${ids.length !== 1 ? "s" : ""} deleted`)
+      selection.clear()
+      setConfirmBulkDelete(false)
+      await refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete")
+    } finally {
+      setBulkDeleting(false)
     }
   }
 
@@ -492,10 +518,25 @@ export function Deals() {
             No deals match the current filters.
           </Card>
         ) : (
+          <>
+          <BulkActionBar
+            count={selection.count}
+            label="deal"
+            onDelete={() => setConfirmBulkDelete(true)}
+            onClear={selection.clear}
+            disabled={bulkDeleting}
+          />
           <Card className="overflow-hidden p-0">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={selection.isAllSelected ? true : selection.isSomeSelected ? "indeterminate" : false}
+                      onCheckedChange={selection.toggleAll}
+                      aria-label="Select all deals on this page"
+                    />
+                  </TableHead>
                   <TableHead>Deal</TableHead>
                   <TableHead className="hidden md:table-cell">Stage</TableHead>
                   <TableHead className="hidden md:table-cell">Account</TableHead>
@@ -509,7 +550,14 @@ export function Deals() {
                 {pagedGridDeals.map((d) => {
                   const stage = stageById.get(d.stage_id)
                   return (
-                    <TableRow key={d.id}>
+                    <TableRow key={d.id} data-state={selection.isSelected(d.id) ? "selected" : undefined}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selection.isSelected(d.id)}
+                          onCheckedChange={() => selection.toggle(d.id)}
+                          aria-label={`Select ${d.title}`}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         <button
                           type="button"
@@ -582,6 +630,7 @@ export function Deals() {
               />
             </div>
           </Card>
+          </>
         )}
       </div>
 
@@ -610,6 +659,33 @@ export function Deals() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={confirmBulkDelete}
+        onOpenChange={(open) => !open && setConfirmBulkDelete(false)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {selection.count} deal{selection.count !== 1 ? "s" : ""}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              The selected deal{selection.count !== 1 ? "s" : ""} will be permanently removed.
+              This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); void handleBulkDelete() }}
+              disabled={bulkDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bulkDeleting ? "Deleting…" : `Delete ${selection.count}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

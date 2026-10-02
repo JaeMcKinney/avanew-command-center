@@ -566,6 +566,28 @@ export async function updateCompany(
   return data
 }
 
+export async function bulkDeleteCompanies(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  if (PREVIEW_MODE) {
+    const idSet = new Set(ids)
+    const rows = loadMock<Company>("companies", seedCompanies)
+    saveMock("companies", rows.filter((r) => !idSet.has(r.id)))
+    const contacts = loadMock<Contact>("contacts", seedContacts)
+    saveMock(
+      "contacts",
+      contacts.map((c) => (c.company_id && idSet.has(c.company_id) ? { ...c, company_id: null } : c))
+    )
+    const deals = loadMock<Deal>("deals", seedDeals)
+    saveMock(
+      "deals",
+      deals.map((d) => (d.company_id && idSet.has(d.company_id) ? { ...d, company_id: null } : d))
+    )
+    return
+  }
+  const { error } = await supabase.from("companies").delete().in("id", ids)
+  if (error) throw error
+}
+
 export async function deleteCompany(id: string): Promise<void> {
   if (PREVIEW_MODE) {
     const rows = loadMock<Company>("companies", seedCompanies)
@@ -733,6 +755,18 @@ export async function updateContact(
     .single()
   if (error) throw error
   return data
+}
+
+export async function bulkDeleteContacts(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  if (PREVIEW_MODE) {
+    const idSet = new Set(ids)
+    const rows = loadMock<Contact>("contacts", seedContacts)
+    saveMock("contacts", rows.filter((r) => !idSet.has(r.id)))
+    return
+  }
+  const { error } = await supabase.from("contacts").delete().in("id", ids)
+  if (error) throw error
 }
 
 export async function deleteContact(id: string): Promise<void> {
@@ -981,6 +1015,18 @@ export async function updateDeal(id: string, input: DealInput): Promise<Deal> {
     .single()
   if (error) throw error
   return data
+}
+
+export async function bulkDeleteDeals(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  if (PREVIEW_MODE) {
+    const idSet = new Set(ids)
+    const rows = loadMock<Deal>("deals", seedDeals)
+    saveMock("deals", rows.filter((r) => !idSet.has(r.id)))
+    return
+  }
+  const { error } = await supabase.from("deals").delete().in("id", ids)
+  if (error) throw error
 }
 
 export async function deleteDeal(id: string): Promise<void> {
@@ -2388,6 +2434,18 @@ export async function updateLead(id: string, input: LeadInput): Promise<Lead> {
   const { data, error } = await supabase.from("leads").update({ ...input, updated_at: nowIso() }).eq("id", id).select().single()
   if (error) throw error
   return data
+}
+
+export async function bulkDeleteLeads(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  if (PREVIEW_MODE) {
+    const idSet = new Set(ids)
+    const rows = loadMock<Lead>("leads", seedLeads)
+    saveMock("leads", rows.filter((r) => !idSet.has(r.id)))
+    return
+  }
+  const { error } = await supabase.from("leads").delete().in("id", ids)
+  if (error) throw error
 }
 
 export async function deleteLead(id: string): Promise<void> {

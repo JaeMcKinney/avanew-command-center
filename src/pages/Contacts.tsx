@@ -39,7 +39,10 @@ import {
 import { PageHeader } from "@/components/PageHeader"
 import { EmptyState } from "@/components/EmptyState"
 import { Pagination } from "@/components/Pagination"
-import { deleteContact, listCompanies, listContacts } from "@/lib/data"
+import { Checkbox } from "@/components/ui/checkbox"
+import { BulkActionBar } from "@/components/BulkActionBar"
+import { useRowSelection } from "@/hooks/useRowSelection"
+import { bulkDeleteContacts, deleteContact, listCompanies, listContacts } from "@/lib/data"
 import type { Company, Contact } from "@/types/db"
 
 export function Contacts() {
@@ -53,6 +56,8 @@ export function Contacts() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [confirmDelete, setConfirmDelete] = useState<Contact | null>(null)
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
 
   async function refresh() {
     setLoading(true)
@@ -111,6 +116,9 @@ export function Contacts() {
     return filtered.slice(start, start + pageSize)
   }, [filtered, page, pageSize])
 
+  const pagedIds = useMemo(() => paged.map((c) => c.id), [paged])
+  const selection = useRowSelection(pagedIds)
+
   async function handleDelete() {
     if (!confirmDelete) return
     try {
@@ -120,6 +128,23 @@ export function Contacts() {
       await refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete")
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0) return
+    setBulkDeleting(true)
+    try {
+      await bulkDeleteContacts(ids)
+      toast.success(`${ids.length} contact${ids.length !== 1 ? "s" : ""} deleted`)
+      selection.clear()
+      setConfirmBulkDelete(false)
+      await refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete")
+    } finally {
+      setBulkDeleting(false)
     }
   }
 
@@ -199,10 +224,24 @@ export function Contacts() {
           <p className="text-xs text-muted-foreground mb-2">
             {filtered.length} record{filtered.length !== 1 ? "s" : ""}
           </p>
+          <BulkActionBar
+            count={selection.count}
+            label="contact"
+            onDelete={() => setConfirmBulkDelete(true)}
+            onClear={selection.clear}
+            disabled={bulkDeleting}
+          />
           <Card className="overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={selection.isAllSelected ? true : selection.isSomeSelected ? "indeterminate" : false}
+                    onCheckedChange={selection.toggleAll}
+                    aria-label="Select all contacts on this page"
+                  />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead className="hidden md:table-cell">Title</TableHead>
                 <TableHead className="hidden lg:table-cell">Company</TableHead>
@@ -213,7 +252,14 @@ export function Contacts() {
             </TableHeader>
             <TableBody>
               {paged.map((c) => (
-                <TableRow key={c.id}>
+                <TableRow key={c.id} data-state={selection.isSelected(c.id) ? "selected" : undefined}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selection.isSelected(c.id)}
+                      onCheckedChange={() => selection.toggle(c.id)}
+                      aria-label={`Select ${c.first_name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     <button
                       type="button"
@@ -305,6 +351,33 @@ export function Contacts() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={confirmBulkDelete}
+        onOpenChange={(open) => !open && setConfirmBulkDelete(false)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {selection.count} contact{selection.count !== 1 ? "s" : ""}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              The selected contact{selection.count !== 1 ? "s" : ""} will be removed permanently.
+              This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); void handleBulkDelete() }}
+              disabled={bulkDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bulkDeleting ? "Deleting…" : `Delete ${selection.count}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
