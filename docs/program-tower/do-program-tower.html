@@ -146,8 +146,10 @@ p{margin:0}
 .hint{display:none; font-size:12px; color:var(--fg-3); margin-top:8px}
 
 /* layer panel */
-.insp{position:sticky; top:16px; display:flex; flex-direction:column; gap:14px}
-.insp-close{display:none}
+.sidebar{position:sticky; top:16px; display:flex; flex-direction:column; gap:16px; max-height:calc(100vh - 32px); overflow-y:auto; min-width:0}
+.insp{display:flex; flex-direction:column; gap:14px}
+.insp-close{align-self:flex-start; font:inherit; font-size:13px; font-weight:500; color:var(--fg-2); background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:4px 10px; cursor:pointer}
+.insp-close:hover{color:var(--fg)}
 .insp-top{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
 .chip{font-size:11px; font-weight:600; padding:2px 7px; border-radius:3px; border:1px solid var(--edge); background:var(--fill); color:var(--ink)}
 .chip.t-abc{--fill:var(--abc); --edge:var(--abc-edge); --ink:var(--abc-ink)}
@@ -177,20 +179,21 @@ p{margin:0}
 .empty{color:var(--fg-3); font-size:13px}
 
 /* what changed */
-.tbl-wrap{overflow-x:auto}
-table{border-collapse:collapse; width:100%; font-size:13px}
-th{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-3); font-weight:600; text-align:left; padding:6px 10px; border-bottom:1px solid var(--line-strong)}
-td{padding:10px; border-bottom:1px solid var(--line); vertical-align:top}
-td.what{font-weight:500}
-td.what .badge{margin-right:6px; vertical-align:-3px}
-.kchip{display:inline-block; font-size:11px; font-weight:600; padding:1px 6px; border-radius:3px; color:var(--c); background:var(--cs); border:1px solid var(--c); white-space:nowrap}
-.k-ns .kchip, .kchip.k-ns{border-style:dashed}
-td .lbl{display:none}
-td.what .kchip{display:none}
+.clist{list-style:none; margin:0; padding:0; display:flex; flex-direction:column}
+.citem{display:flex; flex-direction:column; gap:6px; padding:12px 0; border-top:1px solid var(--line)}
+.citem:first-child{border-top:0; padding-top:0}
+.chead{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; font-weight:600; font-size:13.5px; line-height:1.35}
+.chead .badge{margin-right:6px; vertical-align:-3px}
+.cgrid{display:grid; grid-template-columns:76px minmax(0,1fr); gap:3px 10px; margin:0; font-size:13px}
+.cgrid dt{font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-3); font-weight:600; padding-top:2px}
+.cgrid dd{margin:0; min-width:0}
+.kchip{flex:none; display:inline-block; font-size:11px; font-weight:600; padding:1px 6px; border-radius:3px; color:var(--c); background:var(--cs); border:1px solid var(--c); white-space:nowrap}
+.kchip.k-ns{border-style:dashed}
 
 /* tablet and phone: layer panel becomes a bottom sheet */
 @media (max-width:1060px){
   .main{grid-template-columns:minmax(0,1fr)}
+  .sidebar{position:static; max-height:none; overflow:visible}
   .hint{display:block}
   .insp{position:fixed; left:0; right:0; bottom:0; top:auto; z-index:20; margin:0; max-height:72vh; overflow-y:auto;
     border-radius:14px 14px 0 0; border-bottom:0; box-shadow:0 -8px 30px rgba(0,0,0,.18);
@@ -198,7 +201,7 @@ td.what .kchip{display:none}
     transform:translateY(105%); transition:transform .22s ease; visibility:hidden}
   .insp.open{transform:none; visibility:visible}
   .insp::before{content:""; align-self:center; width:40px; height:4px; border-radius:2px; background:var(--line-strong); flex:none}
-  .insp-close{display:inline-flex; position:absolute; top:10px; right:max(12px, env(safe-area-inset-right, 0px)); font:inherit; font-size:13px; font-weight:500; color:var(--fg-2);
+  .insp-close{position:absolute; top:10px; right:max(12px, env(safe-area-inset-right, 0px));
     background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:4px 10px; cursor:pointer}
   .scrim{position:fixed; inset:0; background:var(--scrim); z-index:19}
 }
@@ -232,15 +235,6 @@ td.what .kchip{display:none}
   .layer .flag{top:auto; bottom:2px; right:2px; font-size:8.5px; padding:0 3px}
   .nobc{font-size:10px}
   .legend{font-size:11.5px; gap:6px 12px}
-  /* changes table → stacked cards */
-  table, thead, tbody, tr, td{display:block; width:100%}
-  thead{display:none}
-  tr{padding:10px 0; border-bottom:1px solid var(--line)}
-  td{border:0; padding:3px 0}
-  td .lbl{display:block; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-3); font-weight:600}
-  td.what{display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:14px}
-  td.flagcell{display:none}
-  td.what .kchip{display:inline-block}
 }
 @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
 </style>
@@ -272,7 +266,7 @@ td.what .kchip{display:none}
         <p class="sub">Limits in $M. Requested side is proposed data (GAP-09, GAP-01).</p>
       </div>
       <div id="tower" class="tower"></div>
-      <p class="hint">Tap a layer for details. Numbers match the rows in What changed.</p>
+      <p class="hint">Tap a layer for details. Numbers match the items in What changed.</p>
       <div class="legend">
         <span><i class="sw abc"></i>A/B/C</span>
         <span><i class="sw sa"></i>Side A excess</span>
@@ -282,16 +276,18 @@ td.what .kchip{display:none}
       </div>
     </section>
 
-    <aside class="card insp" id="insp" aria-label="Layer detail"></aside>
+    <div class="sidebar">
+      <aside class="card insp" id="insp" aria-label="Layer detail" hidden></aside>
+      <section class="card changes" id="changes" aria-labelledby="chg-h">
+        <div class="card-head">
+          <h2 id="chg-h">What changed</h2>
+          <p class="sub">Expiring against requested, from the bottom of the tower up.</p>
+        </div>
+        <ol class="clist" id="chg"></ol>
+      </section>
+    </div>
   </div>
 
-  <section class="card" aria-labelledby="chg-h">
-    <div class="card-head">
-      <h2 id="chg-h">What changed</h2>
-      <p class="sub">Expiring against requested, from the bottom of the tower up.</p>
-    </div>
-    <div class="tbl-wrap"><table id="chg"></table></div>
-  </section>
 </div>
 <div class="scrim" id="scrim" hidden></div>
 
@@ -350,7 +346,7 @@ const CHANGES = [
 ];
 
 const OURS = L.find(l => l.ours);
-const state = { sel: sheetMQ.matches ? null : OURS.id };
+const state = { sel: null };
 
 /* helpers */
 const byId = id => L.find(l => l.id === id);
@@ -432,8 +428,12 @@ function renderTower(){
 function renderInsp(){
   const el = document.getElementById('insp');
   const l = state.sel ? byId(state.sel) : null;
-  const close = '<button type="button" class="insp-close" id="insp-close">Close</button>';
-  if (!l) { el.innerHTML = close + '<p class="empty">Select a layer to see its details.</p>'; return; }
+  const sheet = sheetMQ.matches;
+  // desktop: the sidebar shows either the selected layer or What changed
+  el.hidden = !sheet && !l;
+  document.getElementById('changes').hidden = !sheet && !!l;
+  const close = `<button type="button" class="insp-close" id="insp-close">${sheet ? 'Close' : '← What changed'}</button>`;
+  if (!l) { el.innerHTML = close; return; }
   const tw = twin(l);
   const exhaust = l.att != null ? l.att + l.lim : null;
   let h = close + `<div class="insp-top"><span class="chip t-${l.t}">${TYPE[l.t].chip}</span>
@@ -464,13 +464,13 @@ function renderInsp(){
 }
 
 function renderChanges(){
-  document.getElementById('chg').innerHTML = `<thead><tr><th>Where</th><th>Expiring</th><th>Requested</th><th>Effect</th><th>Status</th></tr></thead>
-    <tbody>${CHANGES.map((c,i) => `<tr class="k-${c.k}">
-      <td class="what"><span><span class="badge">${i+1}</span>${esc(c.where)}</span><span class="kchip k-${c.k}">${c.flag}</span></td>
-      <td><span class="lbl">Expiring</span>${esc(c.exp)}</td>
-      <td><span class="lbl">Requested</span>${esc(c.req)}</td>
-      <td><span class="lbl">Effect</span>${esc(c.effect)}</td>
-      <td class="flagcell"><span class="kchip k-${c.k}">${c.flag}</span></td></tr>`).join('')}</tbody>`;
+  document.getElementById('chg').innerHTML = CHANGES.map((c,i) => `<li class="citem">
+    <div class="chead"><span><span class="badge k-${c.k}">${i+1}</span>${esc(c.where)}</span><span class="kchip k-${c.k}">${c.flag}</span></div>
+    <dl class="cgrid">
+      <dt>Expiring</dt><dd>${esc(c.exp)}</dd>
+      <dt>Requested</dt><dd>${esc(c.req)}</dd>
+      <dt>Effect</dt><dd>${esc(c.effect)}</dd>
+    </dl></li>`).join('');
 }
 
 /* sheet behaviour on tablet/phone */
@@ -478,11 +478,11 @@ const insp = document.getElementById('insp'), scrim = document.getElementById('s
 function openSheet(){ if (!sheetMQ.matches) return; insp.classList.add('open'); scrim.hidden = false; }
 function closeSheet(){
   insp.classList.remove('open'); scrim.hidden = true;
-  if (sheetMQ.matches) { state.sel = null; renderTower(); }
+  state.sel = null; renderAll();
 }
 scrim.addEventListener('click', closeSheet);
 insp.addEventListener('click', e => { if (e.target.closest('#insp-close')) closeSheet(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && insp.classList.contains('open')) closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.sel) closeSheet(); });
 
 document.getElementById('tower').addEventListener('click', e => {
   const b = e.target.closest('.layer'); if (!b) return;
@@ -496,7 +496,6 @@ function renderAll(){ renderTower(); renderInsp(); }
 narrowMQ.addEventListener('change', renderAll);
 sheetMQ.addEventListener('change', () => {
   insp.classList.remove('open'); scrim.hidden = true;
-  if (!sheetMQ.matches && !state.sel) state.sel = OURS.id;
   renderAll();
 });
 
