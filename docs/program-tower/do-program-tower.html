@@ -1,0 +1,528 @@
+<title>D&amp;O Program Tower</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: workbench bar → policy facts → expiring vs requested tower (height = $ attachment, width = sides covered) with a layer panel (side panel on desktop, bottom sheet on phones) → what changed */
+:root{
+  --bg:#f3f4f7; --surface:#ffffff; --surface-2:#eff1f5; --line:#e0e4ec; --line-strong:#c3cad7;
+  --fg:#1a2030; --fg-2:#4f586c; --fg-3:#7d8599;
+  --abc:#d8e6fc; --abc-edge:#2f6fd6; --abc-ink:#123a7a;
+  --sa:#efe1fc; --sa-edge:#8b3fd9; --sa-ink:#4b1a86;
+  --dic:#fde1ed; --dic-edge:#c42d78; --dic-ink:#7a0f43;
+  --idl:#d6f3e4; --idl-edge:#13915a; --idl-ink:#0b5233;
+  --ours:#d2611c; --ours-soft:#fdeee3;
+  --chg:#384152; --chg-soft:#e9ecf2;
+  --ns:#8a5d0b; --ns-soft:#faf0db;
+  --same:#6f778a; --same-soft:#eef0f4;
+  --focus:#2b6bd6; --scrim:rgba(16,20,30,.35);
+  --f-ui:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-cond:"IBM Plex Sans Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --f-num:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --plot-h:600px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11141b; --surface:#191e28; --surface-2:#202633; --line:#2a3141; --line-strong:#3c4559;
+    --fg:#e5e8ef; --fg-2:#a8afbf; --fg-3:#7a8297;
+    --abc:#1b3358; --abc-edge:#5b95f0; --abc-ink:#d4e4ff;
+    --sa:#33204f; --sa-edge:#ad7af0; --sa-ink:#ecdcff;
+    --dic:#4a1931; --dic-edge:#ec6aa8; --dic-ink:#ffdcec;
+    --idl:#123a2a; --idl-edge:#3fc48a; --idl-ink:#cdf5e2;
+    --ours:#f08c48; --ours-soft:#3a2416;
+    --chg:#c3cad8; --chg-soft:#262d3a;
+    --ns:#e2ad52; --ns-soft:#362a13;
+    --same:#9aa1b2; --same-soft:#232a37;
+    --focus:#72a3ff; --scrim:rgba(0,0,0,.55);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11141b; --surface:#191e28; --surface-2:#202633; --line:#2a3141; --line-strong:#3c4559;
+  --fg:#e5e8ef; --fg-2:#a8afbf; --fg-3:#7a8297;
+  --abc:#1b3358; --abc-edge:#5b95f0; --abc-ink:#d4e4ff;
+  --sa:#33204f; --sa-edge:#ad7af0; --sa-ink:#ecdcff;
+  --dic:#4a1931; --dic-edge:#ec6aa8; --dic-ink:#ffdcec;
+  --idl:#123a2a; --idl-edge:#3fc48a; --idl-ink:#cdf5e2;
+  --ours:#f08c48; --ours-soft:#3a2416;
+  --chg:#c3cad8; --chg-soft:#262d3a;
+  --ns:#e2ad52; --ns-soft:#362a13;
+  --same:#9aa1b2; --same-soft:#232a37;
+  --focus:#72a3ff; --scrim:rgba(0,0,0,.55);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--fg); font-family:var(--f-ui); font-size:14px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:20px 48px}
+.wrap{max-width:1280px; margin:0 auto; display:flex; flex-direction:column; gap:16px}
+h1,h2,h3,h4{margin:0; text-wrap:balance}
+p{margin:0}
+.num{font-family:var(--f-num); font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-3); font-weight:600}
+
+.bar{display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px}
+.pill-sim{font-size:11px; font-weight:700; letter-spacing:.06em; color:#fff; background:var(--ours); padding:2px 8px; border-radius:3px}
+.crumb{color:var(--fg-2); font-size:13px}
+.crumb b{color:var(--fg); font-weight:600}
+.titlerow h1{font-size:24px; font-weight:600; letter-spacing:-.01em}
+.titlerow p{color:var(--fg-2); max-width:70ch; margin-top:2px}
+
+.facts{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden}
+.fact{background:var(--surface); padding:10px 14px; display:flex; flex-direction:column; gap:2px; min-width:0}
+.fact .v{font-weight:500}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px; min-width:0}
+.card-head{display:flex; flex-direction:column; gap:2px; margin-bottom:14px}
+.card-head h2{font-size:16px; font-weight:600}
+.card-head .sub{color:var(--fg-2); font-size:13px}
+
+.main{display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:16px; align-items:start}
+
+/* tower */
+.tower{display:grid; grid-template-columns:34px minmax(0,1fr) 124px minmax(0,1fr); column-gap:10px; row-gap:6px}
+.col-head{display:flex; flex-direction:column; gap:6px; min-width:0}
+.col-title{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:0 10px}
+.col-title h3{font-size:12px; font-weight:600; letter-spacing:.07em; text-transform:uppercase}
+.col-title .tag{font-size:10px; font-weight:600; letter-spacing:.06em; color:var(--ns); background:var(--ns-soft); padding:1px 5px; border-radius:3px; margin-left:4px; vertical-align:1px}
+.col-total{font-size:12px; color:var(--fg-2)}
+.col-total b{color:var(--fg); font-size:15px; font-weight:500}
+.lanes{position:relative; height:16px; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-3); font-weight:600}
+.lanes span{position:absolute; top:0; text-align:center; white-space:nowrap; overflow:hidden}
+.gutter-head{align-self:end; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-3); font-weight:600; text-align:center; padding-bottom:1px}
+
+.axis{position:relative; height:var(--plot-h)}
+.axis span{position:absolute; right:2px; transform:translateY(50%); font-size:11px; color:var(--fg-3)}
+.axis span.ours-tick{color:var(--ours); font-weight:500}
+.plot{position:relative; height:var(--plot-h); border-left:1px solid var(--line-strong); border-bottom:1px solid var(--line-strong)}
+.lane-bg{position:absolute; top:0; bottom:0; background:var(--surface-2); opacity:.6}
+.grid{position:absolute; left:0; right:0; border-top:1px dashed var(--line)}
+.ref50{position:absolute; left:0; right:0; border-top:1.5px solid var(--line-strong)}
+.nobc{position:absolute; display:flex; align-items:center; justify-content:center; text-align:center; padding:4px; font-size:11px; color:var(--fg-3); line-height:1.25;
+  background:repeating-linear-gradient(135deg, transparent 0 7px, var(--line) 7px 8px)}
+.nobc span{background:var(--surface); padding:2px 4px; border-radius:3px}
+
+.layer{position:absolute; margin:0; padding:4px 7px; border:1px solid var(--edge); background:var(--fill); color:var(--ink); border-radius:3px;
+  font:inherit; text-align:left; cursor:pointer; overflow:hidden; display:flex; flex-direction:column; justify-content:center; gap:1px;
+  transition:border-color .12s, box-shadow .12s; -webkit-tap-highlight-color:transparent}
+.layer:hover{border-color:var(--fg-2)}
+.layer:focus-visible{outline:2px solid var(--focus); outline-offset:1px; z-index:4}
+.layer .l1{font-family:var(--f-cond); font-weight:600; font-size:12.5px; line-height:1.2}
+.layer .amt{font-family:var(--f-num); font-weight:500; font-size:11.5px; white-space:nowrap}
+.layer .l2{font-family:var(--f-cond); font-size:11.5px; line-height:1.2; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.layer.t-abc{--fill:var(--abc); --edge:var(--abc-edge); --ink:var(--abc-ink)}
+.layer.t-sa{--fill:var(--sa); --edge:var(--sa-edge); --ink:var(--sa-ink)}
+.layer.t-dic{--fill:var(--dic); --edge:var(--dic-edge); --ink:var(--dic-ink)}
+.layer.t-idl{--fill:var(--idl); --edge:var(--idl-edge); --ink:var(--idl-ink)}
+.layer.assumed{border-style:dashed; background:repeating-linear-gradient(135deg, var(--fill) 0 6px, var(--surface) 6px 9px)}
+.layer.sel{box-shadow:0 0 0 2px var(--fg); z-index:3}
+.layer.ours{border:2px solid var(--ours)}
+.layer.ours.sel{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--ours)}
+.layer .flag{position:absolute; top:3px; right:3px; font-size:9.5px; font-weight:700; letter-spacing:.04em; color:#fff; background:var(--ours); padding:1px 5px; border-radius:2px; line-height:1.4}
+.layer .dd{display:inline-block; vertical-align:-1px; margin-right:3px}
+.layer.t-abc .l1{padding-right:44px}
+.layer.t-idl{padding:2px; align-items:center}
+.layer.t-idl .l1{font-size:11px}
+
+.gutter{position:relative; height:var(--plot-h)}
+.chg{position:absolute; left:0; right:0; display:flex; align-items:center; gap:6px; padding:2px 0}
+.chg .brk{align-self:stretch; width:7px; border:2px solid var(--c); border-right:0; border-radius:3px 0 0 3px; flex:none}
+.chg .tx{display:flex; gap:5px; align-items:flex-start; font-size:11.5px; line-height:1.25; color:var(--c); font-weight:500; background:var(--cs); padding:3px 6px; border-radius:4px}
+.badge{flex:none; display:inline-grid; place-items:center; width:16px; height:16px; border-radius:50%; background:var(--c); color:var(--surface); font-size:10px; font-weight:700; font-family:var(--f-ui); line-height:1}
+.k-chg{--c:var(--chg); --cs:var(--chg-soft)}
+.k-new{--c:var(--chg); --cs:var(--chg-soft)}
+.k-ns{--c:var(--ns); --cs:var(--ns-soft)}
+.k-same{--c:var(--same); --cs:var(--same-soft)}
+.k-ns .brk{border-style:dashed}
+
+.legend{display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line); font-size:12px; color:var(--fg-2)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.sw{width:16px; height:12px; border-radius:2px; border:2px solid; display:inline-block; flex:none}
+.sw.abc{background:var(--abc); border-color:var(--abc-edge)}
+.sw.sa{background:var(--sa); border-color:var(--sa-edge)}
+.sw.dic{background:var(--dic); border-color:var(--dic-edge)}
+.sw.idl{background:var(--idl); border-color:var(--idl-edge); border-style:dashed}
+.sw.ours{background:transparent; border:2px solid var(--ours)}
+.hint{display:none; font-size:12px; color:var(--fg-3); margin-top:8px}
+
+/* layer panel */
+.sidebar{position:sticky; top:16px; display:flex; flex-direction:column; gap:16px; max-height:calc(100vh - 32px); overflow-y:auto; min-width:0}
+.insp{display:flex; flex-direction:column; gap:14px}
+.insp-close{align-self:flex-start; font:inherit; font-size:13px; font-weight:500; color:var(--fg-2); background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:4px 10px; cursor:pointer}
+.insp-close:hover{color:var(--fg)}
+.insp-top{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.chip{font-size:11px; font-weight:600; padding:2px 7px; border-radius:3px; border:1px solid var(--edge); background:var(--fill); color:var(--ink)}
+.chip.t-abc{--fill:var(--abc); --edge:var(--abc-edge); --ink:var(--abc-ink)}
+.chip.t-sa{--fill:var(--sa); --edge:var(--sa-edge); --ink:var(--sa-ink)}
+.chip.t-dic{--fill:var(--dic); --edge:var(--dic-edge); --ink:var(--dic-ink)}
+.chip.t-idl{--fill:var(--idl); --edge:var(--idl-edge); --ink:var(--idl-ink)}
+.chip.plain{--fill:var(--surface-2); --edge:var(--line); --ink:var(--fg-2)}
+.chip.ours{--fill:var(--ours-soft); --edge:var(--ours); --ink:var(--ours)}
+.insp h3{font-size:18px; font-weight:600}
+.insp .carrier{color:var(--fg-2)}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; margin:0; font-size:13px}
+.kv dt{color:var(--fg-2)}
+.kv dd{margin:0; text-align:right; font-family:var(--f-num); font-variant-numeric:tabular-nums}
+.kv dd.muted{color:var(--fg-3); font-family:var(--f-ui)}
+.sec{display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--line)}
+.sec h4{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-3); font-weight:600}
+.sides{display:flex; gap:6px; flex-wrap:wrap}
+.side{font-size:12px; padding:3px 8px; border-radius:3px; border:1px solid var(--line); color:var(--fg-3)}
+.side.on{border-color:var(--fg-2); color:var(--fg); font-weight:500; background:var(--surface-2)}
+.side.off{text-decoration:line-through}
+.under{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; font-size:13px}
+.under li{display:grid; grid-template-columns:10px minmax(0,1fr) auto; gap:8px; align-items:center}
+.under .dot{width:10px; height:10px; border-radius:2px; border:1px solid}
+.under .missing{color:var(--ns)}
+.under .cum{font-family:var(--f-num); color:var(--fg-2); font-size:12px}
+.note{font-size:13px; color:var(--fg-2)}
+.btn-place{align-self:flex-start; font:inherit; font-size:13px; font-weight:600; color:var(--surface); background:var(--ours); border:1px solid var(--ours); border-radius:6px; padding:8px 12px; cursor:pointer}
+.btn-place:hover{filter:brightness(1.05)}
+.sec.place h4{color:var(--ours)}
+.empty{color:var(--fg-3); font-size:13px}
+
+/* what changed */
+.clist{list-style:none; margin:0; padding:0; display:flex; flex-direction:column}
+.citem{display:flex; flex-direction:column; gap:6px; padding:12px 0; border-top:1px solid var(--line)}
+.citem:first-child{border-top:0; padding-top:0}
+.chead{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; font-weight:600; font-size:13.5px; line-height:1.35}
+.chead .badge{margin-right:6px; vertical-align:-3px}
+.cgrid{display:grid; grid-template-columns:76px minmax(0,1fr); gap:3px 10px; margin:0; font-size:13px}
+.cgrid dt{font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-3); font-weight:600; padding-top:2px}
+.cgrid dd{margin:0; min-width:0}
+.kchip{flex:none; display:inline-block; font-size:11px; font-weight:600; padding:1px 6px; border-radius:3px; color:var(--c); background:var(--cs); border:1px solid var(--c); white-space:nowrap}
+.kchip.k-ns{border-style:dashed}
+
+/* tablet and phone: layer panel becomes a bottom sheet */
+@media (max-width:1060px){
+  .main{grid-template-columns:minmax(0,1fr)}
+  .sidebar{position:static; max-height:none; overflow:visible}
+  .hint{display:block}
+  .insp{position:fixed; left:0; right:0; bottom:0; top:auto; z-index:20; margin:0; max-height:72vh; overflow-y:auto;
+    border-radius:14px 14px 0 0; border-bottom:0; box-shadow:0 -8px 30px rgba(0,0,0,.18);
+    padding:12px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    transform:translateY(105%); transition:transform .22s ease; visibility:hidden}
+  .insp.open{transform:none; visibility:visible}
+  .insp::before{content:""; align-self:center; width:40px; height:4px; border-radius:2px; background:var(--line-strong); flex:none}
+  .insp-close{position:absolute; top:10px; right:max(12px, env(safe-area-inset-right, 0px));
+    background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:4px 10px; cursor:pointer}
+  .scrim{position:fixed; inset:0; background:var(--scrim); z-index:19}
+}
+@media (max-width:720px){
+  :root{--plot-h:560px}
+  body{padding-block:12px 40px}
+  .titlerow h1{font-size:20px}
+  .card{padding:12px}
+  .facts{grid-template-columns:1fr 1fr}
+  .fact{padding:8px 10px}
+  .fact .v{font-size:13px}
+  .tower{grid-template-columns:24px minmax(0,1fr) 20px minmax(0,1fr); column-gap:5px}
+  .axis span{font-size:10px; right:1px}
+  .col-title h3{font-size:11px}
+  .col-title .tag{display:none}
+  .col-total{font-size:11px}
+  .col-total b{font-size:13px}
+  .col-total .pr{display:none}
+  .gutter-head{font-size:0}
+  .chg .brk{display:none}
+  .chg{justify-content:center}
+  .chg .tx{background:none; padding:0}
+  .chg .tx .t{display:none}
+  .layer{padding:3px 4px}
+  .layer .l1{font-size:11px; padding-right:0}
+  .layer.t-abc .l1{padding-right:0}
+  .layer .amt{font-family:var(--f-cond); font-size:11px; font-weight:500; display:block}
+  .layer .l2{font-size:10.5px}
+  .layer.t-sa .l2, .layer.t-dic .l2{display:none}
+  .layer.t-sa .amt, .layer.t-dic .amt{white-space:normal}
+  .layer .flag{top:auto; bottom:2px; right:2px; font-size:8.5px; padding:0 3px}
+  .nobc{font-size:10px}
+  .legend{font-size:11.5px; gap:6px 12px}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <span class="pill-sim">SIMULATION</span>
+    <span class="crumb">Risk Review › <b>Program Overview</b> · Public D&amp;O + EPL · Fiduciary · Crime</span>
+  </div>
+
+  <div class="titlerow">
+    <h1>D&amp;O program tower</h1>
+    <p>Height is the attachment point in $M. Width shows which insuring agreements a layer covers.</p>
+  </div>
+
+  <div class="facts" aria-label="Policy terms">
+    <div class="fact"><span class="eyebrow">Policy period</span><span class="v num"><span style="white-space:nowrap">11-15-2026 –</span> <span style="white-space:nowrap">11-15-2027</span></span></div>
+    <div class="fact"><span class="eyebrow">Defense</span><span class="v">Inside the limit</span></div>
+    <div class="fact"><span class="eyebrow">Pending &amp; prior</span><span class="v num">03-17-2022</span></div>
+    <div class="fact"><span class="eyebrow">ERP</span><span class="v">12 months at 100%</span></div>
+    <div class="fact"><span class="eyebrow">Structure</span><span class="v">Primary · Monoline</span></div>
+    <div class="fact"><span class="eyebrow">Aggregates</span><span class="v">D&amp;O, EPL, Fiduciary, Crime separate</span></div>
+  </div>
+
+  <div class="main">
+    <section class="card" aria-labelledby="tower-h">
+      <div class="card-head">
+        <h2 id="tower-h">Expiring vs requested</h2>
+        <p class="sub">Limits in $M. Requested side is proposed data (GAP-09, GAP-01). Select a requested layer with no carrier to place ACME Carrier on it.</p>
+      </div>
+      <div id="tower" class="tower"></div>
+      <p class="hint">Tap a layer for details. Numbers match the items in What changed.</p>
+      <div class="legend">
+        <span><i class="sw abc"></i>A/B/C</span>
+        <span><i class="sw sa"></i>Side A excess</span>
+        <span><i class="sw dic"></i>Side A DIC</span>
+        <span><i class="sw idl"></i>IDL (dashed = attachment not stated)</span>
+        <span><i class="sw ours"></i>ACME Carrier layer</span>
+      </div>
+    </section>
+
+    <div class="sidebar">
+      <aside class="card insp" id="insp" aria-label="Layer detail" hidden></aside>
+      <section class="card changes" id="changes" aria-labelledby="chg-h">
+        <div class="card-head">
+          <h2 id="chg-h">What changed</h2>
+          <p class="sub">Expiring against requested, from the bottom of the tower up.</p>
+        </div>
+        <ol class="clist" id="chg"></ol>
+      </section>
+    </div>
+  </div>
+
+</div>
+<div class="scrim" id="scrim" hidden></div>
+
+<script>
+const MAX = 90; // $M shown on the axis
+const LANES_WIDE   = { I:[0,12], A:[12,40], B:[52,24], C:[76,24] }; // left %, width %
+const LANES_NARROW = { I:[0,13], A:[13,51], B:[64,18], C:[82,18] };
+const narrowMQ = matchMedia('(max-width:720px)');
+const sheetMQ  = matchMedia('(max-width:1060px)');
+const lanes = () => narrowMQ.matches ? LANES_NARROW : LANES_WIDE;
+
+const TYPE = {
+  abc:{ label:'Excess A/B/C', chip:'A/B/C', sides:['A','B','C'] },
+  sa: { label:'Side A excess', chip:'Side A excess', sides:['A'] },
+  dic:{ label:'Side A DIC', chip:'Side A DIC', sides:['A'] },
+  idl:{ label:'IDL', chip:'IDL', sides:[] }
+};
+const SIDE_NAME = { A:'Side A', B:'Side B', C:'Side C' };
+
+const L = [
+  { id:'e1', p:'exp', t:'abc', carrier:'Travelers', lim:10, att:0,  prem:648, ret:'Securities $5M · Side A $0 · other not stated' },
+  { id:'e2', p:'exp', t:'abc', carrier:'Berkley',   lim:10, att:10, prem:454 },
+  { id:'e3', p:'exp', t:'abc', carrier:'Markel',    lim:10, att:20, prem:340 },
+  { id:'e4', p:'exp', t:'abc', carrier:'Beazley',   lim:10, att:30, prem:272 },
+  { id:'e5', p:'exp', t:'abc', carrier:'Sompo',     lim:10, att:40, prem:231 },
+  { id:'e6', p:'exp', t:'sa',  carrier:'AIG',       lim:15, att:50, prem:248 },
+  { id:'e7', p:'exp', t:'dic', carrier:'Chubb',     lim:10, att:65, prem:152 },
+
+  { id:'r1', p:'req', t:'abc', carrier:null, lim:10, att:0,  ret:'Securities $2.5M · other claims $1M · Side A $0',
+    note:'Securities retention $2.5M (from $5M), $1M other claims, $0 Side A. Entity securities coverage.' },
+  { id:'r2', p:'req', t:'abc', carrier:null, lim:10, att:10, note:'Layer 1 of 4 × $10M, following form to primary.' },
+  { id:'r3', p:'req', t:'abc', carrier:null, lim:10, att:20, note:'Layer 2 of 4 × $10M, following form to primary.' },
+  { id:'r4', p:'req', t:'abc', carrier:null, lim:10, att:30, note:'Layer 3 of 4 × $10M, following form to primary.' },
+  { id:'r5', p:'req', t:'abc', carrier:null, lim:10, att:40, note:'Layer 4 of 4 × $10M, following form to primary.' },
+  { id:'r6', p:'req', t:'sa',  carrier:null, lim:15, att:50, note:'Side A only.' },
+  { id:'r7', p:'req', t:'dic', carrier:null, lim:15, att:65, note:'Limit raised from $10M.' },
+  { id:'r8', p:'req', t:'idl', carrier:null, lim:5,  att:null, drawAt:80, note:'Attachment not stated in the submission. Drawn at $80M as a placeholder.' }
+];
+
+const CHANGES = [
+  { y0:0,  y1:10, k:'chg',  flag:'Changed',    short:'Securities retention $5M → $2.5M', where:'Primary A/B/C $10M',
+    exp:'$5M securities retention · Travelers', req:() => `$2.5M securities · $1M other claims · $0 Side A · ${carrierLower(byId('r1'))}`,
+    effect:'Securities retention decreases by $2.5M. The expiring retention for other claims is not stated.' },
+  { y0:10, y1:50, k:'ns',   flag:'Not stated', short:'Carriers not stated', where:'Excess A/B/C, 4 × $10M',
+    exp:'Berkley · Markel · Beazley · Sompo', req:() => {
+      const o = ['r2','r3','r4','r5'].map(byId).find(isOurs);
+      return '4 × $10M following form' + (o ? ` · ACME Carrier on ${amt(o)}` : ' · carriers not stated');
+    },
+    effect:() => {
+      const n = ['r2','r3','r4','r5'].map(byId).filter(l => !carrierOf(l)).length;
+      return `Limits and attachments are unchanged. Carriers for ${n === 4 ? 'all four' : ['none','one','two','three'][n] + ' of the four'} layers are not stated in the submission.`;
+    } },
+  { y0:50, y1:65, k:'same', flag:'Unchanged',  short:'No change', where:'Side A excess',
+    exp:'$15M xs $50M · AIG', req:() => `$15M xs $50M · ${carrierLower(byId('r6'))}`,
+    effect:'Limit and attachment are unchanged.' },
+  { y0:65, y1:80, k:'chg',  flag:'Changed',    short:'DIC limit $10M → $15M', where:'Side A DIC',
+    exp:'$10M xs $65M · Chubb', req:() => `$15M xs $65M · ${carrierLower(byId('r7'))}`,
+    effect:'Limit increases by $5M. Total program limit goes from $75M to $80M.' },
+  { y0:80, y1:85, k:'new',  flag:'New',        short:'New IDL $5M', where:'Independent directors liability (IDL)',
+    exp:'None', req:() => '$5M · attachment not stated' + (isOurs(byId('r8')) ? ' · ACME Carrier' : ''),
+    effect:'New layer. The attachment is not stated in the submission.' }
+];
+
+const STORE_KEY = 'do-tower-acme-layer';
+function loadOurs(){ try { const v = localStorage.getItem(STORE_KEY); if (v && L.some(l => l.id === v && l.p === 'req')) return v; } catch (e) {} return 'r4'; }
+function saveOurs(id){ try { localStorage.setItem(STORE_KEY, id); } catch (e) {} }
+const state = { sel: null, ours: loadOurs() };
+
+/* helpers */
+const byId = id => L.find(l => l.id === id);
+const prog = p => L.filter(l => l.p === p);
+const yAt = l => l.att ?? l.drawAt;
+const m = x => x == null ? '—' : '$' + (Number.isInteger(x) ? x : x.toFixed(1)) + 'M';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const name = l => (l.t === 'abc' && l.att === 0) ? 'Primary A/B/C' : TYPE[l.t].label;
+const amt = l => l.att == null ? m(l.lim) : l.att === 0 ? m(l.lim) : `${m(l.lim)} xs ${m(l.att)}`;
+function span(l){
+  const ln = lanes();
+  if (l.t === 'abc') return [ln.A[0], ln.A[1] + ln.B[1] + ln.C[1]];
+  if (l.t === 'idl') return ln.I;
+  return ln.A;
+}
+const twin = l => L.find(x => x.p !== l.p && x.t === l.t && x.att === l.att) || null;
+function under(l){
+  if (l.att == null) return [];
+  return prog(l.p).filter(x => x.t !== 'idl' && x.att < l.att && (l.t !== 'abc' || x.t === 'abc')).sort((a,b) => a.att - b.att);
+}
+const isOurs = l => l.id === state.ours;
+const carrierOf = l => isOurs(l) ? 'ACME Carrier' : l.carrier;
+const carrierText = l => carrierOf(l) || 'Carrier not stated';
+const carrierLower = l => carrierOf(l) || 'carrier not stated';
+const val = v => typeof v === 'function' ? v() : v;
+const icDrop = '<svg class="dd" width="9" height="10" viewBox="0 0 9 10" aria-hidden="true"><path d="M4.5 0v8M1 5l3.5 3.5L8 5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M0 9.5h9" stroke="currentColor" stroke-width="1"/></svg>';
+
+/* tower */
+function plotHTML(p){
+  const ln = lanes();
+  let h = '';
+  for (const key of ['I','B']) h += `<div class="lane-bg" style="left:${ln[key][0]}%;width:${ln[key][1]}%"></div>`;
+  for (let t = 10; t <= MAX; t += 10) if (t !== 50) h += `<div class="grid" style="bottom:${t/MAX*100}%"></div>`;
+  h += `<div class="nobc" style="left:${ln.B[0]}%;width:${ln.B[1]+ln.C[1]}%;bottom:${50/MAX*100}%;top:0"><span>No Side B or C limit above $50M</span></div>`;
+  h += `<div class="ref50" style="bottom:${50/MAX*100}%"></div>`;
+  for (const l of prog(p)) {
+    const [x,w] = span(l);
+    const cls = ['layer', 't-'+l.t, l.att == null ? 'assumed' : '', l.id === state.sel ? 'sel' : '', isOurs(l) ? 'ours' : ''].join(' ');
+    const sub = isOurs(l) ? 'ACME Carrier' : l.carrier ? `${l.carrier} · $${l.prem}K`
+              : l.t === 'idl' ? 'Attachment not stated' : l.id === 'r7' ? 'Raised from $10M' : 'Carrier not stated';
+    const label = `${p === 'exp' ? 'Expiring' : 'Requested'} ${name(l)} ${amt(l)}, ${carrierText(l)}`;
+    h += `<button type="button" class="${cls}" data-id="${l.id}" aria-pressed="${l.id === state.sel}" aria-label="${esc(label)}"
+      style="left:calc(${x}% + 2px);width:calc(${w}% - 4px);bottom:calc(${yAt(l)/MAX*100}% + 1px);height:calc(${l.lim/MAX*100}% - 2px)">
+      ${isOurs(l) ? '<span class="flag">ACME</span>' : ''}
+      ${l.t === 'idl' ? '<span class="l1">IDL</span>' : `<span class="l1">${l.t === 'dic' ? icDrop : ''}<span class="nm">${esc(name(l))}</span> <span class="amt">${amt(l)}</span></span>
+      <span class="l2">${esc(sub)}</span>`}</button>`;
+  }
+  return h;
+}
+function colHead(p){
+  const ls = prog(p);
+  const total = ls.filter(l => l.t !== 'idl').reduce((s,l) => s + l.lim, 0);
+  const idl = ls.filter(l => l.t === 'idl').reduce((s,l) => s + l.lim, 0);
+  const prem = ls.every(l => l.prem != null) ? ls.reduce((s,l) => s + l.prem, 0) : null;
+  const premTxt = prem != null ? `$${(prem/1000).toFixed(3)}M premium` : 'Premium not quoted';
+  const short = narrowMQ.matches;
+  const laneLbl = Object.entries(lanes()).map(([key,[x,w]]) =>
+    `<span style="left:${x}%;width:${w}%">${key === 'I' ? 'IDL' : (short && key !== 'A' ? key : 'Side ' + key)}</span>`).join('');
+  return `<div class="col-head">
+    <div class="col-title"><h3>${p === 'exp' ? 'Expiring' : 'Requested<span class="tag">PROPOSED</span>'}</h3></div>
+    <span class="col-total"><b class="num">${m(total)}</b>${idl ? ` <span class="num">+ ${m(idl)} IDL</span>` : ''}<span class="pr"> · ${premTxt}</span></span>
+    <div class="lanes">${laneLbl}</div></div>`;
+}
+function axisHTML(){
+  let h = '';
+  for (let t = 0; t <= MAX; t += 10) h += `<span class="num${t === byId(state.ours).att ? ' ours-tick' : ''}" style="bottom:${t/MAX*100}%">${t}</span>`;
+  return h;
+}
+function gutterHTML(){
+  return CHANGES.map((c,i) => `<div class="chg k-${c.k}" style="bottom:${c.y0/MAX*100}%;height:${(c.y1-c.y0)/MAX*100}%">
+    <span class="brk"></span><span class="tx"><span class="badge">${i+1}</span><span class="t">${esc(c.short)}</span></span></div>`).join('');
+}
+function renderTower(){
+  document.getElementById('tower').innerHTML =
+    '<div></div>' + colHead('exp') + '<div class="gutter-head">Change</div>' + colHead('req') +
+    `<div class="axis" aria-hidden="true">${axisHTML()}</div>` +
+    `<div class="plot" role="group" aria-label="Expiring tower">${plotHTML('exp')}</div>` +
+    `<div class="gutter" aria-hidden="true">${gutterHTML()}</div>` +
+    `<div class="plot" role="group" aria-label="Requested tower">${plotHTML('req')}</div>`;
+}
+
+/* layer panel */
+function renderInsp(){
+  const el = document.getElementById('insp');
+  const l = state.sel ? byId(state.sel) : null;
+  const sheet = sheetMQ.matches;
+  // desktop: the sidebar shows either the selected layer or What changed
+  el.hidden = !sheet && !l;
+  document.getElementById('changes').hidden = !sheet && !!l;
+  const close = `<button type="button" class="insp-close" id="insp-close">${sheet ? 'Close' : '← What changed'}</button>`;
+  if (!l) { el.innerHTML = close; return; }
+  const tw = twin(l);
+  const exhaust = l.att != null ? l.att + l.lim : null;
+  let h = close + `<div class="insp-top"><span class="chip t-${l.t}">${TYPE[l.t].chip}</span>
+      <span class="chip plain">${l.p === 'exp' ? 'Expiring' : 'Requested'}</span>${isOurs(l) ? '<span class="chip ours">ACME Carrier</span>' : ''}</div>
+    <div><h3>${esc(name(l))} <span class="num">${amt(l)}</span></h3><p class="carrier">${esc(carrierText(l))}</p></div>
+    <dl class="kv">
+      <dt>Limit</dt><dd>${m(l.lim)}</dd>
+      <dt>Attaches at</dt>${l.att == null ? '<dd class="muted">Not stated</dd>' : `<dd>${m(l.att)}</dd>`}
+      <dt>Exhausts at</dt>${exhaust == null ? '<dd class="muted">—</dd>' : `<dd>${m(exhaust)}</dd>`}
+      <dt>Premium</dt>${l.prem != null ? `<dd>$${l.prem}K</dd>` : '<dd class="muted">Not quoted</dd>'}
+      ${l.prem != null ? `<dt>Rate on line</dt><dd>${(l.prem/(l.lim*10)).toFixed(2)}%</dd>` : ''}
+      ${tw ? `<dt>${l.p === 'req' ? 'Expiring' : 'Requested'} at this position</dt><dd>${amt(tw)}${tw.carrier ? ' · ' + esc(tw.carrier) : ''}</dd>` : ''}
+    </dl>`;
+  if (l.ret) h += `<div class="sec"><h4>Retentions</h4><p class="note">${esc(l.ret)}</p></div>`;
+  h += `<div class="sec"><h4>Covers</h4>${l.t === 'idl'
+      ? '<p class="note">Independent directors only.</p>'
+      : `<div class="sides">${['A','B','C'].map(s => `<span class="side ${TYPE[l.t].sides.includes(s) ? 'on' : 'off'}">${SIDE_NAME[s]}</span>`).join('')}</div>`}
+      ${l.t === 'dic' ? '<p class="note">Difference in Conditions. Drop-down terms per policy wording.</p>' : ''}</div>`;
+  const u = under(l);
+  if (l.att == null) h += `<div class="sec"><h4>Beneath this layer</h4><p class="note">Depends on the attachment, which is not stated.</p></div>`;
+  else if (u.length) h += `<div class="sec"><h4>Beneath this layer · ${m(l.att)}</h4><ul class="under">${
+      u.slice().reverse().map(x => `<li><span class="dot" style="background:var(--${x.t});border-color:var(--${x.t}-edge)"></span>
+        <span>${esc(name(x))} ${amt(x)} · ${carrierOf(x) ? esc(carrierOf(x)) : '<span class="missing">not stated</span>'}</span>
+        <span class="cum">${m(x.att + x.lim)}</span></li>`).join('')}</ul></div>`;
+  else h += `<div class="sec"><h4>Beneath this layer</h4><p class="note">Retention only.</p></div>`;
+  if (l.p === 'req') {
+    if (isOurs(l)) h += `<div class="sec place"><h4>ACME Carrier position</h4><p class="note">ACME Carrier is placed on this layer. Select another layer with no carrier to move it.</p></div>`;
+    else if (!carrierOf(l)) h += `<div class="sec place"><h4>Open layer</h4><p class="note">No carrier is stated for this layer.</p>
+      <button type="button" class="btn-place" id="place" data-id="${l.id}">Place ACME Carrier on this layer</button></div>`;
+  }
+  if (l.note) h += `<div class="sec"><h4>Submission notes</h4><p class="note">${esc(l.note)}</p></div>`;
+  el.innerHTML = h;
+}
+
+function renderChanges(){
+  document.getElementById('chg').innerHTML = CHANGES.map((c,i) => `<li class="citem">
+    <div class="chead"><span><span class="badge k-${c.k}">${i+1}</span>${esc(c.where)}</span><span class="kchip k-${c.k}">${c.flag}</span></div>
+    <dl class="cgrid">
+      <dt>Expiring</dt><dd>${esc(c.exp)}</dd>
+      <dt>Requested</dt><dd>${esc(val(c.req))}</dd>
+      <dt>Effect</dt><dd>${esc(val(c.effect))}</dd>
+    </dl></li>`).join('');
+}
+
+/* sheet behaviour on tablet/phone */
+const insp = document.getElementById('insp'), scrim = document.getElementById('scrim');
+function openSheet(){ if (!sheetMQ.matches) return; insp.classList.add('open'); scrim.hidden = false; }
+function closeSheet(){
+  insp.classList.remove('open'); scrim.hidden = true;
+  state.sel = null; renderAll();
+}
+scrim.addEventListener('click', closeSheet);
+insp.addEventListener('click', e => {
+  if (e.target.closest('#insp-close')) return closeSheet();
+  const b = e.target.closest('#place'); if (!b) return;
+  state.ours = b.dataset.id; saveOurs(state.ours);
+  renderAll(); renderChanges();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.sel) closeSheet(); });
+
+document.getElementById('tower').addEventListener('click', e => {
+  const b = e.target.closest('.layer'); if (!b) return;
+  state.sel = b.dataset.id;
+  renderTower(); renderInsp(); openSheet();
+  const again = document.querySelector(`.layer[data-id="${state.sel}"]`);
+  if (again && !sheetMQ.matches) again.focus({ preventScroll:true });
+});
+
+function renderAll(){ renderTower(); renderInsp(); }
+narrowMQ.addEventListener('change', renderAll);
+sheetMQ.addEventListener('change', () => {
+  insp.classList.remove('open'); scrim.hidden = true;
+  renderAll();
+});
+
+renderAll(); renderChanges();
+</script>
