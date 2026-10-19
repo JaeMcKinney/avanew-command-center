@@ -1,0 +1,739 @@
+<title>D&amp;O Program Tower</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: workbench bar → policy facts → tower (height = $ attachment, width = which sides a layer protects) beside a layer inspector → underwriting read, loss-type limits, changes, pricing */
+:root{
+  --bg:#f3f4f7; --surface:#ffffff; --surface-2:#f0f2f6; --line:#e0e4ec; --line-strong:#c3cad7;
+  --fg:#1a2030; --fg-2:#4f586c; --fg-3:#80889c;
+  --abc:#dde8fb; --abc-edge:#86a7df; --abc-ink:#1c3b74;
+  --sa:#ebe4fb; --sa-edge:#ab92e2; --sa-ink:#4a2f88;
+  --dic:#ddd3f7; --dic-edge:#7c5ecc; --dic-ink:#382076;
+  --idl:#d9f1ec; --idl-edge:#4aa996; --idl-ink:#145a4d;
+  --ours:#d2611c; --ours-soft:#fdeee3;
+  --up:#1d774b; --up-soft:#e1f3e9;
+  --warn:#93600a; --warn-soft:#fbf0d8;
+  --gap:#b02a22; --gap-soft:#fbe6e4;
+  --focus:#2b6bd6;
+  --f-ui:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-cond:"IBM Plex Sans Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --f-num:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --plot-h:600px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11141b; --surface:#191e28; --surface-2:#202633; --line:#2a3141; --line-strong:#3c4559;
+    --fg:#e5e8ef; --fg-2:#a8afbf; --fg-3:#778095;
+    --abc:#1e3152; --abc-edge:#4f78bb; --abc-ink:#d2e1ff;
+    --sa:#2d244d; --sa-edge:#8a70d4; --sa-ink:#e4dbff;
+    --dic:#382965; --dic-edge:#9b80ef; --dic-ink:#eee7ff;
+    --idl:#153b35; --idl-edge:#3e9e8b; --idl-ink:#c9f1e7;
+    --ours:#f08c48; --ours-soft:#3a2416;
+    --up:#5cc08b; --up-soft:#163226;
+    --warn:#e0a743; --warn-soft:#382b12;
+    --gap:#ef6f66; --gap-soft:#3c1b19;
+    --focus:#72a3ff;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11141b; --surface:#191e28; --surface-2:#202633; --line:#2a3141; --line-strong:#3c4559;
+  --fg:#e5e8ef; --fg-2:#a8afbf; --fg-3:#778095;
+  --abc:#1e3152; --abc-edge:#4f78bb; --abc-ink:#d2e1ff;
+  --sa:#2d244d; --sa-edge:#8a70d4; --sa-ink:#e4dbff;
+  --dic:#382965; --dic-edge:#9b80ef; --dic-ink:#eee7ff;
+  --idl:#153b35; --idl-edge:#3e9e8b; --idl-ink:#c9f1e7;
+  --ours:#f08c48; --ours-soft:#3a2416;
+  --up:#5cc08b; --up-soft:#163226;
+  --warn:#e0a743; --warn-soft:#382b12;
+  --gap:#ef6f66; --gap-soft:#3c1b19;
+  --focus:#72a3ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--fg); font-family:var(--f-ui); font-size:14px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:20px 48px}
+.wrap{max-width:1320px; margin:0 auto; display:flex; flex-direction:column; gap:16px}
+h1,h2,h3,h4{margin:0; text-wrap:balance}
+p{margin:0}
+.num{font-family:var(--f-num); font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-3); font-weight:600}
+
+/* workbench bar */
+.bar{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px}
+.pill-sim{font-size:11px; font-weight:700; letter-spacing:.06em; color:#fff; background:var(--ours); padding:2px 8px; border-radius:3px}
+.crumb{color:var(--fg-2); font-size:13px}
+.crumb b{color:var(--fg); font-weight:600}
+.titlerow{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px}
+.titlerow h1{font-size:24px; font-weight:600; letter-spacing:-.01em}
+.titlerow p{color:var(--fg-2); max-width:70ch}
+
+/* facts strip */
+.facts{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden}
+.fact{background:var(--surface); padding:10px 14px; display:flex; flex-direction:column; gap:2px; min-width:0}
+.fact .v{font-weight:500}
+
+/* cards */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px; min-width:0}
+.card-head{display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:10px 16px; margin-bottom:14px}
+.card-head h2{font-size:16px; font-weight:600}
+.card-head .sub{color:var(--fg-2); font-size:13px}
+
+.main{display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:16px; align-items:start}
+@media (max-width:1060px){ .main{grid-template-columns:minmax(0,1fr)} }
+.lower{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:16px; align-items:start}
+@media (max-width:900px){ .lower{grid-template-columns:minmax(0,1fr)} }
+
+/* controls */
+.controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.seg{display:inline-flex; border:1px solid var(--line-strong); border-radius:6px; overflow:hidden}
+.seg button{font:inherit; font-size:13px; background:var(--surface); color:var(--fg-2); border:0; padding:6px 12px; cursor:pointer}
+.seg button + button{border-left:1px solid var(--line-strong)}
+.seg button[aria-pressed="true"]{background:var(--fg); color:var(--surface); font-weight:500}
+.seg button:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.ourpick{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--fg-2)}
+.ourpick select{font:inherit; font-size:13px; color:var(--fg); background:var(--surface); border:1px solid var(--ours); border-radius:6px; padding:5px 8px; max-width:240px}
+
+/* tower */
+.tower-scroll{overflow-x:auto}
+.tower{display:grid; column-gap:10px; row-gap:6px; min-width:300px}
+.tower.compare{grid-template-columns:38px minmax(0,1fr) 128px minmax(0,1fr)}
+.tower.single{grid-template-columns:38px minmax(0,1fr)}
+@media (max-width:720px){
+  .tower.compare{grid-template-columns:32px minmax(0,1fr) minmax(0,1fr); column-gap:6px}
+  .tower.compare .gutter, .tower.compare .gutter-head{display:none}
+  :root{--plot-h:540px}
+}
+.col-head{display:flex; flex-direction:column; gap:6px; min-width:0; container-type:inline-size}
+.col-title{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 10px}
+.col-title h3{font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase}
+.col-title h3 .tag{font-size:10px; font-weight:600; letter-spacing:.06em; color:var(--warn); background:var(--warn-soft); padding:1px 5px; border-radius:3px; margin-left:6px; vertical-align:2px}
+.col-total{font-size:12px; color:var(--fg-2)}
+.col-total b{color:var(--fg); font-size:15px; font-weight:600}
+.lanes{position:relative; height:18px; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-3); font-weight:600}
+.lanes span{position:absolute; top:0; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.gutter-head{align-self:end; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-3); font-weight:600; text-align:center; padding-bottom:2px}
+
+.axis{position:relative; height:var(--plot-h)}
+.axis span{position:absolute; right:2px; transform:translateY(50%); font-size:11px; color:var(--fg-3)}
+.axis span.ours-tick{color:var(--ours); font-weight:600}
+.plot{position:relative; height:var(--plot-h); container-type:inline-size; border-left:1px solid var(--line-strong); border-bottom:1px solid var(--line-strong)}
+.lane-bg{position:absolute; top:0; bottom:0; background:var(--surface-2); opacity:.55}
+.grid{position:absolute; left:0; right:0; border-top:1px dashed var(--line)}
+.ref50{position:absolute; left:0; right:0; border-top:1.5px solid var(--line-strong)}
+.nobc{position:absolute; display:flex; align-items:center; justify-content:center; text-align:center; padding:6px; font-size:11px; color:var(--fg-3); line-height:1.3;
+  background:repeating-linear-gradient(135deg, transparent 0 7px, var(--line) 7px 8px)}
+.nobc span{background:var(--surface); padding:2px 4px; border-radius:3px}
+
+.layer{position:absolute; margin:0; padding:4px 7px; border:1px solid var(--edge); background:var(--fill); color:var(--ink); border-radius:3px;
+  font:inherit; text-align:left; cursor:pointer; overflow:hidden; display:flex; flex-direction:column; justify-content:center; gap:1px; transition:border-color .12s, box-shadow .12s}
+.layer:hover{border-color:var(--fg-2)}
+.layer:focus-visible{outline:2px solid var(--focus); outline-offset:1px; z-index:4}
+.layer .l1{font-family:var(--f-cond); font-weight:600; font-size:12.5px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:38px}
+.layer .l2{font-family:var(--f-cond); font-size:11.5px; line-height:1.2; opacity:.82; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.layer .l1 .amt{font-family:var(--f-num); font-weight:500; font-size:11.5px}
+.layer.t-abc{--fill:var(--abc); --edge:var(--abc-edge); --ink:var(--abc-ink)}
+.layer.t-sa{--fill:var(--sa); --edge:var(--sa-edge); --ink:var(--sa-ink)}
+.layer.t-dic{--fill:var(--dic); --edge:var(--dic-edge); --ink:var(--dic-ink)}
+.layer.t-idl{--fill:var(--idl); --edge:var(--idl-edge); --ink:var(--idl-ink)}
+.layer.assumed{border-style:dashed; background:repeating-linear-gradient(135deg, var(--fill) 0 6px, var(--surface) 6px 9px)}
+.layer.sel{box-shadow:0 0 0 2px var(--fg); z-index:3}
+.layer.ours{border:2px solid var(--ours)}
+.layer.ours.sel{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--ours)}
+.layer.ghost{outline:1.5px dashed var(--ours); outline-offset:-4px}
+.layer .flag{position:absolute; top:3px; right:3px; font-size:9.5px; font-weight:700; letter-spacing:.05em; color:#fff; background:var(--ours); padding:1px 5px; border-radius:2px; line-height:1.4}
+.layer .flag.ghostflag{background:transparent; color:var(--ours); border:1px dashed var(--ours)}
+.layer .dd{display:inline-block; vertical-align:-1px; margin-right:3px}
+.layer.narrow .l1{white-space:normal; padding-right:0}
+.layer.narrow .flag{top:auto; bottom:3px}
+.layer.t-idl .l1 .nm{display:none}
+@container (max-width:300px){
+  .layer.narrow .l2{display:none}
+  .layer.narrow .l1 .nm{display:none}
+  .layer.narrow{padding:3px 4px}
+  .layer.narrow .l1{padding-right:0}
+  .layer.narrow .flag{display:none}
+  .nobc span{font-size:10px}
+}
+@container (max-width:200px){
+  .layer .l2{display:none}
+  .layer .l1{padding-right:0}
+  .layer .flag{display:none}
+}
+
+.gutter{position:relative; height:var(--plot-h)}
+.chg{position:absolute; left:0; right:0; display:flex; align-items:center; gap:6px; padding:2px 0}
+.chg .brk{align-self:stretch; width:8px; border:2px solid var(--c); border-right:0; border-radius:3px 0 0 3px; flex:none}
+.chg .tx{font-size:11.5px; line-height:1.25; color:var(--c); font-weight:500; background:var(--cs); padding:3px 6px; border-radius:4px}
+.k-up{--c:var(--up); --cs:var(--up-soft)}
+.k-warn{--c:var(--warn); --cs:var(--warn-soft)}
+.k-gap{--c:var(--gap); --cs:var(--gap-soft)}
+.k-same{--c:var(--fg-3); --cs:transparent}
+
+.legend{display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line); font-size:12px; color:var(--fg-2)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.sw{width:14px; height:12px; border-radius:2px; border:1px solid; display:inline-block; flex:none}
+.sw.abc{background:var(--abc); border-color:var(--abc-edge)}
+.sw.sa{background:var(--sa); border-color:var(--sa-edge)}
+.sw.dic{background:var(--dic); border-color:var(--dic-edge)}
+.sw.idl{background:var(--idl); border-color:var(--idl-edge); border-style:dashed}
+.sw.ours{background:transparent; border:2px solid var(--ours)}
+
+/* inspector */
+.insp{position:sticky; top:16px; display:flex; flex-direction:column; gap:14px}
+@media (max-width:1060px){ .insp{position:static} }
+.insp-top{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.chip{font-size:11px; font-weight:600; padding:2px 7px; border-radius:3px; border:1px solid var(--edge); background:var(--fill); color:var(--ink)}
+.chip.t-abc{--fill:var(--abc); --edge:var(--abc-edge); --ink:var(--abc-ink)}
+.chip.t-sa{--fill:var(--sa); --edge:var(--sa-edge); --ink:var(--sa-ink)}
+.chip.t-dic{--fill:var(--dic); --edge:var(--dic-edge); --ink:var(--dic-ink)}
+.chip.t-idl{--fill:var(--idl); --edge:var(--idl-edge); --ink:var(--idl-ink)}
+.chip.plain{--fill:var(--surface-2); --edge:var(--line); --ink:var(--fg-2)}
+.chip.ours{--fill:var(--ours-soft); --edge:var(--ours); --ink:var(--ours)}
+.insp h3{font-size:18px; font-weight:600}
+.insp .carrier{color:var(--fg-2)}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; margin:0; font-size:13px}
+.kv dt{color:var(--fg-2)}
+.kv dd{margin:0; text-align:right; font-family:var(--f-num); font-variant-numeric:tabular-nums}
+.kv dd.muted{color:var(--fg-3); font-family:var(--f-ui)}
+.sec{display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--line)}
+.sec h4{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-3); font-weight:600}
+.sides{display:flex; gap:6px; flex-wrap:wrap}
+.side{font-size:12px; padding:3px 8px; border-radius:3px; border:1px solid var(--line); color:var(--fg-3)}
+.side.on{border-color:var(--fg-2); color:var(--fg); font-weight:500; background:var(--surface-2)}
+.side.off{text-decoration:line-through}
+.reach{display:grid; grid-template-columns:1fr auto auto; gap:3px 12px; font-size:13px}
+.reach .h{font-size:11px; color:var(--fg-3)}
+.reach .r{text-align:right; font-family:var(--f-num)}
+.reach .delta{color:var(--warn); font-weight:600}
+.under{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px; font-size:13px}
+.under li{display:grid; grid-template-columns:10px 1fr auto; gap:8px; align-items:center}
+.under .dot{width:10px; height:10px; border-radius:2px; border:1px solid}
+.under .missing{color:var(--gap)}
+.under .cum{font-family:var(--f-num); color:var(--fg-2); font-size:12px}
+.note{font-size:13px; color:var(--fg-2)}
+.note.alert{color:var(--gap)}
+.btn{font:inherit; font-size:13px; font-weight:500; border:1px solid var(--ours); color:var(--ours); background:var(--ours-soft); padding:7px 12px; border-radius:6px; cursor:pointer; align-self:flex-start}
+.btn:hover{background:var(--ours); color:#fff}
+
+/* read */
+.read-head{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.read ol{margin:0; padding-left:20px; display:flex; flex-direction:column; gap:8px; max-width:78ch}
+.read li::marker{color:var(--fg-3); font-family:var(--f-num); font-size:12px}
+.read .lead{font-size:15px; font-weight:500; margin-bottom:10px; max-width:70ch}
+.confirm{margin-top:14px; padding:12px 14px; background:var(--surface-2); border-radius:6px}
+.confirm ul{margin:6px 0 0; padding-left:18px; display:flex; flex-direction:column; gap:4px}
+.disclaim{margin-top:10px; font-size:12px; color:var(--fg-3)}
+
+/* loss-type */
+.lt{display:flex; flex-direction:column; gap:14px}
+.lt-row{display:grid; grid-template-columns:minmax(0,150px) minmax(0,1fr); gap:6px 14px; align-items:center}
+@media (max-width:480px){ .lt-row{grid-template-columns:minmax(0,1fr)} }
+.lt-name b{display:block; font-weight:600; font-size:13px}
+.lt-name span{font-size:12px; color:var(--fg-2)}
+.lt-bars{display:flex; flex-direction:column; gap:4px; min-width:0}
+.lt-bar{display:grid; grid-template-columns:30px minmax(0,1fr) 92px; gap:8px; align-items:center; font-size:11px; color:var(--fg-3)}
+.track{height:12px; position:relative; background:var(--surface-2); border-radius:2px; overflow:hidden}
+.seg-s{position:absolute; top:0; bottom:0; left:0; background:var(--abc-edge)}
+.seg-d{position:absolute; top:0; bottom:0; background:var(--dic-edge)}
+.seg-i{position:absolute; top:0; bottom:0; background:var(--idl-edge)}
+.lt-val{font-family:var(--f-num); color:var(--fg); font-size:12px; text-align:right}
+.lt-val .chgv{color:var(--up)}
+.lt-key{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--fg-2)}
+.lt-key i{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px}
+
+/* changes table */
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse; width:100%; font-size:13px; min-width:640px}
+th{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-3); font-weight:600; text-align:left; padding:6px 10px; border-bottom:1px solid var(--line-strong)}
+td{padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top}
+td.what{font-weight:500}
+.kchip{display:inline-block; font-size:11px; font-weight:600; padding:1px 6px; border-radius:3px; color:var(--c); background:var(--cs); border:1px solid var(--c); white-space:nowrap}
+
+/* pricing */
+.px{display:flex; flex-direction:column; gap:6px}
+.px-row{display:grid; grid-template-columns:minmax(0,190px) minmax(0,1fr) 128px 52px; gap:10px; align-items:center; font-size:12.5px; padding:3px 6px; border-radius:4px; border:1px solid transparent}
+.px-row.hl{border-color:var(--ours); background:var(--ours-soft)}
+.px-row .nm{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.px-row .nm small{color:var(--fg-3); font-size:11.5px}
+.px-row .bar{height:10px; border-radius:2px; background:var(--fill)}
+.px-row .v{font-family:var(--f-num); text-align:right}
+.px-row .rel{font-family:var(--f-num); text-align:right; color:var(--fg-2)}
+.px-head{font-size:11px; color:var(--fg-3); letter-spacing:.06em; text-transform:uppercase; font-weight:600}
+@media (max-width:520px){ .px-row{grid-template-columns:minmax(0,1fr) 108px 40px} .px-row .barcell{display:none} }
+
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <span class="pill-sim">SIMULATION</span>
+    <span class="crumb">Risk Review › <b>Program Overview</b> · Public D&amp;O + EPL · Fiduciary · Crime</span>
+  </div>
+
+  <div class="titlerow">
+    <div>
+      <h1>D&amp;O program tower</h1>
+      <p>Expiring against requested. Height is the attachment point in $M; width shows which insuring agreements a layer protects. Click any layer to inspect it.</p>
+    </div>
+  </div>
+
+  <div class="facts" aria-label="Policy terms">
+    <div class="fact"><span class="eyebrow">Policy period</span><span class="v num">11-15-2026 – 11-15-2027</span></div>
+    <div class="fact"><span class="eyebrow">Defense</span><span class="v">Inside the limit</span></div>
+    <div class="fact"><span class="eyebrow">Pending &amp; prior date</span><span class="v num">03-17-2022</span></div>
+    <div class="fact"><span class="eyebrow">ERP</span><span class="v">12 months at 100% of annual premium</span></div>
+    <div class="fact"><span class="eyebrow">Structure</span><span class="v">Primary · Monoline</span></div>
+    <div class="fact"><span class="eyebrow">Aggregates</span><span class="v">D&amp;O, EPL, Fiduciary, Crime separate</span></div>
+  </div>
+
+  <div class="main">
+    <section class="card" aria-labelledby="tower-h">
+      <div class="card-head">
+        <div>
+          <h2 id="tower-h">Tower by attachment</h2>
+          <p class="sub">Limits in $M. Requested side is proposed data (GAP-09, GAP-01).</p>
+        </div>
+        <div class="controls">
+          <div class="seg" role="group" aria-label="View">
+            <button type="button" id="m-compare" data-mode="compare">Compare</button>
+            <button type="button" id="m-exp" data-mode="exp">Expiring</button>
+            <button type="button" id="m-req" data-mode="req">Requested</button>
+          </div>
+          <label class="ourpick" for="ours">AWAC layer
+            <select id="ours"></select>
+          </label>
+        </div>
+      </div>
+      <div class="tower-scroll"><div id="tower" class="tower"></div></div>
+      <div class="legend">
+        <span><i class="sw abc"></i>A/B/C: shared by individuals and the company</span>
+        <span><i class="sw sa"></i>Side A excess: individuals only</span>
+        <span><i class="sw dic"></i>Side A DIC: individuals only, can drop down</span>
+        <span><i class="sw idl"></i>IDL: independent directors only (dashed = position assumed)</span>
+        <span><i class="sw ours"></i>AWAC layer</span>
+      </div>
+    </section>
+
+    <aside class="card insp" id="insp" aria-live="polite" aria-label="Layer detail"></aside>
+  </div>
+
+  <div class="lower">
+    <section class="card read" aria-labelledby="read-h">
+      <div class="card-head">
+        <div class="read-head"><h2 id="read-h">Underwriting read</h2><span class="chip plain">Draft</span></div>
+      </div>
+      <div id="read"></div>
+    </section>
+
+    <section class="card" aria-labelledby="lt-h">
+      <div class="card-head">
+        <div>
+          <h2 id="lt-h">Limit available by type of loss</h2>
+          <p class="sub">The tower total isn't what every claim can reach.</p>
+        </div>
+      </div>
+      <div class="lt" id="lt"></div>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="chg-h">
+    <div class="card-head">
+      <div>
+        <h2 id="chg-h">What changed at renewal</h2>
+        <p class="sub">Ordered from the bottom of the tower up.</p>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table id="chg"></table></div>
+  </section>
+
+  <section class="card" aria-labelledby="px-h">
+    <div class="card-head">
+      <div>
+        <h2 id="px-h">Expiring pricing by attachment</h2>
+        <p class="sub">Premium per $1M of limit, and each layer's price as a share of the layer beneath it.</p>
+      </div>
+    </div>
+    <div class="px" id="px"></div>
+  </section>
+</div>
+
+<script>
+const MAX = 90; // $M shown on the axis
+const LANES = { I:[0,12], A:[12,40], B:[52,24], C:[76,24] }; // left %, width %
+const TYPE = {
+  abc:{ label:'Excess A/B/C', sides:['A','B','C'] },
+  sa: { label:'Side A excess', sides:['A'] },
+  dic:{ label:'Side A DIC', sides:['A'] },
+  idl:{ label:'IDL', sides:['I'] }
+};
+const SIDE_NAME = { A:'Side A', B:'Side B', C:'Side C', I:'Indep. directors' };
+// Retentions in $M by insuring agreement; null = not stated in submission
+const RET = { exp:{ A:0, B:null, C:5 }, req:{ A:0, B:1, C:2.5 } };
+
+const L = [
+  { id:'e1', p:'exp', t:'abc', carrier:'Travelers', lim:10, att:0,  prem:648 },
+  { id:'e2', p:'exp', t:'abc', carrier:'Berkley',   lim:10, att:10, prem:454 },
+  { id:'e3', p:'exp', t:'abc', carrier:'Markel',    lim:10, att:20, prem:340 },
+  { id:'e4', p:'exp', t:'abc', carrier:'Beazley',   lim:10, att:30, prem:272 },
+  { id:'e5', p:'exp', t:'abc', carrier:'Sompo',     lim:10, att:40, prem:231 },
+  { id:'e6', p:'exp', t:'sa',  carrier:'AIG',       lim:15, att:50, prem:248 },
+  { id:'e7', p:'exp', t:'dic', carrier:'Chubb',     lim:10, att:65, prem:152 },
+
+  { id:'r1', p:'req', t:'abc', carrier:null, lim:10, att:0,  prem:null, sub:'Sec. retention $2.5M',
+    note:'Securities retention $2.5M (from $5M), $1M other claims, $0 Side A. Entity securities coverage.' },
+  { id:'r2', p:'req', t:'abc', carrier:null, lim:10, att:10, prem:null, note:'Layer 1 of 4 × $10M, following form to primary.' },
+  { id:'r3', p:'req', t:'abc', carrier:null, lim:10, att:20, prem:null, note:'Layer 2 of 4 × $10M, following form to primary.' },
+  { id:'r4', p:'req', t:'abc', carrier:null, lim:10, att:30, prem:null, note:'Layer 3 of 4 × $10M, following form to primary.' },
+  { id:'r5', p:'req', t:'abc', carrier:null, lim:10, att:40, prem:null, note:'Layer 4 of 4 × $10M, following form to primary.' },
+  { id:'r6', p:'req', t:'sa',  carrier:null, lim:15, att:50, prem:null, note:'Side A only.' },
+  { id:'r7', p:'req', t:'dic', carrier:null, lim:15, att:65, prem:null, sub:'Raised from $10M', note:'Limit raised from $10M.' },
+  { id:'r8', p:'req', t:'idl', carrier:null, lim:5,  att:null, drawAt:80, prem:null, sub:'Attachment not stated',
+    note:'Attachment not stated in the submission. Drawn at $80M as a placeholder.' }
+];
+
+const CHANGES = [
+  { y0:0,  y1:10, k:'warn', short:'Securities retention $5M → $2.5M', where:'Primary A/B/C',
+    exp:'$5M securities retention', req:'$2.5M securities · $1M other · $0 Side A',
+    why:'Every securities claim reaches the primary, and every excess layer, $2.5M sooner.' },
+  { y0:10, y1:50, k:'gap', short:'Excess carriers not named', where:'Excess A/B/C, 4 × $10M',
+    exp:'Berkley · Markel · Beazley · Sompo', req:'4 × $10M following form, carriers not stated',
+    why:'Continuity, solvency and form differences in the underlying can\'t be checked yet.' },
+  { y0:50, y1:65, k:'same', short:'No change', where:'Side A excess',
+    exp:'$15M xs $50M · AIG', req:'$15M xs $50M · carrier not stated',
+    why:'Same limit and attachment.' },
+  { y0:65, y1:80, k:'up', short:'+$5M Side A DIC', where:'Side A DIC',
+    exp:'$10M xs $65M · Chubb', req:'$15M xs $65M',
+    why:'Program grows $75M → $80M. All of the added limit protects individuals only.' },
+  { y0:80, y1:85, k:'gap', short:'New $5M IDL', where:'Independent directors (IDL)',
+    exp:'None', req:'$5M, attachment not stated',
+    why:'Needs an attachment and drop-down terms before its relationship to the DIC is known.' }
+];
+
+const state = { mode: (window.innerWidth < 720 ? 'req' : 'compare'), ours:'r4', sel:'r4' };
+
+/* helpers */
+const byId = id => L.find(l => l.id === id);
+const prog = p => L.filter(l => l.p === p);
+const yAt = l => l.att ?? l.drawAt;
+const m = x => x == null ? '—' : '$' + (Number.isInteger(x) ? x : x.toFixed(1)) + 'M';
+const k = x => '$' + x + 'K';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const ORD = ['primary','first','second','third','fourth','fifth'];
+function name(l){
+  if (l.t === 'abc' && l.att === 0) return 'Primary A/B/C';
+  return TYPE[l.t].label;
+}
+function amt(l){
+  if (l.att == null) return m(l.lim);
+  return l.att === 0 ? m(l.lim) : `${m(l.lim)} xs ${m(l.att)}`;
+}
+function span(l){
+  if (l.t === 'abc') return [LANES.A[0], LANES.A[1] + LANES.B[1] + LANES.C[1]];
+  if (l.t === 'idl') return LANES.I;
+  return LANES.A;
+}
+const rpm = l => l.prem == null ? null : l.prem / l.lim;           // $K per $1M of limit
+const rol = l => l.prem == null ? null : l.prem / (l.lim * 10);    // %
+function adjacentBelow(l){
+  if (l.att == null || l.att === 0) return null;
+  return prog(l.p).find(x => x.t !== 'idl' && x.att + x.lim === l.att) || null;
+}
+function relativity(l){
+  const b = adjacentBelow(l);
+  return (b && rpm(l) != null && rpm(b) != null) ? rpm(l) / rpm(b) : null;
+}
+function under(l){
+  if (l.att == null) return [];
+  return prog(l.p).filter(x => x.t !== 'idl' && x.att < l.att && (l.t !== 'abc' || x.t === 'abc')).sort((a,b) => a.att - b.att);
+}
+function twin(l){
+  const o = l.p === 'exp' ? 'req' : 'exp';
+  return L.find(x => x.p === o && x.t === l.t && x.att === l.att) || null;
+}
+function reach(l){
+  if (l.att == null) return [];
+  return TYPE[l.t].sides.map(s => ({ s, v: RET[l.p][s] == null ? null : l.att + RET[l.p][s] }));
+}
+function carrierText(l){
+  if (l.carrier) return l.carrier;
+  const t = twin(l);
+  return t && t.carrier ? `Carrier not stated · expiring ${t.carrier}` : 'Carrier not stated';
+}
+const icDrop = '<svg class="dd" width="9" height="10" viewBox="0 0 9 10" aria-hidden="true"><path d="M4.5 0v8M1 5l3.5 3.5L8 5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M0 9.5h9" stroke="currentColor" stroke-width="1"/></svg>';
+
+/* tower */
+function plotHTML(p){
+  const ours = byId(state.ours);
+  const ghostId = ours && ours.p === 'req' ? (twin(ours) || {}).id : null;
+  let h = '';
+  for (const key of ['I','B']) {
+    const [x,w] = LANES[key];
+    h += `<div class="lane-bg" style="left:${x}%;width:${w}%"></div>`;
+  }
+  for (let t = 10; t <= MAX; t += 10) {
+    h += t === 50 ? '' : `<div class="grid" style="bottom:${t/MAX*100}%"></div>`;
+  }
+  h += `<div class="nobc" style="left:${LANES.B[0]}%;width:${LANES.B[1]+LANES.C[1]}%;bottom:${50/MAX*100}%;top:0"><span>No Side B or C limit above $50M</span></div>`;
+  h += `<div class="ref50" style="bottom:${50/MAX*100}%"></div>`;
+  for (const l of prog(p)) {
+    const [x,w] = span(l);
+    const narrow = l.t !== 'abc';
+    const cls = ['layer', 't-'+l.t, narrow ? 'narrow' : '', l.att == null ? 'assumed' : '',
+      l.id === state.sel ? 'sel' : '', l.id === state.ours ? 'ours' : '', l.id === ghostId ? 'ghost' : ''].join(' ');
+    const sub = l.sub || (l.carrier ? `${l.carrier} · ${k(l.prem)}` : 'Carrier not stated');
+    const flag = l.id === state.ours ? '<span class="flag">AWAC</span>'
+               : l.id === ghostId ? '<span class="flag ghostflag">AWAC POS.</span>' : '';
+    const label = `${name(l)} ${amt(l)}, ${carrierText(l)}${l.id === state.ours ? ', AWAC layer' : ''}`;
+    h += `<button type="button" class="${cls}" data-id="${l.id}" aria-pressed="${l.id === state.sel}" aria-label="${esc(label)}"
+      style="left:calc(${x}% + 2px);width:calc(${w}% - 4px);bottom:calc(${yAt(l)/MAX*100}% + 1px);height:calc(${l.lim/MAX*100}% - 2px)">
+      ${flag}<span class="l1">${l.t === 'dic' ? icDrop : ''}<span class="nm">${esc(name(l))} </span><span class="amt">${amt(l)}</span></span>
+      <span class="l2">${esc(sub)}</span></button>`;
+  }
+  return h;
+}
+function colHead(p){
+  const ls = prog(p);
+  const total = ls.filter(l => l.t !== 'idl').reduce((s,l) => s + l.lim, 0);
+  const idl = ls.filter(l => l.t === 'idl').reduce((s,l) => s + l.lim, 0);
+  const prem = ls.every(l => l.prem != null) ? ls.reduce((s,l) => s + l.prem, 0) : null;
+  const premTxt = prem != null ? `$${(prem/1000).toFixed(3)}M premium` : 'Premium not quoted';
+  const lanes = Object.entries(LANES).map(([key,[x,w]]) =>
+    `<span style="left:${x}%;width:${w}%">${key === 'I' ? 'IDL' : 'Side ' + key}</span>`).join('');
+  return `<div class="col-head">
+    <div class="col-title"><h3>${p === 'exp' ? 'Expiring' : 'Requested<span class="tag">PROPOSED</span>'}</h3>
+      <span class="col-total"><b class="num">${m(total)}</b>${idl ? ` <span class="num">+ ${m(idl)} IDL</span>` : ''} · ${premTxt}</span></div>
+    <div class="lanes">${lanes}</div></div>`;
+}
+function axisHTML(){
+  const ours = byId(state.ours);
+  const oa = ours ? ours.att : null;
+  const ticks = [];
+  for (let t = 0; t <= MAX; t += 10) ticks.push(t);
+  if (oa != null && oa % 10 !== 0) ticks.push(oa);
+  return ticks.map(t => `<span class="num${t === oa ? ' ours-tick' : ''}" style="bottom:${t/MAX*100}%">${t}</span>`).join('');
+}
+function gutterHTML(){
+  return CHANGES.map(c => `<div class="chg k-${c.k}" style="bottom:${c.y0/MAX*100}%;height:${(c.y1-c.y0)/MAX*100}%">
+    <span class="brk"></span><span class="tx">${esc(c.short)}</span></div>`).join('');
+}
+function renderTower(){
+  const t = document.getElementById('tower');
+  const cols = state.mode === 'compare' ? ['exp','req'] : [state.mode];
+  t.className = 'tower ' + (state.mode === 'compare' ? 'compare' : 'single');
+  let h = '<div></div>' + colHead(cols[0]);
+  if (cols.length === 2) h += '<div class="gutter-head">Change</div>' + colHead(cols[1]);
+  h += `<div class="axis" aria-hidden="true">${axisHTML()}</div>`;
+  h += `<div class="plot" role="group" aria-label="${cols[0] === 'exp' ? 'Expiring' : 'Requested'} tower">${plotHTML(cols[0])}</div>`;
+  if (cols.length === 2) h += `<div class="gutter">${gutterHTML()}</div><div class="plot" role="group" aria-label="Requested tower">${plotHTML(cols[1])}</div>`;
+  t.innerHTML = h;
+  for (const b of document.querySelectorAll('.seg button')) b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode));
+}
+
+/* inspector */
+function renderInsp(){
+  const l = byId(state.sel);
+  const tw = twin(l);
+  const ref = l.prem != null ? l : (tw && tw.prem != null ? tw : null);
+  const isOurs = l.id === state.ours;
+  const rel = ref ? relativity(ref) : null;
+  const exhaust = l.att != null ? l.att + l.lim : null;
+  let h = `<div class="insp-top"><span class="chip t-${l.t}">${TYPE[l.t].label === 'Excess A/B/C' ? 'A/B/C' : TYPE[l.t].label}</span>
+    <span class="chip plain">${l.p === 'exp' ? 'Expiring' : 'Requested'}</span>${isOurs ? '<span class="chip ours">AWAC layer</span>' : ''}</div>
+    <div><h3>${esc(name(l))} <span class="num">${amt(l)}</span></h3><p class="carrier">${esc(carrierText(l))}</p></div>
+    <dl class="kv">
+      <dt>Limit</dt><dd>${m(l.lim)}</dd>
+      <dt>Attaches at</dt>${l.att == null ? '<dd class="muted">Not stated</dd>' : `<dd>${m(l.att)}</dd>`}
+      <dt>Exhausts at</dt>${exhaust == null ? '<dd class="muted">—</dd>' : `<dd>${m(exhaust)}</dd>`}
+      <dt>Premium${ref && ref !== l ? ' (expiring here)' : ''}</dt>${ref ? `<dd>${k(ref.prem)}</dd>` : '<dd class="muted">Not quoted</dd>'}
+      <dt>Rate on line</dt>${ref ? `<dd>${rol(ref).toFixed(2)}%</dd>` : '<dd class="muted">—</dd>'}
+      <dt>Premium per $1M</dt>${ref ? `<dd>$${rpm(ref).toFixed(1)}K</dd>` : '<dd class="muted">—</dd>'}
+      <dt>Price vs layer below</dt>${rel != null ? `<dd>${Math.round(rel*100)}%</dd>` : '<dd class="muted">—</dd>'}
+    </dl>`;
+
+  const sides = TYPE[l.t].sides;
+  h += `<div class="sec"><h4>Responds to</h4><div class="sides">${['A','B','C'].map(s =>
+      `<span class="side ${sides.includes(s) || (l.t === 'idl' && s === 'A') ? 'on' : 'off'}">${SIDE_NAME[s]}</span>`).join('')}</div>
+      ${l.t === 'idl' ? '<p class="note">Independent directors only, for non-indemnifiable loss.</p>' : ''}
+      ${l.t === 'dic' ? '<p class="note">Broader terms than the underlying. Can drop down and pay inside the tower when an underlying insurer refuses or can\'t pay, or the company can\'t indemnify.</p>' : ''}</div>`;
+
+  const r = reach(l);
+  if (r.length) {
+    const tr = tw ? reach(tw) : [];
+    h += `<div class="sec"><h4>Total loss needed to reach this layer</h4><div class="reach">
+      <span class="h">Loss type</span><span class="h r">${l.p === 'exp' ? 'Expiring' : 'Requested'}</span><span class="h r">${tw ? (tw.p === 'exp' ? 'Expiring' : 'Requested') : ''}</span>
+      ${r.map(x => {
+        const o = tr.find(y => y.s === x.s);
+        const moved = o && o.v != null && x.v != null && o.v !== x.v;
+        return `<span>${SIDE_NAME[x.s]}${x.s === 'C' ? ' (securities)' : ''}</span>
+          <span class="r ${moved && l.p === 'req' ? 'delta' : ''}">${m(x.v)}</span><span class="r">${o ? m(o.v) : ''}</span>`;
+      }).join('')}</div>
+      <p class="note">Attachment plus the retention for that loss type${l.t !== 'abc' ? ', assuming the A/B/C layers below exhaust' : ''}.</p></div>`;
+  }
+
+  const u = under(l);
+  if (l.att == null) {
+    h += `<div class="sec"><h4>Beneath this layer</h4><p class="note alert">Unknown until the attachment is stated.</p></div>`;
+  } else if (u.length) {
+    let cum = 0;
+    h += `<div class="sec"><h4>Beneath this layer · ${m(l.att)} across ${u.length} layer${u.length > 1 ? 's' : ''}</h4><ul class="under">${
+      u.slice().reverse().map(x => {
+        return `<li><span class="dot" style="background:var(--${x.t});border-color:var(--${x.t}-edge)"></span>
+          <span>${esc(name(x))} ${amt(x)} · ${x.carrier ? esc(x.carrier) : '<span class="missing">not named</span>'}</span>
+          <span class="cum">${m(x.att + x.lim)}</span></li>`;
+      }).join('')}</ul></div>`;
+  } else {
+    h += `<div class="sec"><h4>Beneath this layer</h4><p class="note">Nothing. This layer sits directly on the retention.</p></div>`;
+  }
+
+  if (l.note) h += `<div class="sec"><h4>Submission notes</h4><p class="note${l.att == null ? ' alert' : ''}">${esc(l.note)}</p></div>`;
+  if (l.p === 'req' && !isOurs) h += `<button type="button" class="btn" id="setours">Set as AWAC layer</button>`;
+  document.getElementById('insp').innerHTML = h;
+  const b = document.getElementById('setours');
+  if (b) b.onclick = () => { state.ours = l.id; document.getElementById('ours').value = l.id; renderAll(); };
+}
+
+/* underwriting read, generated from the fields above */
+function renderRead(){
+  const l = byId(state.ours);
+  const tw = twin(l);
+  const u = under(l);
+  const missing = u.filter(x => !x.carrier);
+  const pts = [], confirm = [];
+  let lead;
+  if (l.t === 'abc') {
+    const idx = l.att / 10;
+    lead = l.att === 0
+      ? `AWAC is quoting the primary A/B/C layer, ${m(l.lim)} above the retentions.`
+      : `AWAC is quoting ${amt(l)}, the ${ORD[idx]} of four excess A/B/C layers, with ${m(l.att)} of shared A/B/C limit beneath it.`;
+    const now = l.att + RET.req.C, was = l.att + RET.exp.C;
+    pts.push(l.att === 0
+      ? `The securities retention falls from ${m(RET.exp.C)} to ${m(RET.req.C)}, so this layer pays from ${m(RET.req.C)} of securities loss instead of ${m(RET.exp.C)}. Other claims carry a ${m(RET.req.B)} retention and Side A has none.`
+      : `A securities claim now reaches this layer at ${m(now)} of total loss, down from ${m(was)} on expiring terms, because the securities retention falls from ${m(RET.exp.C)} to ${m(RET.req.C)}.`);
+    pts.push('Defense costs sit inside the limit, so the layers below erode on defense spend in a long securities class action as well as on settlement.');
+    if (missing.length) {
+      const inc = u.map(x => (twin(x) || {}).carrier).filter(Boolean).join(', ');
+      pts.push(u.length === 1
+        ? `The underlying primary layer has no named carrier yet (expiring: ${inc}).`
+        : `${missing.length === u.length ? 'None' : 'Not all'} of the ${u.length} underlying layers have a named carrier yet (expiring: ${inc}).`);
+    }
+    pts.push('The company has no Side B or C limit above $50M. The $5M DIC increase and the new IDL add capacity for individuals only and do not change when this layer is reached.');
+    if (tw) pts.push(`Expiring at this attachment: ${tw.carrier}, ${k(tw.prem)}, ${rol(tw).toFixed(2)}% rate on line${relativity(tw) ? `, priced at ${Math.round(relativity(tw)*100)}% of the layer below` : ''}.`);
+    confirm.push('Carriers and policy forms for every underlying layer, and any departures from follow form');
+    confirm.push('Reason for the lower securities retention, and whether it is reflected in the primary pricing');
+    confirm.push('Market cap, share price history and any open securities matters behind the attachment choice');
+  } else if (l.t === 'sa' || l.t === 'dic') {
+    lead = `AWAC is quoting ${l.t === 'dic' ? 'the Side A DIC' : 'the Side A excess'} layer, ${amt(l)}. It protects individual directors and officers only.`;
+    pts.push(`It is reached only after the ${m(50)} of shared A/B/C limit is used up. Side B and C claims (company reimbursement and entity securities) erode that shared limit first.`);
+    if (l.t === 'dic') {
+      pts.push(`As DIC, exposure isn't limited to losses above ${m(l.att)}. It can drop down to pay Side A loss when an underlying insurer refuses or can't pay, when the company is insolvent, or when indemnification is barred.`);
+      if (tw && tw.lim !== l.lim) pts.push(`The requested limit rises from ${m(tw.lim)} to ${m(l.lim)}, taking total Side A protection to ${m(l.att + l.lim)}.`);
+      confirm.push('DIC triggers: insolvency, refusal to pay, rescission of underlying, and non-indemnifiable loss definition');
+    } else {
+      confirm.push('Whether this layer drops down over exhausted or non-paying A/B/C insurers');
+    }
+    if (tw) pts.push(`Expiring at this attachment: ${tw.carrier}, ${k(tw.prem)} for ${m(tw.lim)}, ${rol(tw).toFixed(2)}% rate on line.`);
+    pts.push('The new IDL has no stated attachment, so its order relative to this layer is unknown.');
+    confirm.push('IDL attachment, and whether it sits above or alongside the Side A DIC');
+  } else {
+    lead = 'AWAC is quoting the $5M IDL layer, which protects independent directors only.';
+    pts.push('The submission does not state an attachment. The tower draws it at $80M as a placeholder.');
+    pts.push('IDL is often written excess of all other D&O, including Side A DIC, with its own drop-down. The wording decides that.');
+    confirm.push('Attachment and the policies it sits excess of');
+    confirm.push('Drop-down triggers and the definition of independent director');
+  }
+  document.getElementById('read').innerHTML = `<p class="lead">${esc(lead)}</p>
+    <ol>${pts.map(p => `<li>${esc(p)}</li>`).join('')}</ol>
+    <div class="confirm"><span class="eyebrow">Confirm before quoting</span><ul>${confirm.map(c => `<li>${esc(c)}</li>`).join('')}</ul></div>
+    <p class="disclaim">Generated from the submission fields on this page. Check against policy wording before relying on it.</p>`;
+}
+
+/* limit by loss type */
+function capacity(p){
+  const ls = prog(p);
+  const sum = t => ls.filter(l => l.t === t).reduce((s,l) => s + l.lim, 0);
+  const shared = sum('abc'), sideA = sum('sa') + sum('dic'), idl = sum('idl');
+  return { A:[shared, sideA, 0], I:[shared, sideA, idl], B:[shared, 0, 0], C:[shared, 0, 0] };
+}
+function renderLT(){
+  const ce = capacity('exp'), cr = capacity('req');
+  const rows = [
+    ['A','Side A','Individuals, loss the company can\'t indemnify'],
+    ['I','Independent directors','Side A loss for outside directors'],
+    ['B','Side B','Company reimbursing its D&Os'],
+    ['C','Side C','Entity securities claims']
+  ];
+  const bar = (lab, [s,d,i], tot, prev) => {
+    const ch = prev != null && tot !== prev ? ` <span class="chgv">+${m(tot - prev)}</span>` : '';
+    return `<div class="lt-bar"><span>${lab}</span><div class="track">
+      <span class="seg-s" style="width:${s/MAX*100}%"></span>
+      ${d ? `<span class="seg-d" style="left:${s/MAX*100}%;width:${d/MAX*100}%"></span>` : ''}
+      ${i ? `<span class="seg-i" style="left:${(s+d)/MAX*100}%;width:${i/MAX*100}%"></span>` : ''}
+    </div><span class="lt-val">${m(tot)}${ch}</span></div>`;
+  };
+  let h = rows.map(([key, nm, desc]) => {
+    const e = ce[key], r = cr[key];
+    const te = e[0]+e[1]+e[2], tr = r[0]+r[1]+r[2];
+    return `<div class="lt-row"><div class="lt-name"><b>${nm}</b><span>${desc}</span></div>
+      <div class="lt-bars">${bar('Exp', e, te)}${bar('Req', r, tr, te)}</div></div>`;
+  }).join('');
+  h += `<div class="lt-key"><span><i style="background:var(--abc-edge)"></i>Shared A/B/C limit</span>
+    <span><i style="background:var(--dic-edge)"></i>Side A only</span><span><i style="background:var(--idl-edge)"></i>IDL</span></div>
+    <p class="note">The first $50M is shared by all three insuring agreements. A large entity securities settlement can use it up before individuals collect, which is why the Side A-only limit matters.</p>`;
+  document.getElementById('lt').innerHTML = h;
+}
+
+function renderChanges(){
+  const label = { up:'Increase', warn:'Exposure up', gap:'Missing info', same:'Unchanged' };
+  document.getElementById('chg').innerHTML = `<thead><tr><th>Where</th><th>Expiring</th><th>Requested</th><th>Why it matters</th><th>Flag</th></tr></thead>
+    <tbody>${CHANGES.map(c => `<tr><td class="what">${esc(c.where)}</td><td>${esc(c.exp)}</td><td>${esc(c.req)}</td>
+      <td>${esc(c.why)}</td><td><span class="kchip k-${c.k}">${label[c.k]}</span></td></tr>`).join('')}</tbody>`;
+}
+
+function renderPricing(){
+  const ours = byId(state.ours);
+  const hlId = ours ? (ours.p === 'exp' ? ours.id : (twin(ours) || {}).id) : null;
+  const ls = prog('exp').sort((a,b) => a.att - b.att);
+  const top = Math.max(...ls.map(rpm));
+  document.getElementById('px').innerHTML =
+    `<div class="px-row px-head"><span>Layer</span><span class="barcell"></span><span class="v">Per $1M · ROL</span><span class="rel">vs below</span></div>` +
+    ls.map(l => {
+      const rel = relativity(l);
+      return `<div class="px-row t-${l.t}${l.id === hlId ? ' hl' : ''}" style="--fill:var(--${l.t}-edge)">
+        <span class="nm">${l.att === 0 ? 'Primary' : esc(TYPE[l.t].label.replace('Excess ','')) + ' xs ' + m(l.att)} <small>${esc(l.carrier)}</small></span>
+        <span class="barcell"><span class="bar" style="display:block;width:${rpm(l)/top*100}%"></span></span>
+        <span class="v">$${rpm(l).toFixed(1)}K · ${rol(l).toFixed(2)}%</span>
+        <span class="rel">${rel ? Math.round(rel*100) + '%' : '—'}</span></div>`;
+    }).join('');
+}
+
+function renderAll(){ renderTower(); renderInsp(); renderRead(); renderPricing(); }
+
+/* wiring */
+const sel = document.getElementById('ours');
+sel.innerHTML = prog('req').map(l => `<option value="${l.id}">${esc(name(l))} ${amt(l)}</option>`).join('');
+sel.value = state.ours;
+sel.onchange = () => { state.ours = sel.value; state.sel = sel.value; if (state.mode === 'exp') state.mode = 'compare'; renderAll(); };
+
+document.querySelector('.seg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-mode]'); if (!b) return;
+  state.mode = b.dataset.mode;
+  const cur = byId(state.sel);
+  if (state.mode !== 'compare' && cur.p !== state.mode) {
+    const t = twin(cur);
+    state.sel = t ? t.id : prog(state.mode)[0].id;
+  }
+  renderAll();
+});
+document.getElementById('tower').addEventListener('click', e => {
+  const b = e.target.closest('.layer'); if (!b) return;
+  state.sel = b.dataset.id;
+  renderTower(); renderInsp();
+  const again = document.querySelector(`.layer[data-id="${state.sel}"]`); if (again) again.focus({ preventScroll:true });
+  if (window.innerWidth < 1060) document.getElementById('insp').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start' });
+});
+
+renderAll(); renderLT(); renderChanges();
+</script>
