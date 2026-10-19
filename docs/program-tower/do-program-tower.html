@@ -8,12 +8,12 @@
 :root{
   --bg:#f3f4f7; --surface:#ffffff; --surface-2:#eff1f5; --line:#e0e4ec; --line-strong:#c3cad7;
   --fg:#1a2030; --fg-2:#4f586c; --fg-3:#7d8599;
-  --abc:#dde8fb; --abc-edge:#86a7df; --abc-ink:#1c3b74;
-  --sa:#ebe4fb; --sa-edge:#ab92e2; --sa-ink:#4a2f88;
-  --dic:#ddd3f7; --dic-edge:#7c5ecc; --dic-ink:#382076;
-  --idl:#d9f1ec; --idl-edge:#4aa996; --idl-ink:#145a4d;
+  --abc:#d8e6fc; --abc-edge:#2f6fd6; --abc-ink:#123a7a;
+  --sa:#efe1fc; --sa-edge:#8b3fd9; --sa-ink:#4b1a86;
+  --dic:#fde1ed; --dic-edge:#c42d78; --dic-ink:#7a0f43;
+  --idl:#d6f3e4; --idl-edge:#13915a; --idl-ink:#0b5233;
   --ours:#d2611c; --ours-soft:#fdeee3;
-  --chg:#2f5aa8; --chg-soft:#e4ecfa;
+  --chg:#384152; --chg-soft:#e9ecf2;
   --ns:#8a5d0b; --ns-soft:#faf0db;
   --same:#6f778a; --same-soft:#eef0f4;
   --focus:#2b6bd6; --scrim:rgba(16,20,30,.35);
@@ -26,12 +26,12 @@
   :root:not([data-theme="light"]){
     --bg:#11141b; --surface:#191e28; --surface-2:#202633; --line:#2a3141; --line-strong:#3c4559;
     --fg:#e5e8ef; --fg-2:#a8afbf; --fg-3:#7a8297;
-    --abc:#1e3152; --abc-edge:#4f78bb; --abc-ink:#d2e1ff;
-    --sa:#2d244d; --sa-edge:#8a70d4; --sa-ink:#e4dbff;
-    --dic:#382965; --dic-edge:#9b80ef; --dic-ink:#eee7ff;
-    --idl:#153b35; --idl-edge:#3e9e8b; --idl-ink:#c9f1e7;
+    --abc:#1b3358; --abc-edge:#5b95f0; --abc-ink:#d4e4ff;
+    --sa:#33204f; --sa-edge:#ad7af0; --sa-ink:#ecdcff;
+    --dic:#4a1931; --dic-edge:#ec6aa8; --dic-ink:#ffdcec;
+    --idl:#123a2a; --idl-edge:#3fc48a; --idl-ink:#cdf5e2;
     --ours:#f08c48; --ours-soft:#3a2416;
-    --chg:#8fb0ee; --chg-soft:#1d2a45;
+    --chg:#c3cad8; --chg-soft:#262d3a;
     --ns:#e2ad52; --ns-soft:#362a13;
     --same:#9aa1b2; --same-soft:#232a37;
     --focus:#72a3ff; --scrim:rgba(0,0,0,.55);
@@ -41,12 +41,12 @@
 :root[data-theme="dark"]{
   --bg:#11141b; --surface:#191e28; --surface-2:#202633; --line:#2a3141; --line-strong:#3c4559;
   --fg:#e5e8ef; --fg-2:#a8afbf; --fg-3:#7a8297;
-  --abc:#1e3152; --abc-edge:#4f78bb; --abc-ink:#d2e1ff;
-  --sa:#2d244d; --sa-edge:#8a70d4; --sa-ink:#e4dbff;
-  --dic:#382965; --dic-edge:#9b80ef; --dic-ink:#eee7ff;
-  --idl:#153b35; --idl-edge:#3e9e8b; --idl-ink:#c9f1e7;
+  --abc:#1b3358; --abc-edge:#5b95f0; --abc-ink:#d4e4ff;
+  --sa:#33204f; --sa-edge:#ad7af0; --sa-ink:#ecdcff;
+  --dic:#4a1931; --dic-edge:#ec6aa8; --dic-ink:#ffdcec;
+  --idl:#123a2a; --idl-edge:#3fc48a; --idl-ink:#cdf5e2;
   --ours:#f08c48; --ours-soft:#3a2416;
-  --chg:#8fb0ee; --chg-soft:#1d2a45;
+  --chg:#c3cad8; --chg-soft:#262d3a;
   --ns:#e2ad52; --ns-soft:#362a13;
   --same:#9aa1b2; --same-soft:#232a37;
   --focus:#72a3ff; --scrim:rgba(0,0,0,.55);
@@ -137,7 +137,7 @@ p{margin:0}
 
 .legend{display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line); font-size:12px; color:var(--fg-2)}
 .legend span{display:inline-flex; align-items:center; gap:6px}
-.sw{width:14px; height:12px; border-radius:2px; border:1px solid; display:inline-block; flex:none}
+.sw{width:16px; height:12px; border-radius:2px; border:2px solid; display:inline-block; flex:none}
 .sw.abc{background:var(--abc); border-color:var(--abc-edge)}
 .sw.sa{background:var(--sa); border-color:var(--sa-edge)}
 .sw.dic{background:var(--dic); border-color:var(--dic-edge)}
@@ -176,6 +176,9 @@ p{margin:0}
 .under .missing{color:var(--ns)}
 .under .cum{font-family:var(--f-num); color:var(--fg-2); font-size:12px}
 .note{font-size:13px; color:var(--fg-2)}
+.btn-place{align-self:flex-start; font:inherit; font-size:13px; font-weight:600; color:var(--surface); background:var(--ours); border:1px solid var(--ours); border-radius:6px; padding:8px 12px; cursor:pointer}
+.btn-place:hover{filter:brightness(1.05)}
+.sec.place h4{color:var(--ours)}
 .empty{color:var(--fg-3); font-size:13px}
 
 /* what changed */
@@ -263,7 +266,7 @@ p{margin:0}
     <section class="card" aria-labelledby="tower-h">
       <div class="card-head">
         <h2 id="tower-h">Expiring vs requested</h2>
-        <p class="sub">Limits in $M. Requested side is proposed data (GAP-09, GAP-01).</p>
+        <p class="sub">Limits in $M. Requested side is proposed data (GAP-09, GAP-01). Select a requested layer with no carrier to place ACME Carrier on it.</p>
       </div>
       <div id="tower" class="tower"></div>
       <p class="hint">Tap a layer for details. Numbers match the items in What changed.</p>
@@ -320,7 +323,7 @@ const L = [
     note:'Securities retention $2.5M (from $5M), $1M other claims, $0 Side A. Entity securities coverage.' },
   { id:'r2', p:'req', t:'abc', carrier:null, lim:10, att:10, note:'Layer 1 of 4 × $10M, following form to primary.' },
   { id:'r3', p:'req', t:'abc', carrier:null, lim:10, att:20, note:'Layer 2 of 4 × $10M, following form to primary.' },
-  { id:'r4', p:'req', t:'abc', carrier:'ACME Carrier', ours:true, lim:10, att:30, note:'Layer 3 of 4 × $10M, following form to primary. ACME Carrier quote under review.' },
+  { id:'r4', p:'req', t:'abc', carrier:null, lim:10, att:30, note:'Layer 3 of 4 × $10M, following form to primary.' },
   { id:'r5', p:'req', t:'abc', carrier:null, lim:10, att:40, note:'Layer 4 of 4 × $10M, following form to primary.' },
   { id:'r6', p:'req', t:'sa',  carrier:null, lim:15, att:50, note:'Side A only.' },
   { id:'r7', p:'req', t:'dic', carrier:null, lim:15, att:65, note:'Limit raised from $10M.' },
@@ -329,24 +332,32 @@ const L = [
 
 const CHANGES = [
   { y0:0,  y1:10, k:'chg',  flag:'Changed',    short:'Securities retention $5M → $2.5M', where:'Primary A/B/C $10M',
-    exp:'$5M securities retention · Travelers', req:'$2.5M securities · $1M other claims · $0 Side A · carrier not stated',
+    exp:'$5M securities retention · Travelers', req:() => `$2.5M securities · $1M other claims · $0 Side A · ${carrierLower(byId('r1'))}`,
     effect:'Securities retention decreases by $2.5M. The expiring retention for other claims is not stated.' },
   { y0:10, y1:50, k:'ns',   flag:'Not stated', short:'Carriers not stated', where:'Excess A/B/C, 4 × $10M',
-    exp:'Berkley · Markel · Beazley · Sompo', req:'4 × $10M following form · ACME Carrier on $10M xs $30M',
-    effect:'Limits and attachments are unchanged. Carriers for three of the four layers are not stated in the submission.' },
+    exp:'Berkley · Markel · Beazley · Sompo', req:() => {
+      const o = ['r2','r3','r4','r5'].map(byId).find(isOurs);
+      return '4 × $10M following form' + (o ? ` · ACME Carrier on ${amt(o)}` : ' · carriers not stated');
+    },
+    effect:() => {
+      const n = ['r2','r3','r4','r5'].map(byId).filter(l => !carrierOf(l)).length;
+      return `Limits and attachments are unchanged. Carriers for ${n === 4 ? 'all four' : ['none','one','two','three'][n] + ' of the four'} layers are not stated in the submission.`;
+    } },
   { y0:50, y1:65, k:'same', flag:'Unchanged',  short:'No change', where:'Side A excess',
-    exp:'$15M xs $50M · AIG', req:'$15M xs $50M · carrier not stated',
+    exp:'$15M xs $50M · AIG', req:() => `$15M xs $50M · ${carrierLower(byId('r6'))}`,
     effect:'Limit and attachment are unchanged.' },
   { y0:65, y1:80, k:'chg',  flag:'Changed',    short:'DIC limit $10M → $15M', where:'Side A DIC',
-    exp:'$10M xs $65M · Chubb', req:'$15M xs $65M · carrier not stated',
+    exp:'$10M xs $65M · Chubb', req:() => `$15M xs $65M · ${carrierLower(byId('r7'))}`,
     effect:'Limit increases by $5M. Total program limit goes from $75M to $80M.' },
   { y0:80, y1:85, k:'new',  flag:'New',        short:'New IDL $5M', where:'Independent directors liability (IDL)',
-    exp:'None', req:'$5M · attachment not stated',
+    exp:'None', req:() => '$5M · attachment not stated' + (isOurs(byId('r8')) ? ' · ACME Carrier' : ''),
     effect:'New layer. The attachment is not stated in the submission.' }
 ];
 
-const OURS = L.find(l => l.ours);
-const state = { sel: null };
+const STORE_KEY = 'do-tower-acme-layer';
+function loadOurs(){ try { const v = localStorage.getItem(STORE_KEY); if (v && L.some(l => l.id === v && l.p === 'req')) return v; } catch (e) {} return 'r4'; }
+function saveOurs(id){ try { localStorage.setItem(STORE_KEY, id); } catch (e) {} }
+const state = { sel: null, ours: loadOurs() };
 
 /* helpers */
 const byId = id => L.find(l => l.id === id);
@@ -367,7 +378,11 @@ function under(l){
   if (l.att == null) return [];
   return prog(l.p).filter(x => x.t !== 'idl' && x.att < l.att && (l.t !== 'abc' || x.t === 'abc')).sort((a,b) => a.att - b.att);
 }
-const carrierText = l => l.carrier || 'Carrier not stated';
+const isOurs = l => l.id === state.ours;
+const carrierOf = l => isOurs(l) ? 'ACME Carrier' : l.carrier;
+const carrierText = l => carrierOf(l) || 'Carrier not stated';
+const carrierLower = l => carrierOf(l) || 'carrier not stated';
+const val = v => typeof v === 'function' ? v() : v;
 const icDrop = '<svg class="dd" width="9" height="10" viewBox="0 0 9 10" aria-hidden="true"><path d="M4.5 0v8M1 5l3.5 3.5L8 5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M0 9.5h9" stroke="currentColor" stroke-width="1"/></svg>';
 
 /* tower */
@@ -380,13 +395,13 @@ function plotHTML(p){
   h += `<div class="ref50" style="bottom:${50/MAX*100}%"></div>`;
   for (const l of prog(p)) {
     const [x,w] = span(l);
-    const cls = ['layer', 't-'+l.t, l.att == null ? 'assumed' : '', l.id === state.sel ? 'sel' : '', l.ours ? 'ours' : ''].join(' ');
-    const sub = l.ours ? 'ACME Carrier' : l.carrier ? `${l.carrier} · $${l.prem}K`
+    const cls = ['layer', 't-'+l.t, l.att == null ? 'assumed' : '', l.id === state.sel ? 'sel' : '', isOurs(l) ? 'ours' : ''].join(' ');
+    const sub = isOurs(l) ? 'ACME Carrier' : l.carrier ? `${l.carrier} · $${l.prem}K`
               : l.t === 'idl' ? 'Attachment not stated' : l.id === 'r7' ? 'Raised from $10M' : 'Carrier not stated';
     const label = `${p === 'exp' ? 'Expiring' : 'Requested'} ${name(l)} ${amt(l)}, ${carrierText(l)}`;
     h += `<button type="button" class="${cls}" data-id="${l.id}" aria-pressed="${l.id === state.sel}" aria-label="${esc(label)}"
       style="left:calc(${x}% + 2px);width:calc(${w}% - 4px);bottom:calc(${yAt(l)/MAX*100}% + 1px);height:calc(${l.lim/MAX*100}% - 2px)">
-      ${l.ours ? '<span class="flag">ACME</span>' : ''}
+      ${isOurs(l) ? '<span class="flag">ACME</span>' : ''}
       ${l.t === 'idl' ? '<span class="l1">IDL</span>' : `<span class="l1">${l.t === 'dic' ? icDrop : ''}<span class="nm">${esc(name(l))}</span> <span class="amt">${amt(l)}</span></span>
       <span class="l2">${esc(sub)}</span>`}</button>`;
   }
@@ -408,7 +423,7 @@ function colHead(p){
 }
 function axisHTML(){
   let h = '';
-  for (let t = 0; t <= MAX; t += 10) h += `<span class="num${t === OURS.att ? ' ours-tick' : ''}" style="bottom:${t/MAX*100}%">${t}</span>`;
+  for (let t = 0; t <= MAX; t += 10) h += `<span class="num${t === byId(state.ours).att ? ' ours-tick' : ''}" style="bottom:${t/MAX*100}%">${t}</span>`;
   return h;
 }
 function gutterHTML(){
@@ -437,7 +452,7 @@ function renderInsp(){
   const tw = twin(l);
   const exhaust = l.att != null ? l.att + l.lim : null;
   let h = close + `<div class="insp-top"><span class="chip t-${l.t}">${TYPE[l.t].chip}</span>
-      <span class="chip plain">${l.p === 'exp' ? 'Expiring' : 'Requested'}</span>${l.ours ? '<span class="chip ours">ACME Carrier</span>' : ''}</div>
+      <span class="chip plain">${l.p === 'exp' ? 'Expiring' : 'Requested'}</span>${isOurs(l) ? '<span class="chip ours">ACME Carrier</span>' : ''}</div>
     <div><h3>${esc(name(l))} <span class="num">${amt(l)}</span></h3><p class="carrier">${esc(carrierText(l))}</p></div>
     <dl class="kv">
       <dt>Limit</dt><dd>${m(l.lim)}</dd>
@@ -456,9 +471,14 @@ function renderInsp(){
   if (l.att == null) h += `<div class="sec"><h4>Beneath this layer</h4><p class="note">Depends on the attachment, which is not stated.</p></div>`;
   else if (u.length) h += `<div class="sec"><h4>Beneath this layer · ${m(l.att)}</h4><ul class="under">${
       u.slice().reverse().map(x => `<li><span class="dot" style="background:var(--${x.t});border-color:var(--${x.t}-edge)"></span>
-        <span>${esc(name(x))} ${amt(x)} · ${x.carrier ? esc(x.carrier) : '<span class="missing">not stated</span>'}</span>
+        <span>${esc(name(x))} ${amt(x)} · ${carrierOf(x) ? esc(carrierOf(x)) : '<span class="missing">not stated</span>'}</span>
         <span class="cum">${m(x.att + x.lim)}</span></li>`).join('')}</ul></div>`;
   else h += `<div class="sec"><h4>Beneath this layer</h4><p class="note">Retention only.</p></div>`;
+  if (l.p === 'req') {
+    if (isOurs(l)) h += `<div class="sec place"><h4>ACME Carrier position</h4><p class="note">ACME Carrier is placed on this layer. Select another layer with no carrier to move it.</p></div>`;
+    else if (!carrierOf(l)) h += `<div class="sec place"><h4>Open layer</h4><p class="note">No carrier is stated for this layer.</p>
+      <button type="button" class="btn-place" id="place" data-id="${l.id}">Place ACME Carrier on this layer</button></div>`;
+  }
   if (l.note) h += `<div class="sec"><h4>Submission notes</h4><p class="note">${esc(l.note)}</p></div>`;
   el.innerHTML = h;
 }
@@ -468,8 +488,8 @@ function renderChanges(){
     <div class="chead"><span><span class="badge k-${c.k}">${i+1}</span>${esc(c.where)}</span><span class="kchip k-${c.k}">${c.flag}</span></div>
     <dl class="cgrid">
       <dt>Expiring</dt><dd>${esc(c.exp)}</dd>
-      <dt>Requested</dt><dd>${esc(c.req)}</dd>
-      <dt>Effect</dt><dd>${esc(c.effect)}</dd>
+      <dt>Requested</dt><dd>${esc(val(c.req))}</dd>
+      <dt>Effect</dt><dd>${esc(val(c.effect))}</dd>
     </dl></li>`).join('');
 }
 
@@ -481,7 +501,12 @@ function closeSheet(){
   state.sel = null; renderAll();
 }
 scrim.addEventListener('click', closeSheet);
-insp.addEventListener('click', e => { if (e.target.closest('#insp-close')) closeSheet(); });
+insp.addEventListener('click', e => {
+  if (e.target.closest('#insp-close')) return closeSheet();
+  const b = e.target.closest('#place'); if (!b) return;
+  state.ours = b.dataset.id; saveOurs(state.ours);
+  renderAll(); renderChanges();
+});
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.sel) closeSheet(); });
 
 document.getElementById('tower').addEventListener('click', e => {
