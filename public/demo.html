@@ -1694,15 +1694,21 @@
       : 'https://ai-automation.divigner.com';
   }
   function goToLeadForm(){
-    // Scroll to the bottom of the page (final CTA / RA form area) instead of
+    // Scroll to the bottom of the page (final CTA area) instead of
     // navigating away to the refer page.
     window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'smooth'});
+  }
+  function openLeadForm(){
+    // The lead form lives on the /refer/<slug> page. The demo renders inside a
+    // same-origin iframe on /demo/<slug>, so navigate the top window.
+    try { window.top.location.href = leadFormUrl(); }
+    catch(e){ window.location.href = leadFormUrl(); }
   }
 
   document.getElementById('learn-more-btn').addEventListener('click', function(e){ e.preventDefault(); goToLeadForm(); });
   document.getElementById('mob-learn-more').addEventListener('click', function(){ closeMobMenu(); goToLeadForm(); });
   document.getElementById('hero-learn-more').addEventListener('click', function(e){ e.preventDefault(); goToLeadForm(); });
-  document.getElementById('footer-learn-more').addEventListener('click', goToLeadForm);
+  document.getElementById('footer-learn-more').addEventListener('click', openLeadForm);
   /* Featured "Ava" avatar — opens in the avatar modal (slightly blurred backdrop,
      resizable, fullscreen control, full-bleed on mobile). No link-out, and no
      auto-start: a live mic-only session begins only when the visitor clicks.
