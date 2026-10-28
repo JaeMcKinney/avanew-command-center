@@ -33,7 +33,7 @@
 | Net assets (EOY) | ($7,073,976) | ($6,261,993) | ($7,011,258) |
 | Contributions & grants | $5,173,375 | $4,157,012 | $2,810,899 |
 | Program service revenue | $43,462,881 | $44,805,563 | $33,781,882 |
-| Other revenue (investment + other) | $1,376,598 | $863,002 | $192,627 |
+| Other revenue (investment + other) | $1,376,587 (investment $0) | $862,991 (investment $0) | $192,616 |
 
 Sources: TY2024 return above; TY2023 https://projects.propublica.org/nonprofits/organizations/222164120/202521299349303127/full ; TY2022 https://projects.propublica.org/nonprofits/organizations/222164120/202441289349302049/full [V].
 
