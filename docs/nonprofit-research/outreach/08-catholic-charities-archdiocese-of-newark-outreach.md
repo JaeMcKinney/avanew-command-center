@@ -42,11 +42,63 @@
 
 ## B. Version A: first-touch email
 
-<!--A-->
+**Subject:** Helping Newark families find the right program
+
+**Body:**
+
+```text
+Hi John,
+
+I'm Jae McKinney, founder of Divigner, an AI solutions company based in Montclair, New Jersey. We're working with New Community Corporation in Newark on a community engagement initiative.
+
+Catholic Charities runs 86 programs at 26 sites, including LIHEAP and USF utility help in Newark.
+
+We've built an AI interactive avatar that acts as a 24/7 web concierge. It is a visible, human-like representative people can speak with naturally. The web concierge gives real-time presentations with images and slides, answers questions during the presentation, and guides people to the right program.
+
+Picture a Newark family at 9 PM, behind on the gas bill, unsure where to turn. Privacy first: the web concierge would use only public information and never request personal details.
+
+Experience the Catholic Charities Web Concierge: [DEMO LINK PENDING]
+
+Could we find 15 minutes to talk next week?
+```
+
+**Signature:** Jae McKinney | Founder, Divigner | Montclair, NJ | https://divigner.com
+
+**Disclaimer:** Independent Divigner demonstration using publicly available information; not an official Catholic Charities of the Archdiocese of Newark service.
+
+**Word count:** body 141 words (greeting through the 15-minute ask; counted with Python `len(body.split())`; target 110 to 130); above 130 but within the 150 cap, see the reason in the JSON notes.
 
 ## C. Version B: expanded email
 
-<!--B-->
+**Subject:** A privacy-first guide to Catholic Charities programs
+
+**Body:**
+
+```text
+Hi John,
+
+I'm Jae McKinney, founder of Divigner, an AI solutions company based in Montclair, New Jersey. We're working with New Community Corporation in Newark on a community engagement initiative. That work shows me how much a family's first step depends on finding the right door.
+
+Catholic Charities offers an extraordinary network: 86 programs at 26 sites across Bergen, Essex, Hudson and Union counties. Housing, food and utility assistance alone spans LIHEAP and USF help, Parish Access Centers, housing counseling, and family shelters such as Hope House and St. Rocco's, each with its own phone number, location and referral path.
+
+We've built an AI interactive avatar that acts as a 24/7 web concierge. It is a visible, human-like representative that families can see and speak with naturally.
+
+The web concierge delivers real-time presentations using actual images, slides and verified program information. Visitors can interrupt with a question, get an immediate answer, and the walkthrough adapts to their needs. It then guides them to your existing pathways, starting with the Help Line at 1-800-227-7413 and the published program contacts. It supports staff rather than replacing them.
+
+I know protecting client information matters deeply to your team. Any demonstration would draw only on your public website and Catalog of Services, would never ask visitors for names, Social Security numbers, immigration status or health details, and would make no eligibility decisions.
+
+Picture a Newark family at 9 PM, behind on the gas bill. They want to know whether Catholic Charities helps with LIHEAP, which office to contact, and which documents to gather. The web concierge could walk them through it with slides and point them to the right contact.
+
+Experience the Catholic Charities Web Concierge: [DEMO LINK PENDING]
+
+Would you have 15 minutes next week, by phone or at 590 North 7th Street?
+```
+
+**Signature:** Jae McKinney | Founder, Divigner | Montclair, NJ | https://divigner.com
+
+**Disclaimer:** Independent Divigner demonstration using publicly available information; not an official Catholic Charities of the Archdiocese of Newark service.
+
+**Word count:** body 300 words (greeting through the 15-minute ask; counted with Python `len(body.split())`; target 250 to 300).
 
 ## D. Demo package
 
