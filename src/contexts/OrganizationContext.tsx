@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react"
 import type { ReactNode } from "react"
 import { listMyOrganizations, setCurrentOrg, getRaPortalRedirect } from "@/lib/data"
 import { supabase } from "@/lib/supabase"
@@ -28,8 +28,14 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const [currentOrg, setCurrentOrgState] = useState<OrgWithRole | null>(null)
   const [loading, setLoading] = useState(true)
   const [raRedirect, setRaRedirect] = useState<string | null>(null)
+  const currentOrgRef = useRef<OrgWithRole | null>(null)
+  useEffect(() => { currentOrgRef.current = currentOrg }, [currentOrg])
 
   const refresh = useCallback(async () => {
+    // Right after sign-in there is no org yet: hold the app in "loading" until the
+    // list arrives, or OrgGate bounces to /select-org before we can auto-pick.
+    // Never re-enter loading mid-session (would remount the open page).
+    if (!currentOrgRef.current) setLoading(true)
     try {
       // Run the RA gate FIRST. If the signed-in user is an RA, they have no
       // business in the staff org space — skip listMyOrganizations entirely
@@ -46,18 +52,15 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       }
       setRaRedirect(null)
 
-      // Each domain is its own company's front door: app.avanew.ai never shows
-      // the Divigner workspace and ai-automation.divigner.com never shows Avanew.
-      const list = (await listMyOrganizations()).filter(
-        (o) => !SITE.hiddenOrgSlugs.includes(o.slug)
-      )
+      // Each domain is one company's front door and opens exactly one workspace:
+      // the company's own if the user belongs to it, else that site's demo
+      // workspace (separate demo logins). No picker, no cross-company access.
+      const all = await listMyOrganizations()
+      const home = all.find((o) => o.slug === SITE.homeOrgSlug)
+      const demo = all.find((o) => o.slug === SITE.demoOrgSlug)
+      const list = home ? [home] : demo ? [demo] : []
       setOrgs(list)
-
-      // Restore persisted org selection, else open the site's home workspace
-      const savedId = localStorage.getItem(ORG_KEY)
-      const saved = list.find((o) => o.id === savedId) ?? null
-      const home = list.find((o) => o.slug === SITE.homeOrgSlug) ?? null
-      const pick = saved ?? home ?? (list.length === 1 ? list[0] : null)
+      const pick = list[0] ?? null
 
       if (pick) {
         setCurrentOrgState(pick)

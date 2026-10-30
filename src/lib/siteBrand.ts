@@ -37,10 +37,13 @@ type SiteConfig = {
   appName: string
   title: string
   favicon: string
-  /** Org (workspace) slug this site opens into by default. */
+  /** Wordmark for light / dark backgrounds. */
+  logoLight: string
+  logoDark: string
+  /** The company's workspace. Members always land here. */
   homeOrgSlug: string
-  /** Org slugs that must never appear on this site. */
-  hiddenOrgSlugs: string[]
+  /** Demo workspace for separate demo logins (users who aren't in the home org). */
+  demoOrgSlug: string
 }
 
 const CONFIG: Record<SiteBrand, SiteConfig> = {
@@ -48,15 +51,19 @@ const CONFIG: Record<SiteBrand, SiteConfig> = {
     appName: "Avanew",
     title: "Avanew Command Center",
     favicon: "/brands/avanew/favicon.svg",
+    logoLight: "/brands/avanew/avanew-logo-light.svg",
+    logoDark: "/brands/avanew/avanew-logo-dark.svg",
     homeOrgSlug: "avanew",
-    hiddenOrgSlugs: ["divigner"],
+    demoOrgSlug: "democo",
   },
   divigner: {
     appName: "Divigner",
     title: "Divigner AI Automations",
     favicon: "/favicon.png",
+    logoLight: "/logos/divigner-logo-light.png",
+    logoDark: "/logos/divigner-logo-dark.png",
     homeOrgSlug: "divigner",
-    hiddenOrgSlugs: ["avanew"],
+    demoOrgSlug: "divigner-demo",
   },
 }
 
