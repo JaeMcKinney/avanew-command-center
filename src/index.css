@@ -88,6 +88,121 @@
   --sidebar-ring: #22e59a;
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   Avanew (app.avanew.ai) — avanew.ai site palette: white + black, crimson red
+     red    #C42133   primary on light (white text 5.9:1)
+     red-lt #F0616D   primary on dark (black text 6.2:1)
+     ink    #0B0B0C   black
+     font   Public Sans (body) + Fraunces (headings)
+   Applied when <html data-brand="avanew"> — see src/lib/siteBrand.ts
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root[data-brand="avanew"] {
+  --background: #fafafa;
+  --foreground: #0b0b0c;
+  --card: #ffffff;
+  --card-foreground: #0b0b0c;
+  --popover: #ffffff;
+  --popover-foreground: #0b0b0c;
+  --primary: #c42133;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #0b0b0c;
+  --muted: #f1f1f2;
+  --muted-foreground: #4c4c52;
+  --accent: #fff1f2;
+  --accent-foreground: #0b0b0c;
+  --destructive: #c2410c;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #a1a1aa;
+  --ring: #c42133;
+
+  --chart-1: #c42133;
+  --chart-2: #e63946;
+  --chart-3: #ff8a94;
+  --chart-4: #7a1220;
+  --chart-5: #4c4c52;
+
+  --sidebar: #f7f7f8;
+  --sidebar-foreground: #0b0b0c;
+  --sidebar-primary: #c42133;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fff1f2;
+  --sidebar-accent-foreground: #0b0b0c;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #c42133;
+}
+
+:root[data-brand="avanew"].dark {
+  --background: #0b0b0c;
+  --foreground: #f4f4f5;
+  --card: #19191c;
+  --card-foreground: #f4f4f5;
+  --popover: #19191c;
+  --popover-foreground: #f4f4f5;
+  --primary: #f0616d;
+  --primary-foreground: #0b0b0c;
+  --secondary: #1f1f23;
+  --secondary-foreground: #f4f4f5;
+  --muted: #1a1a1d;
+  --muted-foreground: #b4b4ba;
+  --accent: #2a1518;
+  --accent-foreground: #f4f4f5;
+  --destructive: #ef6a3b;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.14);
+  --input: rgba(255, 255, 255, 0.32);
+  --ring: #f0616d;
+
+  --chart-1: #f0616d;
+  --chart-2: #e63946;
+  --chart-3: #ffb4ba;
+  --chart-4: #f4f4f5;
+  --chart-5: #b4b4ba;
+
+  --sidebar: #0f0f11;
+  --sidebar-foreground: #d4d4d8;
+  --sidebar-primary: #f0616d;
+  --sidebar-primary-foreground: #0b0b0c;
+  --sidebar-accent: #1f1f23;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #f0616d;
+}
+
+@font-face {
+  font-family: "Public Sans";
+  src: url("/brands/avanew/fonts/PublicSans-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("/brands/avanew/fonts/Fraunces-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("/brands/avanew/fonts/Fraunces-Variable-Italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@layer base {
+  html[data-brand="avanew"],
+  html[data-brand="avanew"] body {
+    font-family: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-feature-settings: normal;
+  }
+  html[data-brand="avanew"] h1,
+  html[data-brand="avanew"] h2 {
+    font-family: "Fraunces", Georgia, serif;
+  }
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -160,4 +275,42 @@
       0 0 0 1px color-mix(in srgb, var(--primary) 30%, transparent),
       0 0 24px 2px color-mix(in srgb, var(--primary) 14%, transparent);
   }
+}
+
+/* ── Avanew home hero (Dashboard on app.avanew.ai) ── */
+.avanew-hero {
+  background:
+    radial-gradient(700px 380px at 88% -10%, rgba(196, 33, 51, 0.55), transparent 60%),
+    radial-gradient(520px 320px at -5% 120%, rgba(122, 18, 32, 0.6), transparent 65%),
+    linear-gradient(160deg, #141416 0%, #0b0b0c 70%);
+  box-shadow: 0 30px 70px -30px rgba(196, 33, 51, 0.45);
+}
+.avanew-hero .font-serif { font-family: "Fraunces", Georgia, serif; font-weight: 500; }
+.avanew-hero-wave {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 70%;
+  width: min(60%, 560px);
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 0 24px;
+  opacity: 0.32;
+  mask-image: linear-gradient(90deg, transparent, #000 35%);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 35%);
+}
+.avanew-hero-wave span {
+  flex: 1;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, #ff8a94, #c42133);
+  transform-origin: bottom;
+  animation: avanewWave 2.4s ease-in-out infinite;
+}
+@keyframes avanewWave {
+  0%, 100% { transform: scaleY(0.55); }
+  50% { transform: scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avanew-hero-wave span { animation: none; }
 }

@@ -48,6 +48,8 @@ import type {
 } from "@/types/db"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/useRole"
+import { SITE_BRAND } from "@/lib/siteBrand"
+import { AvanewHomeHero } from "@/components/AvanewHomeHero"
 
 const ACTIVITY_ICONS: Record<ActivityType, LucideIcon> = {
   call: Phone,
@@ -278,10 +280,26 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Dashboard"
-        description="Overview of your pipeline, tasks, and business performance."
-      />
+      {SITE_BRAND === "avanew" ? (
+        <AvanewHomeHero
+          stats={[
+            { label: "Pipeline Value", value: loading ? "…" : fmtCurrency(pipelineValue) },
+            {
+              label: "Activity This Week",
+              value: loading
+                ? "…"
+                : String(activities.filter((a) => Date.now() - new Date(a.created_at).getTime() < 7 * 864e5).length),
+            },
+            { label: "Contacts", value: loading ? "…" : String(contacts.length) },
+            { label: "Open Tasks", value: loading ? "…" : String(openTasksCount) },
+          ]}
+        />
+      ) : (
+        <PageHeader
+          title="Dashboard"
+          description="Overview of your pipeline, tasks, and business performance."
+        />
+      )}
 
       {/* Module sections — 2-col on lg, stacked on mobile */}
       <div className={cn("grid grid-cols-1 gap-6 items-stretch", !isLimitedRole && "lg:grid-cols-2")}>

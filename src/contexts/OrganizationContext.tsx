@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import type { ReactNode } from "react"
 import { listMyOrganizations, setCurrentOrg, getRaPortalRedirect } from "@/lib/data"
 import { supabase } from "@/lib/supabase"
+import { SITE } from "@/lib/siteBrand"
 import type { OrgWithRole } from "@/types/db"
 
 const ORG_KEY = "avanew-crm.current-org-id"
@@ -45,21 +46,23 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       }
       setRaRedirect(null)
 
-      const list = await listMyOrganizations()
+      // Each domain is its own company's front door: app.avanew.ai never shows
+      // the Divigner workspace and ai-automation.divigner.com never shows Avanew.
+      const list = (await listMyOrganizations()).filter(
+        (o) => !SITE.hiddenOrgSlugs.includes(o.slug)
+      )
       setOrgs(list)
 
-      // Restore persisted org selection
+      // Restore persisted org selection, else open the site's home workspace
       const savedId = localStorage.getItem(ORG_KEY)
       const saved = list.find((o) => o.id === savedId) ?? null
+      const home = list.find((o) => o.slug === SITE.homeOrgSlug) ?? null
+      const pick = saved ?? home ?? (list.length === 1 ? list[0] : null)
 
-      if (saved) {
-        setCurrentOrgState(saved)
-        setCurrentOrg(saved.id)
-      } else if (list.length === 1) {
-        // Auto-select if user only belongs to one org
-        setCurrentOrgState(list[0])
-        setCurrentOrg(list[0].id)
-        localStorage.setItem(ORG_KEY, list[0].id)
+      if (pick) {
+        setCurrentOrgState(pick)
+        setCurrentOrg(pick.id)
+        localStorage.setItem(ORG_KEY, pick.id)
       } else {
         setCurrentOrgState(null)
         setCurrentOrg(null)

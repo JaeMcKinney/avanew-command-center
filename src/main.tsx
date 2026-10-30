@@ -8,6 +8,9 @@ import { OrganizationProvider } from "@/contexts/OrganizationContext"
 import { ThemeProvider } from "@/lib/ThemeProvider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
+import { applySiteBrand } from "@/lib/siteBrand"
+
+applySiteBrand()
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -47,10 +47,10 @@ const ORG_BRANDING: Record<string, {
   wordmark?: boolean  // true = logo is a wordmark (use img), false = use icon + text
 }> = {
   avanew: {
-    logoLight: "/logos/avanew-logo.svg",
-    logoDark: "/logos/avanew-logo-white.svg",
-    icon: "/logos/avanew-icon.svg",
-    name: "Avanew Command Center",
+    logoLight: "/brands/avanew/avanew-logo-light.svg",
+    logoDark: "/brands/avanew/avanew-logo-dark.svg",
+    icon: "/brands/avanew/favicon.svg",
+    name: "Avanew",
     wordmark: true,
   },
   divigner: {

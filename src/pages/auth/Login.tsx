@@ -5,10 +5,64 @@ import { Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
 import { getRaPortalRedirect } from "@/lib/data"
+import { SITE_BRAND } from "@/lib/siteBrand"
 
 const LOGO_SRC = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgMTE1NS4xNiAzNjguNDkiPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6IHVybCgjbGluZWFyLWdyYWRpZW50LTIpOwogICAgICB9CgogICAgICAuY2xzLTIgewogICAgICAgIGZpbGw6ICNjNWM1YzU7CiAgICAgIH0KCiAgICAgIC5jbHMtMyB7CiAgICAgICAgZmlsbDogI2M5YzljOTsKICAgICAgfQoKICAgICAgLmNscy00IHsKICAgICAgICBmaWxsOiB1cmwoI2xpbmVhci1ncmFkaWVudC00KTsKICAgICAgfQoKICAgICAgLmNscy01IHsKICAgICAgICBmaWxsOiB1cmwoI3JhZGlhbC1ncmFkaWVudCk7CiAgICAgIH0KCiAgICAgIC5jbHMtNiB7CiAgICAgICAgZmlsbDogdXJsKCNsaW5lYXItZ3JhZGllbnQtMyk7CiAgICAgIH0KCiAgICAgIC5jbHMtNyB7CiAgICAgICAgZmlsbDogdXJsKCNsaW5lYXItZ3JhZGllbnQtNSk7CiAgICAgIH0KCiAgICAgIC5jbHMtOCB7CiAgICAgICAgZmlsbDogdXJsKCNsaW5lYXItZ3JhZGllbnQtNyk7CiAgICAgIH0KCiAgICAgIC5jbHMtOSB7CiAgICAgICAgZmlsbDogdXJsKCNsaW5lYXItZ3JhZGllbnQtNik7CiAgICAgIH0KCiAgICAgIC5jbHMtMTAgewogICAgICAgIGZpbGw6IHVybCgjbGluZWFyLWdyYWRpZW50LTgpOwogICAgICB9CgogICAgICAuY2xzLTEwLCAuY2xzLTExIHsKICAgICAgICBmaWxsLXJ1bGU6IGV2ZW5vZGQ7CiAgICAgIH0KCiAgICAgIC5jbHMtMTEgewogICAgICAgIGZpbGw6IHVybCgjbGluZWFyLWdyYWRpZW50KTsKICAgICAgfQoKICAgICAgLmNscy0xMiB7CiAgICAgICAgZmlsbDogI2Y3ZjdmNzsKICAgICAgfQogICAgPC9zdHlsZT4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0icmFkaWFsLWdyYWRpZW50IiBjeD0iNTc3LjU4IiBjeT0iMTI3LjU4IiBmeD0iNTc3LjU4IiBmeT0iMTI3LjU4IiByPSIyMTguNDkiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMDIwMjAyIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2JkYmRiZCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibGluZWFyLWdyYWRpZW50IiB4MT0iNDUzLjkyIiB5MT0iMTMwLjIyIiB4Mj0iNjk0LjQ4IiB5Mj0iMTMwLjIyIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzAyMDIwMiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiZGJkYmQiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImxpbmVhci1ncmFkaWVudC0yIiB4MT0iMzYxLjkyIiB5MT0iMTY4LjE1IiB4Mj0iNDQzLjAzIiB5Mj0iMTY4LjE1IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CiAgICAgIDxzdG9wIG9mZnNldD0iLjIiIHN0b3AtY29sb3I9IiMwMjAyMDIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIuNSIgc3RvcC1jb2xvcj0iIzMyYTBiNyIvPgogICAgICA8c3RvcCBvZmZzZXQ9Ii45OCIgc3RvcC1jb2xvcj0iI2ZmZiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibGluZWFyLWdyYWRpZW50LTMiIHgxPSIzMTcuMjIiIHkxPSI4Ny4zOCIgeTI9Ijg3LjM4IiB4bGluazpocmVmPSIjbGluZWFyLWdyYWRpZW50LTIiLz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibGluZWFyLWdyYWRpZW50LTQiIHgxPSIzMzkuNTciIHkxPSIxMjcuNzYiIHkyPSIxMjcuNzYiIHhsaW5rOmhyZWY9IiNsaW5lYXItZ3JhZGllbnQtMiIvPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJsaW5lYXItZ3JhZGllbnQtNSIgeDE9IjgzNC44MyIgeTE9Ijg3LjM4IiB4Mj0iNzA5LjAzIiB5Mj0iODcuMzgiIHhsaW5rOmhyZWY9IiNsaW5lYXItZ3JhZGllbnQtMiIvPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJsaW5lYXItZ3JhZGllbnQtNiIgeDE9IjgxMi40OCIgeTE9IjEyNy43NiIgeDI9IjcwOS4wMyIgeTI9IjEyNy43NiIgeGxpbms6aHJlZj0iI2xpbmVhci1ncmFkaWVudC0yIi8+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImxpbmVhci1ncmFkaWVudC03IiB4MT0iNzkwLjE0IiB4Mj0iNzA5LjAzIiB4bGluazpocmVmPSIjbGluZWFyLWdyYWRpZW50LTIiLz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibGluZWFyLWdyYWRpZW50LTgiIHgxPSI1NzcuNTgiIHkxPSIyNDEuODMiIHgyPSI1NzcuNTgiIHkyPSIxMy4zMyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICA8c3RvcCBvZmZzZXQ9Ii4xIiBzdG9wLWNvbG9yPSIjZmZmIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iLjM4IiBzdG9wLWNvbG9yPSIjNGM0YzRjIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iLjQ0IiBzdG9wLWNvbG9yPSIjZDE5NzAzIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iLjY4IiBzdG9wLWNvbG9yPSIjZGVkZWRlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iLjg3IiBzdG9wLWNvbG9yPSIjZmZmIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8Zz4KICAgIDxnPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTMiIGQ9Ik04MzkuOTMsNDIuMTdoLTMuMTJ2LTE1LjI1aDkuNThjMy40NiwwLDUuOCwxLjY2LDUuOCw0LjgsMCwyLjMzLTEuMzYsMy44OS0zLjUyLDQuNDhsMy44OSw1Ljk3aC0zLjU5bC0zLjU5LTUuNjdoLTUuNDR2NS42N1pNODQ2LjIyLDMzLjg5YzEuODIsMCwyLjg3LS43OSwyLjg3LTIuMTVzLTEuMDQtMi4xNy0yLjg3LTIuMTdoLTYuMjl2NC4zMWg2LjI5WiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik04MzkuOTMsNDIuMTdoLTMuMTJ2LTE1LjI1aDkuNThjMy40NiwwLDUuOCwxLjY2LDUuOCw0LjgsMCwyLjMzLTEuMzYsMy44OS0zLjUyLDQuNDhsMy44OSw1Ljk3aC0zLjU5bC0zLjU5LTUuNjdoLTUuNDR2NS42N1pNODQ2LjIyLDMzLjg5YzEuODIsMCwyLjg3LS43OSwyLjg3LTIuMTVzLTEuMDQtMi4xNy0yLjg3LTIuMTdoLTYuMjl2NC4zMWg2LjI5WiIvPgogICAgPC9nPgogICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNODQzLjY5LDUxLjA0Yy05LjEsMC0xNi41LTcuNC0xNi41LTE2LjVzNy40LTE2LjUsMTYuNS0xNi41LDE2LjUsNy40LDE2LjUsMTYuNS03LjQsMTYuNS0xNi41LDE2LjVaTTg0My42OSwyMC4yMWMtNy45MSwwLTE0LjM0LDYuNDMtMTQuMzQsMTQuMzRzNi40MywxNC4zNCwxNC4zNCwxNC4zNCwxNC4zNC02LjQzLDE0LjM0LTE0LjM0LTYuNDMtMTQuMzQtMTQuMzQtMTQuMzRaIi8+CiAgPC9nPgogIDxnPgogICAgPGc+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMTIiIGQ9Ik0wLDM2Ny41NnYtNTMuOThoMTguNzRjOC40MywwLDE1LjMyLDIuNTYsMjAuNjYsNy42Nyw1LjM1LDUuMTIsOC4wMiwxMS41NSw4LjAyLDE5LjMycy0yLjY5LDE0LjE0LTguMDYsMTkuMjhjLTUuMzcsNS4xNC0xMi4yNSw3LjcxLTIwLjYzLDcuNzFIMFpNNi4wOSwzNjEuOTNoMTIuNjVjNi43MywwLDEyLjE0LTIuMDIsMTYuMjMtNi4wNSw0LjA5LTQuMDQsNi4xMy05LjE0LDYuMTMtMTUuMzFzLTIuMDYtMTEuMjEtNi4xNy0xNS4yN2MtNC4xMS00LjA2LTkuNTEtNi4wOS0xNi4xOS02LjA5SDYuMDl2NDIuNzJaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMTIiIGQ9Ik05Ni4zMSwzNjcuNTZ2LTUzLjk4aDYuMDl2NTMuOThoLTYuMDlaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMTIiIGQ9Ik0xNzIuMjYsMzY3Ljk1bC0yMy4yMS01NC4zNmg2Ljc5bDE5LjIsNDYuNSwxOS4yOC00Ni41aDYuNTVsLTIzLjIxLDU0LjM2aC01LjRaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMTIiIGQ9Ik0yNDcuNTIsMzY3LjU2di01My45OGg2LjA5djUzLjk4aC02LjA5WiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEyIiBkPSJNMzI5Ljk0LDM2OC40OWMtOC4yOCwwLTE0LjkyLTIuNjYtMTkuOTMtNy45OC01LjAxLTUuMzItNy41Mi0xMS45Ni03LjUyLTE5LjkzczIuNTUtMTQuMTYsNy42My0xOS42NmM1LjA5LTUuNSwxMS41Ny04LjI1LDE5LjQzLTguMjUsNC4zMiwwLDguMDMuNTksMTEuMTQsMS43NywzLjExLDEuMTgsNi4xLDIuOTgsOC45OCw1LjRsLTMuOTMsNC42M2MtNC43My00LjExLTEwLjItNi4xNy0xNi40Mi02LjE3cy0xMC44MSwyLjE3LTE0LjY5LDYuNTJjLTMuODgsNC4zNS01LjgyLDkuNi01LjgyLDE1Ljc3LDAsNi41MywxLjk0LDExLjksNS44MiwxNi4xMiwzLjg4LDQuMjEsOS4wNiw2LjMyLDE1LjU0LDYuMzIsNS45NiwwLDExLjE1LTEuOCwxNS41OC01LjR2LTEzLjQyaC0xNi40MnYtNS40N2gyMi4yOXYyMS41MWMtNi4xNyw1LjUtMTMuMzksOC4yNS0yMS42Nyw4LjI1WiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEyIiBkPSJNNDAwLjgxLDM2Ny41NnYtNTMuOThoNS43MWwzNCw0My4yNnYtNDMuMjZoNS45NHY1My45OGgtNC44NmwtMzQuODUtNDQuMjZ2NDQuMjZoLTUuOTRaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMTIiIGQ9Ik00OTcuMTksMzY3LjU2di01My45OGgzOS4wMnY1LjU1aC0zMi45M3YxOC40M2gyOS40NnY1LjU1aC0yOS40NnYxOC44OWgzMy4zMXY1LjU1aC0zOS40WiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEyIiBkPSJNNTg0LjMyLDM2Ny41NnYtNTMuOThoMjMuMjFjNi42MywwLDExLjc1LDEuOCwxNS4zNSw1LjQsMi43OCwyLjc4LDQuMTYsNi4zOCw0LjE2LDEwLjhzLTEuMzQsNy44MS00LjAxLDEwLjQ5Yy0yLjY3LDIuNjctNi4yMiw0LjQyLTEwLjY0LDUuMjRsMTYuNTgsMjIuMDVoLTcuNDhsLTE1LjY1LTIwLjk3aC0xNS40MnYyMC45N2gtNi4wOVpNNTkwLjQyLDM0MS4xMWgxNi41OGM0LjExLDAsNy40NS0xLDEwLjAyLTMuMDEsMi41Ny0yLDMuODYtNC43NSwzLjg2LTguMjVzLTEuMjItNS45NS0zLjY2LTcuODNjLTIuNDQtMS44OC01LjgyLTIuODEtMTAuMTQtMi44MWgtMTYuNjZ2MjEuOVoiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xMiIgZD0iTTc1Ny42NiwzNjguNDljLTguMjgsMC0xNC45Mi0yLjY2LTE5LjkzLTcuOTgtNS4wMS01LjMyLTcuNTItMTEuOTYtNy41Mi0xOS45M3MyLjU1LTE0LjE2LDcuNjMtMTkuNjZjNS4wOS01LjUsMTEuNTctOC4yNSwxOS40My04LjI1LDQuMzIsMCw4LjAzLjU5LDExLjE0LDEuNzcsMy4xMSwxLjE4LDYuMSwyLjk4LDguOTgsNS40bC0zLjkzLDQuNjNjLTQuNzMtNC4xMS0xMC4yLTYuMTctMTYuNDItNi4xN3MtMTAuODEsMi4xNy0xNC42OSw2LjUyYy0zLjg4LDQuMzUtNS44Miw5LjYtNS44MiwxNS43NywwLDYuNTMsMS45NCwxMS45LDUuODIsMTYuMTIsMy44OCw0LjIxLDkuMDYsNi4zMiwxNS41NCw2LjMyLDUuOTYsMCwxMS4xNS0xLjgsMTUuNTgtNS40di0xMy40MmgtMTYuNDJ2LTUuNDdoMjIuMjl2MjEuNTFjLTYuMTcsNS41LTEzLjM5LDguMjUtMjEuNjcsOC4yNVoiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xMiIgZD0iTTgyOC41MywzNjcuNTZ2LTUzLjk4aDIzLjIxYzYuNjMsMCwxMS43NSwxLjgsMTUuMzUsNS40LDIuNzgsMi43OCw0LjE2LDYuMzgsNC4xNiwxMC44cy0xLjM0LDcuODEtNC4wMSwxMC40OWMtMi42NywyLjY3LTYuMjIsNC40Mi0xMC42NCw1LjI0bDE2LjU4LDIyLjA1aC03LjQ4bC0xNS42NS0yMC45N2gtMTUuNDJ2MjAuOTdoLTYuMDlaTTgzNC42MiwzNDEuMTFoMTYuNThjNC4xMSwwLDcuNDUtMSwxMC4wMi0zLjAxLDIuNTctMiwzLjg2LTQuNzUsMy44Ni04LjI1cy0xLjIyLTUuOTUtMy42Ni03LjgzYy0yLjQ0LTEuODgtNS44Mi0yLjgxLTEwLjE0LTIuODFoLTE2LjY2djIxLjlaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMTIiIGQ9Ik05NjQuNjIsMzYwLjI4Yy01LjE5LDUuNDctMTEuOCw4LjIxLTE5LjgyLDguMjFzLTE0LjYtMi43Mi0xOS43NC04LjE3Yy01LjE0LTUuNDUtNy43MS0xMi4wMy03LjcxLTE5Ljc0czIuNi0xNC4yMyw3Ljc5LTE5LjdjNS4xOS01LjQ3LDExLjgtOC4yMSwxOS44Mi04LjIxczE0LjYsMi43MywxOS43NCw4LjE3YzUuMTQsNS40NSw3LjcxLDEyLjAzLDcuNzEsMTkuNzRzLTIuNiwxNC4yMy03Ljc5LDE5LjdaTTkyOS43MywzNTYuMzhjNC4wMyw0LjMyLDkuMTEsNi40OCwxNS4yMyw2LjQ4czExLjE3LTIuMTUsMTUuMTUtNi40NGMzLjk4LTQuMjksNS45OC05LjU3LDUuOTgtMTUuODRzLTIuMDItMTEuNDktNi4wNS0xNS44MWMtNC4wNC00LjMyLTkuMTEtNi40OC0xNS4yMy02LjQ4cy0xMS4xNywyLjE1LTE1LjE1LDYuNDRjLTMuOTgsNC4yOS01Ljk4LDkuNTgtNS45OCwxNS44NXMyLjAyLDExLjQ5LDYuMDUsMTUuODFaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMTIiIGQ9Ik0xMDQyLjM1LDM2OC40MWMtNi44NCwwLTEyLjI5LTIuMDQtMTYuMzUtNi4xMy00LjA2LTQuMDktNi4wOS05Ljg2LTYuMDktMTcuMzF2LTMxLjM4aDYuMDl2MzFjMCw1LjgxLDEuNDUsMTAuMjksNC4zNiwxMy40NiwyLjksMy4xNiw2Ljk1LDQuNzQsMTIuMTQsNC43NHM5LjA3LTEuNTEsMTEuOTUtNC41NWMyLjg4LTMuMDMsNC4zMi03LjQ1LDQuMzItMTMuMjZ2LTMxLjM4aDYuMDl2MzAuOTJjMCw3LjcxLTIuMDMsMTMuNjItNi4wOSwxNy43My00LjA2LDQuMTEtOS41NCw2LjE3LTE2LjQyLDYuMTdaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMTIiIGQ9Ik0xMTE0Ljc1LDM2Ny41NnYtNTMuOThoMjAuMmM2LjE3LDAsMTEuMDgsMS41NCwxNC43Myw0LjYzLDMuNjUsMy4wOCw1LjQ3LDcuMyw1LjQ3LDEyLjY1cy0yLjAyLDkuOTUtNi4wNSwxMy4wM2MtNC4wNCwzLjA4LTkuMDksNC42My0xNS4xNSw0LjYzaC0xMy4xMXYxOS4wNWgtNi4wOVpNMTEyMC44NCwzNDIuOTdoMTMuMzRjNC40NywwLDguMDYtMS4wOSwxMC43Ni0zLjI4LDIuNy0yLjE4LDQuMDUtNS4xLDQuMDUtOC43NXMtMS4zLTYuNjQtMy44OS04LjY4Yy0yLjYtMi4wMy02LjEzLTMuMDUtMTAuNi0zLjA1aC0xMy42NXYyMy43NVoiLz4KICAgIDwvZz4KICAgIDxwYXRoIGNsYXNzPSJjbHMtNSIgZD0iTTgzNi42NSwxMDAuNzZsMjIuMzUtNDAuMzloLTE1Mi41NGwyLjk5LTMuNTEtMTAuMjgtOC42M2MtMTEuOTQtMTAuMDItMjQuNjItMTcuNjItMzcuNjktMjIuNTktMTMuMTktNS4wMS0yOC45Mi03LjU2LTQ2LjczLTcuNTYtNS42NiwwLTExLjI3LjM2LTE2Ljc1LDEuMDgtMTkuNjktMTIuNzMtNDMuMjMtMTkuMTctNzAuMDgtMTkuMTdoLTgzLjk1djYwLjM4aC0xNDcuOGwyMi4zNSw0MC4zOWgwbDIyLjM1LDQwLjM5aDBsMjcuNDUsNDkuNmg3NS42NXYzOS4zNGg4My45NWM0LjI4LDAsOC41Mi0uMTcsMTIuNjYtLjUsMjAuMTYsMTYuOTcsNDUuNTcsMjUuNTcsNzUuNjIsMjUuNTcsMzQuNDIsMCw2NC44OC0xMS42LDkwLjU0LTM0LjQ4bDQuNDYtMy45OHYtMjUuOTZoNzUuNjZsMjcuNDUtNDkuNmgwbDIyLjM1LTQwLjM5aDBaTTUzMS43Miw1My40N2MtMjEuNDQsMjMuMTgtMzIuMzIsNTEuMTYtMzIuMzIsODMuMTYsMCwxNi40MSwyLjYyLDMxLjY3LDcuOCw0NS41OWgtMTMuNjJWNDcuODhoMzQuMzNjMy4wNSwwLDYuMDIuMTMsOC45Mi40LTEuNzUsMS42Ny0zLjQ1LDMuNC01LjExLDUuMTlaTTY2Ny4wMyw4NS45NWwxMC4xNyw4Ljg0LDIwLjA1LTIzLjU5djQ1LjEyaC00Ny45YzAtLjQyLDAtLjg1LDAtMS4yOCwwLTE2LjA4LTIuNzktMzAuOTctOC4zMS00NC41NCw5LjMsMy4zLDE3LjkxLDguNDIsMjUuOTgsMTUuNDRaTTU3OS43MiwxNjMuMjVjLTUuODcsNS44LTEyLjQ5LDEwLjE5LTIwLjA2LDEzLjMtNi41Ni0xMS4yNS05Ljc3LTI0LjQtOS43Ny0zOS45MiwwLTIwLjA0LDYuMDctMzYuNTgsMTguNTUtNTAuNTUsNC45OS01LjU5LDEwLjQzLTkuOTUsMTYuNDgtMTMuMTgsOS4zNywxMS42NywxMy45NCwyNS41MywxMy45NCw0Mi4xNSwwLDE5LjcyLTYuMjYsMzUuNDktMTkuMTQsNDguMlpNNjYyLjQ0LDE5NC4yMmMtMTMuMTYsOS4xNy0yOC4wNywxMy42NC00NS4zOCwxMy42NC00Ljc1LDAtOS4yNC0uMzQtMTMuNDgtMS4wMiwzLjk0LTIuOTEsNy43MS02LjA4LDExLjI5LTkuNTIsMTAuNDQtOS45OSwxOC42LTIxLjMsMjQuMzMtMzMuNzJoMjMuMjR2MzAuNjFaIi8+CiAgICA8cGF0aCBjbGFzcz0iY2xzLTExIiBkPSJNNjk0LjQ4LDIxMy4zOGMtMjMuMjUsMjAuNzMtNTAuNDcsMzEuMS04MS42NiwzMS4xLTI5LjA1LDAtNTIuNzUtOC43LTcxLjEzLTI2LjA5LTUuNTIuNjgtMTEuMjQsMS4wMi0xNy4xNSwxLjAyaC03MC42MlYxNS45N2g3MC42MmMyNi4yOSwwLDQ4LjU4LDYuNjIsNjYuOTEsMTkuODEsNi4zNi0xLjEzLDEyLjk4LTEuNzIsMTkuOTEtMS43MiwxNi4yNywwLDMwLjI3LDIuMjMsNDEuOTksNi42OCwxMS43Miw0LjQ2LDIzLDExLjI0LDMzLjg2LDIwLjM0bC0xNC44MiwxNy40NGMtMTcuNDUtMTUuMTctMzcuNjItMjIuODctNjAuNDUtMjMuMTksMTMuNzksMTcuMzcsMjAuNywzOC4xNSwyMC43LDYyLjM1LDAsNS4wMi0uMzIsOS44OC0uOTMsMTQuNmg2Mi43NnY4MS4wOFpNNTg1LjU3LDYwLjE1Yy0uMjItLjIxLS40Ni0uMzktLjY3LS42LTExLjIzLDMuOTctMjEuMTgsMTAuNjgtMjkuNzYsMjAuMjktMTQuNjMsMTYuMzctMjEuOTQsMzYuMTgtMjEuOTQsNTkuNDNzNS45NSw0MC42NiwxNy43NSw1NS43MmMxMy41NC0zLjU2LDI1LjEzLTEwLjEsMzQuNzctMTkuNjIsMTUuNC0xNS4yMSwyMy4xLTM0LjQ0LDIzLjEtNTcuNjlzLTcuNzUtNDIuMjQtMjMuMjUtNTcuNTRaTTUyNC41NCwzNy4xOWgtNDcuNjZ2MTYxaDQ3LjY2Yy4yMSwwLC40LS4wMi42MS0uMDItMTAuNTItMTYuODUtMTUuNzktMzYuNDgtMTUuNzktNTguOSwwLTI4LjY3LDkuNTktNTMuMzcsMjguNzctNzQuMTEsNy43Mi04LjM1LDE2LjMxLTE0Ljk5LDI1Ljc0LTE5Ljk3LTExLjQ1LTUuMjgtMjQuNTMtOC0zOS4zMy04Wk02NzIuNCwxNTIuOTNoLTQ1LjUyYy00Ljk4LDE0LjAxLTEzLjE4LDI2LjQ5LTI0LjYsMzcuNDItOS43OCw5LjM2LTIwLjkxLDE2LjQ0LTMzLjM0LDIxLjI4LDEyLjQ0LDguMDksMjcuMzIsMTIuMjIsNDQuNzUsMTIuMjIsMjIuNDcsMCw0Mi4wNC02Ljc4LDU4LjcxLTIwLjM0di01MC41N1oiLz4KICAgIDxnPgogICAgICA8cG9seWdvbiBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMzc0LjYyIDE3OS42MiA0NDMuMDMgMTc5LjYyIDQ0My4wMyAxNTYuNjggMzYxLjkyIDE1Ni42OCAzNzQuNjIgMTc5LjYyIi8+CiAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtNiIgcG9pbnRzPSIzMTcuMjIgNzUuOTEgMzI5LjkyIDk4Ljg1IDQ0My4wMyA5OC44NSA0NDMuMDMgNzUuOTEgMzE3LjIyIDc1LjkxIi8+CiAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtNCIgcG9pbnRzPSIzNTIuMjcgMTM5LjI0IDQ0My4wMyAxMzkuMjQgNDQzLjAzIDExNi4yOSAzMzkuNTcgMTE2LjI5IDM1Mi4yNyAxMzkuMjQiLz4KICAgIDwvZz4KICAgIDxnPgogICAgICA8cG9seWdvbiBjbGFzcz0iY2xzLTciIHBvaW50cz0iODM0LjgzIDc1LjkxIDcwOS4wMyA3NS45MSA3MDkuMDMgOTguODUgODIyLjEzIDk4Ljg1IDgzNC44MyA3NS45MSIvPgogICAgICA8cG9seWdvbiBjbGFzcz0iY2xzLTkiIHBvaW50cz0iODEyLjQ4IDExNi4yOSA3MDkuMDMgMTE2LjI5IDcwOS4wMyAxMzkuMjQgNzk5Ljc5IDEzOS4yNCA4MTIuNDggMTE2LjI5Ii8+CiAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtOCIgcG9pbnRzPSI3OTAuMTQgMTU2LjY4IDcwOS4wMyAxNTYuNjggNzA5LjAzIDE3OS42MiA3NzcuNDQgMTc5LjYyIDc5MC4xNCAxNTYuNjgiLz4KICAgIDwvZz4KICAgIDxwYXRoIGNsYXNzPSJjbHMtMTAiIGQ9Ik02OTcuODYsMjEwLjc0Yy0yMy4yNSwyMC43My01MC40NywzMS4xLTgxLjY2LDMxLjEtMjkuMDUsMC01Mi43NS04LjctNzEuMTMtMjYuMDktNS41Mi42OC0xMS4yNCwxLjAyLTE3LjE1LDEuMDJoLTcwLjYyVjEzLjMzaDcwLjYyYzI2LjI5LDAsNDguNTgsNi42Miw2Ni45MSwxOS44MSw2LjM2LTEuMTMsMTIuOTgtMS43MiwxOS45MS0xLjcyLDE2LjI3LDAsMzAuMjcsMi4yMyw0MS45OSw2LjY4LDExLjcyLDQuNDYsMjMsMTEuMjQsMzMuODYsMjAuMzRsLTE0LjgyLDE3LjQ0Yy0xNy40NS0xNS4xNy0zNy42Mi0yMi44Ny02MC40NS0yMy4xOSwxMy43OSwxNy4zNywyMC43LDM4LjE1LDIwLjcsNjIuMzUsMCw1LjAyLS4zMiw5Ljg4LS45MywxNC42aDYyLjc2djgxLjA4Wk01ODguOTUsNTcuNWMtLjIyLS4yMS0uNDYtLjM5LS42Ny0uNi0xMS4yMywzLjk3LTIxLjE4LDEwLjY4LTI5Ljc2LDIwLjI5LTE0LjYzLDE2LjM3LTIxLjk0LDM2LjE4LTIxLjk0LDU5LjQzczUuOTUsNDAuNjYsMTcuNzUsNTUuNzJjMTMuNTQtMy41NiwyNS4xMy0xMC4xLDM0Ljc3LTE5LjYyLDE1LjQtMTUuMjEsMjMuMS0zNC40NCwyMy4xLTU3LjY5cy03Ljc1LTQyLjI0LTIzLjI1LTU3LjU0Wk01MjcuOTIsMzQuNTVoLTQ3LjY2djE2MWg0Ny42NmMuMjEsMCwuNC0uMDIuNjEtLjAyLTEwLjUyLTE2Ljg1LTE1Ljc5LTM2LjQ4LTE1Ljc5LTU4LjksMC0yOC42Nyw5LjU5LTUzLjM3LDI4Ljc3LTc0LjExLDcuNzItOC4zNSwxNi4zMS0xNC45OSwyNS43NC0xOS45Ny0xMS40NS01LjI4LTI0LjUzLTgtMzkuMzMtOFpNNjc1Ljc3LDE1MC4yOWgtNDUuNTJjLTQuOTgsMTQuMDEtMTMuMTgsMjYuNDktMjQuNiwzNy40Mi05Ljc4LDkuMzYtMjAuOTEsMTYuNDQtMzMuMzQsMjEuMjgsMTIuNDQsOC4wOSwyNy4zMiwxMi4yMiw0NC43NSwxMi4yMiwyMi40NywwLDQyLjA0LTYuNzgsNTguNzEtMjAuMzR2LTUwLjU3WiIvPgogIDwvZz4KPC9zdmc+"
 
 const noiseSvg = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
+
+
+type LoginSkin = {
+  logo: string; logoAlt: string; logoHeight: string
+  bg: string; card: string; cardBorder: string; cardShadow: string
+  heading: string; text: string; muted: string; link: string; linkHover: string
+  inputBg: string; inputBorder: string; inputFocus: string
+  button: string; buttonBusy: string; buttonText: string
+  bodyFont: string; headingFont: string; fontsHref: string | null
+  subtitle: string; footer: string
+}
+
+const SKINS: Record<typeof SITE_BRAND, LoginSkin> = {
+  divigner: {
+    logo: LOGO_SRC, logoAlt: "Divigner", logoHeight: "88px",
+    bg: `
+            radial-gradient(900px 600px at 78% -5%, rgba(52,214,194,.13), transparent 60%),
+            radial-gradient(800px 700px at -10% 12%, rgba(28,90,140,.28), transparent 55%),
+            radial-gradient(1000px 900px at 50% 110%, rgba(20,80,110,.20), transparent 60%),
+            linear-gradient(180deg, #06101D 0%, #091A2D 40%, #08182A 100%)
+          `,
+    card: "linear-gradient(165deg, rgba(14,39,65,.90), rgba(9,26,45,.80))",
+    cardBorder: "1px solid rgba(160,190,215,.12)",
+    cardShadow: "0 32px 80px -24px rgba(0,0,0,.7), 0 0 0 1px rgba(52,214,194,.04)",
+    heading: "#EAF2F9", text: "#EAF2F9", muted: "#A2B6C9", link: "#6E8499", linkHover: "#5FE3D2",
+    inputBg: "rgba(9,26,45,.7)", inputBorder: "rgba(160,190,215,.18)", inputFocus: "rgba(52,214,194,.5)",
+    button: "linear-gradient(135deg, #18B9A6, #34D6C2)", buttonBusy: "rgba(24,185,166,.5)", buttonText: "#06101D",
+    bodyFont: "'Manrope', sans-serif", headingFont: "'Fraunces', serif",
+    fontsHref: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Manrope:wght@300;400;500;600;700&display=swap",
+    subtitle: "Sign in to your Divigner account to continue.",
+    footer: "Divigner Group. All rights reserved.",
+  },
+  avanew: {
+    logo: "/brands/avanew/avanew-logo-dark.svg", logoAlt: "Avanew", logoHeight: "72px",
+    bg: `
+            radial-gradient(800px 520px at 82% -8%, rgba(196,33,51,.42), transparent 60%),
+            radial-gradient(700px 600px at -8% 110%, rgba(122,18,32,.45), transparent 60%),
+            linear-gradient(180deg, #0B0B0C 0%, #111113 60%, #0B0B0C 100%)
+          `,
+    card: "linear-gradient(165deg, rgba(25,25,28,.92), rgba(20,20,22,.88))",
+    cardBorder: "1px solid rgba(255,255,255,.08)",
+    cardShadow: "0 32px 80px -24px rgba(0,0,0,.8), 0 0 60px -30px rgba(196,33,51,.5)",
+    heading: "#F4F4F5", text: "#F4F4F5", muted: "#B4B4BA", link: "#8A8A90", linkHover: "#FF8A94",
+    inputBg: "rgba(11,11,12,.75)", inputBorder: "rgba(255,255,255,.14)", inputFocus: "rgba(240,97,109,.65)",
+    button: "linear-gradient(135deg, #C42133, #E63946)", buttonBusy: "rgba(196,33,51,.5)", buttonText: "#FFFFFF",
+    bodyFont: "'Public Sans', sans-serif", headingFont: "'Fraunces', serif",
+    fontsHref: null,
+    subtitle: "Sign in to your Avanew account to continue.",
+    footer: "Avanew. All rights reserved.",
+  },
+}
+
+const SKIN = SKINS[SITE_BRAND]
 
 export function Login() {
   const { signIn } = useAuth()
@@ -40,10 +94,7 @@ export function Login() {
   return (
     <>
       {/* ── Google Fonts: Fraunces + Manrope ── */}
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Manrope:wght@300;400;500;600;700&display=swap"
-      />
+      {SKIN.fontsHref && <link rel="stylesheet" href={SKIN.fontsHref} />}
 
       {/* ── Full-screen background ── */}
       <div
@@ -54,15 +105,10 @@ export function Login() {
           alignItems: "center",
           justifyContent: "center",
           padding: "2rem 1rem",
-          fontFamily: "'Manrope', sans-serif",
+          fontFamily: SKIN.bodyFont,
           position: "relative",
           overflow: "hidden",
-          background: `
-            radial-gradient(900px 600px at 78% -5%, rgba(52,214,194,.13), transparent 60%),
-            radial-gradient(800px 700px at -10% 12%, rgba(28,90,140,.28), transparent 55%),
-            radial-gradient(1000px 900px at 50% 110%, rgba(20,80,110,.20), transparent 60%),
-            linear-gradient(180deg, #06101D 0%, #091A2D 40%, #08182A 100%)
-          `,
+          background: SKIN.bg,
         }}
       >
         {/* Noise overlay */}
@@ -81,9 +127,9 @@ export function Login() {
         {/* ── Logo ── */}
         <div style={{ marginBottom: "2.5rem", position: "relative", zIndex: 1 }}>
           <img
-            src={LOGO_SRC}
-            alt="Divigner"
-            style={{ height: "88px", width: "auto" }}
+            src={SKIN.logo}
+            alt={SKIN.logoAlt}
+            style={{ height: SKIN.logoHeight, width: "auto" }}
           />
         </div>
 
@@ -94,21 +140,21 @@ export function Login() {
             zIndex: 1,
             width: "100%",
             maxWidth: "400px",
-            background: "linear-gradient(165deg, rgba(14,39,65,.90), rgba(9,26,45,.80))",
-            border: "1px solid rgba(160,190,215,.12)",
+            background: SKIN.card,
+            border: SKIN.cardBorder,
             borderRadius: "18px",
             padding: "2.5rem 2rem",
-            boxShadow: "0 32px 80px -24px rgba(0,0,0,.7), 0 0 0 1px rgba(52,214,194,.04)",
+            boxShadow: SKIN.cardShadow,
           }}
         >
           {/* Heading */}
           <div style={{ marginBottom: "2rem" }}>
             <h1
               style={{
-                fontFamily: "'Fraunces', serif",
+                fontFamily: SKIN.headingFont,
                 fontWeight: 500,
                 fontSize: "1.75rem",
-                color: "#EAF2F9",
+                color: SKIN.heading,
                 margin: 0,
                 lineHeight: 1.2,
               }}
@@ -119,11 +165,11 @@ export function Login() {
               style={{
                 marginTop: "0.5rem",
                 fontSize: "0.875rem",
-                color: "#A2B6C9",
+                color: SKIN.muted,
                 margin: "0.5rem 0 0",
               }}
             >
-              Sign in to your Divigner account to continue.
+              {SKIN.subtitle}
             </p>
           </div>
 
@@ -133,7 +179,7 @@ export function Login() {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <label
                 htmlFor="email"
-                style={{ fontSize: "0.8125rem", fontWeight: 500, color: "#A2B6C9", letterSpacing: "0.02em" }}
+                style={{ fontSize: "0.8125rem", fontWeight: 500, color: SKIN.muted, letterSpacing: "0.02em" }}
               >
                 Email
               </label>
@@ -146,18 +192,18 @@ export function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{
-                  background: "rgba(9,26,45,.7)",
-                  border: "1px solid rgba(160,190,215,.18)",
+                  background: SKIN.inputBg,
+                  border: `1px solid ${SKIN.inputBorder}`,
                   borderRadius: "8px",
                   padding: "0.625rem 0.875rem",
-                  color: "#EAF2F9",
+                  color: SKIN.text,
                   fontSize: "0.9375rem",
                   outline: "none",
                   transition: "border-color .2s",
-                  fontFamily: "'Manrope', sans-serif",
+                  fontFamily: SKIN.bodyFont,
                 }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(52,214,194,.5)")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(160,190,215,.18)")}
+                onFocus={(e) => (e.currentTarget.style.borderColor = SKIN.inputFocus)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = SKIN.inputBorder)}
               />
             </div>
 
@@ -166,7 +212,7 @@ export function Login() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <label
                   htmlFor="password"
-                  style={{ fontSize: "0.8125rem", fontWeight: 500, color: "#A2B6C9", letterSpacing: "0.02em" }}
+                  style={{ fontSize: "0.8125rem", fontWeight: 500, color: SKIN.muted, letterSpacing: "0.02em" }}
                 >
                   Password
                 </label>
@@ -174,12 +220,12 @@ export function Login() {
                   to="/forgot-password"
                   style={{
                     fontSize: "0.75rem",
-                    color: "#6E8499",
+                    color: SKIN.link,
                     textDecoration: "none",
                     transition: "color .2s",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "#5FE3D2")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "#6E8499")}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = SKIN.linkHover)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = SKIN.link)}
                 >
                   Forgot password?
                 </Link>
@@ -196,18 +242,18 @@ export function Login() {
                   style={{
                     width: "100%",
                     boxSizing: "border-box",
-                    background: "rgba(9,26,45,.7)",
-                    border: "1px solid rgba(160,190,215,.18)",
+                    background: SKIN.inputBg,
+                    border: `1px solid ${SKIN.inputBorder}`,
                     borderRadius: "8px",
                     padding: "0.625rem 2.5rem 0.625rem 0.875rem",
-                    color: "#EAF2F9",
+                    color: SKIN.text,
                     fontSize: "0.9375rem",
                     outline: "none",
                     transition: "border-color .2s",
-                    fontFamily: "'Manrope', sans-serif",
+                    fontFamily: SKIN.bodyFont,
                   }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(52,214,194,.5)")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(160,190,215,.18)")}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = SKIN.inputFocus)}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = SKIN.inputBorder)}
                 />
                 <button
                   type="button"
@@ -222,7 +268,7 @@ export function Login() {
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    color: "#6E8499",
+                    color: SKIN.link,
                     padding: 0,
                     display: "flex",
                     alignItems: "center",
@@ -243,13 +289,11 @@ export function Login() {
                 marginTop: "0.25rem",
                 width: "100%",
                 padding: "0.75rem 1rem",
-                background: submitting
-                  ? "rgba(24,185,166,.5)"
-                  : "linear-gradient(135deg, #18B9A6, #34D6C2)",
+                background: submitting ? SKIN.buttonBusy : SKIN.button,
                 border: "none",
                 borderRadius: "8px",
-                color: "#06101D",
-                fontFamily: "'Manrope', sans-serif",
+                color: SKIN.buttonText,
+                fontFamily: SKIN.bodyFont,
                 fontWeight: 700,
                 fontSize: "0.9375rem",
                 letterSpacing: "0.01em",
@@ -272,10 +316,10 @@ export function Login() {
             zIndex: 1,
             marginTop: "2rem",
             fontSize: "0.75rem",
-            color: "rgba(162,182,201,.35)",
+            color: SKIN.muted, opacity: 0.45,
           }}
         >
-          © {new Date().getFullYear()} Divigner Group. All rights reserved.
+          © {new Date().getFullYear()} {SKIN.footer}
         </p>
       </div>
     </>

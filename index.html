@@ -23,6 +23,12 @@
           if (t === "dark" || (!t && prefersDark)) {
             document.documentElement.classList.add("dark");
           }
+          // Brand before first paint (siteBrand.ts re-applies after load, incl. ?brand= previews).
+          var h = location.hostname;
+          if (h === "avanew.ai" || /\.avanew\.ai$/.test(h)) {
+            document.documentElement.setAttribute("data-brand", "avanew");
+            document.title = "Avanew Command Center";
+          }
         } catch (e) {}
       })();
     </script>
