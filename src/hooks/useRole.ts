@@ -94,7 +94,7 @@ export function useRole() {
     }
   }, [])
 
-  const canViewAs = actualRole === "super_user"
+  const canViewAs = actualRole === "super_user" || actualRole === "owner"
   // View-as-RA is allowed for admin+ so program admins can QA the portal
   // their own RAs experience without needing super_user.
   const canViewAsRa = actualRole === "super_user" || actualRole === "owner" || actualRole === "admin"

@@ -91,6 +91,7 @@ const ROLE_META: Record<
 }
 
 const STANDARD_ROLES: TeamRole[] = ["admin", "bd", "partner"]
+const OWNER_ROLES: TeamRole[] = ["owner", "admin", "bd", "partner"]
 const ALL_ROLES: TeamRole[] = ["super_user", "owner", "admin", "bd", "partner"]
 
 const ROLE_BADGE_COLORS: Partial<Record<TeamRole, string>> = {
@@ -111,12 +112,14 @@ function initialsOf(name: string | null, email: string) {
 }
 
 export function TeamSection() {
-  const { isSuperUser } = useRole()
+  const { isSuperUser, isOwner } = useRole()
   const [members, setMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
-  const assignableRoles = isSuperUser ? ALL_ROLES : STANDARD_ROLES
+  // Owners manage everything in their workspace except the platform-wide
+  // Super User role, which only a Super User can hand out.
+  const assignableRoles = isSuperUser ? ALL_ROLES : isOwner ? OWNER_ROLES : STANDARD_ROLES
   const [role, setRole] = useState<TeamRole>(() => {
     const saved = localStorage.getItem("avanew-crm.invite-role") as TeamRole | null
     return saved && ALL_ROLES.includes(saved) ? saved : "admin"
@@ -348,7 +351,7 @@ export function TeamSection() {
                     onValueChange={(v) =>
                       void handleRoleChange(m, v as TeamRole)
                     }
-                    disabled={!isSuperUser && isHighPrivilege}
+                    disabled={!isSuperUser && (m.role === "super_user" || (!isOwner && isHighPrivilege))}
                   >
                     <SelectTrigger className="w-[140px]">
                       <SelectValue>
@@ -385,7 +388,7 @@ export function TeamSection() {
                             variant={m.is_program_admin ? "default" : "outline"}
                             size="sm"
                             onClick={() => void toggleProgramAdmin(m)}
-                            disabled={!isSuperUser || m.role !== "admin"}
+                            disabled={!isOwner || m.role !== "admin"}
                             className={cn(
                               "h-8 gap-1.5",
                               m.is_program_admin
@@ -419,7 +422,7 @@ export function TeamSection() {
                             variant="outline"
                             size="sm"
                             onClick={() => void toggleViewAll(m)}
-                            disabled={!isSuperUser}
+                            disabled={!isOwner}
                             className={cn(
                               "h-8 gap-1.5",
                               m.can_view_all
@@ -446,7 +449,7 @@ export function TeamSection() {
                     onClick={() => setConfirmRemove(m)}
                     aria-label="Remove member"
                     className="text-muted-foreground hover:text-destructive"
-                    disabled={!isSuperUser && isHighPrivilege}
+                    disabled={!isSuperUser && (m.role === "super_user" || (!isOwner && isHighPrivilege))}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

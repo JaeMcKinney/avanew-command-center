@@ -16,7 +16,7 @@ export function SettingsNotifications() {
   const { role } = useRole()
 
   const available = NOTIFICATION_TYPES.filter(
-    (n) => role === "super_user" || (role && n.roles.includes(role))
+    (n) => role === "super_user" || role === "owner" || (role && n.roles.includes(role))
   )
 
   return (

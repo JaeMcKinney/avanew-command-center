@@ -214,6 +214,7 @@ export async function persistPermissionsToDB(
 }
 
 export function hasPermission(matrix: PermissionsMatrix, role: TeamRole, key: PermissionKey): boolean {
-  if (role === "super_user") return true
+  // Owners have full access, same as Super User.
+  if (role === "super_user" || role === "owner") return true
   return matrix[key]?.[role as EditableRole] ?? false
 }

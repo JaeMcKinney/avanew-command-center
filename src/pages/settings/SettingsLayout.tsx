@@ -62,14 +62,14 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Company Profile",
         icon: Building2,
         description: "Business identity and info",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
       {
         to: "/settings/team",
         label: "Team / Organization",
         icon: Users,
         description: "Members, roles, and structure",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
     ],
   },
@@ -81,28 +81,28 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Pipeline / Deal Settings",
         icon: Kanban,
         description: "Stage management and deal flow",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
       {
         to: "/settings/financial",
         label: "Financial Settings",
         icon: Landmark,
         description: "Bank connections and sync",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
       {
         to: "/settings/partners-vendors",
         label: "Partner & Vendor Settings",
         icon: Handshake,
         description: "External relationship config",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
       {
         to: "/settings/roles",
         label: "Roles & Permissions",
         icon: ShieldCheck,
         description: "Role matrix and access control",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
     ],
   },
@@ -120,7 +120,7 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Branding / UI Settings",
         icon: Palette,
         description: "Visual theme and appearance",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
     ],
   },
@@ -132,35 +132,35 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Integrations",
         icon: Plug2,
         description: "Third-party API credentials",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
       {
         to: "/settings/security",
         label: "Security",
         icon: Lock,
         description: "Authentication and session policies",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
       {
         to: "/settings/audit-logs",
         label: "Audit Logs",
         icon: ScrollText,
         description: "Activity and access history",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
       {
         to: "/settings/data",
         label: "Data Management",
         icon: Database,
         description: "Import, export, and cleanup",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
       {
         to: "/settings/system",
         label: "System Preferences",
         icon: Server,
         description: "Platform-level configuration",
-        allow: ["super_user", "admin"],
+        allow: ["super_user", "owner", "admin"],
       },
     ],
   },
@@ -170,7 +170,7 @@ const COLLAPSE_KEY = "settings-sidebar:collapsed"
 
 function canSee(item: NavItem, role: TeamRole | null): boolean {
   if (!role) return false
-  if (role === "super_user") return true
+  if (role === "super_user" || role === "owner") return true
   if (!item.allow) return true
   return item.allow.includes(role)
 }

@@ -214,12 +214,12 @@ function App() {
         <Route path="/settings" element={<SettingsLayout />}>
           <Route index element={<Navigate to="/settings/profile" replace />} />
           <Route path="profile" element={<SettingsProfile />} />
-          <Route path="roles" element={<RoleGate allow={["super_user","admin"]}><SettingsRoles /></RoleGate>} />
-          <Route path="company" element={<RoleGate allow={["super_user","admin"]}><SettingsCompany /></RoleGate>} />
-          <Route path="team" element={<RoleGate allow={["super_user","admin"]}><SettingsTeam /></RoleGate>} />
-          <Route path="pipeline" element={<RoleGate allow={["super_user","admin"]}><SettingsPipeline /></RoleGate>} />
-          <Route path="financial" element={<RoleGate allow={["super_user","admin"]}><SettingsFinancial /></RoleGate>} />
-          <Route path="partners-vendors" element={<RoleGate allow={["super_user","admin"]}><SettingsPartnersVendors /></RoleGate>} />
+          <Route path="roles" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsRoles /></RoleGate>} />
+          <Route path="company" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsCompany /></RoleGate>} />
+          <Route path="team" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsTeam /></RoleGate>} />
+          <Route path="pipeline" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsPipeline /></RoleGate>} />
+          <Route path="financial" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsFinancial /></RoleGate>} />
+          <Route path="partners-vendors" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsPartnersVendors /></RoleGate>} />
           {/* Moved to the Referral Program section — redirect keeps old
               bookmarks working. */}
           <Route path="landing-pages" element={<Navigate to="/referral-program/page-templates" replace />} />
@@ -231,13 +231,13 @@ function App() {
           <Route path="ra/archive" element={<Navigate to="/referral-program/associates/archive" replace />} />
           <Route path="ra/:slug/review" element={<LegacyRaRedirect review />} />
           <Route path="ra/:slug" element={<LegacyRaRedirect />} />
-          <Route path="integrations" element={<RoleGate allow={["super_user","admin"]}><SettingsIntegrations /></RoleGate>} />
+          <Route path="integrations" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsIntegrations /></RoleGate>} />
           <Route path="notifications" element={<SettingsNotifications />} />
-          <Route path="security" element={<RoleGate allow={["super_user","admin"]}><SettingsSecurity /></RoleGate>} />
-          <Route path="audit-logs" element={<RoleGate allow={["super_user","admin"]}><SettingsAuditLogs /></RoleGate>} />
-          <Route path="data" element={<RoleGate allow={["super_user","admin"]}><SettingsData /></RoleGate>} />
-          <Route path="branding" element={<RoleGate allow={["super_user","admin"]}><SettingsBranding /></RoleGate>} />
-          <Route path="system" element={<RoleGate allow={["super_user","admin"]}><SettingsSystem /></RoleGate>} />
+          <Route path="security" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsSecurity /></RoleGate>} />
+          <Route path="audit-logs" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsAuditLogs /></RoleGate>} />
+          <Route path="data" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsData /></RoleGate>} />
+          <Route path="branding" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsBranding /></RoleGate>} />
+          <Route path="system" element={<RoleGate allow={["super_user", "owner", "admin"]}><SettingsSystem /></RoleGate>} />
         </Route>
 
         <Route path="/permissions" element={<Navigate to="/settings/roles" replace />} />

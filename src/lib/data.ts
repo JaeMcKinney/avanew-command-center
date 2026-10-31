@@ -1937,6 +1937,7 @@ export async function canManageRaProgram(): Promise<boolean> {
     .eq("organization_id", orgId)
     .eq("user_id", user.id)
     .maybeSingle()
+  if (member?.role === "owner") return true
   return member?.role === "admin" && member?.is_program_admin === true
 }
 

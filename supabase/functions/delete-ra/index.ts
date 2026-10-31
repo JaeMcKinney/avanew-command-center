@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
       .eq("user_id", callerData.user.id)
       .maybeSingle()
     isProgramAdmin =
-      callerMember?.role === "admin" && callerMember?.is_program_admin === true
+      (callerMember?.role === "admin" && callerMember?.is_program_admin === true) || callerMember?.role === "owner"
   }
   if (!isSuperUser && !isProgramAdmin) {
     return json(403, { error: "Super User or Program Admin required" })
