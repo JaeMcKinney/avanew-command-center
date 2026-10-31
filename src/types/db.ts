@@ -101,6 +101,8 @@ export type TeamMember = {
   // receives RA application notifications and may approve/decline submissions.
   // Only meaningful when role === "admin".
   is_program_admin?: boolean
+  // BD/Partner only: sees every record in the org instead of just their own.
+  can_view_all?: boolean
 }
 
 export type RaStatus =
@@ -813,6 +815,7 @@ export type OrganizationMember = {
   role: TeamRole
   created_at: string
   is_program_admin?: boolean
+  can_view_all?: boolean
 }
 
 /** Organization with the current user's role in it — returned by listMyOrganizations */

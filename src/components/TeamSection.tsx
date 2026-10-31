@@ -12,6 +12,8 @@ import {
   Target,
   Handshake,
   Star,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -50,6 +52,7 @@ import {
   removeTeamMember,
   updateTeamMemberRole,
   setProgramAdmin,
+  setMemberViewAll,
 } from "@/lib/data"
 import { useRole } from "@/hooks/useRole"
 import type { TeamMember, TeamRole } from "@/types/db"
@@ -180,6 +183,21 @@ export function TeamSection() {
       await refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update Program Admin")
+    }
+  }
+
+  async function toggleViewAll(member: TeamMember) {
+    const next = !member.can_view_all
+    try {
+      await setMemberViewAll(member.id, next)
+      toast.success(
+        next
+          ? `${member.email} can now see all records`
+          : `${member.email} now sees only their own records`
+      )
+      await refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update record access")
     }
   }
 
@@ -385,6 +403,38 @@ export function TeamSection() {
                             : m.role === "admin"
                               ? "Designate as Program Admin: receives RA application emails and may approve, decline, or delete RAs."
                               : "Only admin members can be designated as Program Admin."}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
+                  {/* Record access — BD/Partner see only records they own
+                      unless a Super User opens it up per person. */}
+                  {m.status === "active" && (m.role === "bd" || m.role === "partner") && (
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => void toggleViewAll(m)}
+                            disabled={!isSuperUser}
+                            className={cn(
+                              "h-8 gap-1.5",
+                              m.can_view_all
+                                ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {m.can_view_all ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                            {m.can_view_all ? "Sees All Records" : "Own Records Only"}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-[260px] text-xs">
+                          {m.can_view_all
+                            ? "Can see every lead, contact, account, deal, task, and activity. Click to limit to their own."
+                            : "Sees only the records they own. Click to let them see everyone's records."}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

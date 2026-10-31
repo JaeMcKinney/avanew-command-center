@@ -193,12 +193,14 @@ async function ensureOwnerForCreate(
   // View-as override: Super User simulating BD/Partner → assign self as owner
   // so the simulated role can see the record they just created.
   if (viewAsScopingRole()) return data.user.id
-  const { data: profile } = await supabase
-    .from("profiles")
+  // Use the org-level role: RLS only lets BD/Partner write rows they own.
+  const { data: member } = await supabase
+    .from("organization_members")
     .select("role")
-    .eq("id", data.user.id)
+    .eq("organization_id", requireOrg())
+    .eq("user_id", data.user.id)
     .maybeSingle()
-  const role = profile?.role as TeamRole | null
+  const role = member?.role as TeamRole | null
   if (role === "bd" || role === "partner") return data.user.id
   return null
 }
@@ -1295,7 +1297,7 @@ export async function listTeamMembers(): Promise<TeamMember[]> {
     await Promise.all([
       supabase
         .from("organization_members")
-        .select("user_id, role, created_at, is_program_admin, profiles(id, full_name, email)")
+        .select("user_id, role, created_at, is_program_admin, can_view_all, profiles(id, full_name, email)")
         .eq("organization_id", orgId)
         // RAs are managed exclusively on the Referral Associates tab; never
         // surface them here as Admins via the ROLE_META fallback. Cast through
@@ -1312,7 +1314,7 @@ export async function listTeamMembers(): Promise<TeamMember[]> {
     ])
   if (mErr) throw mErr
   if (iErr) throw iErr
-  type OrgMemberRow = { user_id: string; role: string; created_at: string; is_program_admin: boolean | null; profiles: { id: string; full_name: string | null; email: string | null } | null }
+  type OrgMemberRow = { user_id: string; role: string; created_at: string; is_program_admin: boolean | null; can_view_all: boolean | null; profiles: { id: string; full_name: string | null; email: string | null } | null }
   const active: TeamMember[] = ((members ?? []) as unknown as OrgMemberRow[]).map((m) => {
     const profile = m.profiles
     return {
@@ -1323,6 +1325,7 @@ export async function listTeamMembers(): Promise<TeamMember[]> {
       status: "active" as const,
       created_at: m.created_at,
       is_program_admin: Boolean(m.is_program_admin),
+      can_view_all: Boolean(m.can_view_all),
     }
   })
   const pending: TeamMember[] = (invites ?? []).map((i) => ({
@@ -1891,6 +1894,21 @@ export async function setProgramAdmin(
   const { error } = await supabase
     .from("organization_members")
     .update({ is_program_admin: value })
+    .eq("organization_id", requireOrg())
+    .eq("user_id", userId)
+  if (error) throw error
+}
+
+/** Let a BD/Partner member see every record in the org, not just the ones
+ *  they own. Enforced by is_org_limited() in RLS. */
+export async function setMemberViewAll(
+  userId: string,
+  value: boolean
+): Promise<void> {
+  if (PREVIEW_MODE) return
+  const { error } = await supabase
+    .from("organization_members")
+    .update({ can_view_all: value })
     .eq("organization_id", requireOrg())
     .eq("user_id", userId)
   if (error) throw error

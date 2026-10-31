@@ -53,9 +53,9 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         to: "/settings/profile",
-        label: "User Management",
+        label: "Profile & Security",
         icon: User,
-        description: "Profile and preferences",
+        description: "Profile, password, and preferences",
       },
       {
         to: "/settings/company",

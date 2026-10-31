@@ -298,6 +298,8 @@ export function AppSidebar({
   // out), but if one briefly renders here, hide the Relationship module + Tasks.
   const isRa = role != null && (role as string) === "referral_associate"
   const isLimitedRole = role === "bd" || role === "partner" || isRa
+  // Cashflow and the Referral Program are business-owner modules only.
+  const isOwnerTier = role === "super_user" || role === "owner"
   const crmActive = CRM_PATHS.some((p) => location.pathname.startsWith(p))
   const cashflowActive = location.pathname.startsWith("/cashflow")
 
@@ -402,7 +404,7 @@ export function AppSidebar({
             <SidebarLink to="/tasks" label="Tasks" icon={CheckSquare} collapsed={collapsed} onNavigate={onNavigate} />
           )}
 
-          {can("cashflow.view") && (
+          {isOwnerTier && can("cashflow.view") && (
             <ModuleGroup
               label="Cashflow"
               icon={TrendingUp}
@@ -414,7 +416,7 @@ export function AppSidebar({
             />
           )}
 
-          {!isLimitedRole && (
+          {isOwnerTier && (
             <ModuleGroup
               label="Referral Program"
               icon={Link2}

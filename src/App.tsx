@@ -184,11 +184,11 @@ function App() {
         <Route path="/reports" element={<Reports />} />
 
         {/* Cashflow — permission-matrix gated */}
-        <Route path="/cashflow" element={<RoleGate permission="cashflow.view"><Cashflow /></RoleGate>} />
-        <Route path="/cashflow/transactions" element={<RoleGate permission="cashflow.transactions"><Transactions /></RoleGate>} />
-        <Route path="/cashflow/transactions/new" element={<RoleGate permission="cashflow.transactions"><TransactionForm /></RoleGate>} />
-        <Route path="/cashflow/transactions/:id/edit" element={<RoleGate permission="cashflow.transactions"><TransactionForm /></RoleGate>} />
-        <Route path="/cashflow/bank-connections" element={<RoleGate permission="cashflow.bank_connections"><BankConnections /></RoleGate>} />
+        <Route path="/cashflow" element={<RoleGate allow={["super_user","owner"]}><Cashflow /></RoleGate>} />
+        <Route path="/cashflow/transactions" element={<RoleGate allow={["super_user","owner"]}><Transactions /></RoleGate>} />
+        <Route path="/cashflow/transactions/new" element={<RoleGate allow={["super_user","owner"]}><TransactionForm /></RoleGate>} />
+        <Route path="/cashflow/transactions/:id/edit" element={<RoleGate allow={["super_user","owner"]}><TransactionForm /></RoleGate>} />
+        <Route path="/cashflow/bank-connections" element={<RoleGate allow={["super_user","owner"]}><BankConnections /></RoleGate>} />
 
         {/* Partners */}
         <Route path="/partners" element={<Partners />} />
@@ -204,11 +204,11 @@ function App() {
             the 2026-07-04 cutover; /settings/ra/* and the old Settings→Team
             RA tab redirect here). */}
         <Route path="/referral-program" element={<Navigate to="/referral-program/associates" replace />} />
-        <Route path="/referral-program/associates" element={<RoleGate allow={["super_user","admin"]}><ReferralProgramAssociates /></RoleGate>} />
-        <Route path="/referral-program/associates/archive" element={<RoleGate allow={["super_user","admin"]}><RaAssociatesArchive /></RoleGate>} />
-        <Route path="/referral-program/associates/:slug/review" element={<RoleGate allow={["super_user","admin"]}><RaAssociateReview /></RoleGate>} />
-        <Route path="/referral-program/associates/:slug" element={<RoleGate allow={["super_user","admin"]}><RaAssociateDetail /></RoleGate>} />
-        <Route path="/referral-program/page-templates" element={<RoleGate allow={["super_user","admin"]}><RaPageTemplates /></RoleGate>} />
+        <Route path="/referral-program/associates" element={<RoleGate allow={["super_user","owner"]}><ReferralProgramAssociates /></RoleGate>} />
+        <Route path="/referral-program/associates/archive" element={<RoleGate allow={["super_user","owner"]}><RaAssociatesArchive /></RoleGate>} />
+        <Route path="/referral-program/associates/:slug/review" element={<RoleGate allow={["super_user","owner"]}><RaAssociateReview /></RoleGate>} />
+        <Route path="/referral-program/associates/:slug" element={<RoleGate allow={["super_user","owner"]}><RaAssociateDetail /></RoleGate>} />
+        <Route path="/referral-program/page-templates" element={<RoleGate allow={["super_user","owner"]}><RaPageTemplates /></RoleGate>} />
 
         {/* Settings — nested module */}
         <Route path="/settings" element={<SettingsLayout />}>
