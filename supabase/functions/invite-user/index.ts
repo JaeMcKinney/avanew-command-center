@@ -18,6 +18,7 @@
 //   - SUPABASE_SERVICE_ROLE_KEY   (your project's service-role key — keep secret)
 
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { canManageOrg } from "../_shared/orgAccess.ts"
 
 type InvitePayload = {
   email: string
@@ -96,6 +97,9 @@ Deno.serve(async (req) => {
   }
   if (!organization_id) {
     return json(400, { error: "organization_id is required" })
+  }
+  if (!(await canManageOrg(admin, callerData.user.id, organization_id))) {
+    return json(403, { error: "Admin or above required in this organization" })
   }
 
   // Write the invitation row with organization_id.

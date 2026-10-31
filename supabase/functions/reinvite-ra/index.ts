@@ -27,6 +27,7 @@
 // Optional: APP_BASE_URL
 
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { canManageOrg } from "../_shared/orgAccess.ts"
 import { sendGridSend, DEFAULT_APP_URL } from "../_shared/email.ts"
 import { signInviteToken, buildAcceptUrl, inviteEmailHtml } from "../_shared/invite.ts"
 
@@ -121,6 +122,9 @@ Deno.serve(async (req) => {
     }>()
   if (raErr) return json(500, { error: raErr.message })
   if (!ra) return json(404, { error: "RA not found" })
+  if (!(await canManageOrg(admin, callerData.user.id, ra.organization_id))) {
+    return json(403, { error: "Admin or above required in this organization" })
+  }
 
   const currentEmail = (ra.profiles?.email ?? "").toLowerCase()
   const newEmail = payload.new_email?.trim().toLowerCase() || currentEmail

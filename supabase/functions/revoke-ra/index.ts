@@ -17,6 +17,7 @@
 //   supabase functions deploy revoke-ra --no-verify-jwt
 
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { canManageOrg } from "../_shared/orgAccess.ts"
 
 type RevokeRaPayload = {
   ra_id: string
@@ -93,6 +94,9 @@ Deno.serve(async (req) => {
     .maybeSingle()
   if (raErr) return json(500, { error: raErr.message })
   if (!ra) return json(404, { error: "RA not found" })
+  if (!(await canManageOrg(admin, callerData.user.id, ra.organization_id))) {
+    return json(403, { error: "Admin or above required in this organization" })
+  }
 
   const status = ra.status as string
 

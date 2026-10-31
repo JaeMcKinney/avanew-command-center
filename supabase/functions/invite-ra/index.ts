@@ -23,6 +23,7 @@
 //   - INVITE_TOKEN_SECRET         (HMAC secret for signing invite tokens)
 
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { canManageOrg } from "../_shared/orgAccess.ts"
 import { sendGridSend, DEFAULT_APP_URL } from "../_shared/email.ts"
 import { signInviteToken, buildAcceptUrl, inviteEmailHtml } from "../_shared/invite.ts"
 
@@ -135,6 +136,9 @@ Deno.serve(async (req) => {
     return json(400, { error: "Slug must be 2–60 lowercase letters, numbers, or hyphens" })
   }
   if (!organization_id) return json(400, { error: "organization_id is required" })
+  if (!(await canManageOrg(admin, callerData.user.id, organization_id))) {
+    return json(403, { error: "Admin or above required in this organization" })
+  }
 
   // Check slug uniqueness.
   const { data: existing } = await admin
