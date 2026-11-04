@@ -92,3 +92,30 @@ export function inviteEmailHtml(firstName: string, orgName: string, acceptUrl: s
     acceptUrl,
   )
 }
+
+// ── Staff (team member) invites ─────────────────────────────────────────────
+// Same HMAC scheme, separate payload shape: { kind: "staff", user_id, exp }.
+// RA tokens have no `kind`, so neither token type verifies as the other.
+
+export type StaffInvitePayload = { kind: "staff"; user_id: string; exp: number }
+
+export async function signStaffInviteToken(payload: StaffInvitePayload, secret: string): Promise<string> {
+  const body = b64urlEncode(new TextEncoder().encode(JSON.stringify(payload)))
+  const sig = b64urlEncode(await hmac(body, secret))
+  return `${body}.${sig}`
+}
+
+export async function verifyStaffInviteToken(token: string, secret: string): Promise<StaffInvitePayload | null> {
+  const parts = token.split(".")
+  if (parts.length !== 2) return null
+  const [body, sig] = parts
+  const expected = b64urlEncode(await hmac(body, secret))
+  if (!timingSafeEqual(sig, expected)) return null
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(body))) as StaffInvitePayload
+    if (payload.kind !== "staff" || typeof payload.user_id !== "string" || typeof payload.exp !== "number") return null
+    return payload
+  } catch {
+    return null
+  }
+}

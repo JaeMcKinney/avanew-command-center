@@ -87,6 +87,32 @@ export function SetupAccount() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
+    // Long-lived staff invite (?invite=<token>): trade it for a fresh sign-in
+    // link, which brings the browser back here with a session.
+    const invite = new URLSearchParams(window.location.search).get("invite")
+    if (invite) {
+      void (async () => {
+        const { data, error } = await supabase.functions.invoke<
+          { ok: true; action_link: string } | { ok: false; reason: "expired" | "already" | "invalid" }
+        >("staff-invite", { body: { action: "accept", token: invite } })
+        if (data?.ok) {
+          window.location.href = data.action_link
+          return
+        }
+        if (!error && data?.reason === "already") {
+          toast.info("Your account is already set up. Please sign in.")
+          navigate("/login", { replace: true })
+          return
+        }
+        setLinkError(
+          data?.reason === "expired"
+            ? "This invite link has expired."
+            : "This invite link isn't valid."
+        )
+      })()
+      return
+    }
+
     // Token may already be exchanged if the page loaded with a hash
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -108,7 +134,7 @@ export function SetupAccount() {
       setLinkError((cur) => cur ?? "This invite link has expired or was already used.")
     }, 8000)
     return () => { subscription.unsubscribe(); window.clearTimeout(timer) }
-  }, [])
+  }, [navigate])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -123,7 +149,8 @@ export function SetupAccount() {
     setSubmitting(true)
     const { error } = await supabase.auth.updateUser({
       password,
-      data: fullName.trim() ? { full_name: fullName.trim() } : undefined,
+      // password_set marks a staff invite link as spent (see staff-invite).
+      data: { ...(fullName.trim() ? { full_name: fullName.trim() } : {}), password_set: true },
     })
     setSubmitting(false)
     if (error) {
