@@ -55,7 +55,11 @@ Deno.serve(async (req) => {
 
   if (body.action === "create") {
     const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "")
-    if (bearer !== serviceKey) return json(403, { error: "Service role required" })
+    // Accept any valid service-role key (legacy JWT or new secret key): only
+    // those can call the auth admin API.
+    const probe = createClient(supabaseUrl, bearer, { auth: { autoRefreshToken: false, persistSession: false } })
+    const { error: probeErr } = bearer ? await probe.auth.admin.listUsers({ perPage: 1 }) : { error: true }
+    if (probeErr) return json(403, { error: "Service role required" })
     const appUrl = body.app_url ?? ""
     if (!ALLOWED_APP_URLS.includes(appUrl)) return json(400, { error: "app_url not allowed" })
     if (!body.user_id) return json(400, { error: "user_id is required" })
