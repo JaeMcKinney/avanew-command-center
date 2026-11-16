@@ -216,8 +216,16 @@ export async function listProfiles(filter: { side: "divigner" } | { clientId: st
   return unwrap(await ("side" in filter ? query.eq("side", "divigner") : query.eq("client_id", filter.clientId)))
 }
 
+const ROLE_ORDER = ["owner", "admin", "manager", "analyst", "client_admin", "client_member"]
+
+/** Built-in roles from most to least access, then custom roles, Divigner before client. */
 export async function listRoles(): Promise<Role[]> {
-  return unwrap(await supabase.from("roles").select("*").order("created_at").order("name"))
+  const roles = unwrap(await supabase.from("roles").select("*").order("created_at").order("name"))
+  const rank = (r: Role) => {
+    const builtIn = ROLE_ORDER.indexOf(r.key)
+    return builtIn >= 0 ? builtIn : r.side === "divigner" ? 3.5 : ROLE_ORDER.length
+  }
+  return roles.sort((a, b) => rank(a) - rank(b))
 }
 
 export async function listPermissions(): Promise<Permission[]> {

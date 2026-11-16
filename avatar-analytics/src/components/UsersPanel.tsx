@@ -52,7 +52,7 @@ function InviteDialog({ scope, roles, open, onOpenChange }: { scope: Scope; role
   const queryClient = useQueryClient()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
-  const [roleId, setRoleId] = useState(roles[roles.length > 1 && "side" in scope ? 1 : 0]?.id ?? "")
+  const [roleId, setRoleId] = useState(roles.find((r) => r.key === ("side" in scope ? "admin" : "client_member"))?.id ?? roles[0]?.id ?? "")
   const [assigned, setAssigned] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const role = roles.find((r) => r.id === roleId)
