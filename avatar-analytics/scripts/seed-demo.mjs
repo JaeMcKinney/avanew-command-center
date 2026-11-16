@@ -154,6 +154,21 @@ export async function seedDemo({ days = 75, log = console.log } = {}) {
   }
   must(await admin.from("invoices").insert([invoiceFor(3, 0), invoiceFor(2, 1), invoiceFor(1, 2)]), "invoices")
 
+  log("Filling in client files…")
+  const ownerId = must(await admin.from("profiles").select("id").eq("side", "divigner").limit(1), "owner")[0].id
+  must(await admin.from("clients").update({ website: "https://northlinerealty.example", industry: "Real estate", phone: "555-0100", account_manager_id: ownerId }).eq("id", northline.id), "account")
+  must(await admin.from("clients").update({ website: "https://harbor-dental.example", industry: "Dental care" }).eq("id", harbor.id), "account")
+  must(await admin.from("client_contacts").insert([
+    { client_id: northline.id, full_name: "Morgan Hale", title: "Operations lead", email: "morgan@northline.test", phone: "555-0101", is_primary: true, created_by: ownerId },
+    { client_id: northline.id, full_name: "Dana Reyes", title: "Marketing manager", email: "dana@northline.test", phone: null, is_primary: false, created_by: ownerId },
+    { client_id: harbor.id, full_name: "Pat Kim", title: "Practice manager", email: "pat@harbor.test", phone: "555-0140", is_primary: true, created_by: ownerId },
+  ]), "contacts")
+  must(await admin.from("client_notes").insert([
+    { client_id: northline.id, author_id: ownerId, kind: "call", pinned: true, body: "Kick-off call. They want a second avatar for the buyer side in the new year, and transcripts sent to the leasing team each Monday." },
+    { client_id: northline.id, author_id: ownerId, kind: "note", pinned: false, body: "Logo arrives next week from their designer. Using their name in the header until then." },
+    { client_id: harbor.id, author_id: ownerId, kind: "meeting", pinned: false, body: "Demo went well. Deciding on a package after their board meets." },
+  ]), "notes")
+
   log("Writing summaries and questions…")
   const pending = must(await admin.from("conversation_insights").select("conversation_id").eq("status", "pending"), "pending")
   const transcripts = must(await admin.from("transcripts").select("conversation_id, turns"), "transcripts")

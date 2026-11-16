@@ -167,7 +167,7 @@ describe("publishing answers to the avatar's knowledge", () => {
       expect(doc.crawl).toEqual({ depth: 1, max_pages: 1 })
       // Attached to the PAL without disturbing anything else on it.
       const pal = tavus.pals.find((p) => p.pal_id === palId)!
-      expect(pal.document_ids).toEqual([doc.document_id])
+      expect(pal.document_ids).toEqual(["d-kb-hours", "d-kb-gone", doc.document_id]) // added to what was there
       expect(pal.callback_url).toContain("/tavus-webhook/")
     }
   })

@@ -25,6 +25,12 @@ This folder is self-contained. It does not share code or a database with the CRM
 | Packages, and each client's subscription through Stripe (subscribe, change package, payment method, cancel, invoices) | Built, tested against a mock Stripe |
 | Usage against the package: one warning email, pause at the limit, automatic resume | Built, tested against mock Tavus and email |
 | Extra minutes: a one-time $10, $20 or $50 payment on Stripe adds minutes to the current period without changing package | Built, tested against a mock Stripe |
+| Extra minutes for a custom whole-dollar amount, within a range staff set | Built |
+| Invoices filtered by period, and downloaded together as a ZIP with a summary spreadsheet | Built, tested against a mock Stripe |
+| Client file for staff: one list of every client, contacts, notes, account details | Built |
+| Finance for staff: recurring revenue, revenue by source, month and client, costs and profit | Built; costs are entered by staff |
+| Client logo upload with an editor (size, position, background, remove white box), saved as PNG | Built |
+| Avatar detail read live from Tavus: prompt, knowledge, guardrails, objectives, tools, skills, face, models, with PAL, face and conversation IDs shown throughout | Built, tested against a mock Tavus |
 | Text-message notices | Placeholder: recorded as skipped until a text provider is connected |
 | Concurrency limit per package | Shown to clients; not yet enforced in Tavus |
 | Enhancements store | Not yet |
@@ -65,6 +71,8 @@ Tavus ──► tavus-webhook/<avatar token>   checks the signature
   - `billing` starts a Stripe checkout, opens Stripe's billing page, changes package, and cancels or resumes a subscription.
   - `stripe-webhook` keeps subscriptions and invoices in step with Stripe.
   - `usage-check` compares talk time with each client's package: one warning email, a pause at the limit, a resume when there is room.
+  - `tavus-pal` reads everything Tavus holds about one avatar for the staff detail page, with keys and header values removed.
+  - `invoice-export` zips a period's invoice PDFs from Stripe with a summary CSV.
   - `export-share` turns an export a person uploaded into a private link that expires after 7 days, emails that link to the person who asked, and (on a schedule) removes old export files.
 - `src` — the React app. `src/lib/api.ts` is every read and write the screens make.
 

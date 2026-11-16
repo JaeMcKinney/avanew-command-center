@@ -5,7 +5,9 @@ import { Link, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { AvatarCards } from "@/components/AvatarCards"
 import { AvatarPicker } from "@/components/AvatarPicker"
+import { ClientAccount, ClientContacts, ClientNotes } from "@/components/ClientFile"
 import { ClientForm } from "@/components/ClientForm"
+import { LogoEditor } from "@/components/LogoEditor"
 import { PageHeader } from "@/components/PageHeader"
 import { Stat } from "@/components/Stat"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
@@ -86,7 +88,9 @@ export default function ClientDetail() {
         <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="avatars" className="min-h-10 px-4">Avatars</TabsTrigger>
           <TabsTrigger value="people" className="min-h-10 px-4">People</TabsTrigger>
-          {can("clients.manage") && <TabsTrigger value="details" className="min-h-10 px-4">Details</TabsTrigger>}
+          <TabsTrigger value="notes" className="min-h-10 px-4">Notes</TabsTrigger>
+          <TabsTrigger value="contacts" className="min-h-10 px-4">Contacts</TabsTrigger>
+          <TabsTrigger value="details" className="min-h-10 px-4">Details</TabsTrigger>
         </TabsList>
 
         <TabsContent value="avatars" className="flex flex-col gap-4">
@@ -109,22 +113,29 @@ export default function ClientDetail() {
           <UsersPanel scope={{ clientId: c.id, clientName: c.name }} canManage={can("client_users.manage")} />
         </TabsContent>
 
-        {can("clients.manage") && (
-          <TabsContent value="details">
-            <ClientForm
-              key={c.updated_at}
-              mode="edit"
-              initial={{ name: c.name, slug: c.slug, timezone: c.timezone, brand_color: c.brand_color ?? "", logo_url: c.logo_url ?? "", status: c.status }}
-              submitLabel="Save changes"
-              busy={save.isPending}
-              error={saveError}
-              onSubmit={(v) => {
-                setSaveError(null)
-                save.mutate({ name: v.name, timezone: v.timezone, status: v.status, brand_color: v.brand_color || null, logo_url: v.logo_url || null })
-              }}
-            />
-          </TabsContent>
-        )}
+        <TabsContent value="notes"><ClientNotes client={c} /></TabsContent>
+        <TabsContent value="contacts"><ClientContacts client={c} /></TabsContent>
+
+        <TabsContent value="details" className="flex flex-col gap-4">
+          <ClientAccount key={`account-${c.updated_at}`} client={c} />
+          {can("clients.manage") && (
+            <>
+              <LogoEditor clientId={c.id} clientName={c.name} current={c.logo_url} onSaved={() => void queryClient.invalidateQueries({ queryKey: ["client", c.slug] })} />
+              <ClientForm
+                key={c.updated_at}
+                mode="edit"
+                initial={{ name: c.name, slug: c.slug, timezone: c.timezone, brand_color: c.brand_color ?? "", logo_url: c.logo_url ?? "", status: c.status }}
+                submitLabel="Save changes"
+                busy={save.isPending}
+                error={saveError}
+                onSubmit={(v) => {
+                  setSaveError(null)
+                  save.mutate({ name: v.name, timezone: v.timezone, status: v.status, brand_color: v.brand_color || null, logo_url: v.logo_url || null })
+                }}
+              />
+            </>
+          )}
+        </TabsContent>
       </Tabs>
 
       <Dialog open={linking} onOpenChange={setLinking}>

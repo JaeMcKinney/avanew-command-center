@@ -136,7 +136,7 @@ export const handler = endpoint(async (req) => {
         const { data: offers, error: offerError } = await admin.rpc("topup_offer", { p_client_id: client.id, p_amount_cents: Number.isInteger(amount) ? amount : 0 })
         if (offerError) throw new Error(offerError.message)
         const offer = (offers ?? [])[0] as { minutes: number; period_start: string; period_end: string; currency: string } | undefined
-        if (!offer) throw new HttpError(400, "Choose one of the amounts offered")
+        if (!offer) throw new HttpError(400, "That amount cannot be used. Choose one of the amounts offered, or a whole-dollar amount in the range shown.")
         const { data: topup, error: insertError } = await admin.from("usage_topups").insert({
           client_id: client.id, amount_cents: amount, currency: offer.currency, minutes: offer.minutes,
           period_start: offer.period_start, period_end: offer.period_end, created_by: caller.userId,

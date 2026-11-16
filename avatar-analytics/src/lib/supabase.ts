@@ -38,3 +38,25 @@ export async function callFunction<T>(name: string, body: unknown): Promise<T> {
   if (!res.ok) throw new Error(payload?.error ?? `The server returned an error (${res.status}).`)
   return payload as T
 }
+
+/** Like callFunction, for functions that answer with a file instead of JSON. */
+export async function callFunctionRaw(name: string, body: unknown): Promise<Response> {
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+  if (!token) throw new Error("Your session has ended. Sign in again.")
+  let res: Response
+  try {
+    res = await fetch(`${functionsUrl}/${name}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: anonKey!, Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    throw new Error("Could not reach the server. Check your connection and try again.")
+  }
+  if (!res.ok) {
+    const payload = await res.json().catch(() => null)
+    throw new Error(payload?.error ?? `The server returned an error (${res.status}).`)
+  }
+  return res
+}

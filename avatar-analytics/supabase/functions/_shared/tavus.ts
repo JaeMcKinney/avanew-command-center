@@ -158,3 +158,8 @@ export function setDeploymentStatus(deploymentId: string, status: "active" | "in
     method: "PATCH", body: JSON.stringify([{ op: "replace", path: "/status", value: status }]),
   })
 }
+
+/** Reads any Tavus resource by path, for views that show what Tavus holds as it is. */
+export function tavusGet<T = unknown>(path: string): Promise<T> {
+  return request<T>(path)
+}

@@ -14,7 +14,7 @@ for (const scheme of ["light", "dark"] as const) {
 
     test("admin pages", async ({ page }) => {
       await signIn(page, OWNER)
-      for (const path of ["/admin", "/admin/clients", "/admin/clients/new", "/admin/clients/northline", "/admin/avatars", "/admin/team", "/admin/plans", "/admin/activity"]) {
+      for (const path of ["/admin", "/admin/clients", "/admin/clients/new", "/admin/clients/northline", "/admin/avatars", "/admin/avatars/p3a91c0de01", "/admin/team", "/admin/plans", "/admin/finance", "/admin/activity"]) {
         await page.goto(path)
         await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
         await expectAccessible(page)

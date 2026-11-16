@@ -117,16 +117,56 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"clients": {
+                },"client_contacts": {
                   Row: {
-                    "brand_color": string | null,"created_at": string,"created_by": string | null,"id": string,"logo_url": string | null,"name": string,"slug": string,"status": string,"timezone": string,"updated_at": string
+                    "client_id": string,"created_at": string,"created_by": string | null,"email": string | null,"full_name": string,"id": string,"is_primary": boolean,"notes": string | null,"phone": string | null,"title": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "brand_color"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"logo_url"?: string | null,"name": string,"slug": string,"status"?: string,"timezone"?: string,"updated_at"?: string
+                    "client_id": string,"created_at"?: string,"created_by"?: string | null,"email"?: string | null,"full_name": string,"id"?: string,"is_primary"?: boolean,"notes"?: string | null,"phone"?: string | null,"title"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "brand_color"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"logo_url"?: string | null,"name"?: string,"slug"?: string,"status"?: string,"timezone"?: string,"updated_at"?: string
+                    "client_id"?: string,"created_at"?: string,"created_by"?: string | null,"email"?: string | null,"full_name"?: string,"id"?: string,"is_primary"?: boolean,"notes"?: string | null,"phone"?: string | null,"title"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "client_contacts_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"client_notes": {
+                  Row: {
+                    "author_id": string | null,"body": string,"client_id": string,"created_at": string,"id": string,"kind": string,"pinned": boolean,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id"?: string | null,"body": string,"client_id": string,"created_at"?: string,"id"?: string,"kind"?: string,"pinned"?: boolean,"updated_at"?: string
+                  }
+                  Update: {
+                    "author_id"?: string | null,"body"?: string,"client_id"?: string,"created_at"?: string,"id"?: string,"kind"?: string,"pinned"?: boolean,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "client_notes_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"clients": {
+                  Row: {
+                    "account_manager_id": string | null,"address": string | null,"brand_color": string | null,"created_at": string,"created_by": string | null,"id": string,"industry": string | null,"logo_url": string | null,"name": string,"phone": string | null,"slug": string,"status": string,"timezone": string,"updated_at": string,"website": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "account_manager_id"?: string | null,"address"?: string | null,"brand_color"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"industry"?: string | null,"logo_url"?: string | null,"name": string,"phone"?: string | null,"slug": string,"status"?: string,"timezone"?: string,"updated_at"?: string,"website"?: string | null
+                  }
+                  Update: {
+                    "account_manager_id"?: string | null,"address"?: string | null,"brand_color"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"industry"?: string | null,"logo_url"?: string | null,"name"?: string,"phone"?: string | null,"slug"?: string,"status"?: string,"timezone"?: string,"updated_at"?: string,"website"?: string | null
                   }
                   Relationships: [
                     
@@ -543,6 +583,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"usage_topups": {
+                  Row: {
+                    "amount_cents": number,"client_id": string,"created_at": string,"created_by": string | null,"currency": string,"id": string,"minutes": number,"paid_at": string | null,"period_end": string,"period_start": string,"status": string,"stripe_session_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_cents": number,"client_id": string,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"id"?: string,"minutes": number,"paid_at"?: string | null,"period_end": string,"period_start": string,"status"?: string,"stripe_session_id"?: string | null
+                  }
+                  Update: {
+                    "amount_cents"?: number,"client_id"?: string,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"id"?: string,"minutes"?: number,"paid_at"?: string | null,"period_end"?: string,"period_start"?: string,"status"?: string,"stripe_session_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "usage_topups_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -584,16 +644,21 @@ isOneToOne: false
                            },
 "create_client":
 { Args: { "p_brand_color"?: string,"p_logo_url"?: string,"p_name": string,"p_slug": string,"p_timezone"?: string }; Returns: {
-              "brand_color": string | null,
+              "account_manager_id": string | null,
+"address": string | null,
+"brand_color": string | null,
 "created_at": string,
 "created_by": string | null,
 "id": string,
+"industry": string | null,
 "logo_url": string | null,
 "name": string,
+"phone": string | null,
 "slug": string,
 "status": string,
 "timezone": string,
-"updated_at": string
+"updated_at": string,
+"website": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -601,8 +666,14 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"crm_clients":
+{ Args: Record<PropertyKey, never>; Returns: Json[]
+                           },
 "expired_export_paths":
 { Args: { "p_days"?: number }; Returns: string[]
+                           },
+"finance_summary":
+{ Args: { "p_from": string,"p_to": string }; Returns: Json
                            },
 "ingest_tavus_event":
 { Args: { "p_avatar_id": string,"p_payload": Json,"p_source"?: string }; Returns: Json
@@ -651,6 +722,14 @@ isOneToOne: false
                            },
 "set_user_role":
 { Args: { "p_role_id": string,"p_user_id": string }; Returns: undefined
+                           },
+"topup_custom_rule":
+{ Args: { "p_client_id": string }; Returns: Json
+                           },
+"topup_offer":
+{ Args: { "p_amount_cents": number,"p_client_id": string }; Returns: {
+              "currency": string,"minutes": number,"period_end": string,"period_start": string
+            }[]
                            },
 "update_my_profile":
 { Args: { "p_full_name": string }; Returns: undefined

@@ -15,7 +15,7 @@ export const admin = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROL
 /** Empties every app table and removes every user, so each file starts clean. */
 export function resetDatabase() {
   const sql = `
-    truncate public.usage_topups, public.notifications, public.invoices, public.stripe_events, public.client_billing, public.plans,
+    truncate public.client_notes, public.client_contacts, public.usage_topups, public.notifications, public.invoices, public.stripe_events, public.client_billing, public.plans,
       public.avatar_knowledge, public.questions, public.question_groups, public.conversation_insights,
       public.usage_daily, public.transcripts, public.conversations, public.tavus_events,
       public.avatar_secrets, public.avatars, public.tavus_deployments, public.tavus_pals,

@@ -13,7 +13,16 @@ const PORT = Number(process.env.MOCK_TAVUS_PORT ?? 54398)
 function seed() {
   const pal = (pal_id, pal_name, extra = {}) => ({
     pal_id, pal_name, pipeline_mode: "full", default_face_id: "r" + pal_id.slice(1),
-    callback_url: null, created_at: "2026-09-01 10:00:00.000000", updated_at: "2026-11-02T09:00:00.000000Z", ...extra,
+    callback_url: null, created_at: "2026-09-01 10:00:00.000000", updated_at: "2026-11-02T09:00:00.000000Z",
+    system_prompt: `You are ${pal_name.split(" ")[0]}, a friendly concierge. Answer only from the approved knowledge. If you are not certain, say so and offer a follow-up.`,
+    greeting: "Hi, how can I help today?", dynamic_greeting: false, disclosure_type: "always",
+    document_ids: ["d-kb-hours", "d-kb-gone"], document_tags: ["leasing"], objectives_id: "o-tour", guardrail_ids: ["g-no-legal"], guardrail_tags: ["compliance"],
+    layers: {
+      llm: { model: "tavus-auto", api_key: "sk-should-never-be-shown", headers: { Authorization: "Bearer hidden-header-value" } },
+      tts: { tts_engine: "tavus-auto", voice_id: "v0a1b2c3d4e5f", api_key: "tts-secret-value" },
+      perception: { perception_model: "raven-2" }, stt: { stt_engine: "tavus-auto" },
+    },
+    ...extra,
   })
   const dep = (deployment_id, pal_id, name, channel, allowed_origins, extra = {}) => ({
     deployment_id, pal_id, name, channel, status: "active", allowed_origins,
@@ -172,6 +181,23 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (!req.headers["x-api-key"]) return send(res, 401, { message: "Invalid access token" })
+
+  // Read-only pieces of an avatar, for the staff detail page.
+  if (req.method === "GET") {
+    const palTools = path.match(/^\/v2\/pals\/([^/]+)\/tools$/)
+    if (palTools) return send(res, 200, { data: [
+      { tool_id: "t-book-tour", name: "book_tour", description: "Books a property tour for the visitor.", parameters: { type: "object", properties: { day: { type: "string" } }, required: ["day"] },
+        delivery: { api: { url: "https://hooks.northlinerealty.example/tours", method: "POST", headers: { "X-Api-Key": "tool-secret-value" } } }, is_system_tool: false, trigger_type: "in_call" },
+      { tool_id: "end_call", name: "end_call", description: "Ends the call.", parameters: {}, delivery: {}, is_system_tool: true, trigger_type: "in_call" },
+    ] })
+    if (/^\/v2\/pals\/[^/]+\/skills$/.test(path)) return send(res, 200, { data: { web_search: { enabled: true }, magic_canvas: { enabled: true, components: ["text", "calendar"] } } })
+    if (path === "/v2/objectives/o-tour") return send(res, 200, { data: { objective_name: "book_a_tour", objective_prompt: "Find out when the visitor would like to tour and book it.", confirmation_mode: "auto", output_variables: ["tour_day"], modality: "verbal" } })
+    if (path === "/v2/guardrails/g-no-legal") return send(res, 200, { uuid: "g-no-legal", guardrail_name: "no_legal_advice", guardrail_prompt: "Never give legal or financial advice.", modality: "verbal", tags: ["compliance"] })
+    if (path === "/v2/documents/d-kb-hours") return send(res, 200, { document_id: "d-kb-hours", document_name: "Office hours and policies", document_url: "https://northlinerealty.example/policies", status: "ready", tags: ["leasing"], last_crawled_at: "2026-11-10T09:00:00Z", crawl_count: 3 })
+    const face = path.match(/^\/v2\/faces\/([^/]+)$/)
+    if (face) return send(res, 200, { face_id: face[1], face_name: "Studio face", status: "completed", model_name: "phoenix-4.5", face_type: "user", default_voice_id: "v0a1b2c3d4e5f" })
+    if (/^\/v2\/(documents|guardrails|objectives)\//.test(path)) return send(res, 404, { message: "Not found" })
+  }
 
   if (path === "/v2/documents" && req.method === "POST") {
     const body = await readBody(req)

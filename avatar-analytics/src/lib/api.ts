@@ -4,7 +4,7 @@
 
 import type { PostgrestError } from "@supabase/supabase-js"
 import type { DateRange } from "@/lib/dates"
-import { callFunction, supabase } from "@/lib/supabase"
+import { callFunction, callFunctionRaw, supabase } from "@/lib/supabase"
 import type { Database } from "@/types/db"
 
 type Tables = Database["public"]["Tables"]
@@ -351,8 +351,10 @@ export async function getBillingSummary(clientId: string): Promise<BillingSummar
   return data as unknown as BillingSummary
 }
 
-export async function listInvoices(clientId: string): Promise<Invoice[]> {
-  return unwrap(await supabase.from("invoices").select("*").eq("client_id", clientId).order("issued_at", { ascending: false }).limit(60))
+export async function listInvoices(clientId: string, range?: DateRange): Promise<Invoice[]> {
+  let query = supabase.from("invoices").select("*").eq("client_id", clientId).order("issued_at", { ascending: false }).limit(120)
+  if (range) query = query.gte("issued_at", `${range.from}T00:00:00Z`).lte("issued_at", `${range.to}T23:59:59Z`)
+  return unwrap(await query)
 }
 
 type BillingAction =
@@ -365,15 +367,16 @@ export function billingAction(clientId: string, body: BillingAction) {
   return callFunction<{ ok: true; url?: string; resumed?: boolean; ends_at?: string }>("billing", { ...body, client_id: clientId })
 }
 
-export type UsageRules = { alertPercent: number; pauseEnabled: boolean; pausePercent: number; topupAmountsCents: number[]; topupRatePercent: number }
+export type UsageRules = { alertPercent: number; pauseEnabled: boolean; pausePercent: number; topupAmountsCents: number[]; topupRatePercent: number; customMinCents: number; customMaxCents: number }
 
 export async function getUsageRules(): Promise<UsageRules> {
-  const rows = unwrap(await supabase.from("settings").select("key, value").in("key", ["usage.alert_percent", "usage.pause_enabled", "usage.pause_percent", "billing.topup_amounts_cents", "billing.topup_rate_percent"]))
+  const rows = unwrap(await supabase.from("settings").select("key, value").in("key", ["usage.alert_percent", "usage.pause_enabled", "usage.pause_percent", "billing.topup_amounts_cents", "billing.topup_rate_percent", "billing.topup_custom_min_cents", "billing.topup_custom_max_cents"]))
   const value = (key: string) => rows.find((r) => r.key === key)?.value
   const amounts = value("billing.topup_amounts_cents")
   return {
     alertPercent: Number(value("usage.alert_percent") ?? 90), pauseEnabled: value("usage.pause_enabled") !== false, pausePercent: Number(value("usage.pause_percent") ?? 100),
     topupAmountsCents: Array.isArray(amounts) ? amounts.map(Number) : [], topupRatePercent: Number(value("billing.topup_rate_percent") ?? 100),
+    customMinCents: Number(value("billing.topup_custom_min_cents") ?? 0), customMaxCents: Number(value("billing.topup_custom_max_cents") ?? 0),
   }
 }
 
@@ -381,12 +384,156 @@ export async function saveUsageRules(rules: UsageRules): Promise<void> {
   const changes: Array<[string, number | boolean | number[]]> = [
     ["usage.alert_percent", rules.alertPercent], ["usage.pause_enabled", rules.pauseEnabled], ["usage.pause_percent", rules.pausePercent],
     ["billing.topup_amounts_cents", rules.topupAmountsCents], ["billing.topup_rate_percent", rules.topupRatePercent],
+    ["billing.topup_custom_min_cents", rules.customMinCents], ["billing.topup_custom_max_cents", rules.customMaxCents],
   ]
   for (const [key, value] of changes) {
     const { data, error } = await supabase.from("settings").update({ value }).eq("key", key).select("key")
     if (error) fail(error)
     if (!data?.length) throw new Error("You do not have permission to change settings.")
   }
+}
+
+// ── Staff: avatar detail from Tavus, the client file, money, logos ───────────
+
+type Json = Record<string, unknown>
+export type TavusPart<T> = { ok: true; data: T } | { ok: false; error: string }
+export type PalDetail = {
+  fetched_at: string
+  pal: Json & { pal_id: string; pal_name?: string; system_prompt?: string; greeting?: string; default_face_id?: string; layers?: Record<string, Json> }
+  face: TavusPart<Json> | null
+  tools: TavusPart<Json[]>
+  skills: TavusPart<Record<string, Json>>
+  objectives: TavusPart<Json> | null
+  guardrails: Array<{ id: string } & TavusPart<Json>>
+  guardrail_tags: string[]
+  documents: Array<{ id: string } & TavusPart<Json>>
+  document_tags: string[]
+  linked: { id: string; display_name: string; role_label: string | null; webhook_status: string; clients: { name: string; slug: string } | null } | null
+  deployments: Array<{ deployment_id: string; name: string; channel: string; status: string; allowed_origins: string[]; limits: Json }>
+}
+
+export function getPalDetail(palId: string) {
+  return callFunction<PalDetail>("tavus-pal", { pal_id: palId })
+}
+
+/** The face each PAL uses, from the last Tavus refresh. Staff only. */
+export async function listPalFaces(): Promise<Map<string, string | null>> {
+  const rows = unwrap(await supabase.from("tavus_pals").select("pal_id, default_face_id"))
+  return new Map(rows.map((r) => [r.pal_id, r.default_face_id]))
+}
+
+export type CrmClient = {
+  id: string; name: string; slug: string; status: string; logo_url: string | null; brand_color: string | null
+  website: string | null; industry: string | null; phone: string | null; created_at: string; account_manager: string | null
+  plan: string | null; monthly_price_cents: number; billing_status: string; cancel_at_period_end: boolean; renews_at: string | null
+  avatars: number; users: number; contacts: number; notes: number; last_note_at: string | null
+  primary_contact: { full_name: string; email: string | null; phone: string | null } | null
+  minutes_30d: number; last_call_at: string | null; paid_cents: number
+}
+export type ClientContact = Tables["client_contacts"]["Row"]
+export type ClientNote = Tables["client_notes"]["Row"]
+export type ContactInput = Pick<ClientContact, "full_name" | "title" | "email" | "phone" | "is_primary" | "notes">
+export type AccountInput = Pick<Client, "website" | "industry" | "phone" | "address" | "account_manager_id">
+
+export async function listCrmClients(): Promise<CrmClient[]> {
+  const { data, error } = await supabase.rpc("crm_clients")
+  if (error) fail(error)
+  return (data ?? []) as unknown as CrmClient[]
+}
+
+export async function listContacts(clientId?: string): Promise<Array<ClientContact & { clients?: { name: string; slug: string } | null }>> {
+  let query = supabase.from("client_contacts").select("*, clients(name, slug)").order("is_primary", { ascending: false }).order("full_name")
+  if (clientId) query = query.eq("client_id", clientId)
+  return unwrap(await query)
+}
+
+export async function saveContact(clientId: string, id: string | null, input: ContactInput, userId: string): Promise<void> {
+  const result = id
+    ? await supabase.from("client_contacts").update({ ...input, updated_at: new Date().toISOString() }).eq("id", id).select("id")
+    : await supabase.from("client_contacts").insert({ ...input, client_id: clientId, created_by: userId }).select("id")
+  if (result.error) fail(result.error)
+  if (!result.data?.length) throw new Error("You do not have permission to do this.")
+}
+
+export async function deleteContact(id: string): Promise<void> {
+  const { data, error } = await supabase.from("client_contacts").delete().eq("id", id).select("id")
+  if (error) fail(error)
+  if (!data?.length) throw new Error("You do not have permission to do this.")
+}
+
+export async function listNotes(clientId: string): Promise<ClientNote[]> {
+  return unwrap(await supabase.from("client_notes").select("*").eq("client_id", clientId).order("pinned", { ascending: false }).order("created_at", { ascending: false }))
+}
+
+export async function addNote(clientId: string, userId: string, body: string, kind: string): Promise<void> {
+  const { error } = await supabase.from("client_notes").insert({ client_id: clientId, author_id: userId, body, kind })
+  if (error) fail(error)
+}
+
+export async function updateNote(id: string, patch: { body?: string; pinned?: boolean }): Promise<void> {
+  const { data, error } = await supabase.from("client_notes").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id).select("id")
+  if (error) fail(error)
+  if (!data?.length) throw new Error("Only the person who wrote a note can change it.")
+}
+
+export async function deleteNote(id: string): Promise<void> {
+  const { data, error } = await supabase.from("client_notes").delete().eq("id", id).select("id")
+  if (error) fail(error)
+  if (!data?.length) throw new Error("Only the person who wrote a note can remove it.")
+}
+
+export async function updateClientAccount(id: string, input: AccountInput): Promise<void> {
+  const { data, error } = await supabase.from("clients").update(input).eq("id", id).select("id")
+  if (error) fail(error)
+  if (!data?.length) throw new Error("You do not have permission to do this.")
+}
+
+/** Stores an edited logo (PNG) and makes it the client's logo. Returns its address. */
+export async function uploadClientLogo(clientId: string, png: Blob): Promise<string> {
+  const path = `${clientId}/${crypto.randomUUID()}.png`
+  const { error } = await supabase.storage.from("logos").upload(path, png, { contentType: "image/png", cacheControl: "31536000" })
+  if (error) throw new Error("The logo could not be saved. Check that it is under 1 MB and try again.")
+  const url = supabase.storage.from("logos").getPublicUrl(path).data.publicUrl
+  const saved = await supabase.from("clients").update({ logo_url: url }).eq("id", clientId).select("id")
+  if (saved.error) fail(saved.error)
+  if (!saved.data?.length) throw new Error("You do not have permission to do this.")
+  return url
+}
+
+export type FinanceMonth = { month: string; subscription_cents: number; extra_cents: number; addon_cents: number; minutes: number; usage_cost_cents: number; fixed_cost_cents: number }
+export type FinanceClient = { id: string; name: string; slug: string; subscription_cents: number; extra_cents: number; minutes: number; usage_cost_cents: number }
+export type Finance = {
+  cost_per_minute_cents: number; fixed_monthly_cost_cents: number; months: FinanceMonth[]; clients: FinanceClient[]
+  mrr_cents: number; ending_mrr_cents: number; subscribers: number; past_due: number
+}
+
+export async function getFinance(range: DateRange): Promise<Finance> {
+  const { data, error } = await supabase.rpc("finance_summary", { p_from: range.from, p_to: range.to })
+  if (error) fail(error)
+  return data as unknown as Finance
+}
+
+export async function saveFinanceCosts(costPerMinuteCents: number, fixedMonthlyCents: number): Promise<void> {
+  for (const [key, value] of [["finance.cost_per_minute_cents", costPerMinuteCents], ["finance.fixed_monthly_cost_cents", fixedMonthlyCents]] as const) {
+    const { data, error } = await supabase.from("settings").update({ value }).eq("key", key).select("key")
+    if (error) fail(error)
+    if (!data?.length) throw new Error("You do not have permission to change settings.")
+  }
+}
+
+export type TopupCustomRule = { min_cents: number; max_cents: number; minutes_per_dollar: number; currency: string }
+
+export async function getTopupCustomRule(clientId: string): Promise<TopupCustomRule | null> {
+  const { data, error } = await supabase.rpc("topup_custom_rule", { p_client_id: clientId })
+  if (error) fail(error)
+  return (data ?? null) as unknown as TopupCustomRule | null
+}
+
+/** A ZIP of every invoice PDF in the period, with a summary spreadsheet. */
+export async function downloadInvoices(clientId: string, range: DateRange): Promise<{ blob: Blob; filename: string; count: number; missing: number }> {
+  const res = await callFunctionRaw("invoice-export", { client_id: clientId, from: range.from, to: range.to })
+  const filename = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? "invoices.zip"
+  return { blob: await res.blob(), filename, count: Number(res.headers.get("X-Invoices") ?? 0), missing: Number(res.headers.get("X-Invoices-Missing") ?? 0) }
 }
 
 // ── People, roles and permissions ────────────────────────────────────────────

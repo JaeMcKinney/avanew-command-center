@@ -14,7 +14,7 @@ test("a client reads the summary and questions for a call and downloads it as a 
   await expect(dialog.getByRole("heading", { name: "Summary" })).toBeVisible()
   await expect(dialog.getByText(/The visitor asked about/)).toBeVisible()
   // The questions are split into what the avatar answered and what it did not, with a count of each.
-  await expect(dialog.getByRole("status")).toContainText(/The visitor asked \d+ questions?\. The avatar answered \d+, partly answered \d+ and did not answer \d+\./)
+  await expect(dialog.getByRole("status").filter({ hasText: "The visitor asked" })).toContainText(/The visitor asked \d+ questions?\. The avatar answered \d+, partly answered \d+ and did not answer \d+\./)
   const answered = dialog.getByRole("region", { name: /^Questions answered \(\d+\)$/ })
   const unanswered = dialog.getByRole("region", { name: /^Questions not answered \(\d+\)$/ })
   await expect(answered.getByText("Do you have two-bedroom homes available in January?")).toBeVisible()

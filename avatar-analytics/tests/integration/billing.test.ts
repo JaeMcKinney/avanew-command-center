@@ -299,7 +299,7 @@ describe("extra minutes without changing package", () => {
 
   it("refuses other amounts, people who cannot manage billing, and clients without a subscription", async () => {
     expect((await callFunction("billing", { action: "topup", client_id: northline.id, amount_cents: 1 }, { token: dana.token })).status).toBe(400)
-    expect((await callFunction("billing", { action: "topup", client_id: northline.id, amount_cents: 2500 }, { token: dana.token })).status).toBe(400)
+    expect((await callFunction("billing", { action: "topup", client_id: northline.id, amount_cents: 2550 }, { token: dana.token })).status).toBe(400) // custom amounts are whole dollars
     expect((await callFunction("billing", { action: "topup", client_id: northline.id, amount_cents: 2000 }, { token: lee.token })).status).toBe(403)
     expect((await callFunction("billing", { action: "topup", client_id: harbor.id, amount_cents: 2000 }, { token: pat.token })).status).toBe(409)
     expect((await dana.client.from("usage_topups").insert({ client_id: northline.id, amount_cents: 1, minutes: 9999, status: "paid", period_start: new Date().toISOString(), period_end: new Date(Date.now() + 1e9).toISOString() })).error).not.toBeNull()

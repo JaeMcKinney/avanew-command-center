@@ -11,6 +11,8 @@ import { handler as conversationInsights } from "../supabase/functions/conversat
 import { handler as exportShare } from "../supabase/functions/export-share/handler.ts"
 import { handler as stripeWebhook } from "../supabase/functions/stripe-webhook/handler.ts"
 import { handler as usageCheck } from "../supabase/functions/usage-check/handler.ts"
+import { handler as invoiceExport } from "../supabase/functions/invoice-export/handler.ts"
+import { handler as tavusPal } from "../supabase/functions/tavus-pal/handler.ts"
 import { handler as knowledgePage } from "../supabase/functions/knowledge-page/handler.ts"
 import { handler as knowledgePublish } from "../supabase/functions/knowledge-publish/handler.ts"
 import { handler as tavusBackfill } from "../supabase/functions/tavus-backfill/handler.ts"
@@ -25,6 +27,8 @@ const routes: Record<string, (req: Request) => Promise<Response>> = {
   "stripe-webhook": stripeWebhook,
   "usage-check": usageCheck,
   "export-share": exportShare,
+  "invoice-export": invoiceExport,
+  "tavus-pal": tavusPal,
   "knowledge-page": knowledgePage,
   "knowledge-publish": knowledgePublish,
   "tavus-backfill": tavusBackfill,

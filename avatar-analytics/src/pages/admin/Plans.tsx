@@ -104,12 +104,14 @@ function UsageRulesForm({ initial }: { initial: UsageRules }) {
   const [rules, setRules] = useState({
     alert: String(initial.alertPercent), pause: String(initial.pausePercent), enabled: initial.pauseEnabled,
     amounts: initial.topupAmountsCents.map((c) => c / 100).join(", "), rate: String(initial.topupRatePercent),
+    customMin: String(initial.customMinCents / 100), customMax: String(initial.customMaxCents / 100),
   })
   const [problem, setProblem] = useState("")
   const save = useMutation({
     mutationFn: () => saveUsageRules({
       alertPercent: Number(rules.alert), pauseEnabled: rules.enabled, pausePercent: Number(rules.pause),
       topupAmountsCents: amountsOf(rules.amounts).map((dollars) => Math.round(dollars * 100)), topupRatePercent: Number(rules.rate),
+      customMinCents: Math.round(Number(rules.customMin) * 100), customMaxCents: Math.round(Number(rules.customMax) * 100),
     }),
     onSuccess: () => toast.success("Usage rules saved"),
     onError: (err) => toast.error((err as Error).message),
@@ -122,6 +124,8 @@ function UsageRulesForm({ initial }: { initial: UsageRules }) {
     const amounts = amountsOf(rules.amounts)
     if (amounts.some((a) => !(a >= 1 && a <= 1000)) || amounts.length > 6) return setProblem("Enter up to six extra-minute amounts in dollars, separated by commas, for example 10, 20, 50. Leave it empty to turn extra minutes off.")
     if (!(Number(rules.rate) >= 1 && Number(rules.rate) <= 1000)) return setProblem("Enter the extra-minute price as a percentage, for example 100.")
+    const min = Number(rules.customMin), max = Number(rules.customMax)
+    if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || (min > 0 && max < min)) return setProblem("Enter the smallest and largest custom amounts in whole dollars. Use 0 as the smallest to turn custom amounts off.")
     setProblem("")
     save.mutate()
   }
@@ -156,6 +160,18 @@ function UsageRulesForm({ initial }: { initial: UsageRules }) {
           <p id={`${id}-rate-help`} className="text-xs text-muted-foreground">100 charges the same per minute as their package. 125 charges a quarter more.</p>
         </div>
       </div>
+      <fieldset className="grid gap-4 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-medium">Custom amount (US dollars)</legend>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`${id}-cmin`}>Smallest amount a client can enter</Label>
+          <Input id={`${id}-cmin`} inputMode="numeric" value={rules.customMin} onChange={(e) => setRules({ ...rules, customMin: e.target.value })} className="min-h-11 max-w-32" aria-describedby={`${id}-cmin-help`} />
+          <p id={`${id}-cmin-help`} className="text-xs text-muted-foreground">Use 0 to offer only the fixed amounts above.</p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`${id}-cmax`}>Largest amount a client can enter</Label>
+          <Input id={`${id}-cmax`} inputMode="numeric" value={rules.customMax} onChange={(e) => setRules({ ...rules, customMax: e.target.value })} className="min-h-11 max-w-32" />
+        </div>
+      </fieldset>
       {problem && <p id={`${id}-problem`} role="alert" className="text-sm font-medium text-bad">{problem}</p>}
       <div><Button type="submit" className="min-h-10" disabled={save.isPending}>{save.isPending ? "Saving…" : "Save usage rules"}</Button></div>
     </form>

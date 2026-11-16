@@ -1,6 +1,10 @@
 // A client's linked avatars: photo, whether Tavus is reporting their calls,
 // and the embed code for each deployment.
 
+import { Link } from "react-router-dom"
+import { CopyId } from "@/components/CopyId"
+import { useAuth } from "@/hooks/useAuth"
+import { listPalFaces } from "@/lib/api"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useId, useState } from "react"
 import { toast } from "sonner"
@@ -61,6 +65,10 @@ function RenameDialog({ avatar, onClose }: { avatar: Avatar; onClose: () => void
 
 export function AvatarCards({ clientId, manage, showEmbeds, empty }: { clientId: string; manage: boolean; showEmbeds: boolean; empty?: React.ReactNode }) {
   const queryClient = useQueryClient()
+  const { access, can } = useAuth()
+  const isStaff = access?.side === "divigner"
+  const canSeeDetail = can("avatars.link")
+  const faces = useQuery({ queryKey: ["pal-faces"], queryFn: listPalFaces, enabled: isStaff })
   const avatars = useQuery({ queryKey: ["avatars", clientId], queryFn: () => listAvatars(clientId) })
   const palIds = (avatars.data ?? []).map((a) => a.tavus_pal_id)
   const deployments = useQuery({ queryKey: ["deployments", clientId, palIds.join(",")], queryFn: () => listDeployments(palIds), enabled: showEmbeds && palIds.length > 0 })
@@ -100,6 +108,13 @@ export function AvatarCards({ clientId, manage, showEmbeds, empty }: { clientId:
               <div className="min-w-0 flex-1">
                 <h3 className="text-xl font-semibold break-words">{avatar.display_name}</h3>
                 {avatar.role_label && <p className="text-sm text-muted-foreground">{avatar.role_label}</p>}
+                {isStaff && (
+                  <div className="mt-1.5 flex flex-col gap-0.5">
+                    <CopyId label="PAL ID" value={avatar.tavus_pal_id} />
+                    <CopyId label="Face ID" value={faces.data?.get(avatar.tavus_pal_id)} />
+                    {canSeeDetail && <Link to={`/admin/avatars/${avatar.tavus_pal_id}`} className="inline-flex min-h-6 items-center text-xs font-medium text-primary-text underline">Prompt, knowledge, guardrails and tools</Link>}
+                  </div>
+                )}
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <WebhookStatusPill status={avatar.webhook_status} />
                   {avatar.last_event_at && <span>Last call reported {timeAgo(avatar.last_event_at)}</span>}

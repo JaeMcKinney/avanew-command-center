@@ -1,4 +1,4 @@
-import { Activity as ActivityIcon, Bot, Building2, LayoutDashboard, Users, Package } from "lucide-react"
+import { Activity as ActivityIcon, Bot, Building2, LayoutDashboard, Users, CircleDollarSign, Package } from "lucide-react"
 import { useEffect, useRef, type ReactNode } from "react"
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 import { StaffShell, type NavItem } from "@/components/Shell"
@@ -7,7 +7,9 @@ import { useAuth } from "@/hooks/useAuth"
 import AcceptInvite from "@/pages/AcceptInvite"
 import Login from "@/pages/Login"
 import Activity from "@/pages/admin/Activity"
+import Finance from "@/pages/admin/Finance"
 import Plans from "@/pages/admin/Plans"
+import AvatarDetail from "@/pages/admin/AvatarDetail"
 import Avatars from "@/pages/admin/Avatars"
 import ClientDetail from "@/pages/admin/ClientDetail"
 import ClientNew from "@/pages/admin/ClientNew"
@@ -64,6 +66,7 @@ function AdminLayout() {
     { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
     { to: "/admin/clients", label: "Clients", icon: Building2 },
     ...(can("avatars.link") ? [{ to: "/admin/avatars", label: "Avatars", icon: Bot }] : []),
+    ...(can("finance.view") ? [{ to: "/admin/finance", label: "Finance", icon: CircleDollarSign }] : []),
     ...(can("plans.manage") ? [{ to: "/admin/plans", label: "Packages", icon: Package }] : []),
     { to: "/admin/team", label: "Team", icon: Users },
     ...(can("audit.view") ? [{ to: "/admin/activity", label: "Activity", icon: ActivityIcon }] : []),
@@ -89,8 +92,10 @@ export default function App() {
           <Route path="clients/new" element={<Need permission="clients.manage"><ClientNew /></Need>} />
           <Route path="clients/:slug" element={<ClientDetail />} />
           <Route path="avatars" element={<Need permission="avatars.link"><Avatars /></Need>} />
+          <Route path="avatars/:palId" element={<Need permission="avatars.link"><AvatarDetail /></Need>} />
           <Route path="team" element={<Team />} />
           <Route path="plans" element={<Need permission="plans.manage"><Plans /></Need>} />
+          <Route path="finance" element={<Need permission="finance.view"><Finance /></Need>} />
           <Route path="activity" element={<Need permission="audit.view"><Activity /></Need>} />
         </Route>
         <Route path="/c/:slug" element={<RequireAuth><PortalLayout /></RequireAuth>}>

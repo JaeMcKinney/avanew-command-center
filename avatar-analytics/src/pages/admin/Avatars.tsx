@@ -9,7 +9,8 @@ import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
 import { InfoPill, StatusPill } from "@/components/StatusPill"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { listClients, searchPals } from "@/lib/api"
+import { CopyId } from "@/components/CopyId"
+import { listClients, listPalFaces, searchPals } from "@/lib/api"
 import { Link2 } from "lucide-react"
 
 /** Every avatar in the Tavus account, and which client each one belongs to. */
@@ -17,11 +18,12 @@ export default function Avatars() {
   const [query, setQuery] = useState("")
   const hits = useQuery({ queryKey: ["pal-search", query], queryFn: () => searchPals(query), placeholderData: (prev) => prev })
   const clients = useQuery({ queryKey: ["clients"], queryFn: listClients })
+  const faces = useQuery({ queryKey: ["pal-faces"], queryFn: listPalFaces })
   const slugOf = (clientId: string | null) => clients.data?.find((c) => c.id === clientId)?.slug
 
   return (
     <>
-      <PageHeader title="Tavus avatars" description="A copy of the avatars in your Tavus account. To link one, open a client and choose “Link avatars”." />
+      <PageHeader title="Tavus avatars" description="A copy of the avatars in your Tavus account. Open one to see its prompt, knowledge, guardrails, objectives and tools. To link one, open a client and choose “Link avatars”." />
       <TavusSyncStatus />
       <div className="flex max-w-md flex-col gap-1.5">
         <Label htmlFor="avatar-search">Search by name or website</Label>
@@ -46,11 +48,14 @@ export default function Avatars() {
             {hits.data.map((hit) => {
               const slug = slugOf(hit.linked_client_id)
               return (
-                <li key={hit.pal_id} className="flex items-center gap-3 rounded-lg border bg-card p-4">
+                <li key={hit.pal_id} className="flex items-start gap-3 rounded-lg border bg-card p-4">
                   <AvatarPhoto name={hit.name || hit.pal_id} src={hit.thumbnail_image_url} />
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium break-words">{hit.name || "(no name)"}</p>
-                    <p className="font-mono text-xs text-muted-foreground">{hit.pal_id}</p>
+                    <p className="font-medium break-words"><Link to={`/admin/avatars/${hit.pal_id}`} className="text-primary-text hover:underline">{hit.name || "(no name)"}</Link></p>
+                    <div className="mt-1 flex flex-col gap-0.5">
+                      <CopyId label="PAL ID" value={hit.pal_id} />
+                      <CopyId label="Face ID" value={faces.data?.get(hit.pal_id)} />
+                    </div>
                     <p className="text-xs text-muted-foreground">{hit.deployments.length} deployment{hit.deployments.length === 1 ? "" : "s"}</p>
                     <p className="mt-1.5">
                       {hit.linked_avatar_id ? (

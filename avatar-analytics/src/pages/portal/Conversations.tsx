@@ -5,6 +5,7 @@ import { useId, useState } from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
+import { CopyId } from "@/components/CopyId"
 import { ExportBar } from "@/components/ExportBar"
 import { PageHeader } from "@/components/PageHeader"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
@@ -89,6 +90,7 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
             {formatDateTime(conversation.started_at ?? conversation.ended_at, timeZone)} · {duration(conversation.talk_seconds)} · {endedBecause(conversation.shutdown_reason)}
           </DialogDescription>
         </DialogHeader>
+        <CopyId label="Tavus conversation ID" value={conversation.conversation_id} />
         {transcript.isPending ? (
           <LoadingBlock label="Loading transcript" />
         ) : transcript.isError ? (
@@ -277,7 +279,10 @@ export default function Conversations() {
                         />
                       )}
                     </td>
-                    <td className="tabular px-4 py-3">{formatDateTime(conv.started_at ?? conv.ended_at, client.timezone)}</td>
+                    <td className="tabular px-4 py-3">
+                      {formatDateTime(conv.started_at ?? conv.ended_at, client.timezone)}
+                      <span className="block font-mono text-[0.7rem] text-muted-foreground select-all" title="Tavus conversation ID">{conv.conversation_id}</span>
+                    </td>
                     <td className="px-4 py-3">{nameOf(conv.avatar_id)}</td>
                     <td className="tabular px-4 py-3 text-right">{duration(conv.talk_seconds)}</td>
                     <td className="hidden px-4 py-3 sm:table-cell">{endedBecause(conv.shutdown_reason)}</td>

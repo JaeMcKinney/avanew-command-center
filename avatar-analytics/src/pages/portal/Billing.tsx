@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { AlertTriangle, CheckCircle2, Clock, CreditCard, ExternalLink, PauseCircle, XCircle } from "lucide-react"
+import { AlertTriangle, CheckCircle2, Clock, CreditCard, Download, ExternalLink, PauseCircle, XCircle } from "lucide-react"
 import { useEffect, useId, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -14,8 +14,10 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/hooks/useAuth"
-import { billingAction, getBillingSummary, listInvoices, listPlans, type BillingSummary, type Plan } from "@/lib/api"
-import { formatDay } from "@/lib/dates"
+import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
+import { Input } from "@/components/ui/input"
+import { billingAction, downloadInvoices, getBillingSummary, getTopupCustomRule, listInvoices, listPlans, type BillingSummary, type Plan, type TopupCustomRule } from "@/lib/api"
+import { formatDay, formatRange, presetRange, todayIn } from "@/lib/dates"
 import { count, minutes, money } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
@@ -37,8 +39,41 @@ function SubscriptionPill({ summary }: { summary: BillingSummary }) {
   }
 }
 
+/** Any whole-dollar amount in the allowed range, with the minutes it buys shown as the person types. */
+function CustomAmount({ rule, busy, onPay }: { rule: TopupCustomRule; busy: boolean; onPay: (amountCents: number) => void }) {
+  const id = useId()
+  const [value, setValue] = useState("")
+  const [problem, setProblem] = useState("")
+  const min = rule.min_cents / 100
+  const max = rule.max_cents / 100
+  const dollars = Number(value)
+  const valid = value.trim() !== "" && Number.isInteger(dollars) && dollars >= min && dollars <= max
+  const buys = valid ? Math.floor(dollars * rule.minutes_per_dollar) : 0
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!valid || buys < 1) return setProblem(`Enter a whole number of dollars from ${money(rule.min_cents, rule.currency)} to ${money(rule.max_cents, rule.currency)}.`)
+    setProblem("")
+    onPay(dollars * 100)
+  }
+  return (
+    <form onSubmit={submit} noValidate className="flex flex-col gap-1.5">
+      <Label htmlFor={`${id}-amount`}>Or enter another amount (US dollars)</Label>
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          id={`${id}-amount`} inputMode="numeric" value={value} onChange={(e) => { setValue(e.target.value.replace(/[^0-9]/g, "")); setProblem("") }}
+          className="min-h-11 w-32" autoComplete="off" placeholder={String(min)} aria-invalid={problem ? true : undefined} aria-describedby={`${id}-help${problem ? ` ${id}-problem` : ""}`}
+        />
+        <Button type="submit" variant="outline" className="min-h-11" disabled={busy}>Add minutes</Button>
+        <p role="status" className="text-sm font-medium">{valid && buys > 0 ? `${money(dollars * 100, rule.currency)} adds ${count(buys)} minutes` : ""}</p>
+      </div>
+      <p id={`${id}-help`} className="text-xs text-muted-foreground">Whole dollars, from {money(rule.min_cents, rule.currency)} to {money(rule.max_cents, rule.currency)}.</p>
+      {problem && <p id={`${id}-problem`} role="alert" className="text-sm font-medium text-bad">{problem}</p>}
+    </form>
+  )
+}
+
 /** How much of the period's included minutes are used, in words and as a bar. */
-function UsageMeter({ summary, onTopUp, busy }: { summary: BillingSummary; onTopUp?: (amountCents: number) => void; busy: boolean }) {
+function UsageMeter({ summary, onTopUp, busy, custom }: { summary: BillingSummary; onTopUp?: (amountCents: number) => void; busy: boolean; custom?: TopupCustomRule | null }) {
   const id = useId()
   if (!summary.plan || summary.included_seconds == null) return null
   const percent = summary.used_percent ?? 0
@@ -84,6 +119,7 @@ function UsageMeter({ summary, onTopUp, busy }: { summary: BillingSummary; onTop
               </li>
             ))}
           </ul>
+          {custom && <CustomAmount rule={custom} busy={busy} onPay={onTopUp} />}
         </div>
       )}
     </section>
@@ -129,10 +165,25 @@ export default function Billing() {
     refetchInterval: (query) => ((justPaid && !query.state.data?.has_subscription) || justToppedUp ? 2000 : false),
   })
   const plans = useQuery({ queryKey: ["plans"], queryFn: listPlans })
-  const invoices = useQuery({ queryKey: ["invoices", client.id], queryFn: () => listInvoices(client.id) })
+  const today = todayIn(client.timezone)
+  const [period, setPeriod] = useState<RangeState>({ preset: "year", range: presetRange("year", today) })
+  const invoices = useQuery({ queryKey: ["invoices", client.id, period.range.from, period.range.to], queryFn: () => listInvoices(client.id, period.range) })
+  const custom = useQuery({ queryKey: ["topup-custom", client.id], queryFn: () => getTopupCustomRule(client.id) })
+  const downloadAll = useMutation({
+    mutationFn: () => downloadInvoices(client.id, period.range),
+    onSuccess: async (file) => {
+      const { saveFile } = await import("@/lib/pdf")
+      saveFile(new Uint8Array(await file.blob.arrayBuffer()), file.filename, "application/zip")
+      toast.success(file.missing > 0
+        ? `Downloaded ${count(file.count - file.missing)} of ${count(file.count)} invoices. The summary lists the rest with links.`
+        : `Downloaded ${count(file.count)} invoice${file.count === 1 ? "" : "s"} with a summary`)
+    },
+    onError: (err) => toast.error((err as Error).message),
+  })
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["billing", client.id] })
     void queryClient.invalidateQueries({ queryKey: ["invoices", client.id] })
+    void queryClient.invalidateQueries({ queryKey: ["topup-custom", client.id] })
     void queryClient.invalidateQueries({ queryKey: ["client", client.slug] })
   }
 
@@ -236,7 +287,7 @@ export default function Billing() {
             )}
           </section>
           {justToppedUp && <p role="status" className="rounded-lg bg-info-soft p-3 text-sm">Thank you. We are confirming your payment; your extra minutes appear here in a few seconds.</p>}
-          <UsageMeter summary={s} busy={busy} onTopUp={canManage ? (amount_cents) => goToStripe.mutate({ action: "topup", amount_cents }) : undefined} />
+          <UsageMeter summary={s} busy={busy} custom={canManage ? custom.data : null} onTopUp={canManage ? (amount_cents) => goToStripe.mutate({ action: "topup", amount_cents }) : undefined} />
         </>
       ) : (
         <section aria-labelledby="choose-title" className="flex flex-col gap-4">
@@ -264,8 +315,17 @@ export default function Billing() {
 
       <section aria-labelledby="invoices-title" className="flex flex-col gap-3">
         <h2 id="invoices-title" className="text-lg font-semibold">Invoices</h2>
+        <DateRangeControl value={period} onChange={setPeriod} today={today} />
+        {!invoices.isPending && !invoices.isError && invoices.data.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p role="status" className="text-sm text-muted-foreground">{count(invoices.data.length)} invoice{invoices.data.length === 1 ? "" : "s"} · {formatRange(period.range)}</p>
+            <Button variant="outline" className="min-h-10" disabled={downloadAll.isPending} onClick={() => downloadAll.mutate()}>
+              <Download aria-hidden="true" />{downloadAll.isPending ? "Preparing…" : "Download these invoices (ZIP)"}
+            </Button>
+          </div>
+        )}
         {invoices.isPending ? <LoadingBlock label="Loading invoices" /> : invoices.isError ? <ErrorBlock error={invoices.error} /> : invoices.data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No invoices yet. Each one is also emailed to you when it is issued.</p>
+          <p className="text-sm text-muted-foreground">No invoices in this period. Choose a longer period to look further back. Each invoice is also emailed to you when it is issued.</p>
         ) : (
           <TableScroll label="Invoices table" className="rounded-lg border bg-card">
             <table className="w-full text-sm">
