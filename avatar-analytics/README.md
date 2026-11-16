@@ -119,7 +119,7 @@ The browser tests check every page against WCAG 2.2 AA with axe, in light and da
    ```bash
    npx supabase secrets set TAVUS_API_KEY=… ANTHROPIC_API_KEY=… APP_URL=https://… CRON_SECRET=…
    ```
-   Without `ANTHROPIC_API_KEY` everything else works; transcripts simply wait for their summary. `INSIGHTS_MODEL` chooses the model (the default is the most capable one; a smaller model costs less per transcript).
+   Without `ANTHROPIC_API_KEY` everything else works; transcripts simply wait for their summary. `INSIGHTS_MODEL` chooses the model. The default is `claude-haiku-5-5`, the low-cost one; set a larger model if summaries need more nuance.
 5. Deploy the functions: `npx supabase functions deploy`.
 6. Deploy the app (for example on Vercel, with this folder as the root directory) with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set. Leave `VITE_FUNCTIONS_URL` unset.
 7. **Create the Owner.** In the SQL editor, name the email address that will be the Owner:

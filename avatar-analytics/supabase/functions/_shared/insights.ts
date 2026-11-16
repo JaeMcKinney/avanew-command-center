@@ -6,7 +6,8 @@
 import Anthropic from "npm:@anthropic-ai/sdk@^1.8"
 import type { SupabaseClient } from "./clients.ts"
 
-const DEFAULT_MODEL = "claude-opus-5-5"
+// The small, low-cost model handles this task well. Set INSIGHTS_MODEL to use a larger one.
+const DEFAULT_MODEL = "claude-haiku-5-5"
 const MAX_ATTEMPTS = 3
 
 const SYSTEM = `You review transcripts of conversations between a website visitor and a company's AI video avatar. The company uses your output to see what visitors want and to improve the avatar's knowledge.
@@ -64,9 +65,8 @@ async function analyse(client: Anthropic, model: string, transcript: string, ope
   const response = await client.beta.messages.create({
     model,
     max_tokens: 16000,
-    // If the model declines a transcript, let the API retry it on a fallback model.
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
+    // Larger models can hand a declined transcript to a fallback model. Haiku has no fallback.
+    ...(model.startsWith("claude-haiku") ? {} : { betas: ["server-side-fallback-2026-07-01" as const], fallbacks: "default" as const }),
     thinking: { type: "adaptive" },
     output_config: { effort: "low", format: { type: "json_schema", schema: OUTPUT_SCHEMA } },
     system: SYSTEM,

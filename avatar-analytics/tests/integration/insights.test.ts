@@ -52,7 +52,7 @@ describe("summaries and questions", () => {
     const res = await callFunction("conversation-insights", {}, CRON)
     expect(res).toMatchObject({ status: 200, body: { ok: true, processed: 1, failed: 0 } })
     const { data: insight } = await admin.from("conversation_insights").select("status, summary, model").eq("conversation_id", "ins-1").single()
-    expect(insight).toMatchObject({ status: "ready", model: "claude-opus-5-5" })
+    expect(insight).toMatchObject({ status: "ready", model: "claude-haiku-5-5" })
     expect(insight!.summary).toContain("2 questions")
 
     const { data: questions } = await admin.from("questions").select("question, outcome, group_id").eq("conversation_id", "ins-1").order("position")
