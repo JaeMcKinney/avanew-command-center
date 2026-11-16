@@ -18,7 +18,8 @@
     "functions": "DENO_NO_PACKAGE_JSON=1 deno run --allow-net --allow-env --env-file=supabase/functions/.env scripts/serve-functions.ts",
     "functions:check": "DENO_NO_PACKAGE_JSON=1 deno check scripts/serve-functions.ts supabase/functions/*/index.ts",
     "seed": "node scripts/seed-demo.mjs",
-    "mock-tavus": "node tests/mock-tavus.mjs"
+    "mock-tavus": "node tests/mock-tavus.mjs",
+    "dev:shared": "SHARED_PREVIEW=1 VITE_SUPABASE_URL=/_sb VITE_FUNCTIONS_URL=/_fn/functions/v1 vite"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",

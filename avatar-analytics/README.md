@@ -78,6 +78,8 @@ npm run functions           # the server functions
 npm run dev                 # the app, at http://127.0.0.1:5180
 ```
 
+To open the app from another device or a hosted preview, run `npm run dev:shared` in place of `npm run dev`. It serves the app, the local Supabase API and the local functions through the one address.
+
 Load sample clients, avatars and two months of calls:
 
 ```bash

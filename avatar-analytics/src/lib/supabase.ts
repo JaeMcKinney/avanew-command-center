@@ -1,7 +1,10 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/db"
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
+// A value starting with "/" means "on this same site", for when the app and
+// the API are served through one address (see the dev proxy in vite.config.ts).
+const configured = import.meta.env.VITE_SUPABASE_URL as string | undefined
+const url = configured?.startsWith("/") ? window.location.origin + configured : configured
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
 if (!url || !anonKey) {
@@ -10,7 +13,10 @@ if (!url || !anonKey) {
 
 export const supabase = createClient<Database>(url, anonKey)
 
-const functionsUrl = ((import.meta.env.VITE_FUNCTIONS_URL as string | undefined) ?? `${url}/functions/v1`).replace(/\/+$/, "")
+const configuredFunctions = import.meta.env.VITE_FUNCTIONS_URL as string | undefined
+const functionsUrl = (
+  configuredFunctions?.startsWith("/") ? window.location.origin + configuredFunctions : (configuredFunctions ?? `${url}/functions/v1`)
+).replace(/\/+$/, "")
 
 /** Calls a server function as the signed-in user. Throws with a readable message on failure. */
 export async function callFunction<T>(name: string, body: unknown): Promise<T> {
