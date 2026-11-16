@@ -159,8 +159,10 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
   )
 }
 
-export default function Conversations() {
-  const client = usePortalClient()
+/** Shown in the client's portal, and inside the client's file for Divigner staff (pass `client` and `embedded`). */
+export default function Conversations({ client: given, embedded = false }: { client?: Client; embedded?: boolean } = {}) {
+  const fromPortal = usePortalClient()
+  const client = given ?? fromPortal
   const today = todayIn(client.timezone)
   const selectId = useId()
   const [state, setState] = useState<RangeState>({ preset: "month", range: presetRange("month", today) })
@@ -211,7 +213,8 @@ export default function Conversations() {
 
   return (
     <>
-      <PageHeader title="Conversations" description="Every finished call with your avatars. Choose a period and an avatar, then open a call to read what was said. Tick one or more to download, share or email them." />
+      {!embedded && <PageHeader title="Conversations" description="Every finished call with your avatars. Choose a period and an avatar, then open a call to read what was said. Tick one or more to download, share or email them." />}
+      {embedded && <p className="max-w-prose text-sm text-muted-foreground">Every finished call with {client.name}'s avatars. Open a call to read the summary, the questions and the transcript. Tick one or more to download, share or email them.</p>}
       <DateRangeControl value={state} onChange={(next) => { setState(next); setPage(1); clear() }} today={today} />
 
       <div className="flex max-w-xs flex-col gap-1.5">

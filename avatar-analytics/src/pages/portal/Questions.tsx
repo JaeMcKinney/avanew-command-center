@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/useAuth"
-import { answerQuestion, listAvatarsEver, listQuestionGroups, publishKnowledge, setQuestionStatus, type QuestionGroup } from "@/lib/api"
+import { answerQuestion, listAvatarsEver, listQuestionGroups, publishKnowledge, setQuestionStatus, type Client, type QuestionGroup } from "@/lib/api"
 import { formatDateTime } from "@/lib/dates"
 import { count } from "@/lib/format"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
@@ -138,8 +138,10 @@ function QuestionCard({ group, avatarNames, timeZone, canAnswer, onChanged }: {
   )
 }
 
-export default function Questions() {
-  const client = usePortalClient()
+/** Shown in the client's portal, and inside the client's file for Divigner staff (pass `client` and `embedded`). */
+export default function Questions({ client: given, embedded = false }: { client?: Client; embedded?: boolean } = {}) {
+  const fromPortal = usePortalClient()
+  const client = given ?? fromPortal
   const { can } = useAuth()
   const queryClient = useQueryClient()
   const groups = useQuery({ queryKey: ["question-groups", client.id], queryFn: () => listQuestionGroups(client.id) })
@@ -157,12 +159,15 @@ export default function Questions() {
 
   return (
     <>
+      {!embedded && (
       <PageHeader
         title="Questions"
         description={canAnswer
           ? "Questions visitors asked that your avatars could not answer well. Write an answer once and the avatar will use it from then on."
           : "Questions visitors asked that your avatars could not answer well."}
       />
+      )}
+      {embedded && <p className="max-w-prose text-sm text-muted-foreground">Questions visitors asked that {client.name}'s avatars could not answer well. An answer written here is added to the avatar's knowledge.</p>}
       {groups.isPending ? (
         <LoadingBlock label="Loading questions" />
       ) : groups.isError ? (

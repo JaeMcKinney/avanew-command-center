@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useId, useState } from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
-import { ChartCard, Columns, DataTable, Donut } from "@/components/Charts"
+import { TrendingDown, TrendingUp } from "lucide-react"
+import { ChartCard, Columns, DataTable, Donut, RankedBars, SignedColumns } from "@/components/Charts"
 import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
 import { PageHeader } from "@/components/PageHeader"
 import { Stat } from "@/components/Stat"
@@ -82,27 +83,54 @@ export default function Finance() {
     const revenueOf = (m: FinanceData["months"][number]) => Number(m.subscription_cents) + Number(m.extra_cents) + Number(m.addon_cents)
     const columns = months.map((m) => ({ key: m.month, label: monthName(m.month, false).slice(0, 3), longLabel: monthName(m.month), value: Math.round(revenueOf(m) / 100) }))
 
+    const minutesUsed = total((m) => m.minutes)
+    const paying = f.clients.filter((c) => Number(c.subscription_cents) + Number(c.extra_cents) > 0)
+    const margin = revenue > 0 ? percent(profit, revenue) : "0%"
+    const dollars = (cents: number) => Math.round(cents / 100)
+    const profitColumns = months.map((m) => ({ key: m.month, label: monthName(m.month, false).slice(0, 3), longLabel: monthName(m.month), value: dollars(revenueOf(m) - Number(m.usage_cost_cents) - Number(m.fixed_cost_cents)) }))
+
     return (
       <>
+        {/* The answer first: are we making money? */}
+        <section aria-labelledby="verdict" className="flex flex-wrap items-center gap-4 rounded-lg border bg-card p-5 sm:p-6">
+          <span aria-hidden="true" className={`grid size-14 shrink-0 place-items-center rounded-full ${!costsSet ? "bg-muted text-muted-foreground" : profit >= 0 ? "bg-ok-soft text-ok" : "bg-bad-soft text-bad"}`}>
+            {costsSet && profit < 0 ? <TrendingDown className="size-7" /> : <TrendingUp className="size-7" />}
+          </span>
+          <div className="min-w-0 flex-1 basis-72">
+            <h2 id="verdict" className="text-2xl font-semibold sm:text-3xl">
+              {!costsSet ? `${money(revenue)} came in` : profit >= 0 ? `Profitable: ${money(profit)} profit` : `Losing money: ${money(-profit)} loss`}
+            </h2>
+            <p className="text-muted-foreground">
+              {!costsSet
+                ? "Enter your costs at the bottom of this page to see whether that is a profit."
+                : `${money(revenue)} of revenue against ${money(usageCost + fixedCost)} of costs, a ${margin} margin. ${formatRange(state.range)}.`}
+            </p>
+          </div>
+        </section>
+
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Recurring each month" value={money(f.mrr_cents)} note={`${count(f.subscribers)} subscribing client${f.subscribers === 1 ? "" : "s"}${f.ending_mrr_cents > 0 ? ` · ${money(f.ending_mrr_cents)} ending` : ""}`} highlight />
-          <Stat label="Revenue in this period" value={money(revenue)} note={formatRange(state.range)} />
-          <Stat label={costsSet ? "Profit in this period" : "Profit"} value={costsSet ? money(profit) : "—"} note={costsSet ? `${revenue > 0 ? percent(profit, revenue) : "0%"} margin, after ${money(usageCost + fixedCost)} of costs` : "Enter your costs below to see this"} />
+          <Stat label="Revenue" value={money(revenue)} note={formatRange(state.range)} />
+          <Stat label="Costs" value={costsSet ? money(usageCost + fixedCost) : "—"} note={costsSet ? `${money(usageCost)} usage · ${money(fixedCost)} fixed` : "Not entered yet"} />
+          <Stat label="Profit" value={costsSet ? money(profit) : "—"} note={costsSet ? (profit >= 0 ? "After all costs" : "Costs are higher than revenue") : "Needs your costs"} highlight={costsSet} />
+          <Stat label="Margin" value={costsSet ? margin : "—"} note="Profit as a share of revenue" />
+          <Stat label="Recurring each month" value={money(f.mrr_cents)} note={`${count(f.subscribers)} subscribing client${f.subscribers === 1 ? "" : "s"}${f.ending_mrr_cents > 0 ? ` · ${money(f.ending_mrr_cents)} ending` : ""}`} />
+          <Stat label="Average per paying client" value={paying.length ? money(revenue / paying.length) : "—"} note={`${count(paying.length)} paying client${paying.length === 1 ? "" : "s"} in this period`} />
+          <Stat label="Earned per minute" value={minutesUsed > 0 ? money(revenue / minutesUsed) : "—"} note={f.cost_per_minute_cents > 0 ? `Each minute costs you ${money(f.cost_per_minute_cents)}` : `${count(minutesUsed)} minutes used`} />
           <Stat label="Payments to chase" value={count(f.past_due)} note={f.past_due === 0 ? "Nobody is behind" : "Clients with a failed or late payment"} />
         </div>
 
-        {revenue === 0 && total((m) => m.minutes) === 0 ? (
+        {revenue === 0 && minutesUsed === 0 ? (
           <EmptyState title="Nothing in this period yet">Revenue appears here as Stripe confirms each payment. Choose a longer period to look further back.</EmptyState>
         ) : (
           <>
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+            <div className="grid gap-4 lg:grid-cols-2">
               <ChartCard
                 title="Where revenue came from"
                 subtitle={formatRange(state.range)}
                 chart={<Donut unit="" centerValue={money(revenue)} centerLabel="revenue" slices={[
-                  { id: "subscription", label: "Packages", value: Math.round(subscription / 100), color: seriesColor(0) },
-                  { id: "extra", label: "Extra minutes", value: Math.round(extra / 100), color: seriesColor(1) },
-                  { id: "addons", label: "Add-ons", value: Math.round(addons / 100), color: seriesColor(2) },
+                  { id: "subscription", label: "Packages", value: dollars(subscription), color: seriesColor(0) },
+                  { id: "extra", label: "Extra minutes", value: dollars(extra), color: seriesColor(1) },
+                  { id: "addons", label: "Add-ons", value: dollars(addons), color: seriesColor(2) },
                 ]} />}
                 table={<DataTable caption="Revenue by source" head={["Source", "Revenue", "Share"]} rows={[
                   ["Monthly packages (including setup fees)", money(subscription), percent(subscription, revenue)],
@@ -110,16 +138,72 @@ export default function Finance() {
                   ["Add-ons (not sold yet)", money(addons), percent(addons, revenue)],
                 ]} />}
               />
+              {costsSet && profit >= 0 ? (
+                <ChartCard
+                  title="Where each dollar went"
+                  subtitle="Revenue split into costs and what is left"
+                  chart={<Donut unit="" centerValue={margin} centerLabel="margin" slices={[
+                    { id: "profit", label: "Profit", value: dollars(profit), color: seriesColor(2) },
+                    { id: "usage", label: "Usage cost", value: dollars(usageCost), color: seriesColor(1) },
+                    { id: "fixed", label: "Fixed costs", value: dollars(fixedCost), color: seriesColor(3) },
+                  ]} />}
+                  table={<DataTable caption="Where each dollar went" head={["Part", "Amount", "Share of revenue"]} rows={[
+                    ["Profit", money(profit), percent(profit, revenue)],
+                    ["Usage cost", money(usageCost), percent(usageCost, revenue)],
+                    ["Fixed costs", money(fixedCost), percent(fixedCost, revenue)],
+                  ]} />}
+                />
+              ) : (
+                <section aria-labelledby="dollar-went" className="flex flex-col gap-2 rounded-lg border bg-card p-4 sm:p-5">
+                  <h3 id="dollar-went" className="font-sans text-base font-semibold">Where each dollar went</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {costsSet ? `Costs of ${money(usageCost + fixedCost)} are higher than revenue of ${money(revenue)}, so there is no profit to show as a share.` : "Enter your costs at the bottom of this page to see how each dollar splits between costs and profit."}
+                  </p>
+                </section>
+              )}
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
               <ChartCard
                 title="Revenue by month"
                 subtitle="In dollars, when Stripe received each payment"
-                chart={<Columns columns={columns} unit="dollars" color={seriesColor(0)} />}
+                chart={<Columns columns={columns} unit="dollars" color={seriesColor(0)} label="Revenue by month" />}
                 table={<DataTable caption="Revenue by month" head={["Month", "Revenue"]} rows={months.map((m) => [monthName(m.month), money(revenueOf(m))])} />}
               />
+              {costsSet ? (
+                <ChartCard
+                  title="Profit by month"
+                  subtitle="Above the line is profit; below it is a loss"
+                  chart={<SignedColumns columns={profitColumns} label="Profit by month" format={(v) => `${v < 0 ? "-" : ""}$${Math.abs(v).toLocaleString("en-US")}`} />}
+                  table={<DataTable caption="Profit by month" head={["Month", "Revenue", "Costs", "Profit"]} rows={months.map((m) => [monthName(m.month), money(revenueOf(m)), money(Number(m.usage_cost_cents) + Number(m.fixed_cost_cents)), money(revenueOf(m) - Number(m.usage_cost_cents) - Number(m.fixed_cost_cents))])} />}
+                />
+              ) : (
+                <section aria-labelledby="profit-month" className="flex flex-col gap-2 rounded-lg border bg-card p-4 sm:p-5">
+                  <h3 id="profit-month" className="font-sans text-base font-semibold">Profit by month</h3>
+                  <p className="text-sm text-muted-foreground">Enter your costs at the bottom of this page to see profit for each month.</p>
+                </section>
+              )}
             </div>
 
+            {f.clients.length > 0 && (
+              <section aria-labelledby="client-bars" className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
+                <div>
+                  <h3 id="client-bars" className="font-sans text-base font-semibold">Revenue by client</h3>
+                  <p className="text-sm text-muted-foreground">Who pays the most in this period{f.cost_per_minute_cents > 0 ? ", with each client's margin after usage cost" : ""}.</p>
+                </div>
+                <RankedBars
+                  label="Revenue by client" color={seriesColor(0)}
+                  bars={f.clients.map((c) => {
+                    const paid = Number(c.subscription_cents) + Number(c.extra_cents)
+                    return { id: c.id, label: c.name, value: paid, display: money(paid), detail: f.cost_per_minute_cents > 0 && paid > 0 ? `${percent(paid - Number(c.usage_cost_cents), paid)} margin` : `${count(c.minutes)} min used` }
+                  })}
+                />
+              </section>
+            )}
+
+            <h2 className="text-xl font-semibold">The detail</h2>
             <section aria-labelledby="by-month" className="flex flex-col gap-3">
-              <h2 id="by-month" className="text-lg font-semibold">Month by month</h2>
+              <h3 id="by-month" className="text-lg font-semibold">Month by month</h3>
               <TableScroll label="Month by month table" className="rounded-lg border bg-card">
                 <table className="w-full text-sm">
                   <caption className="sr-only">Revenue, cost and profit for each month</caption>
@@ -169,7 +253,7 @@ export default function Finance() {
             </section>
 
             <section aria-labelledby="by-client" className="flex flex-col gap-3">
-              <h2 id="by-client" className="text-lg font-semibold">Client by client</h2>
+              <h3 id="by-client" className="text-lg font-semibold">Client by client</h3>
               <TableScroll label="Client by client table" className="rounded-lg border bg-card">
                 <table className="w-full text-sm">
                   <caption className="sr-only">Revenue, usage cost and margin for each client in this period</caption>
@@ -219,7 +303,7 @@ export default function Finance() {
 
   return (
     <>
-      <PageHeader title="Finance" description="What clients have paid, what recurs each month, and what is left after your costs. Figures come from payments Stripe has confirmed." />
+      <PageHeader title="Finance" description="Whether we are making money: revenue, costs, profit and margin for the period you choose. Figures come from payments Stripe has confirmed." />
       <DateRangeControl value={state} onChange={setState} today={today} />
       {body()}
     </>

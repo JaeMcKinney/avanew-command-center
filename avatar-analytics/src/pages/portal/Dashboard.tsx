@@ -5,7 +5,7 @@ import { ChartCard, Columns, DataTable, Donut, type Slice } from "@/components/C
 import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
 import { Stat } from "@/components/Stat"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
-import { listAvatars, sumUsage, usageByAvatar, usageByDay } from "@/lib/api"
+import { listAvatars, sumUsage, usageByAvatar, usageByDay, type Client } from "@/lib/api"
 import { bucketColumns, GRAIN_LABEL, grainFor } from "@/lib/buckets"
 import { MAX_SERIES, seriesColor } from "@/lib/chartColors"
 import { formatDay, formatRange, presetRange, startOfMonth, startOfQuarter, todayIn } from "@/lib/dates"
@@ -13,9 +13,11 @@ import { count, duration, minutes, percent } from "@/lib/format"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
 
-export default function Dashboard() {
-  const client = usePortalClient()
-  useDocumentTitle(`${client.name} dashboard`)
+/** Shown in the client's portal, and inside the client's file for Divigner staff (pass `client` and `embedded`). */
+export default function Dashboard({ client: given, embedded = false }: { client?: Client; embedded?: boolean } = {}) {
+  const fromPortal = usePortalClient()
+  const client = given ?? fromPortal
+  useDocumentTitle(embedded ? client.name : `${client.name} dashboard`)
   const today = todayIn(client.timezone)
   const [state, setState] = useState<RangeState>({ preset: "month", range: presetRange("month", today) })
   const { range } = state
@@ -49,7 +51,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <h1 className="sr-only">{client.name} dashboard</h1>
+      {!embedded && <h1 className="sr-only">{client.name} dashboard</h1>}
 
       <section aria-labelledby="talk-time-heading" className="flex flex-col gap-3">
         <h2 id="talk-time-heading" className="text-2xl font-semibold">Talk time you have used</h2>

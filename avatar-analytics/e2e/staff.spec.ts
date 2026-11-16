@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process"
 import { readFile } from "node:fs/promises"
 import { expect, test } from "@playwright/test"
 import { strFromU8, unzipSync } from "fflate"
@@ -120,14 +121,22 @@ test("staff see revenue, what recurs monthly and profit after costs", async ({ p
   await signIn(page, OWNER)
   await page.getByRole("link", { name: "Finance" }).click()
   await expect(page.getByRole("heading", { name: "Finance", level: 1 })).toBeVisible()
-  // Sample data: one client on $199 a month, with three paid invoices this year.
+  // Sample data: one client on $199 a month with three paid invoices this year ($597).
+  // Extra minutes bought in other tests add to that, so check against the database.
+  const query = "select (select coalesce(sum(amount_paid_cents),0) from public.invoices where status='paid') + (select coalesce(sum(amount_cents),0) from public.usage_topups where status='paid')"
+  const paid = Number(execFileSync("docker", ["exec", "-i", "supabase_db_avatar-analytics", "psql", "-U", "postgres", "-Atq", "-c", query]).toString().trim()) / 100
+  const total = "$" + paid.toLocaleString("en-US")
+  expect(paid).toBeGreaterThanOrEqual(597)
+  await expect(page.getByRole("heading", { name: /came in$|^Profitable:|^Losing money:/ })).toBeVisible()
   await expect(page.getByText("Recurring each month").locator("..")).toContainText("$199")
-  await expect(page.getByText("Revenue in this period").locator("..")).toContainText("$597")
+  await expect(page.getByText("Revenue", { exact: true }).first().locator("..")).toContainText(total)
+  await expect(page.getByRole("img", { name: /^Revenue by month\. [\d,]+ dollars in total/ })).toBeVisible()
+  await expect(page.getByRole("list", { name: "Revenue by client" }).getByRole("listitem").first()).toContainText("Northline Realty")
   const months = page.getByRole("table", { name: /Revenue, cost and profit for each month/ })
   await expect(months.getByRole("row").last()).toContainText("Total")
-  await expect(months.getByRole("row").last()).toContainText("$597")
+  await expect(months.getByRole("row").last()).toContainText(total)
   const clients = page.getByRole("table", { name: /for each client/ })
-  await expect(clients.getByRole("row").filter({ hasText: "Northline Realty" })).toContainText("$597")
+  await expect(clients.getByRole("row").filter({ hasText: "Northline Realty" })).toContainText(total)
   await expectAccessible(page)
   await expectNoSidewaysScroll(page)
 
@@ -137,7 +146,12 @@ test("staff see revenue, what recurs monthly and profit after costs", async ({ p
   await costs.getByLabel("Fixed costs each month (US dollars)").fill("20")
   await costs.getByRole("button", { name: "Save costs" }).click()
   await expect(page.getByText("Costs saved")).toBeVisible()
-  await expect(page.getByText("Profit in this period").locator("..")).toContainText(/margin, after \$[\d,.]+ of costs/)
+  // The answer is stated outright, with a pie of where each dollar went and profit by month as bars.
+  await expect(page.getByRole("region", { name: /^(Profitable|Losing money):/ })).toContainText(/of revenue against \$[\d,.]+ of costs, a -?\d+% margin/)
+  await expect(page.getByText("Margin", { exact: true }).first().locator("..")).toContainText("%")
+  await expect(page.getByRole("img", { name: /^Profit by month\. A (profit|loss) of/ })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Where each dollar went" })).toBeVisible()
+  await expectAccessible(page)
   await expect(clients.getByRole("row").filter({ hasText: "Northline Realty" })).toContainText("%")
   await costs.getByLabel("What a minute of talk time costs you (US dollars)").fill("0")
   await costs.getByLabel("Fixed costs each month (US dollars)").fill("0")
@@ -184,4 +198,41 @@ test("every conversation shows its Tavus conversation ID", async ({ page }) => {
   await page.getByRole("button", { name: /^Read the conversation/ }).first().click()
   await expect(page.getByRole("dialog").getByText(/^demo-\d{5}$/)).toBeVisible()
   await expect(page.getByRole("dialog").getByRole("button", { name: /^Copy Tavus conversation ID demo-/ })).toBeVisible()
+})
+
+test("staff read, export and answer for a client from inside the client's file", async ({ page }) => {
+  await signIn(page, OWNER)
+  await page.goto("/admin/clients/northline")
+  // The client's own analytics.
+  await page.getByRole("tab", { name: "Analytics" }).click()
+  await expect(page.getByRole("region", { name: "Talk time you have used" })).toBeVisible()
+  await expect(page.getByRole("img", { name: /Talk time by avatar\. Maya/ })).toBeVisible()
+
+  // Their conversations, with the same filter, transcript view and export bar the client has.
+  await page.getByRole("tab", { name: "Conversations" }).click()
+  await page.getByRole("button", { name: "This year" }).click()
+  await page.getByRole("combobox", { name: "Avatar" }).selectOption({ label: "Maya" })
+  await expect(page.getByRole("status").filter({ hasText: "with Maya" })).toBeVisible()
+  await page.getByRole("button", { name: /^Read the conversation/ }).first().click()
+  const dialog = page.getByRole("dialog")
+  await expect(dialog.getByRole("heading", { name: "Summary" })).toBeVisible()
+  await expect(dialog.getByRole("button", { name: "Download PDF" })).toBeVisible()
+  await page.keyboard.press("Escape")
+  const boxes = page.getByRole("checkbox", { name: /^Select the conversation from/ })
+  await boxes.nth(0).check()
+  await boxes.nth(1).check()
+  const bar = page.getByRole("region", { name: "Export selected transcripts" })
+  await expect(bar.getByRole("button", { name: "Email to me" })).toBeVisible()
+  const [download] = await Promise.all([page.waitForEvent("download"), bar.getByRole("button", { name: "Download ZIP" }).click()])
+  expect(download.suggestedFilename()).toMatch(/^northline-transcripts-2-conversations-/)
+  expect(Object.keys(unzipSync(new Uint8Array(await readFile(await download.path()))))).toHaveLength(2)
+  await expectAccessible(page)
+  await expectNoSidewaysScroll(page)
+
+  // And their questions.
+  await page.getByRole("tab", { name: "Questions" }).click()
+  await expect(page.getByRole("tab", { name: /^Needs an answer/ })).toBeVisible()
+  await expect(page.getByRole("tab", { name: /^Answered/ })).toBeVisible()
+  // One page title only: the client's name.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1)
 })

@@ -16,6 +16,9 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UsersPanel } from "@/components/UsersPanel"
+import Conversations from "@/pages/portal/Conversations"
+import Dashboard from "@/pages/portal/Dashboard"
+import Questions from "@/pages/portal/Questions"
 import { useAuth } from "@/hooks/useAuth"
 import { getClientBySlug, sumUsage, updateClient, usageByDay, type Client } from "@/lib/api"
 import { browserToday, presetRange, startOfMonth } from "@/lib/dates"
@@ -87,6 +90,9 @@ export default function ClientDetail() {
       <Tabs defaultValue="avatars" className="flex flex-col gap-4">
         <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="avatars" className="min-h-10 px-4">Avatars</TabsTrigger>
+          {can("analytics.view") && <TabsTrigger value="analytics" className="min-h-10 px-4">Analytics</TabsTrigger>}
+          {can("transcripts.view") && <TabsTrigger value="conversations" className="min-h-10 px-4">Conversations</TabsTrigger>}
+          {can("transcripts.view") && <TabsTrigger value="questions" className="min-h-10 px-4">Questions</TabsTrigger>}
           <TabsTrigger value="people" className="min-h-10 px-4">People</TabsTrigger>
           <TabsTrigger value="notes" className="min-h-10 px-4">Notes</TabsTrigger>
           <TabsTrigger value="contacts" className="min-h-10 px-4">Contacts</TabsTrigger>
@@ -108,6 +114,11 @@ export default function ClientDetail() {
             }
           />
         </TabsContent>
+
+        {/* The same screens the client has, so staff can read, export and answer without leaving the file. */}
+        {can("analytics.view") && <TabsContent value="analytics" className="flex flex-col gap-6"><Dashboard client={c} embedded /></TabsContent>}
+        {can("transcripts.view") && <TabsContent value="conversations" className="flex flex-col gap-4"><Conversations client={c} embedded /></TabsContent>}
+        {can("transcripts.view") && <TabsContent value="questions" className="flex flex-col gap-4"><Questions client={c} embedded /></TabsContent>}
 
         <TabsContent value="people">
           <UsersPanel scope={{ clientId: c.id, clientName: c.name }} canManage={can("client_users.manage")} />
