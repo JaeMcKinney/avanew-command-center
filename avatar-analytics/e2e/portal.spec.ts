@@ -168,7 +168,7 @@ test("a client pulls every conversation for one avatar over a period, page by pa
   // One avatar: every row is theirs, and the count matches the database.
   await page.getByLabel("Avatar").selectOption({ label: "Theo" })
   await expect(status).toContainText(`Showing 1–25 of ${theoCount} conversations with Theo`)
-  await expect(table.locator("tbody tr td:nth-child(2)").filter({ hasNotText: "Theo" })).toHaveCount(0)
+  await expect(table.locator("tbody tr td:nth-child(3)").filter({ hasNotText: "Theo" })).toHaveCount(0)
   const firstOnPage1 = await table.locator("tbody tr").first().innerText()
 
   // Page through to the end. Nothing is repeated and nothing is cut off.

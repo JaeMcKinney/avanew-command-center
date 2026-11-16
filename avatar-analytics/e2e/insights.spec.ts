@@ -28,28 +28,11 @@ test("a client reads the summary and questions for a call and downloads it as a 
   await expectAccessible(page)
 
   const [download] = await Promise.all([page.waitForEvent("download"), dialog.getByRole("button", { name: "Download PDF" }).click()])
-  expect(download.suggestedFilename()).toMatch(/^northline-[a-z]+-\d{4}-\d{2}-\d{2}-transcript\.pdf$/)
+  expect(download.suggestedFilename()).toMatch(/^northline-[a-z]+-\d{4}-\d{2}-\d{2}-\d{4}-transcript\.pdf$/)
   const pdf = await PDFDocument.load(await readFile(await download.path()))
   expect(pdf.getPageCount()).toBeGreaterThanOrEqual(1)
   expect(pdf.getTitle()).toMatch(/^Conversation with (Maya|Theo|Ivy)$/)
   expect(pdf.getAuthor()).toBe("Divigner")
-})
-
-test("a client downloads every transcript for one avatar in a period as a single PDF", async ({ page }) => {
-  await signIn(page, CLIENT_ADMIN)
-  await page.getByRole("link", { name: "Conversations" }).click()
-  await expect(page.getByRole("heading", { name: "Conversations", level: 1 })).toBeVisible()
-  await page.getByRole("combobox", { name: "Avatar" }).selectOption({ label: "Theo" })
-  await page.getByRole("button", { name: "This year" }).click()
-  await expect(page.getByRole("status").filter({ hasText: "with Theo" })).toBeVisible()
-  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download transcripts (PDF)" }).click()])
-  expect(download.suggestedFilename()).toMatch(/^northline-theo-transcripts-\d{4}-\d{2}-\d{2}-to-\d{4}-\d{2}-\d{2}\.pdf$/)
-  const pdf = await PDFDocument.load(await readFile(await download.path()))
-  const said = /Downloaded (\d+) transcripts?/.exec(await page.getByText(/Downloaded \d+ transcript/).innerText())!
-  // Every conversation starts on its own page.
-  expect(pdf.getPageCount()).toBeGreaterThanOrEqual(Number(said[1]))
-  expect(Number(said[1])).toBeGreaterThan(1)
-  expect(pdf.getTitle()).toBe("Conversation transcripts for Northline Realty")
 })
 
 test("a client answers a question once and it is added to every avatar that was asked", async ({ page }) => {

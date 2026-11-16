@@ -44,6 +44,8 @@ function seed() {
     ],
     conversations: [],
     documents: [],
+    emails: [],
+    emailStatus: 200,
     recrawls: [],
     recrawlStatus: 202,
     anthropicCalls: 0,
@@ -109,6 +111,14 @@ const server = http.createServer(async (req, res) => {
       content: [{ type: "text", text: JSON.stringify(result) }],
       stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 100, output_tokens: 50 },
     })
+  }
+
+  // ── A stand-in for the Resend email API ──
+  if (path === "/resend/emails" && req.method === "POST") {
+    if (!/^Bearer \S+/.test(req.headers.authorization ?? "")) return send(res, 401, { message: "Missing API key" })
+    if (state.emailStatus !== 200) return send(res, state.emailStatus, { message: "mock failure" })
+    state.emails.push(await readBody(req))
+    return send(res, 200, { id: `email-mock-${state.emails.length}` })
   }
 
   if (!req.headers["x-api-key"]) return send(res, 401, { message: "Invalid access token" })

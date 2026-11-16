@@ -441,6 +441,9 @@ verify_jwt = false
 [functions.conversation-insights]
 verify_jwt = false
 
+[functions.export-share]
+verify_jwt = false
+
 [functions.knowledge-publish]
 verify_jwt = false
 

@@ -277,16 +277,20 @@ export async function setQuestionStatus(groupId: string, status: "open" | "dismi
 export const EXPORT_LIMIT = 200
 export type ExportItem = { conversation: Conversation; turns: TranscriptTurn[]; summary: string | null; questions: Question[] }
 
-/** Everything needed to print the transcripts in a period: the newest EXPORT_LIMIT calls that have one. */
-export async function listForExport(clientId: string, range: DateRange, avatarId: string | null): Promise<{ items: ExportItem[]; total: number }> {
+/** The newest EXPORT_LIMIT calls in a period that have a transcript, for "select all". */
+export async function listTranscriptConversations(clientId: string, range: DateRange, avatarId: string | null): Promise<{ rows: Conversation[]; total: number }> {
   let query = supabase.from("conversations").select("*", { count: "exact" }).eq("client_id", clientId).eq("has_transcript", true)
-    .gte("usage_date", range.from).lte("usage_date", range.to).order("started_at", { ascending: false }).limit(EXPORT_LIMIT)
+    .gte("usage_date", range.from).lte("usage_date", range.to)
   if (avatarId) query = query.eq("avatar_id", avatarId)
-  const convs = await query
-  if (convs.error) fail(convs.error)
-  const rows = convs.data ?? []
-  const ids = rows.map((r) => r.conversation_id)
-  if (ids.length === 0) return { items: [], total: 0 }
+  const { data, error, count } = await query.order("started_at", { ascending: false, nullsFirst: false }).order("conversation_id").limit(EXPORT_LIMIT)
+  if (error) fail(error)
+  return { rows: data ?? [], total: count ?? 0 }
+}
+
+/** The transcript, summary and questions for each of the given calls, in the same order. */
+export async function loadExportItems(conversations: Conversation[]): Promise<ExportItem[]> {
+  const ids = conversations.map((c) => c.conversation_id)
+  if (ids.length === 0) return []
   const [transcripts, insights, questions] = await Promise.all([
     supabase.from("transcripts").select("conversation_id, turns").in("conversation_id", ids),
     supabase.from("conversation_insights").select("conversation_id, summary").in("conversation_id", ids).eq("status", "ready"),
@@ -294,16 +298,13 @@ export async function listForExport(clientId: string, range: DateRange, avatarId
   ])
   const turns = new Map(unwrap(transcripts).map((t) => [t.conversation_id, t.turns as unknown as TranscriptTurn[]]))
   const summaries = new Map(unwrap(insights).map((i) => [i.conversation_id, i.summary]))
-  const asked = unwrap(questions)
-  return {
-    total: convs.count ?? rows.length,
-    items: rows.map((conversation) => ({
-      conversation,
-      turns: turns.get(conversation.conversation_id) ?? [],
-      summary: summaries.get(conversation.conversation_id) ?? null,
-      questions: asked.filter((q) => q.conversation_id === conversation.conversation_id),
-    })),
-  }
+  const asked = unwrap(questions) as Question[]
+  return conversations.filter((c) => turns.has(c.conversation_id)).map((conversation) => ({
+    conversation,
+    turns: turns.get(conversation.conversation_id) ?? [],
+    summary: summaries.get(conversation.conversation_id) ?? null,
+    questions: asked.filter((q) => q.conversation_id === conversation.conversation_id),
+  }))
 }
 
 // ── People, roles and permissions ────────────────────────────────────────────

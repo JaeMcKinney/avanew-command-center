@@ -18,6 +18,7 @@ export default defineConfig({
   webServer: [
     { command: "npm run mock-tavus", url: "http://127.0.0.1:54398/__control/health", reuseExistingServer: true },
     { command: "npm run functions", url: "http://127.0.0.1:54399/health", reuseExistingServer: true },
-    { command: "npm run dev", url: "http://127.0.0.1:5180", reuseExistingServer: true },
+    // Dropbox and Google Drive only appear when their keys are set; the tests stand in for both services.
+    { command: "npm run dev", url: "http://127.0.0.1:5180", reuseExistingServer: true, env: { VITE_DROPBOX_APP_KEY: "test-dropbox-key", VITE_GOOGLE_CLIENT_ID: "test-google-client" } },
   ],
 })

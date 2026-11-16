@@ -7,6 +7,7 @@
 
 import { handler as avatarLink } from "../supabase/functions/avatar-link/handler.ts"
 import { handler as conversationInsights } from "../supabase/functions/conversation-insights/handler.ts"
+import { handler as exportShare } from "../supabase/functions/export-share/handler.ts"
 import { handler as knowledgePage } from "../supabase/functions/knowledge-page/handler.ts"
 import { handler as knowledgePublish } from "../supabase/functions/knowledge-publish/handler.ts"
 import { handler as tavusBackfill } from "../supabase/functions/tavus-backfill/handler.ts"
@@ -17,6 +18,7 @@ import { handler as userInvite } from "../supabase/functions/user-invite/handler
 const routes: Record<string, (req: Request) => Promise<Response>> = {
   "avatar-link": avatarLink,
   "conversation-insights": conversationInsights,
+  "export-share": exportShare,
   "knowledge-page": knowledgePage,
   "knowledge-publish": knowledgePublish,
   "tavus-backfill": tavusBackfill,

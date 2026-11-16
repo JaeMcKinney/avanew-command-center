@@ -39,6 +39,7 @@ export async function mockTavusState(): Promise<{
   patches: Array<{ pal_id: string; ops: Array<{ op: string; path: string; value: unknown }> }>
   documents: Array<{ document_id: string; document_url: string; document_name: string; crawl?: unknown }>
   recrawls: string[]
+  emails: Array<{ from: string; to: string[]; subject: string; text: string; html: string }>
   anthropicCalls: number
 }> {
   return (await fetch(`${MOCK_TAVUS}/__control/state`)).json()

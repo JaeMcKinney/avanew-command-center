@@ -26,7 +26,9 @@ This folder is self-contained. It does not share code or a database with the CRM
 | Stripe billing, invoices, enhancements store | Not yet |
 | Transcript summaries and the questions each visitor asked | Built, tested against a mock Claude API |
 | Questions inbox: answer once, added to the avatar's Tavus knowledge | Built, tested against a mock Tavus |
-| Branded transcript PDF, one call or a whole period | Built |
+| Branded transcript PDF for each call | Built |
+| Export one or many transcripts: ZIP download, device share sheet, private link, email to yourself | Built, email tested against a mock email service |
+| Save an export to Dropbox or Google Drive | Built, tested against stand-ins; each needs its own key (see below) |
 | Monthly questions email | Not yet |
 | Change history, Tavus rollouts, support requests | Not yet |
 | Financial reports and forecast | Not yet |
@@ -56,6 +58,7 @@ Tavus ──► tavus-webhook/<avatar token>   checks the signature
   - `conversation-insights` summarises new transcripts with Claude and lists the questions asked.
   - `knowledge-publish` sends a client's answers to Tavus as a knowledge document on each avatar.
   - `knowledge-page` is the page Tavus reads those answers from (public, reached only by a long random address).
+  - `export-share` turns an export a person uploaded into a private link that expires after 7 days, emails that link to the person who asked, and (on a schedule) removes old export files.
 - `src` — the React app. `src/lib/api.ts` is every read and write the screens make.
 
 Who can see what is enforced in the database, not in the screens. A client user can only ever read rows for their own client, whatever the app asks for.
@@ -120,6 +123,11 @@ The browser tests check every page against WCAG 2.2 AA with axe, in light and da
    npx supabase secrets set TAVUS_API_KEY=… ANTHROPIC_API_KEY=… APP_URL=https://… CRON_SECRET=…
    ```
    Without `ANTHROPIC_API_KEY` everything else works; transcripts simply wait for their summary. `INSIGHTS_MODEL` chooses the model. The default is `claude-haiku-5-5`, the low-cost one; set a larger model if summaries need more nuance.
+   Optional extras for transcript exports:
+   - **Email to me** needs `RESEND_API_KEY` and `EMAIL_FROM` on the server (a [Resend](https://resend.com) account with your sending domain verified).
+   - **Save to Dropbox** needs `VITE_DROPBOX_APP_KEY` on the app (a Dropbox app with this site's address in its allowed domains).
+   - **Save to Google Drive** needs `VITE_GOOGLE_CLIENT_ID` on the app (a Google OAuth web client with this site as an authorised JavaScript origin and the Drive API enabled). The app asks only for permission to add files.
+   Each button stays hidden until its setting exists. Download, share and private links need nothing extra. Add a daily schedule for `export-share` (same form as the ones below) to remove export files after 7 days.
 5. Deploy the functions: `npx supabase functions deploy`.
 6. Deploy the app (for example on Vercel, with this folder as the root directory) with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set. Leave `VITE_FUNCTIONS_URL` unset.
 7. **Create the Owner.** In the SQL editor, name the email address that will be the Owner:

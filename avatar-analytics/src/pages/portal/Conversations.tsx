@@ -5,14 +5,16 @@ import { useId, useState } from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
+import { ExportBar } from "@/components/ExportBar"
 import { PageHeader } from "@/components/PageHeader"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
 import { StatusPill } from "@/components/StatusPill"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
-  CONVERSATIONS_PAGE_SIZE, EXPORT_LIMIT, getInsight, getTranscript, listAvatarsEver, listConversations, listForExport, splitQuestions,
+  CONVERSATIONS_PAGE_SIZE, getInsight, getTranscript, listAvatarsEver, listConversations, listTranscriptConversations, splitQuestions,
   type Client, type Conversation, type Question,
 } from "@/lib/api"
 import { formatDateTime, formatRange, presetRange, todayIn } from "@/lib/dates"
@@ -55,13 +57,6 @@ function QuestionSection({ id, title, questions, empty, questionsPath }: { id: s
   )
 }
 
-/** Builds the PDF only when asked, so the PDF code is not loaded for people who never download. */
-async function downloadPdf(client: Client, scope: string | undefined, name: Array<string | null | undefined>, conversations: import("@/lib/pdf").PdfConversation[]) {
-  const { buildTranscriptPdf, pdfFileName, saveFile } = await import("@/lib/pdf")
-  const bytes = await buildTranscriptPdf({ clientName: client.name, logoUrl: client.logo_url, timeZone: client.timezone, scope, conversations })
-  saveFile(bytes, pdfFileName(name))
-}
-
 function TranscriptDialog({ conversation, avatarName, client, onClose }: { conversation: Conversation; avatarName: string; client: Client; onClose: () => void }) {
   const timeZone = client.timezone
   const transcript = useQuery({ queryKey: ["transcript", conversation.conversation_id], queryFn: () => getTranscript(conversation.conversation_id) })
@@ -75,8 +70,9 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
   const download = async () => {
     setSaving(true)
     try {
-      await downloadPdf(client, undefined, [client.slug, avatarName, (conversation.started_at ?? conversation.ended_at ?? "").slice(0, 10), "transcript"],
-        [{ conversation, avatarName, summary, questions, turns: transcript.data ?? [] }])
+      const [{ buildExportFile }, { saveFile }] = await Promise.all([import("@/lib/exportFiles"), import("@/lib/pdf")])
+      const file = await buildExportFile(client, [{ conversation, avatarName, summary, questions, turns: transcript.data ?? [] }])
+      saveFile(file.bytes, file.filename, file.type)
     } catch (err) {
       toast.error(`The PDF could not be made: ${(err as Error).message}`)
     } finally {
@@ -169,7 +165,8 @@ export default function Conversations() {
   const [avatarId, setAvatarId] = useState("")
   const [page, setPage] = useState(1)
   const [open, setOpen] = useState<Conversation | null>(null)
-  const [exporting, setExporting] = useState(false)
+  const [selected, setSelected] = useState<Map<string, Conversation>>(new Map())
+  const [selectingAll, setSelectingAll] = useState(false)
   const avatars = useQuery({ queryKey: ["avatars-ever", client.id], queryFn: () => listAvatarsEver(client.id) })
   const conversations = useQuery({
     queryKey: ["conversations", client.id, state.range.from, state.range.to, avatarId, page],
@@ -185,40 +182,42 @@ export default function Conversations() {
   const last = Math.min(total, page * CONVERSATIONS_PAGE_SIZE)
   const who = avatarId ? ` with ${nameOf(avatarId)}` : ""
 
-  const downloadAll = async () => {
-    setExporting(true)
+  const withTranscript = rows.filter((r) => r.has_transcript)
+  const pageChecked = withTranscript.length > 0 && withTranscript.every((r) => selected.has(r.conversation_id))
+  const pageSome = withTranscript.some((r) => selected.has(r.conversation_id))
+  const toggle = (convs: Conversation[], on: boolean) => {
+    setSelected((prev) => {
+      const next = new Map(prev)
+      for (const c of convs) if (on) next.set(c.conversation_id, c); else next.delete(c.conversation_id)
+      return next
+    })
+  }
+  /** Ticks every transcript in the chosen period and avatar, not only the ones on this page. */
+  const selectAll = async () => {
+    setSelectingAll(true)
     try {
-      const { items, total: withTranscript } = await listForExport(client.id, state.range, avatarId || null)
-      if (items.length === 0) {
-        toast.message("None of these conversations has a transcript to download.")
-        return
-      }
-      const scope = `${formatRange(state.range)}${avatarId ? ` · ${nameOf(avatarId)}` : ""}`
-      await downloadPdf(client, scope, [client.slug, avatarId ? nameOf(avatarId) : null, "transcripts", state.range.from, "to", state.range.to],
-        items.map((item) => ({ ...item, avatarName: nameOf(item.conversation.avatar_id) })))
-      if (withTranscript > items.length) {
-        toast.message(`The PDF has the newest ${count(items.length)} of ${count(withTranscript)} transcripts. Choose a shorter period to get the rest.`)
-      } else {
-        toast.success(`Downloaded ${count(items.length)} transcript${items.length === 1 ? "" : "s"}`)
-      }
+      const all = await listTranscriptConversations(client.id, state.range, avatarId || null)
+      setSelected(new Map(all.rows.map((c) => [c.conversation_id, c])))
+      if (all.total > all.rows.length) toast.message(`Selected the newest ${count(all.rows.length)} of ${count(all.total)} transcripts. Choose a shorter period to export the rest.`)
     } catch (err) {
-      toast.error(`The PDF could not be made: ${(err as Error).message}`)
+      toast.error((err as Error).message)
     } finally {
-      setExporting(false)
+      setSelectingAll(false)
     }
   }
+  const clear = () => setSelected(new Map())
 
   return (
     <>
-      <PageHeader title="Conversations" description="Every finished call with your avatars. Choose a period and an avatar, then open a call to read what was said." />
-      <DateRangeControl value={state} onChange={(next) => { setState(next); setPage(1) }} today={today} />
+      <PageHeader title="Conversations" description="Every finished call with your avatars. Choose a period and an avatar, then open a call to read what was said. Tick one or more to download, share or email them." />
+      <DateRangeControl value={state} onChange={(next) => { setState(next); setPage(1); clear() }} today={today} />
 
       <div className="flex max-w-xs flex-col gap-1.5">
         <Label htmlFor={selectId}>Avatar</Label>
         <select
           id={selectId}
           value={avatarId}
-          onChange={(e) => { setAvatarId(e.target.value); setPage(1) }}
+          onChange={(e) => { setAvatarId(e.target.value); setPage(1); clear() }}
           className="min-h-10 rounded-md border border-input bg-transparent px-3 text-sm"
         >
           <option value="">All avatars</option>
@@ -240,16 +239,24 @@ export default function Conversations() {
             <p role="status" className="text-sm text-muted-foreground">
               {total > CONVERSATIONS_PAGE_SIZE ? `Showing ${first}–${last} of ${count(total)}` : count(total)} conversation{total === 1 ? "" : "s"}{who} · {formatRange(state.range)}
             </p>
-            <Button variant="outline" className="min-h-10" onClick={() => void downloadAll()} disabled={exporting} aria-describedby={`${selectId}-export-help`}>
-              <Download aria-hidden="true" />{exporting ? "Preparing PDF…" : "Download transcripts (PDF)"}
+            <Button variant="outline" className="min-h-10" onClick={() => void selectAll()} disabled={selectingAll}>
+              {selectingAll ? "Selecting…" : `Select all transcripts${who} in this period`}
             </Button>
           </div>
-          <p id={`${selectId}-export-help`} className="sr-only">One PDF with every transcript in this period{who}, up to {EXPORT_LIMIT}.</p>
           <TableScroll label="Conversations table" className={cn("rounded-lg border bg-card", conversations.isPlaceholderData && "opacity-60")}>
             <table className="w-full text-sm">
               <caption className="sr-only">Conversations{who}, newest first</caption>
               <thead>
                 <tr className="border-b bg-muted/60 text-left text-xs text-muted-foreground uppercase">
+                  <th scope="col" className="w-12 py-2.5 pr-0 pl-4">
+                    <Checkbox
+                      className="size-5"
+                      aria-label="Select every transcript on this page"
+                      disabled={withTranscript.length === 0}
+                      checked={pageChecked ? true : pageSome ? "indeterminate" : false}
+                      onCheckedChange={(on) => toggle(withTranscript, on === true)}
+                    />
+                  </th>
                   <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">When</th>
                   <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">Avatar</th>
                   <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Length</th>
@@ -260,6 +267,16 @@ export default function Conversations() {
               <tbody>
                 {rows.map((conv) => (
                   <tr key={conv.conversation_id} className="border-b last:border-0">
+                    <td className="py-3 pr-0 pl-4">
+                      {conv.has_transcript && (
+                        <Checkbox
+                          className="size-5"
+                          aria-label={`Select the conversation from ${formatDateTime(conv.started_at ?? conv.ended_at, client.timezone)}`}
+                          checked={selected.has(conv.conversation_id)}
+                          onCheckedChange={(on) => toggle([conv], on === true)}
+                        />
+                      )}
+                    </td>
                     <td className="tabular px-4 py-3">{formatDateTime(conv.started_at ?? conv.ended_at, client.timezone)}</td>
                     <td className="px-4 py-3">{nameOf(conv.avatar_id)}</td>
                     <td className="tabular px-4 py-3 text-right">{duration(conv.talk_seconds)}</td>
@@ -292,6 +309,8 @@ export default function Conversations() {
           )}
         </>
       )}
+
+      {selected.size > 0 && <ExportBar client={client} selected={[...selected.values()]} nameOf={nameOf} onClear={clear} />}
 
       {open && <TranscriptDialog conversation={open} avatarName={nameOf(open.avatar_id)} client={client} onClose={() => setOpen(null)} />}
     </>
