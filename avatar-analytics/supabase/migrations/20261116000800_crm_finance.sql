@@ -167,7 +167,9 @@ begin
     'fixed_monthly_cost_cents', v_fixed,
     'months', coalesce((select jsonb_agg(jsonb_build_object(
         'month', b.month, 'subscription_cents', b.subscription_cents, 'extra_cents', b.extra_cents, 'addon_cents', b.addon_cents,
-        'minutes', round(b.minutes), 'usage_cost_cents', round(b.minutes * v_cost_per_minute), 'fixed_cost_cents', v_fixed) order by b.month) from by_month b), '[]'::jsonb),
+        'minutes', round(b.minutes), 'usage_cost_cents', round(b.minutes * v_cost_per_minute),
+        -- Fixed costs count only in months with any business, so empty months before the first client are not a loss.
+        'fixed_cost_cents', case when b.subscription_cents + b.extra_cents + b.minutes > 0 then v_fixed else 0 end) order by b.month) from by_month b), '[]'::jsonb),
     'clients', coalesce((select jsonb_agg(jsonb_build_object(
         'id', c.id, 'name', c.name, 'slug', c.slug, 'subscription_cents', c.subscription_cents, 'extra_cents', c.extra_cents,
         'minutes', round(c.minutes), 'usage_cost_cents', round(c.minutes * v_cost_per_minute)) order by (c.subscription_cents + c.extra_cents) desc, c.name)

@@ -49,7 +49,7 @@ function CostsForm({ data }: { data: FinanceData }) {
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={`${id}-fixed`}>Fixed costs each month (US dollars)</Label>
           <Input id={`${id}-fixed`} inputMode="decimal" value={fixed} onChange={(e) => setFixed(e.target.value)} className="min-h-11 max-w-40" aria-describedby={`${id}-fixed-help`} />
-          <p id={`${id}-fixed-help`} className="text-xs text-muted-foreground">Platform plans and tools you pay whatever the usage.</p>
+          <p id={`${id}-fixed-help`} className="text-xs text-muted-foreground">Platform plans and tools you pay whatever the usage. Counted in each month that has revenue or usage.</p>
         </div>
       </div>
       {problem && <p role="alert" className="text-sm font-medium text-bad">{problem}</p>}
@@ -100,7 +100,7 @@ export default function Finance() {
                 title="Where revenue came from"
                 subtitle={formatRange(state.range)}
                 chart={<Donut unit="" centerValue={money(revenue)} centerLabel="revenue" slices={[
-                  { id: "subscription", label: "Monthly packages", value: Math.round(subscription / 100), color: seriesColor(0) },
+                  { id: "subscription", label: "Packages", value: Math.round(subscription / 100), color: seriesColor(0) },
                   { id: "extra", label: "Extra minutes", value: Math.round(extra / 100), color: seriesColor(1) },
                   { id: "addons", label: "Add-ons", value: Math.round(addons / 100), color: seriesColor(2) },
                 ]} />}
