@@ -127,10 +127,11 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
               ) : (
                 <>
                   <p role="status" className="rounded-lg bg-muted p-3 text-sm">
-                    The visitor asked <strong>{count(questions.length)}</strong> question{questions.length === 1 ? "" : "s"}. The avatar answered <strong>{count(split.answered.length)}</strong> and did not fully answer <strong>{count(split.unanswered.length)}</strong>.
+                    The visitor asked <strong>{count(questions.length)}</strong> question{questions.length === 1 ? "" : "s"}. The avatar answered <strong>{count(split.answered.length)}</strong>, partly answered <strong>{count(split.partly.length)}</strong> and did not answer <strong>{count(split.unanswered.length)}</strong>.
                   </p>
-                  <QuestionSection id="answered-heading" title="Questions answered" questions={split.answered} empty="The avatar did not fully answer any of the questions." />
-                  <QuestionSection id="unanswered-heading" title="Questions not answered" questions={split.unanswered} empty="The avatar answered every question." questionsPath={`/c/${client.slug}/questions`} />
+                  <QuestionSection id="answered-heading" title="Questions answered" questions={split.answered} empty="None." />
+                  <QuestionSection id="partly-heading" title="Questions partly answered" questions={split.partly} empty="None." questionsPath={`/c/${client.slug}/questions`} />
+                  <QuestionSection id="unanswered-heading" title="Questions not answered" questions={split.unanswered} empty="None." questionsPath={`/c/${client.slug}/questions`} />
                 </>
               )
             )}

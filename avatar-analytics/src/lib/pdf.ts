@@ -195,10 +195,10 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
     heading("Summary")
     paragraph(item.summary ?? "A summary is not available for this conversation yet.", item.summary ? { gap: 6 } : { font: italic, color: MUTED, gap: 6 })
 
-    const { answered, unanswered } = splitQuestions(item.questions)
+    const { answered, partly, unanswered } = splitQuestions(item.questions)
     if (item.summary && item.questions.length > 0) {
       const total = item.questions.length
-      paragraph(`The visitor asked ${total} question${total === 1 ? "" : "s"}. The avatar answered ${answered.length} and did not fully answer ${unanswered.length}.`, { font: bold, size: 10, color: NAVY, gap: 6 })
+      paragraph(`The visitor asked ${total} question${total === 1 ? "" : "s"}. The avatar answered ${answered.length}, partly answered ${partly.length} and did not answer ${unanswered.length}.`, { font: bold, size: 10, color: NAVY, gap: 6 })
     }
     const list = (title: string, questions: Question[], empty: string) => {
       heading(`${title} (${questions.length})`)
@@ -206,19 +206,15 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
       questions.forEach((q, i) => {
         need(30)
         page.drawText(`${i + 1}.`, { x: MARGIN, y: y - 10.5, size: 10.5, font: bold, color: INK })
-        paragraph(q.question, { indent: 18, gap: q.outcome === "answered" ? 5 : 0 })
-        if (q.outcome !== "answered") {
-          paragraph(q.outcome === "weak" ? "Partly answered" : "Not answered", { indent: 18, size: 9, font: bold, color: NAVY, gap: 2 })
-          if (q.group?.status === "answered" && q.group.answer) {
-            paragraph(`Answer since added to the avatar's knowledge: ${q.group.answer}`, { indent: 18, size: 9.5, color: MUTED })
-          }
-          y -= 5
-        }
+        const added = q.outcome !== "answered" && q.group?.status === "answered" && q.group.answer
+        paragraph(q.question, { indent: 18, gap: added ? 1 : 5 })
+        if (added) paragraph(`Answer since added to the avatar's knowledge: ${q.group!.answer}`, { indent: 18, size: 9.5, color: MUTED, gap: 5 })
       })
     }
     if (item.questions.length > 0) {
-      list("Questions answered", answered, "The avatar did not fully answer any of the questions.")
-      list("Questions not answered", unanswered, "The avatar answered every question.")
+      list("Questions answered", answered, "None.")
+      list("Questions partly answered", partly, "None.")
+      list("Questions not answered", unanswered, "None.")
     } else if (item.summary) {
       heading("Questions")
       paragraph("The visitor did not ask any questions.", { font: italic, color: MUTED, gap: 6 })

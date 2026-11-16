@@ -233,9 +233,13 @@ export type Insight = Tables["conversation_insights"]["Row"]
 export type Question = Tables["questions"]["Row"] & { group?: { status: string; answer: string | null } | null }
 const QUESTION_COLUMNS = "*, group:question_groups(status, answer)"
 
-/** Splits a call's questions into the ones the avatar answered and the ones it did not (fully). */
-export function splitQuestions(questions: Question[]): { answered: Question[]; unanswered: Question[] } {
-  return { answered: questions.filter((q) => q.outcome === "answered"), unanswered: questions.filter((q) => q.outcome !== "answered") }
+/** Splits a call's questions into the ones the avatar answered, partly answered, and did not answer. */
+export function splitQuestions(questions: Question[]): { answered: Question[]; partly: Question[]; unanswered: Question[] } {
+  return {
+    answered: questions.filter((q) => q.outcome === "answered"),
+    partly: questions.filter((q) => q.outcome === "weak"),
+    unanswered: questions.filter((q) => q.outcome !== "answered" && q.outcome !== "weak"),
+  }
 }
 export type QuestionGroup = Tables["question_groups"]["Row"]
 

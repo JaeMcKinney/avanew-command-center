@@ -14,12 +14,17 @@ test("a client reads the summary and questions for a call and downloads it as a 
   await expect(dialog.getByRole("heading", { name: "Summary" })).toBeVisible()
   await expect(dialog.getByText(/The visitor asked about/)).toBeVisible()
   // The questions are split into what the avatar answered and what it did not, with a count of each.
-  await expect(dialog.getByRole("status")).toContainText(/The visitor asked \d+ questions?\. The avatar answered \d+ and did not fully answer \d+\./)
+  await expect(dialog.getByRole("status")).toContainText(/The visitor asked \d+ questions?\. The avatar answered \d+, partly answered \d+ and did not answer \d+\./)
   const answered = dialog.getByRole("region", { name: /^Questions answered \(\d+\)$/ })
   const unanswered = dialog.getByRole("region", { name: /^Questions not answered \(\d+\)$/ })
   await expect(answered.getByText("Do you have two-bedroom homes available in January?")).toBeVisible()
   await expect(unanswered.getByText("Do you have two-bedroom homes available in January?")).toHaveCount(0)
+  const partly = dialog.getByRole("region", { name: /^Questions partly answered \(\d+\)$/ })
+  await expect(partly).toBeVisible()
+  // Each section holds only its own kind.
   await expect(answered.getByText(/Partly answered|Not answered/)).toHaveCount(0)
+  await expect(partly.getByText("Not answered", { exact: true })).toHaveCount(0)
+  await expect(unanswered.getByText("Partly answered", { exact: true })).toHaveCount(0)
   await expectAccessible(page)
 
   const [download] = await Promise.all([page.waitForEvent("download"), dialog.getByRole("button", { name: "Download PDF" }).click()])
