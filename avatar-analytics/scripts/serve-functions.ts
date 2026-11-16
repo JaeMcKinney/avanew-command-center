@@ -6,6 +6,9 @@
 // Serves http://127.0.0.1:54399/functions/v1/<name>
 
 import { handler as avatarLink } from "../supabase/functions/avatar-link/handler.ts"
+import { handler as conversationInsights } from "../supabase/functions/conversation-insights/handler.ts"
+import { handler as knowledgePage } from "../supabase/functions/knowledge-page/handler.ts"
+import { handler as knowledgePublish } from "../supabase/functions/knowledge-publish/handler.ts"
 import { handler as tavusBackfill } from "../supabase/functions/tavus-backfill/handler.ts"
 import { handler as tavusSync } from "../supabase/functions/tavus-sync/handler.ts"
 import { handler as tavusWebhook } from "../supabase/functions/tavus-webhook/handler.ts"
@@ -13,6 +16,9 @@ import { handler as userInvite } from "../supabase/functions/user-invite/handler
 
 const routes: Record<string, (req: Request) => Promise<Response>> = {
   "avatar-link": avatarLink,
+  "conversation-insights": conversationInsights,
+  "knowledge-page": knowledgePage,
+  "knowledge-publish": knowledgePublish,
   "tavus-backfill": tavusBackfill,
   "tavus-sync": tavusSync,
   "tavus-webhook": tavusWebhook,

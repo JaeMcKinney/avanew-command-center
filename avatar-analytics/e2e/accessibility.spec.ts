@@ -29,7 +29,7 @@ for (const scheme of ["light", "dark"] as const) {
 
     test("client portal pages", async ({ page }) => {
       await signIn(page, CLIENT_ADMIN)
-      for (const path of ["/c/northline", "/c/northline/conversations", "/c/northline/avatars", "/c/northline/team"]) {
+      for (const path of ["/c/northline", "/c/northline/conversations", "/c/northline/questions", "/c/northline/avatars", "/c/northline/team"]) {
         await page.goto(path)
         await expect(page.getByRole("heading").first()).toBeVisible()
         await expectAccessible(page)

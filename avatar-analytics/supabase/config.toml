@@ -437,3 +437,13 @@ verify_jwt = false
 
 [functions.tavus-backfill]
 verify_jwt = false
+
+[functions.conversation-insights]
+verify_jwt = false
+
+[functions.knowledge-publish]
+verify_jwt = false
+
+# Read by Tavus without a login; protected by a long random token in the address.
+[functions.knowledge-page]
+verify_jwt = false

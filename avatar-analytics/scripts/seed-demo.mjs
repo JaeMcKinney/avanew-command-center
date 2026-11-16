@@ -43,6 +43,12 @@ const SAMPLE_TURNS = [
   ["assistant", "Of course. I have 10 am or 2 pm on Saturday. Which suits you?"],
 ]
 
+const SAMPLE_TOPICS = {
+  "Hi, do you have any two-bedroom homes available in January?": "Do you have two-bedroom homes available in January?",
+  "Yes please. Is there a pet deposit?": "Is there a pet deposit?",
+  "That works. Can I book a tour for Saturday?": "Can I book a tour for Saturday?",
+}
+
 export async function seedDemo({ days = 75, log = console.log } = {}) {
   const { url, serviceKey, anonKey, functionsUrl } = settings()
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
@@ -123,6 +129,32 @@ export async function seedDemo({ days = 75, log = console.log } = {}) {
   for (let i = 0; i < events.length; i += 25) {
     await Promise.all(events.slice(i, i + 25).map(async (e) =>
       must(await admin.rpc("ingest_tavus_event", { p_avatar_id: e.avatar, p_payload: e.payload, p_source: "webhook" }), "ingest")))
+  }
+
+  log("Writing summaries and questions…")
+  const pending = must(await admin.from("conversation_insights").select("conversation_id").eq("status", "pending"), "pending")
+  const transcripts = must(await admin.from("transcripts").select("conversation_id, turns"), "transcripts")
+  const turnsOf = new Map(transcripts.map((t) => [t.conversation_id, t.turns]))
+  const groupIds = new Map() // client|topic -> group id, so repeats are counted rather than duplicated
+  const clientOf = new Map(must(await admin.from("conversations").select("conversation_id, client_id"), "conversations").map((c) => [c.conversation_id, c.client_id]))
+  for (const { conversation_id } of pending) {
+    const turns = turnsOf.get(conversation_id) ?? []
+    const client = clientOf.get(conversation_id)
+    const questions = []
+    turns.forEach((turn, i) => {
+      if (turn.role !== "user" || !turn.content.includes("?")) return
+      const topic = SAMPLE_TOPICS[turn.content] ?? turn.content
+      const reply = turns[i + 1]?.content ?? ""
+      const outcome = !reply ? "unanswered" : /not certain/i.test(reply) ? "weak" : "answered"
+      questions.push({ question: topic, outcome, topic, group_id: groupIds.get(`${client}|${topic}`) ?? null })
+    })
+    const missed = questions.filter((q) => q.outcome !== "answered").length
+    const summary = `The visitor asked about ${questions.length > 1 ? "availability, pets and tours" : "two-bedroom homes in January"}. `
+      + (missed ? "The avatar could not fully answer every question, so a follow-up is expected." : "The avatar answered and offered next steps.")
+    must(await admin.rpc("save_conversation_insights", { p_conversation_id: conversation_id, p_summary: summary, p_questions: questions, p_model: "demo" }), "insights")
+    if (missed) {
+      for (const g of must(await admin.from("question_groups").select("id, question").eq("client_id", client), "groups")) groupIds.set(`${client}|${g.question}`, g.id)
+    }
   }
 
   log(`Done: ${n} calls for ${avatars.length} avatars.`)

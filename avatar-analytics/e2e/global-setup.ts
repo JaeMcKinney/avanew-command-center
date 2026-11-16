@@ -4,7 +4,8 @@ import { seedDemo } from "../scripts/seed-demo.mjs"
 /** Every run starts from the same sample data. */
 export default async function globalSetup() {
   const sql = `
-    truncate public.usage_daily, public.transcripts, public.conversations, public.tavus_events,
+    truncate public.avatar_knowledge, public.questions, public.question_groups, public.conversation_insights,
+      public.usage_daily, public.transcripts, public.conversations, public.tavus_events,
       public.avatar_secrets, public.avatars, public.tavus_deployments, public.tavus_pals,
       public.tavus_sync_runs, public.staff_client_assignments, public.audit_log, public.clients
       restart identity cascade;

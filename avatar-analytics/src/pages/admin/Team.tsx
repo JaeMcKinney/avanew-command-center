@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { TableScroll } from "@/components/TableScroll"
 import { useState } from "react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/PageHeader"
@@ -34,7 +35,7 @@ function PermissionsMatrix({ editable }: { editable: boolean }) {
     unsaved[`${roleId}:${permission}`] ?? (granted.data ?? []).some((g) => g.role_id === roleId && g.permission === permission)
 
   return (
-    <div className="relative overflow-x-auto rounded-lg border bg-card">
+    <TableScroll label="Table of what each role may do" className="rounded-lg border bg-card">
       <table className="w-full text-sm">
         <caption className="sr-only">Permissions for each role</caption>
         <thead>
@@ -84,7 +85,7 @@ function PermissionsMatrix({ editable }: { editable: boolean }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </TableScroll>
   )
 }
 

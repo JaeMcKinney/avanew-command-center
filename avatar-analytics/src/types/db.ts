@@ -25,6 +25,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"avatar_knowledge": {
+                  Row: {
+                    "avatar_id": string,"last_error": string | null,"needs_refresh": boolean,"page_token": string,"published_at": string | null,"tavus_document_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "avatar_id": string,"last_error"?: string | null,"needs_refresh"?: boolean,"page_token": string,"published_at"?: string | null,"tavus_document_id"?: string | null
+                  }
+                  Update: {
+                    "avatar_id"?: string,"last_error"?: string | null,"needs_refresh"?: boolean,"page_token"?: string,"published_at"?: string | null,"tavus_document_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "avatar_knowledge_avatar_id_fkey"
+      columns: ["avatar_id"]
+isOneToOne: true
+      referencedRelation: "avatars"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"avatar_secrets": {
                   Row: {
                     "avatar_id": string,"callback_secret": string,"webhook_token": string
@@ -84,6 +104,32 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"conversation_insights": {
+                  Row: {
+                    "attempts": number,"client_id": string,"conversation_id": string,"created_at": string,"error": string | null,"model": string | null,"status": string,"summary": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attempts"?: number,"client_id": string,"conversation_id": string,"created_at"?: string,"error"?: string | null,"model"?: string | null,"status"?: string,"summary"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "attempts"?: number,"client_id"?: string,"conversation_id"?: string,"created_at"?: string,"error"?: string | null,"model"?: string | null,"status"?: string,"summary"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conversation_insights_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conversation_insights_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: true
+      referencedRelation: "conversations"
+      referencedColumns: ["conversation_id"]
+    }
                   ]
                 },"conversations": {
                   Row: {
@@ -148,6 +194,64 @@ isOneToOne: false
       columns: ["role_id"]
 isOneToOne: false
       referencedRelation: "roles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"question_groups": {
+                  Row: {
+                    "answer": string | null,"answered_at": string | null,"answered_by": string | null,"avatar_ids": (string)[],"client_id": string,"created_at": string,"id": string,"knowledge_error": string | null,"knowledge_status": string,"last_asked_at": string | null,"question": string,"status": string,"times_asked": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "answer"?: string | null,"answered_at"?: string | null,"answered_by"?: string | null,"avatar_ids"?: (string)[],"client_id": string,"created_at"?: string,"id"?: string,"knowledge_error"?: string | null,"knowledge_status"?: string,"last_asked_at"?: string | null,"question": string,"status"?: string,"times_asked"?: number
+                  }
+                  Update: {
+                    "answer"?: string | null,"answered_at"?: string | null,"answered_by"?: string | null,"avatar_ids"?: (string)[],"client_id"?: string,"created_at"?: string,"id"?: string,"knowledge_error"?: string | null,"knowledge_status"?: string,"last_asked_at"?: string | null,"question"?: string,"status"?: string,"times_asked"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "question_groups_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"questions": {
+                  Row: {
+                    "avatar_id": string,"client_id": string,"conversation_id": string,"created_at": string,"group_id": string | null,"id": string,"outcome": string,"position": number,"question": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "avatar_id": string,"client_id": string,"conversation_id": string,"created_at"?: string,"group_id"?: string | null,"id"?: string,"outcome": string,"position"?: number,"question": string
+                  }
+                  Update: {
+                    "avatar_id"?: string,"client_id"?: string,"conversation_id"?: string,"created_at"?: string,"group_id"?: string | null,"id"?: string,"outcome"?: string,"position"?: number,"question"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "questions_avatar_id_fkey"
+      columns: ["avatar_id"]
+isOneToOne: false
+      referencedRelation: "avatars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "questions_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "questions_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "conversations"
+      referencedColumns: ["conversation_id"]
+    },{
+      foreignKeyName: "questions_group_id_fkey"
+      columns: ["group_id"]
+isOneToOne: false
+      referencedRelation: "question_groups"
       referencedColumns: ["id"]
     }
                   ]
@@ -351,7 +455,29 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "check_access":
+            "answer_question":
+{ Args: { "p_answer": string,"p_group_id": string }; Returns: {
+              "answer": string | null,
+"answered_at": string | null,
+"answered_by": string | null,
+"avatar_ids": (string)[],
+"client_id": string,
+"created_at": string,
+"id": string,
+"knowledge_error": string | null,
+"knowledge_status": string,
+"last_asked_at": string | null,
+"question": string,
+"status": string,
+"times_asked": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "question_groups"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"check_access":
 { Args: { "p_client_id"?: string,"p_permission": string }; Returns: boolean
                            },
 "create_client":
@@ -382,11 +508,36 @@ isOneToOne: false
 "refresh_avatar_photos":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"save_conversation_insights":
+{ Args: { "p_conversation_id": string,"p_model"?: string,"p_questions": Json,"p_summary": string }; Returns: undefined
+                           },
 "search_tavus_pals":
 { Args: { "p_limit"?: number,"p_query"?: string }; Returns: {
               "deployments": Json,"linked_avatar_id": string,"linked_client_id": string,"linked_client_name": string,"name": string,"pal_id": string,"score": number,"tavus_updated_at": string,"thumbnail_image_url": string
             }[]
                            },
+"set_question_status":
+{ Args: { "p_group_id": string,"p_status": string }; Returns: {
+              "answer": string | null,
+"answered_at": string | null,
+"answered_by": string | null,
+"avatar_ids": (string)[],
+"client_id": string,
+"created_at": string,
+"id": string,
+"knowledge_error": string | null,
+"knowledge_status": string,
+"last_asked_at": string | null,
+"question": string,
+"status": string,
+"times_asked": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "question_groups"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "set_staff_assignments":
 { Args: { "p_client_ids": (string)[],"p_user_id": string }; Returns: undefined
                            },

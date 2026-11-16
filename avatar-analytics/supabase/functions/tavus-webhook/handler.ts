@@ -8,6 +8,7 @@
 
 import { serviceClient } from "../_shared/clients.ts"
 import { endpoint, HttpError, json } from "../_shared/http.ts"
+import { processPendingInsights } from "../_shared/insights.ts"
 import { verifyTavusSignature } from "../_shared/signature.ts"
 
 export const handler = endpoint(async (req) => {
@@ -53,6 +54,13 @@ export const handler = endpoint(async (req) => {
   if (ingestError) {
     console.error("ingest_tavus_event failed", ingestError.message)
     throw new HttpError(500, "Could not store the event")
+  }
+  // A transcript just arrived: summarise it now, without making Tavus wait.
+  // The schedule picks up anything this misses.
+  if (payload.event_type === "application.transcription_ready") {
+    const work = processPendingInsights(admin, 3).catch((err) => console.error("insights:", err.message))
+    const runtime = (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime
+    runtime?.waitUntil(work)
   }
   return json(200, { ok: true, ...data })
 })

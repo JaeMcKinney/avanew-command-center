@@ -1,21 +1,58 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { TableScroll } from "@/components/TableScroll"
+import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, Download } from "lucide-react"
 import { useId, useState } from "react"
+import { toast } from "sonner"
 import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
 import { PageHeader } from "@/components/PageHeader"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
+import { StatusPill } from "@/components/StatusPill"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { CONVERSATIONS_PAGE_SIZE, getTranscript, listAvatarsEver, listConversations, type Conversation } from "@/lib/api"
+import {
+  CONVERSATIONS_PAGE_SIZE, EXPORT_LIMIT, getInsight, getTranscript, listAvatarsEver, listConversations, listForExport,
+  type Client, type Conversation,
+} from "@/lib/api"
 import { formatDateTime, formatRange, presetRange, todayIn } from "@/lib/dates"
 import { count, duration, endedBecause } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
 
-function TranscriptDialog({ conversation, avatarName, timeZone, onClose }: { conversation: Conversation; avatarName: string; timeZone: string; onClose: () => void }) {
+function OutcomePill({ outcome }: { outcome: string }) {
+  if (outcome === "answered") return <StatusPill tone="ok" icon={<CheckCircle2 />}>Answered</StatusPill>
+  if (outcome === "weak") return <StatusPill tone="warn" icon={<CircleHelp />}>Partly answered</StatusPill>
+  return <StatusPill tone="bad" icon={<AlertTriangle />}>Not answered</StatusPill>
+}
+
+/** Builds the PDF only when asked, so the PDF code is not loaded for people who never download. */
+async function downloadPdf(client: Client, scope: string | undefined, name: Array<string | null | undefined>, conversations: import("@/lib/pdf").PdfConversation[]) {
+  const { buildTranscriptPdf, pdfFileName, saveFile } = await import("@/lib/pdf")
+  const bytes = await buildTranscriptPdf({ clientName: client.name, logoUrl: client.logo_url, timeZone: client.timezone, scope, conversations })
+  saveFile(bytes, pdfFileName(name))
+}
+
+function TranscriptDialog({ conversation, avatarName, client, onClose }: { conversation: Conversation; avatarName: string; client: Client; onClose: () => void }) {
+  const timeZone = client.timezone
   const transcript = useQuery({ queryKey: ["transcript", conversation.conversation_id], queryFn: () => getTranscript(conversation.conversation_id) })
+  const insight = useQuery({ queryKey: ["insight", conversation.conversation_id], queryFn: () => getInsight(conversation.conversation_id) })
+  const [saving, setSaving] = useState(false)
   const turns = (transcript.data ?? []).filter((t) => t.role === "user" || t.role === "assistant")
+  const summary = insight.data?.insight?.status === "ready" ? insight.data.insight.summary : null
+  const questions = insight.data?.questions ?? []
+
+  const download = async () => {
+    setSaving(true)
+    try {
+      await downloadPdf(client, undefined, [client.slug, avatarName, (conversation.started_at ?? conversation.ended_at ?? "").slice(0, 10), "transcript"],
+        [{ conversation, avatarName, summary, questions, turns: transcript.data ?? [] }])
+    } catch (err) {
+      toast.error(`The PDF could not be made: ${(err as Error).message}`)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
@@ -29,20 +66,60 @@ function TranscriptDialog({ conversation, avatarName, timeZone, onClose }: { con
           <LoadingBlock label="Loading transcript" />
         ) : transcript.isError ? (
           <ErrorBlock error={transcript.error} />
-        ) : turns.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nothing was said in this conversation.</p>
         ) : (
-          <ol className="flex flex-col gap-3">
-            {turns.map((turn, i) => (
-              <li key={i} className={turn.role === "assistant" ? "rounded-lg bg-muted p-3" : "rounded-lg border p-3"}>
-                <p className="text-xs font-semibold text-muted-foreground">
-                  {turn.role === "assistant" ? avatarName : "Visitor"}
-                  {typeof turn.seconds_from_start === "number" && <span className="tabular font-normal"> · {duration(turn.seconds_from_start)}</span>}
+          <>
+            <div>
+              <Button variant="outline" className="min-h-10" onClick={() => void download()} disabled={saving || insight.isPending}>
+                <Download aria-hidden="true" />{saving ? "Preparing PDF…" : "Download PDF"}
+              </Button>
+            </div>
+
+            <section aria-labelledby="summary-heading" className="flex flex-col gap-1.5">
+              <h3 id="summary-heading" className="text-sm font-semibold">Summary</h3>
+              {insight.isPending ? (
+                <p className="text-sm text-muted-foreground">Loading…</p>
+              ) : summary ? (
+                <p className="text-sm">{summary}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {insight.data?.insight?.status === "failed" ? "A summary could not be made for this conversation." : "The summary is being prepared. Check back in a few minutes."}
                 </p>
-                <p className="text-sm whitespace-pre-wrap">{turn.content}</p>
-              </li>
-            ))}
-          </ol>
+              )}
+            </section>
+
+            {questions.length > 0 && (
+              <section aria-labelledby="questions-heading" className="flex flex-col gap-1.5">
+                <h3 id="questions-heading" className="text-sm font-semibold">Questions the visitor asked</h3>
+                <ul className="flex flex-col gap-2">
+                  {questions.map((q) => (
+                    <li key={q.id} className="flex flex-wrap items-start justify-between gap-2 rounded-lg border p-3 text-sm">
+                      <span className="min-w-0 flex-1 basis-56">{q.question}</span>
+                      <OutcomePill outcome={q.outcome} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            <section aria-labelledby="transcript-heading" className="flex flex-col gap-1.5">
+              <h3 id="transcript-heading" className="text-sm font-semibold">Transcript</h3>
+              {turns.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nothing was said in this conversation.</p>
+              ) : (
+                <ol className="flex flex-col gap-3">
+                  {turns.map((turn, i) => (
+                    <li key={i} className={turn.role === "assistant" ? "rounded-lg bg-muted p-3" : "rounded-lg border p-3"}>
+                      <p className="text-xs font-semibold text-muted-foreground">
+                        {turn.role === "assistant" ? avatarName : "Visitor"}
+                        {typeof turn.seconds_from_start === "number" && <span className="tabular font-normal"> · {duration(turn.seconds_from_start)}</span>}
+                      </p>
+                      <p className="text-sm whitespace-pre-wrap">{turn.content}</p>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+          </>
         )}
       </DialogContent>
     </Dialog>
@@ -57,6 +134,7 @@ export default function Conversations() {
   const [avatarId, setAvatarId] = useState("")
   const [page, setPage] = useState(1)
   const [open, setOpen] = useState<Conversation | null>(null)
+  const [exporting, setExporting] = useState(false)
   const avatars = useQuery({ queryKey: ["avatars-ever", client.id], queryFn: () => listAvatarsEver(client.id) })
   const conversations = useQuery({
     queryKey: ["conversations", client.id, state.range.from, state.range.to, avatarId, page],
@@ -71,6 +149,29 @@ export default function Conversations() {
   const first = (page - 1) * CONVERSATIONS_PAGE_SIZE + 1
   const last = Math.min(total, page * CONVERSATIONS_PAGE_SIZE)
   const who = avatarId ? ` with ${nameOf(avatarId)}` : ""
+
+  const downloadAll = async () => {
+    setExporting(true)
+    try {
+      const { items, total: withTranscript } = await listForExport(client.id, state.range, avatarId || null)
+      if (items.length === 0) {
+        toast.message("None of these conversations has a transcript to download.")
+        return
+      }
+      const scope = `${formatRange(state.range)}${avatarId ? ` · ${nameOf(avatarId)}` : ""}`
+      await downloadPdf(client, scope, [client.slug, avatarId ? nameOf(avatarId) : null, "transcripts", state.range.from, "to", state.range.to],
+        items.map((item) => ({ ...item, avatarName: nameOf(item.conversation.avatar_id) })))
+      if (withTranscript > items.length) {
+        toast.message(`The PDF has the newest ${count(items.length)} of ${count(withTranscript)} transcripts. Choose a shorter period to get the rest.`)
+      } else {
+        toast.success(`Downloaded ${count(items.length)} transcript${items.length === 1 ? "" : "s"}`)
+      }
+    } catch (err) {
+      toast.error(`The PDF could not be made: ${(err as Error).message}`)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <>
@@ -100,10 +201,16 @@ export default function Conversations() {
         <EmptyState title={`No conversations${who} in this period`}>Try a longer period{avatarId ? " or all avatars" : ""}.</EmptyState>
       ) : (
         <>
-          <p role="status" className="text-sm text-muted-foreground">
-            {total > CONVERSATIONS_PAGE_SIZE ? `Showing ${first}–${last} of ${count(total)}` : count(total)} conversation{total === 1 ? "" : "s"}{who} · {formatRange(state.range)}
-          </p>
-          <div className={cn("relative overflow-x-auto rounded-lg border bg-card", conversations.isPlaceholderData && "opacity-60")}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p role="status" className="text-sm text-muted-foreground">
+              {total > CONVERSATIONS_PAGE_SIZE ? `Showing ${first}–${last} of ${count(total)}` : count(total)} conversation{total === 1 ? "" : "s"}{who} · {formatRange(state.range)}
+            </p>
+            <Button variant="outline" className="min-h-10" onClick={() => void downloadAll()} disabled={exporting} aria-describedby={`${selectId}-export-help`}>
+              <Download aria-hidden="true" />{exporting ? "Preparing PDF…" : "Download transcripts (PDF)"}
+            </Button>
+          </div>
+          <p id={`${selectId}-export-help`} className="sr-only">One PDF with every transcript in this period{who}, up to {EXPORT_LIMIT}.</p>
+          <TableScroll label="Conversations table" className={cn("rounded-lg border bg-card", conversations.isPlaceholderData && "opacity-60")}>
             <table className="w-full text-sm">
               <caption className="sr-only">Conversations{who}, newest first</caption>
               <thead>
@@ -135,7 +242,7 @@ export default function Conversations() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
 
           {pages > 1 && (
             <nav aria-label="Pages of conversations" className="flex flex-wrap items-center justify-between gap-3">
@@ -151,7 +258,7 @@ export default function Conversations() {
         </>
       )}
 
-      {open && <TranscriptDialog conversation={open} avatarName={nameOf(open.avatar_id)} timeZone={client.timezone} onClose={() => setOpen(null)} />}
+      {open && <TranscriptDialog conversation={open} avatarName={nameOf(open.avatar_id)} client={client} onClose={() => setOpen(null)} />}
     </>
   )
 }

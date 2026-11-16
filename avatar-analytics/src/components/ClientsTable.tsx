@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { TableScroll } from "@/components/TableScroll"
 import { Link } from "react-router-dom"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
 import { ClientStatusPill } from "@/components/StatusPill"
@@ -25,7 +26,7 @@ export function ClientsTable({ filter = "", empty }: { filter?: string; empty?: 
   const avatarCount = (clientId: string) => (avatars.data ?? []).filter((a) => a.client_id === clientId).length
 
   return (
-    <div className="relative overflow-x-auto rounded-lg border bg-card">
+    <TableScroll label="Clients table" className="rounded-lg border bg-card">
       <table className="w-full text-sm">
         <caption className="sr-only">Clients, with talk time today and this month</caption>
         <thead>
@@ -54,6 +55,6 @@ export function ClientsTable({ filter = "", empty }: { filter?: string; empty?: 
           ))}
         </tbody>
       </table>
-    </div>
+    </TableScroll>
   )
 }

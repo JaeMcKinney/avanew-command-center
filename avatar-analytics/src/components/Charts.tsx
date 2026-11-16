@@ -4,6 +4,7 @@
 // mouse.
 
 import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
+import { TableScroll } from "@/components/TableScroll"
 import { Button } from "@/components/ui/button"
 import type { Column } from "@/lib/buckets"
 import { percent } from "@/lib/format"
@@ -50,7 +51,7 @@ export function ChartCard({
           {asTable ? "Show as chart" : "Show as table"}
         </Button>
       </div>
-      {asTable ? <div className="relative overflow-x-auto">{table}</div> : chart}
+      {asTable ? <TableScroll label={`${title}, as a table`}>{table}</TableScroll> : chart}
     </section>
   )
 }

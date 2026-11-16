@@ -24,7 +24,10 @@ This folder is self-contained. It does not share code or a database with the CRM
 | Activity log | Built |
 | Talk-time and concurrency limits, overage email and pause | Not yet |
 | Stripe billing, invoices, enhancements store | Not yet |
-| Transcript summaries, questions inbox, branded PDF | Not yet |
+| Transcript summaries and the questions each visitor asked | Built, tested against a mock Claude API |
+| Questions inbox: answer once, added to the avatar's Tavus knowledge | Built, tested against a mock Tavus |
+| Branded transcript PDF, one call or a whole period | Built |
+| Monthly questions email | Not yet |
 | Change history, Tavus rollouts, support requests | Not yet |
 | Financial reports and forecast | Not yet |
 
@@ -50,6 +53,9 @@ Tavus ──► tavus-webhook/<avatar token>   checks the signature
   - `tavus-backfill` re-checks recent conversations in case a webhook was missed.
   - `avatar-link` links and unlinks avatars, and sets the avatar's webhook in Tavus.
   - `user-invite` invites people.
+  - `conversation-insights` summarises new transcripts with Claude and lists the questions asked.
+  - `knowledge-publish` sends a client's answers to Tavus as a knowledge document on each avatar.
+  - `knowledge-page` is the page Tavus reads those answers from (public, reached only by a long random address).
 - `src` — the React app. `src/lib/api.ts` is every read and write the screens make.
 
 Who can see what is enforced in the database, not in the screens. A client user can only ever read rows for their own client, whatever the app asks for.
@@ -111,8 +117,9 @@ The browser tests check every page against WCAG 2.2 AA with axe, in light and da
    - set the Site URL to where the app will run, and add `<that URL>/accept-invite` to the redirect URLs.
 4. Set the server settings (see `supabase/functions/.env.example`):
    ```bash
-   npx supabase secrets set TAVUS_API_KEY=… APP_URL=https://… CRON_SECRET=…
+   npx supabase secrets set TAVUS_API_KEY=… ANTHROPIC_API_KEY=… APP_URL=https://… CRON_SECRET=…
    ```
+   Without `ANTHROPIC_API_KEY` everything else works; transcripts simply wait for their summary. `INSIGHTS_MODEL` chooses the model (the default is the most capable one; a smaller model costs less per transcript).
 5. Deploy the functions: `npx supabase functions deploy`.
 6. Deploy the app (for example on Vercel, with this folder as the root directory) with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set. Leave `VITE_FUNCTIONS_URL` unset.
 7. **Create the Owner.** In the SQL editor, name the email address that will be the Owner:
@@ -135,6 +142,20 @@ The browser tests check every page against WCAG 2.2 AA with axe, in light and da
        headers := '{"Content-Type": "application/json", "x-cron-secret": "<CRON_SECRET>"}'::jsonb,
        body := '{}'::jsonb)
    $$);
+   -- Catches any summary the webhook did not start, and retries failures.
+   select cron.schedule('conversation-insights', '*/10 * * * *', $$
+     select net.http_post(
+       url := 'https://<ref>.supabase.co/functions/v1/conversation-insights',
+       headers := '{"Content-Type": "application/json", "x-cron-secret": "<CRON_SECRET>"}'::jsonb,
+       body := '{}'::jsonb)
+   $$);
+   -- Retries answers Tavus was not ready to accept (it re-reads a page at most once an hour).
+   select cron.schedule('knowledge-publish', '23 * * * *', $$
+     select net.http_post(
+       url := 'https://<ref>.supabase.co/functions/v1/knowledge-publish',
+       headers := '{"Content-Type": "application/json", "x-cron-secret": "<CRON_SECRET>"}'::jsonb,
+       body := '{}'::jsonb)
+   $$);
    ```
 
 ## Check these against the real Tavus account first
@@ -145,5 +166,7 @@ Everything Tavus-related was built from the public API reference (docs.tavus.io)
 2. **Calls started through a deployment use the PAL's default webhook.** The docs say a conversation that does not set its own `callback_url` inherits the PAL's. If a client's site starts conversations through its own code with its own `callback_url`, those calls will not reach the webhook; the hourly backup check picks them up if Tavus lists them with a `pal_id`.
 3. **`pal_id` on listed conversations.** The backup check matches conversations to avatars by `pal_id`. Its result includes `unattributed`, the number of recent conversations Tavus listed with no `pal_id`.
 4. **Timing.** Talk time is the time between `system.pal_joined` and `system.shutdown`, rounded to the nearest 6 seconds with a 30-second minimum, which is how Tavus's pricing page describes billing. Both numbers are settings (`usage.round_to_seconds`, `usage.minimum_seconds`). Compare a few calls with the Tavus invoice.
+
+5. **Answers reach the avatar.** Answer one question in a client's Questions page, then check in Tavus that the avatar has a new knowledge document named after it and that the avatar uses the answer on the next call. The answers are published as a web page that Tavus crawls; the app adds that document to the PAL's `document_ids` and asks Tavus to re-read it when an answer changes.
 
 Linking an avatar replaces its PAL-level `callback_url`. If the PAL already sends events somewhere else, the app says so and asks before replacing it, saves the old address, and restores it when the avatar is unlinked.

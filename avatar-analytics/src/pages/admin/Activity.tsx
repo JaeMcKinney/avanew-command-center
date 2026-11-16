@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { TableScroll } from "@/components/TableScroll"
 import { PageHeader } from "@/components/PageHeader"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
 import { listAudit, listClients, listProfiles, type AuditEntry } from "@/lib/api"
@@ -38,7 +39,7 @@ export default function Activity() {
       ) : log.data.length === 0 ? (
         <EmptyState title="Nothing yet">Changes to clients, avatars and users will be listed here.</EmptyState>
       ) : (
-        <div className="relative overflow-x-auto rounded-lg border bg-card">
+        <TableScroll label="Activity table" className="rounded-lg border bg-card">
           <table className="w-full text-sm">
             <caption className="sr-only">Activity log</caption>
             <thead>
@@ -63,7 +64,7 @@ export default function Activity() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       )}
     </>
   )

@@ -14,6 +14,7 @@ import Clients from "@/pages/admin/Clients"
 import Overview from "@/pages/admin/Overview"
 import Team from "@/pages/admin/Team"
 import Conversations from "@/pages/portal/Conversations"
+import Questions from "@/pages/portal/Questions"
 import Dashboard from "@/pages/portal/Dashboard"
 import PortalAvatars from "@/pages/portal/PortalAvatars"
 import PortalLayout from "@/pages/portal/PortalLayout"
@@ -91,6 +92,7 @@ export default function App() {
         <Route path="/c/:slug" element={<RequireAuth><PortalLayout /></RequireAuth>}>
           <Route index element={<Need permission="analytics.view"><Dashboard /></Need>} />
           <Route path="conversations" element={<Need permission="transcripts.view"><Conversations /></Need>} />
+          <Route path="questions" element={<Questions />} />
           <Route path="avatars" element={<Need permission="embeds.view"><PortalAvatars /></Need>} />
           <Route path="team" element={<Need permission="client_users.manage"><PortalTeam /></Need>} />
         </Route>

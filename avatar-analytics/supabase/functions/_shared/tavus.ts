@@ -8,6 +8,7 @@ export type TavusPal = {
   pal_name?: string | null
   default_face_id?: string | null
   callback_url?: string | null
+  document_ids?: string[] | null
   pipeline_mode?: string | null
   created_at?: string | null
   updated_at?: string | null
@@ -132,4 +133,21 @@ export async function listConversations(page: number, limit = PAGE_SIZE): Promis
 /** A conversation with its events (joined, shutdown, transcript…). */
 export function getConversationWithEvents(conversationId: string): Promise<TavusConversation> {
   return request<TavusConversation>(`/conversations/${encodeURIComponent(conversationId)}?verbose=true`)
+}
+
+export type TavusDocument = { document_id: string; status?: string | null }
+
+/** Adds a web page to the knowledge base. Processing continues in Tavus after this returns. */
+export function createDocument(body: {
+  document_url: string
+  document_name: string
+  tags?: string[]
+  crawl?: { depth: number; max_pages: number }
+}): Promise<TavusDocument> {
+  return request<TavusDocument>("/documents", { method: "POST", body: JSON.stringify(body) })
+}
+
+/** Asks Tavus to read a crawled document's page again. At most once an hour per document. */
+export function recrawlDocument(documentId: string): Promise<unknown> {
+  return request(`/documents/${encodeURIComponent(documentId)}/recrawl`, { method: "POST" })
 }

@@ -43,6 +43,11 @@ function seed() {
       dep("d-harbor-embed", "pb00c0de0006", "Harbor Embed", "embed", ["https://harbor-dental.example"]),
     ],
     conversations: [],
+    documents: [],
+    recrawls: [],
+    recrawlStatus: 202,
+    anthropicCalls: 0,
+    anthropicStatus: 200,
     patches: [],
     failPatchFor: [],
     emptyLists: false,
@@ -77,7 +82,49 @@ const server = http.createServer(async (req, res) => {
   if (path === "/__control/state") return send(res, 200, state)
   if (path === "/__control/health") return send(res, 200, { ok: true })
 
+  // ── A stand-in for the Anthropic Messages API, used for conversation summaries ──
+  // It "reads" the transcript in the request: every visitor line ending in "?"
+  // is a question, unanswered when the reply says it is not certain.
+  if (path === "/anthropic/v1/messages" && req.method === "POST") {
+    state.anthropicCalls++
+    if (state.anthropicStatus !== 200) {
+      return send(res, state.anthropicStatus, { type: "error", error: { type: state.anthropicStatus === 401 ? "authentication_error" : "api_error", message: "mock failure" } })
+    }
+    const body = await readBody(req)
+    const prompt = body.messages[0].content
+    const existing = [...prompt.matchAll(/^- ([0-9a-f-]{36}): (.+)$/gm)].map((m) => ({ id: m[1], question: m[2] }))
+    const lines = prompt.split("<transcript>")[1].split("</transcript>")[0].trim().split("\n")
+    const questions = []
+    lines.forEach((line, i) => {
+      const said = line.replace(/^[^:]+: /, "")
+      if (!line.startsWith("Visitor:") || !said.includes("?")) return
+      const reply = lines[i + 1] ?? ""
+      const outcome = !reply ? "unanswered" : /not certain|don't know/i.test(reply) ? "unanswered" : /check (the|our) website/i.test(reply) ? "weak" : "answered"
+      const topic = said.split(/(?<=[.!]) /).find((part) => part.includes("?")) ?? said
+      questions.push({ question: said, outcome, topic, group_id: existing.find((g) => g.question === topic)?.id ?? null })
+    })
+    const result = { summary: `The visitor asked ${questions.length} question${questions.length === 1 ? "" : "s"}. ${questions.some((q) => q.outcome !== "answered") ? "The avatar could not answer all of them." : "The avatar answered them."}`, questions }
+    return send(res, 200, {
+      id: "msg_mock", type: "message", role: "assistant", model: body.model,
+      content: [{ type: "text", text: JSON.stringify(result) }],
+      stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 100, output_tokens: 50 },
+    })
+  }
+
   if (!req.headers["x-api-key"]) return send(res, 401, { message: "Invalid access token" })
+
+  if (path === "/v2/documents" && req.method === "POST") {
+    const body = await readBody(req)
+    const doc = { document_id: `d-mock-${state.documents.length + 1}`, status: "started", ...body }
+    state.documents.push(doc)
+    return send(res, 200, doc)
+  }
+  const recrawl = path.match(/^\/v2\/documents\/([^/]+)\/recrawl$/)
+  if (recrawl && req.method === "POST") {
+    if (state.recrawlStatus !== 202) return send(res, state.recrawlStatus, { message: "Recrawl not allowed yet" })
+    state.recrawls.push(recrawl[1])
+    return send(res, 202, { document_id: recrawl[1], status: "recrawling" })
+  }
 
   const limit = Number(url.searchParams.get("limit") ?? 10)
 

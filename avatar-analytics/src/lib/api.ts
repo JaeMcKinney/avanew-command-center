@@ -226,6 +226,75 @@ export async function getTranscript(conversationId: string): Promise<TranscriptT
   return data ? (data.turns as unknown as TranscriptTurn[]) : null
 }
 
+// ── Summaries and questions ──────────────────────────────────────────────────
+
+export type Insight = Tables["conversation_insights"]["Row"]
+export type Question = Tables["questions"]["Row"]
+export type QuestionGroup = Tables["question_groups"]["Row"]
+
+export async function getInsight(conversationId: string): Promise<{ insight: Insight | null; questions: Question[] }> {
+  const [insight, questions] = await Promise.all([
+    supabase.from("conversation_insights").select("*").eq("conversation_id", conversationId).maybeSingle(),
+    supabase.from("questions").select("*").eq("conversation_id", conversationId).order("position"),
+  ])
+  if (insight.error) fail(insight.error)
+  return { insight: insight.data, questions: unwrap(questions) }
+}
+
+export async function listQuestionGroups(clientId: string): Promise<QuestionGroup[]> {
+  return unwrap(await supabase.from("question_groups").select("*").eq("client_id", clientId)
+    .order("times_asked", { ascending: false }).order("last_asked_at", { ascending: false }))
+}
+
+export type PublishResult = { knowledge_status: string; knowledge_error: string | null; waiting: boolean }
+
+/** Sends the avatar's updated answers to Tavus. If this fails the server retries on its schedule. */
+export function publishKnowledge(groupId: string) {
+  return callFunction<PublishResult>("knowledge-publish", { group_id: groupId })
+}
+
+export async function answerQuestion(groupId: string, answer: string): Promise<void> {
+  const { error } = await supabase.rpc("answer_question", { p_group_id: groupId, p_answer: answer })
+  if (error) fail(error)
+}
+
+export async function setQuestionStatus(groupId: string, status: "open" | "dismissed"): Promise<void> {
+  const { error } = await supabase.rpc("set_question_status", { p_group_id: groupId, p_status: status })
+  if (error) fail(error)
+}
+
+export const EXPORT_LIMIT = 200
+export type ExportItem = { conversation: Conversation; turns: TranscriptTurn[]; summary: string | null; questions: Question[] }
+
+/** Everything needed to print the transcripts in a period: the newest EXPORT_LIMIT calls that have one. */
+export async function listForExport(clientId: string, range: DateRange, avatarId: string | null): Promise<{ items: ExportItem[]; total: number }> {
+  let query = supabase.from("conversations").select("*", { count: "exact" }).eq("client_id", clientId).eq("has_transcript", true)
+    .gte("usage_date", range.from).lte("usage_date", range.to).order("started_at", { ascending: false }).limit(EXPORT_LIMIT)
+  if (avatarId) query = query.eq("avatar_id", avatarId)
+  const convs = await query
+  if (convs.error) fail(convs.error)
+  const rows = convs.data ?? []
+  const ids = rows.map((r) => r.conversation_id)
+  if (ids.length === 0) return { items: [], total: 0 }
+  const [transcripts, insights, questions] = await Promise.all([
+    supabase.from("transcripts").select("conversation_id, turns").in("conversation_id", ids),
+    supabase.from("conversation_insights").select("conversation_id, summary").in("conversation_id", ids).eq("status", "ready"),
+    supabase.from("questions").select("*").in("conversation_id", ids).order("position"),
+  ])
+  const turns = new Map(unwrap(transcripts).map((t) => [t.conversation_id, t.turns as unknown as TranscriptTurn[]]))
+  const summaries = new Map(unwrap(insights).map((i) => [i.conversation_id, i.summary]))
+  const asked = unwrap(questions)
+  return {
+    total: convs.count ?? rows.length,
+    items: rows.map((conversation) => ({
+      conversation,
+      turns: turns.get(conversation.conversation_id) ?? [],
+      summary: summaries.get(conversation.conversation_id) ?? null,
+      questions: asked.filter((q) => q.conversation_id === conversation.conversation_id),
+    })),
+  }
+}
+
 // ── People, roles and permissions ────────────────────────────────────────────
 
 export async function listProfiles(filter: { side: "divigner" } | { clientId: string }): Promise<Profile[]> {
