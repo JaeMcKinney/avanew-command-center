@@ -2,17 +2,20 @@
 // browser uses, signed in as a real user, so it exercises row-level security.
 
 import { beforeAll, describe, expect, it } from "vitest"
-import { admin, anonClient, createClientRow, createUser, resetDatabase, type TestUser } from "./helpers"
+import { admin, anonClient, createClientRow, createUser, PASSWORD, resetDatabase, signIn, type TestUser } from "./helpers"
 
 let owner: TestUser, adminUser: TestUser, manager: TestUser, analyst: TestUser
 let clientAdminA: TestUser, clientMemberA: TestUser, clientAdminB: TestUser
 let clientA: { id: string }, clientB: { id: string }
+let earlyBirdId: string
 
 beforeAll(async () => {
   resetDatabase()
-  // The first user of a fresh install becomes the Owner by itself.
-  const { data } = await admin.auth.admin.createUser({ email: "owner@divigner.test", password: "Correct-horse-9-battery", email_confirm: true })
-  const { signIn } = await import("./helpers")
+  // A fresh install names its Owner by email. Only that address is promoted.
+  await admin.from("settings").upsert({ key: "bootstrap.owner_email", value: "Owner@Divigner.test" })
+  const early = await admin.auth.admin.createUser({ email: "early-bird@example.test", password: PASSWORD, email_confirm: true })
+  earlyBirdId = early.data.user!.id
+  const { data } = await admin.auth.admin.createUser({ email: "owner@divigner.test", password: PASSWORD, email_confirm: true })
   owner = await signIn("owner@divigner.test", data.user!.id)
 
   clientA = await createClientRow(owner, "Northline Realty", "northline")
@@ -32,19 +35,23 @@ async function visibleClients(user: TestUser) {
   return data!.map((c) => c.slug)
 }
 
-describe("first user", () => {
-  it("becomes the Owner with every Divigner permission", async () => {
+describe("the first Owner", () => {
+  it("is the person named when the project was set up", async () => {
     const { data } = await owner.client.rpc("my_access")
     expect(data.role.key).toBe("owner")
     expect(data.side).toBe("divigner")
     expect(data.permissions).toEqual(expect.arrayContaining(["team.manage", "clients.manage", "avatars.link", "audit.view"]))
+    // The one-time setting is gone, so it cannot be used again.
+    expect((await admin.from("settings").select("key").eq("key", "bootstrap.owner_email")).data).toEqual([])
   })
 
-  it("is the only one promoted: later sign-ups get no profile", async () => {
-    const { data } = await admin.auth.admin.createUser({ email: "stranger@example.test", password: "Correct-horse-9-battery", email_confirm: true })
+  it("is nobody else: signing up, before or after, gives no access", async () => {
+    const before = await admin.from("profiles").select("id").eq("id", earlyBirdId).maybeSingle()
+    expect(before.data).toBeNull()
+
+    const { data } = await admin.auth.admin.createUser({ email: "stranger@example.test", password: PASSWORD, email_confirm: true })
     const { data: profile } = await admin.from("profiles").select("id").eq("id", data.user!.id).maybeSingle()
     expect(profile).toBeNull()
-    const { signIn } = await import("./helpers")
     const stranger = await signIn("stranger@example.test")
     expect(await visibleClients(stranger)).toEqual([])
     expect((await stranger.client.rpc("my_access")).data).toBeNull()

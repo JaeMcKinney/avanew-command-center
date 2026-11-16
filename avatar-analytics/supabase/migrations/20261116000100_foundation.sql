@@ -271,12 +271,20 @@ end $$;
 create trigger roles_protect_system before update or delete on public.roles
   for each row execute function app.protect_system_roles();
 
--- The very first user becomes the Owner. Everyone after that is invited
--- (public sign-up is turned off in supabase/config.toml).
+-- The first Owner. Whoever sets the project up names one email address in
+-- settings ('bootstrap.owner_email'). When a user with exactly that address
+-- is created and nobody has a profile yet, they become the Owner and the
+-- setting is removed. Nobody else is ever promoted by signing up; everyone
+-- after the Owner is invited.
 create or replace function app.handle_new_user() returns trigger
 language plpgsql security definer set search_path = '' as $$
+declare
+  v_owner_email text;
 begin
-  if not exists (select 1 from public.profiles) then
+  select s.value #>> '{}' into v_owner_email from public.settings s where s.key = 'bootstrap.owner_email';
+  if v_owner_email is not null
+     and lower(new.email) = lower(trim(v_owner_email))
+     and not exists (select 1 from public.profiles) then
     insert into public.profiles (id, email, full_name, side, role_id)
     values (
       new.id,
@@ -285,6 +293,7 @@ begin
       'divigner',
       (select id from public.roles where key = 'owner')
     );
+    delete from public.settings where key = 'bootstrap.owner_email';
   end if;
   return new;
 end $$;

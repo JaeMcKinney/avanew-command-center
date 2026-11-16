@@ -113,7 +113,12 @@ The browser tests check every page against WCAG 2.2 AA with axe, in light and da
    ```
 5. Deploy the functions: `npx supabase functions deploy`.
 6. Deploy the app (for example on Vercel, with this folder as the root directory) with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set. Leave `VITE_FUNCTIONS_URL` unset.
-7. **Create the first user** in the Supabase dashboard (Authentication → Users → Add user). The first user becomes the Owner automatically. Everyone else is invited from inside the app.
+7. **Create the Owner.** In the SQL editor, name the email address that will be the Owner:
+   ```sql
+   insert into public.settings (key, value, description)
+   values ('bootstrap.owner_email', '"you@example.com"', 'The first Owner. Removed once they exist.');
+   ```
+   Then add that person in the Supabase dashboard (Authentication → Users → Add user). They become the Owner, and the setting is removed. Nobody else is ever given access by signing up; everyone after the Owner is invited from inside the app.
 8. Schedule the sync and the backup check. In the SQL editor, with the `pg_cron` and `pg_net` extensions enabled:
    ```sql
    select cron.schedule('tavus-sync', '*/15 * * * *', $$

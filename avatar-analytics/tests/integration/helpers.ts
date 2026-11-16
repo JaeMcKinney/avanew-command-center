@@ -48,10 +48,7 @@ async function roleId(key: string): Promise<string> {
   return data.id
 }
 
-/**
- * Creates a user with a role and signs them in. The first user ever created
- * becomes the Owner automatically (that is how a new install is bootstrapped).
- */
+/** Creates a user with a role and signs them in. */
 export async function createUser(opts: {
   email: string
   role: string
