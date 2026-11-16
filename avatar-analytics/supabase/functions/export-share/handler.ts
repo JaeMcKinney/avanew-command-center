@@ -8,43 +8,25 @@
 // Settings: RESEND_API_KEY and EMAIL_FROM (both needed for email).
 
 import { isScheduledCall, requireAccess, requireUser, serviceClient, writeAudit } from "../_shared/clients.ts"
+import { emailSettings, escapeHtml, sendEmail } from "../_shared/email.ts"
 import { endpoint, HttpError, json } from "../_shared/http.ts"
 
 const BUCKET = "exports"
 const LINK_DAYS = 7
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
-const emailSettings = () => {
-  const key = Deno.env.get("RESEND_API_KEY")
-  const from = Deno.env.get("EMAIL_FROM")
-  return key && from ? { key, from, base: (Deno.env.get("RESEND_API_BASE") ?? "https://api.resend.com").replace(/\/+$/, "") } : null
-}
-
-const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
-
-async function sendEmail(to: string, clientName: string, fileName: string, url: string, expires: Date) {
-  const settings = emailSettings()
-  if (!settings) throw new HttpError(503, "Email is not set up yet. Download the file instead, or ask Divigner to turn email on.")
+async function sendLink(to: string, clientName: string, fileName: string, url: string, expires: Date) {
+  if (!emailSettings()) throw new HttpError(503, "Email is not set up yet. Download the file instead, or ask Divigner to turn email on.")
   const until = expires.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })
-  const text = `Here are the conversation transcripts you asked for from ${clientName}.\n\nDownload: ${url}\n\nFile: ${fileName}\nThis private link works until ${until}. Anyone with the link can open the file, so share it with care.\n\nDivigner`
-  const html = `<p>Here are the conversation transcripts you asked for from ${escapeHtml(clientName)}.</p>`
-    + `<p><a href="${escapeHtml(url)}">Download ${escapeHtml(fileName)}</a></p>`
-    + `<p>This private link works until ${until}. Anyone with the link can open the file, so share it with care.</p><p>Divigner</p>`
-  let res: Response
-  try {
-    res = await fetch(`${settings.base}/emails`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${settings.key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: settings.from, to: [to], subject: `Your transcripts from ${clientName}`, text, html }),
-      signal: AbortSignal.timeout(20_000),
-    })
-  } catch {
-    throw new HttpError(502, "The email could not be sent. Try again in a moment.")
-  }
-  if (!res.ok) {
-    console.error("email send failed", res.status, (await res.text()).slice(0, 300))
-    throw new HttpError(502, "The email could not be sent. Try again in a moment.")
-  }
+  const result = await sendEmail({
+    to,
+    subject: `Your transcripts from ${clientName}`,
+    text: `Here are the conversation transcripts you asked for from ${clientName}.\n\nDownload: ${url}\n\nFile: ${fileName}\nThis private link works until ${until}. Anyone with the link can open the file, so share it with care.\n\nDivigner`,
+    html: `<p>Here are the conversation transcripts you asked for from ${escapeHtml(clientName)}.</p>`
+      + `<p><a href="${escapeHtml(url)}">Download ${escapeHtml(fileName)}</a></p>`
+      + `<p>This private link works until ${until}. Anyone with the link can open the file, so share it with care.</p><p>Divigner</p>`,
+  })
+  if (result.status !== "sent") throw new HttpError(502, "The email could not be sent. Try again in a moment.")
 }
 
 export const handler = endpoint(async (req) => {
@@ -86,7 +68,7 @@ export const handler = endpoint(async (req) => {
     const to = user.user?.email
     if (!to) throw new HttpError(400, "Your account has no email address")
     const { data: client } = await admin.from("clients").select("name").eq("id", clientId).single()
-    await sendEmail(to, client?.name ?? "your avatars", fileName, signed.signedUrl, expires)
+    await sendLink(to, client?.name ?? "your avatars", fileName, signed.signedUrl, expires)
     emailedTo = to
   }
 

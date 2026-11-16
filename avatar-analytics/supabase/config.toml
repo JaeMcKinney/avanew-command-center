@@ -441,6 +441,15 @@ verify_jwt = false
 [functions.conversation-insights]
 verify_jwt = false
 
+[functions.billing]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.usage-check]
+verify_jwt = false
+
 [functions.export-share]
 verify_jwt = false
 

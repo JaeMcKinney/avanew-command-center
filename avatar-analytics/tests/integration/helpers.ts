@@ -15,7 +15,8 @@ export const admin = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROL
 /** Empties every app table and removes every user, so each file starts clean. */
 export function resetDatabase() {
   const sql = `
-    truncate public.avatar_knowledge, public.questions, public.question_groups, public.conversation_insights,
+    truncate public.notifications, public.invoices, public.stripe_events, public.client_billing, public.plans,
+      public.avatar_knowledge, public.questions, public.question_groups, public.conversation_insights,
       public.usage_daily, public.transcripts, public.conversations, public.tavus_events,
       public.avatar_secrets, public.avatars, public.tavus_deployments, public.tavus_pals,
       public.tavus_sync_runs, public.staff_client_assignments, public.audit_log, public.clients
@@ -40,6 +41,15 @@ export async function mockTavusState(): Promise<{
   documents: Array<{ document_id: string; document_url: string; document_name: string; crawl?: unknown }>
   recrawls: string[]
   emails: Array<{ from: string; to: string[]; subject: string; text: string; html: string }>
+  deploymentPatches: Array<{ deployment_id: string; ops: Array<{ op: string; path: string; value: unknown }> }>
+  deployments: Array<{ deployment_id: string; status: string }>
+  stripe: {
+    customers: Array<{ id: string; name: string; email: string; metadata: { client_id: string } }>
+    sessions: Array<{ id: string; url: string; form: Record<string, string> }>
+    portals: Array<Record<string, string>>
+    subscriptions: Record<string, unknown>
+    calls: Array<{ method: string; path: string; form: Record<string, string> }>
+  }
   anthropicCalls: number
 }> {
   return (await fetch(`${MOCK_TAVUS}/__control/state`)).json()

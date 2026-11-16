@@ -65,7 +65,7 @@ test("a client reads a conversation and copies an embed code", async ({ page, co
   await page.getByRole("button", { name: "This year" }).click()
   await page.getByRole("button", { name: /^Read the conversation/ }).first().click()
   const dialog = page.getByRole("dialog")
-  await expect(dialog.getByRole("heading")).toContainText("Conversation with")
+  await expect(dialog.getByRole("heading", { level: 2 })).toContainText("Conversation with")
   await expect(dialog.getByText("Visitor").first()).toBeVisible()
   await expect(dialog.getByText(/two-bedroom homes/).first()).toBeVisible()
   await page.keyboard.press("Escape")

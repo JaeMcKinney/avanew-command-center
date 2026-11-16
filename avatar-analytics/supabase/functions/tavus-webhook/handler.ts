@@ -6,6 +6,7 @@
 // the right avatar even when Tavus does not say which PAL a conversation used.
 // The body is checked against X-Tavus-Signature before anything is stored.
 
+import { checkUsage } from "../_shared/billing.ts"
 import { serviceClient } from "../_shared/clients.ts"
 import { endpoint, HttpError, json } from "../_shared/http.ts"
 import { processPendingInsights } from "../_shared/insights.ts"
@@ -59,6 +60,15 @@ export const handler = endpoint(async (req) => {
   // The schedule picks up anything this misses.
   if (payload.event_type === "application.transcription_ready") {
     const work = processPendingInsights(admin, 3).catch((err) => console.error("insights:", err.message))
+    const runtime = (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime
+    runtime?.waitUntil(work)
+  }
+  // A call just ended: see whether this client has reached a usage warning or their limit.
+  if (payload.event_type === "system.shutdown") {
+    const work = (async () => {
+      const { data: avatar } = await admin.from("avatars").select("client_id").eq("id", secret.avatar_id).maybeSingle()
+      if (avatar) await checkUsage(admin, avatar.client_id)
+    })().catch((err) => console.error("usage check:", err.message))
     const runtime = (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime
     runtime?.waitUntil(work)
   }

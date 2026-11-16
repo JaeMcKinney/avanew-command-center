@@ -1,10 +1,11 @@
 // Page frames. On a phone the navigation is a tab bar at the bottom of the
 // screen; on a wider screen it is a sidebar (staff) or a row of tabs (clients).
 
-import { LogOut, type LucideIcon } from "lucide-react"
-import type { ReactNode } from "react"
-import { NavLink } from "react-router-dom"
+import { Ellipsis, LogOut, type LucideIcon } from "lucide-react"
+import { useState, type ReactNode } from "react"
+import { NavLink, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/hooks/useAuth"
 import { cn } from "@/lib/utils"
 
@@ -27,25 +28,55 @@ export function DivignerMark({ className }: { className?: string }) {
   )
 }
 
+const TAB_CLASS = "flex min-h-14 w-full flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium"
+
+/** Phone navigation. Five places fit; with more, the last tab becomes "More" and opens the rest. */
 function BottomTabs({ items, label }: { items: NavItem[]; label: string }) {
+  const [open, setOpen] = useState(false)
+  const { pathname } = useLocation()
+  const shown = items.length > 5 ? items.slice(0, 4) : items
+  const rest = items.slice(shown.length)
+  const inRest = rest.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`))
   return (
     <nav aria-label={label} className="fixed inset-x-0 bottom-0 z-30 border-t bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
       <ul className="flex">
-        {items.slice(0, 5).map((item) => (
+        {shown.map((item) => (
           <li key={item.to} className="flex-1">
-            <NavLink
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                cn("flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium",
-                  isActive ? "text-primary-text" : "text-muted-foreground")
-              }
-            >
+            <NavLink to={item.to} end={item.end} className={({ isActive }) => cn(TAB_CLASS, isActive ? "text-primary-text" : "text-muted-foreground")}>
               <item.icon className="size-5" aria-hidden="true" />
               {item.label}
             </NavLink>
           </li>
         ))}
+        {rest.length > 0 && (
+          <li className="flex-1">
+            <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" className={cn(TAB_CLASS, inRest ? "text-primary-text" : "text-muted-foreground")}>
+              <Ellipsis className="size-5" aria-hidden="true" />
+              More
+            </button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>More</DialogTitle>
+                  <DialogDescription className="sr-only">Other pages</DialogDescription>
+                </DialogHeader>
+                <ul className="flex flex-col">
+                  {rest.map((item) => (
+                    <li key={item.to}>
+                      <NavLink
+                        to={item.to} end={item.end} onClick={() => setOpen(false)}
+                        className={({ isActive }) => cn("flex min-h-12 items-center gap-3 rounded-md px-3 text-base font-medium", isActive ? "bg-muted text-primary-text" : "text-foreground")}
+                      >
+                        <item.icon className="size-5" aria-hidden="true" />
+                        {item.label}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              </DialogContent>
+            </Dialog>
+          </li>
+        )}
       </ul>
     </nav>
   )

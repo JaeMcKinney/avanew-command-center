@@ -51,6 +51,9 @@ function seed() {
     anthropicCalls: 0,
     anthropicStatus: 200,
     patches: [],
+    deploymentPatches: [],
+    failDeploymentPatchFor: [],
+    stripe: { customers: [], sessions: [], portals: [], subscriptions: {}, calls: [], failNext: 0 },
     failPatchFor: [],
     emptyLists: false,
   }
@@ -61,6 +64,14 @@ let state = seed()
 function send(res, status, body) {
   res.writeHead(status, { "Content-Type": "application/json" })
   res.end(JSON.stringify(body))
+}
+
+function readText(req) {
+  return new Promise((resolve) => {
+    let data = ""
+    req.on("data", (c) => (data += c))
+    req.on("end", () => resolve(data))
+  })
 }
 
 function readBody(req) {
@@ -113,6 +124,45 @@ const server = http.createServer(async (req, res) => {
     })
   }
 
+  // ── A stand-in for the Stripe API: just the calls the app makes ──
+  if (path.startsWith("/stripe/v1/")) {
+    if (!/^Bearer sk_/.test(req.headers.authorization ?? "")) return send(res, 401, { error: { message: "Invalid API Key provided" } })
+    const sp = path.slice("/stripe/v1".length)
+    const form = req.method === "POST" ? Object.fromEntries(new URLSearchParams(await readText(req))) : {}
+    state.stripe.calls.push({ method: req.method, path: sp, form })
+    if (state.stripe.failNext > 0) {
+      state.stripe.failNext--
+      return send(res, 402, { error: { message: "mock failure" } })
+    }
+    const now = Math.floor(Date.now() / 1000)
+    if (sp === "/customers") {
+      const customer = { id: `cus_mock${state.stripe.customers.length + 1}`, name: form.name, email: form.email, metadata: { client_id: form["metadata[client_id]"] } }
+      state.stripe.customers.push(customer)
+      return send(res, 200, customer)
+    }
+    if (sp === "/checkout/sessions") {
+      const session = { id: `cs_mock${state.stripe.sessions.length + 1}`, url: `https://checkout.stripe.test/pay/cs_mock${state.stripe.sessions.length + 1}`, form }
+      state.stripe.sessions.push(session)
+      return send(res, 200, session)
+    }
+    if (sp === "/billing_portal/sessions") {
+      state.stripe.portals.push(form)
+      return send(res, 200, { url: `https://billing.stripe.test/session/${state.stripe.portals.length}` })
+    }
+    const sub = sp.match(/^\/subscriptions\/([^/]+)$/)
+    if (sub) {
+      const current = state.stripe.subscriptions[sub[1]]
+      if (!current) return send(res, 404, { error: { message: "No such subscription" } })
+      if (req.method === "POST") {
+        if (form["items[0][price]"]) current.items.data[0].price.id = form["items[0][price]"]
+        if (form.cancel_at_period_end !== undefined) current.cancel_at_period_end = form.cancel_at_period_end === "true"
+        if (form["metadata[plan_id]"]) current.metadata.plan_id = form["metadata[plan_id]"]
+      }
+      return send(res, 200, current)
+    }
+    return send(res, 404, { error: { message: `Unrecognized request URL (${sp})` } })
+  }
+
   // ── A stand-in for the Resend email API ──
   if (path === "/resend/emails" && req.method === "POST") {
     if (!/^Bearer \S+/.test(req.headers.authorization ?? "")) return send(res, 401, { message: "Missing API key" })
@@ -162,6 +212,17 @@ const server = http.createServer(async (req, res) => {
       state.patches.push({ pal_id: pal.pal_id, ops })
       return send(res, 200, pal)
     }
+  }
+
+  const depMatch = path.match(/^\/v2\/deployments\/([^/]+)$/)
+  if (depMatch && req.method === "PATCH") {
+    const dep = state.deployments.find((d) => d.deployment_id === depMatch[1])
+    if (!dep) return send(res, 404, { message: "Deployment not found" })
+    if (state.failDeploymentPatchFor.includes(dep.deployment_id)) return send(res, 500, { message: "mock failure" })
+    const ops = await readBody(req)
+    for (const op of ops) dep[op.path.replace(/^\//, "")] = op.value
+    state.deploymentPatches.push({ deployment_id: dep.deployment_id, ops })
+    return send(res, 200, dep)
   }
 
   if (path === "/v2/deployments" && req.method === "GET") {

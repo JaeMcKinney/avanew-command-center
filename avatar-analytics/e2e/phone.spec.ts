@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { CLIENT_ADMIN, OWNER, signIn } from "./helpers"
+import { CLIENT_ADMIN, OWNER, expectAccessible, expectNoSidewaysScroll, signIn } from "./helpers"
 
 test("on a phone, navigation is a tab bar and everything can be reached by keyboard", async ({ page }) => {
   await signIn(page, CLIENT_ADMIN)
@@ -31,4 +31,37 @@ test("on a phone, staff get the same tab bar", async ({ page }) => {
   await tabs.getByRole("link", { name: "Clients" }).click()
   await expect(page.getByRole("heading", { name: "Clients", level: 1 })).toBeVisible()
   await expect(page.getByRole("link", { name: "Northline Realty" })).toBeVisible()
+})
+
+test("on a phone, pages that do not fit the tab bar are under More", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "The tab bar only shows on small screens")
+  await signIn(page, CLIENT_ADMIN)
+  const tabs = page.getByRole("navigation", { name: "Main" }).filter({ visible: true })
+  await expect(tabs.getByRole("link")).toHaveCount(4)
+  await expect(tabs.getByRole("link", { name: "Billing" })).toHaveCount(0)
+  const more = tabs.getByRole("button", { name: "More" })
+  expect((await more.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+  await more.click()
+  const menu = page.getByRole("dialog", { name: "More" })
+  await expect(menu.getByRole("link")).toHaveText(["Team", "Billing"])
+  await expectAccessible(page)
+  await menu.getByRole("link", { name: "Billing" }).click()
+  await expect(page.getByRole("heading", { name: "Billing", level: 1 })).toBeVisible()
+  await expect(menu).toHaveCount(0)
+  await expectNoSidewaysScroll(page)
+  await expectAccessible(page)
+
+})
+
+test("on a phone, staff reach every page too", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "The tab bar only shows on small screens")
+  await signIn(page, OWNER)
+  const tabs = page.getByRole("navigation", { name: "Main" }).filter({ visible: true })
+  await tabs.getByRole("link", { name: "Packages" }).click()
+  await expect(page.getByRole("heading", { name: "Packages", level: 1 })).toBeVisible()
+  await expectNoSidewaysScroll(page)
+  await tabs.getByRole("button", { name: "More" }).click()
+  await expect(page.getByRole("dialog", { name: "More" }).getByRole("link")).toHaveText(["Team", "Activity"])
+  await page.getByRole("dialog", { name: "More" }).getByRole("link", { name: "Activity" }).click()
+  await expect(page.getByRole("heading", { name: "Activity", level: 1 })).toBeVisible()
 })

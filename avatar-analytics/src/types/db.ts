@@ -91,6 +91,32 @@ isOneToOne: false
       referencedColumns: ["pal_id"]
     }
                   ]
+                },"client_billing": {
+                  Row: {
+                    "cancel_at_period_end": boolean,"cancel_reason": string | null,"cancel_requested_at": string | null,"client_id": string,"current_period_end": string | null,"current_period_start": string | null,"paused_deployments": NonNullable<Json>,"paused_for_usage_at": string | null,"plan_id": string | null,"status": string,"stripe_customer_id": string | null,"stripe_subscription_id": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cancel_at_period_end"?: boolean,"cancel_reason"?: string | null,"cancel_requested_at"?: string | null,"client_id": string,"current_period_end"?: string | null,"current_period_start"?: string | null,"paused_deployments"?: NonNullable<Json>,"paused_for_usage_at"?: string | null,"plan_id"?: string | null,"status"?: string,"stripe_customer_id"?: string | null,"stripe_subscription_id"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "cancel_at_period_end"?: boolean,"cancel_reason"?: string | null,"cancel_requested_at"?: string | null,"client_id"?: string,"current_period_end"?: string | null,"current_period_start"?: string | null,"paused_deployments"?: NonNullable<Json>,"paused_for_usage_at"?: string | null,"plan_id"?: string | null,"status"?: string,"stripe_customer_id"?: string | null,"stripe_subscription_id"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "client_billing_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: true
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "client_billing_plan_id_fkey"
+      columns: ["plan_id"]
+isOneToOne: false
+      referencedRelation: "plans"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"clients": {
                   Row: {
                     "brand_color": string | null,"created_at": string,"created_by": string | null,"id": string,"logo_url": string | null,"name": string,"slug": string,"status": string,"timezone": string,"updated_at": string
@@ -157,6 +183,46 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"invoices": {
+                  Row: {
+                    "amount_due_cents": number,"amount_paid_cents": number,"client_id": string,"currency": string,"hosted_invoice_url": string | null,"id": string,"invoice_pdf": string | null,"issued_at": string,"number": string | null,"period_end": string | null,"period_start": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_due_cents"?: number,"amount_paid_cents"?: number,"client_id": string,"currency"?: string,"hosted_invoice_url"?: string | null,"id": string,"invoice_pdf"?: string | null,"issued_at"?: string,"number"?: string | null,"period_end"?: string | null,"period_start"?: string | null,"status": string
+                  }
+                  Update: {
+                    "amount_due_cents"?: number,"amount_paid_cents"?: number,"client_id"?: string,"currency"?: string,"hosted_invoice_url"?: string | null,"id"?: string,"invoice_pdf"?: string | null,"issued_at"?: string,"number"?: string | null,"period_end"?: string | null,"period_start"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoices_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notifications": {
+                  Row: {
+                    "channel": string,"client_id": string,"created_at": string,"detail": string | null,"id": number,"kind": string,"period_start": string,"recipient": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "channel": string,"client_id": string,"created_at"?: string,"detail"?: string | null,"id"?: never,"kind": string,"period_start"?: string,"recipient": string,"status": string
+                  }
+                  Update: {
+                    "channel"?: string,"client_id"?: string,"created_at"?: string,"detail"?: string | null,"id"?: never,"kind"?: string,"period_start"?: string,"recipient"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notifications_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"permissions": {
                   Row: {
                     "description": string,"key": string,"label": string,"side": string,"sort": number
@@ -171,16 +237,30 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"profiles": {
+                },"plans": {
                   Row: {
-                    "client_id": string | null,"created_at": string,"email": string,"full_name": string,"id": string,"invited_by": string | null,"is_active": boolean,"role_id": string,"side": string
+                    "created_at": string,"currency": string,"description": string,"id": string,"included_minutes": number,"is_active": boolean,"max_concurrent": number | null,"monthly_price_cents": number,"name": string,"sort": number,"stripe_price_id": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "client_id"?: string | null,"created_at"?: string,"email": string,"full_name"?: string,"id": string,"invited_by"?: string | null,"is_active"?: boolean,"role_id": string,"side": string
+                    "created_at"?: string,"currency"?: string,"description"?: string,"id"?: string,"included_minutes": number,"is_active"?: boolean,"max_concurrent"?: number | null,"monthly_price_cents": number,"name": string,"sort"?: number,"stripe_price_id"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "client_id"?: string | null,"created_at"?: string,"email"?: string,"full_name"?: string,"id"?: string,"invited_by"?: string | null,"is_active"?: boolean,"role_id"?: string,"side"?: string
+                    "created_at"?: string,"currency"?: string,"description"?: string,"id"?: string,"included_minutes"?: number,"is_active"?: boolean,"max_concurrent"?: number | null,"monthly_price_cents"?: number,"name"?: string,"sort"?: number,"stripe_price_id"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"profiles": {
+                  Row: {
+                    "client_id": string | null,"created_at": string,"email": string,"full_name": string,"id": string,"invited_by": string | null,"is_active": boolean,"phone": string | null,"role_id": string,"side": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_id"?: string | null,"created_at"?: string,"email": string,"full_name"?: string,"id": string,"invited_by"?: string | null,"is_active"?: boolean,"phone"?: string | null,"role_id": string,"side": string
+                  }
+                  Update: {
+                    "client_id"?: string | null,"created_at"?: string,"email"?: string,"full_name"?: string,"id"?: string,"invited_by"?: string | null,"is_active"?: boolean,"phone"?: string | null,"role_id"?: string,"side"?: string
                   }
                   Relationships: [
                     {
@@ -335,6 +415,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"stripe_events": {
+                  Row: {
+                    "id": string,"received_at": string,"type": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id": string,"received_at"?: string,"type": string
+                  }
+                  Update: {
+                    "id"?: string,"received_at"?: string,"type"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"tavus_deployments": {
                   Row: {
                     "allowed_origins": (string)[],"channel": string,"deployment_id": string,"limits": NonNullable<Json>,"name": string,"page_url": string | null,"pal_id": string,"removed_at": string | null,"status": string,"synced_at": string,"tavus_created_at": string | null,"tavus_updated_at": string | null,"thumbnail_image_url": string | null,"usage_today": number | null,"usage_total": number | null
@@ -477,6 +571,14 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"billing_contacts":
+{ Args: { "p_client_id": string }; Returns: {
+              "email": string,"full_name": string,"phone": string,"side": string
+            }[]
+                           },
+"billing_summary":
+{ Args: { "p_client_id": string }; Returns: Json
+                           },
 "check_access":
 { Args: { "p_client_id"?: string,"p_permission": string }; Returns: boolean
                            },
@@ -499,6 +601,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"expired_export_paths":
+{ Args: { "p_days"?: number }; Returns: string[]
+                           },
 "ingest_tavus_event":
 { Args: { "p_avatar_id": string,"p_payload": Json,"p_source"?: string }; Returns: Json
                            },
@@ -564,6 +669,9 @@ isOneToOne: false
 { Args: { "p_client_id": string,"p_from": string,"p_to": string }; Returns: {
               "billable_seconds": number,"conversations": number,"talk_seconds": number,"usage_date": string
             }[]
+                           },
+"usage_standings":
+{ Args: Record<PropertyKey, never>; Returns: Json[]
                            }
           }
           Enums: {

@@ -57,3 +57,9 @@ export function endedBecause(reason: string | null | undefined): string {
   if (!reason) return "—"
   return SHUTDOWN_REASONS.find(([pattern]) => pattern.test(reason))?.[1] ?? reason.replace(/_/g, " ")
 }
+
+/** "$397" or "$397.50", from an amount in cents. */
+export function money(cents: number | null | undefined, currency = "usd"): string {
+  const amount = (cents ?? 0) / 100
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase(), minimumFractionDigits: Number.isInteger(amount) ? 0 : 2 }).format(amount)
+}

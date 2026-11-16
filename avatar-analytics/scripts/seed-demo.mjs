@@ -131,6 +131,29 @@ export async function seedDemo({ days = 75, log = console.log } = {}) {
       must(await admin.rpc("ingest_tavus_event", { p_avatar_id: e.avatar, p_payload: e.payload, p_source: "webhook" }), "ingest")))
   }
 
+  log("Creating packages and a subscription…")
+  // Made-up packages and prices, for the demo only.
+  const plans = must(await admin.from("plans").insert([
+    { name: "Starter", description: "For a single avatar and a quiet site.", monthly_price_cents: 9900, included_minutes: 150, max_concurrent: 1, stripe_price_id: "price_demoStarter", is_active: true, sort: 1 },
+    { name: "Standard", description: "For a busy site with a few avatars.", monthly_price_cents: 19900, included_minutes: 300, max_concurrent: 3, stripe_price_id: "price_demoStandard", is_active: true, sort: 2 },
+    { name: "Plus", description: "For several sites or long conversations.", monthly_price_cents: 34900, included_minutes: 600, max_concurrent: 5, stripe_price_id: "price_demoPlus", is_active: true, sort: 3 },
+  ]).select("id, name"), "plans")
+  const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1, 5))
+  const monthEnd = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1, 5))
+  must(await admin.from("client_billing").insert({
+    client_id: northline.id, plan_id: plans.find((p) => p.name === "Standard").id, status: "active", stripe_customer_id: "cus_demoNorthline",
+    stripe_subscription_id: "sub_demoNorthline", current_period_start: monthStart.toISOString(), current_period_end: monthEnd.toISOString(),
+  }), "billing")
+  const invoiceFor = (n, monthsAgo) => {
+    const issued = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() - monthsAgo, 1, 5))
+    return {
+      id: `in_demo${n}`, client_id: northline.id, number: `DEMO-000${n}`, status: "paid", amount_due_cents: 19900, amount_paid_cents: 19900, currency: "usd",
+      hosted_invoice_url: `https://invoice.stripe.test/i/in_demo${n}`, invoice_pdf: `https://invoice.stripe.test/i/in_demo${n}/pdf`,
+      period_start: issued.toISOString(), period_end: new Date(Date.UTC(issued.getUTCFullYear(), issued.getUTCMonth() + 1, 1, 5)).toISOString(), issued_at: issued.toISOString(),
+    }
+  }
+  must(await admin.from("invoices").insert([invoiceFor(3, 0), invoiceFor(2, 1), invoiceFor(1, 2)]), "invoices")
+
   log("Writing summaries and questions…")
   const pending = must(await admin.from("conversation_insights").select("conversation_id").eq("status", "pending"), "pending")
   const transcripts = must(await admin.from("transcripts").select("conversation_id, turns"), "transcripts")

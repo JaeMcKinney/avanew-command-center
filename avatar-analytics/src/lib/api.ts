@@ -307,6 +307,73 @@ export async function loadExportItems(conversations: Conversation[]): Promise<Ex
   }))
 }
 
+// ── Billing ──────────────────────────────────────────────────────────────────
+
+export type Plan = Tables["plans"]["Row"]
+export type Invoice = Tables["invoices"]["Row"]
+export type PlanInput = Pick<Plan, "name" | "description" | "monthly_price_cents" | "included_minutes" | "max_concurrent" | "stripe_price_id" | "is_active" | "sort">
+export type BillingSummary = {
+  client_id: string
+  status: "none" | "incomplete" | "trialing" | "active" | "past_due" | "unpaid" | "cancelled"
+  plan: Pick<Plan, "id" | "name" | "description" | "monthly_price_cents" | "currency" | "included_minutes" | "max_concurrent"> | null
+  period_start: string
+  period_end: string
+  renews_at: string | null
+  cancel_at_period_end: boolean
+  has_payment_account: boolean
+  has_subscription: boolean
+  paused_for_usage: boolean
+  used_seconds: number
+  included_seconds: number | null
+  used_percent: number | null
+}
+
+export async function listPlans(): Promise<Plan[]> {
+  return unwrap(await supabase.from("plans").select("*").order("sort").order("monthly_price_cents"))
+}
+
+export async function savePlan(id: string | null, input: PlanInput): Promise<void> {
+  const result = id ? await supabase.from("plans").update(input).eq("id", id).select("id") : await supabase.from("plans").insert(input).select("id")
+  if (result.error) {
+    if (result.error.code === "23505") throw new Error("Another package already uses that Stripe price.")
+    fail(result.error)
+  }
+  if (!result.data?.length) throw new Error("You do not have permission to do this.")
+}
+
+export async function getBillingSummary(clientId: string): Promise<BillingSummary> {
+  const { data, error } = await supabase.rpc("billing_summary", { p_client_id: clientId })
+  if (error) fail(error)
+  return data as unknown as BillingSummary
+}
+
+export async function listInvoices(clientId: string): Promise<Invoice[]> {
+  return unwrap(await supabase.from("invoices").select("*").eq("client_id", clientId).order("issued_at", { ascending: false }).limit(60))
+}
+
+type BillingAction = { action: "checkout" | "change_plan"; plan_id: string } | { action: "portal" | "resume" } | { action: "cancel"; reason: string }
+
+export function billingAction(clientId: string, body: BillingAction) {
+  return callFunction<{ ok: true; url?: string; resumed?: boolean; ends_at?: string }>("billing", { ...body, client_id: clientId })
+}
+
+export type UsageRules = { alertPercent: number; pauseEnabled: boolean; pausePercent: number }
+
+export async function getUsageRules(): Promise<UsageRules> {
+  const rows = unwrap(await supabase.from("settings").select("key, value").in("key", ["usage.alert_percent", "usage.pause_enabled", "usage.pause_percent"]))
+  const value = (key: string) => rows.find((r) => r.key === key)?.value
+  return { alertPercent: Number(value("usage.alert_percent") ?? 90), pauseEnabled: value("usage.pause_enabled") !== false, pausePercent: Number(value("usage.pause_percent") ?? 100) }
+}
+
+export async function saveUsageRules(rules: UsageRules): Promise<void> {
+  const changes: Array<[string, number | boolean]> = [["usage.alert_percent", rules.alertPercent], ["usage.pause_enabled", rules.pauseEnabled], ["usage.pause_percent", rules.pausePercent]]
+  for (const [key, value] of changes) {
+    const { data, error } = await supabase.from("settings").update({ value }).eq("key", key).select("key")
+    if (error) fail(error)
+    if (!data?.length) throw new Error("You do not have permission to change settings.")
+  }
+}
+
 // ── People, roles and permissions ────────────────────────────────────────────
 
 export async function listProfiles(filter: { side: "divigner" } | { clientId: string }): Promise<Profile[]> {

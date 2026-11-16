@@ -151,3 +151,10 @@ export function createDocument(body: {
 export function recrawlDocument(documentId: string): Promise<unknown> {
   return request(`/documents/${encodeURIComponent(documentId)}/recrawl`, { method: "POST" })
 }
+
+/** Turns a deployment on or off. An inactive deployment's embed cannot start calls. */
+export function setDeploymentStatus(deploymentId: string, status: "active" | "inactive"): Promise<unknown> {
+  return request(`/deployments/${encodeURIComponent(deploymentId)}`, {
+    method: "PATCH", body: JSON.stringify([{ op: "replace", path: "/status", value: status }]),
+  })
+}

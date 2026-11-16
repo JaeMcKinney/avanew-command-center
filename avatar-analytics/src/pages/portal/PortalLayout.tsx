@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { ArrowLeft, CircleHelp, Code2, LayoutDashboard, MessagesSquare, Users } from "lucide-react"
+import { ArrowLeft, CircleHelp, Code2, CreditCard, LayoutDashboard, MessagesSquare, Users } from "lucide-react"
 import { Link, Outlet, useOutletContext, useParams } from "react-router-dom"
 import { PortalShell, type NavItem } from "@/components/Shell"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
@@ -42,6 +42,7 @@ export default function PortalLayout() {
     ...(can("transcripts.view") || can("questions.answer") ? [{ to: `${base}/questions`, label: "Questions", icon: CircleHelp }] : []),
     ...(can("embeds.view") ? [{ to: `${base}/avatars`, label: "Avatars", icon: Code2 }] : []),
     ...(can("client_users.manage") ? [{ to: `${base}/team`, label: "Team", icon: Users }] : []),
+    ...(can("billing.view") ? [{ to: `${base}/billing`, label: "Billing", icon: CreditCard }] : []),
   ]
   const brand = c.brand_color && isHexColor(c.brand_color) ? c.brand_color : null
   const style = brand ? ({ "--brand": brand, "--brand-foreground": readableOn(brand) } as React.CSSProperties) : undefined
@@ -53,7 +54,19 @@ export default function PortalLayout() {
         logoUrl={c.logo_url}
         items={items}
         banner={
-          access?.side === "divigner" && (
+          <>
+            {(c.status === "paused" || c.status === "cancelled") && (
+              <div role="status" className="border-b bg-warn-soft text-warn">
+                <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm sm:px-6">
+                  <p>
+                    <strong>{c.status === "paused" ? "Your avatars are paused." : "Your subscription has ended."}</strong>{" "}
+                    {c.status === "paused" ? "They are not taking new calls right now." : "Your avatars are not taking calls."}
+                  </p>
+                  {can("billing.view") && <Link to={`${base}/billing`} className="inline-flex min-h-8 items-center font-semibold underline">See billing</Link>}
+                </div>
+              </div>
+            )}
+            {access?.side === "divigner" && (
             <div className="bg-sidebar text-sidebar-foreground">
               <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm sm:px-6">
                 <p>You are seeing what <strong>{c.name}</strong> sees.</p>
@@ -62,7 +75,8 @@ export default function PortalLayout() {
                 </Link>
               </div>
             </div>
-          )
+          )}
+          </>
         }
       >
         <Outlet context={c} />

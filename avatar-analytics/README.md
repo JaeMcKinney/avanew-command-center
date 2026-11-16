@@ -22,8 +22,11 @@ This folder is self-contained. It does not share code or a database with the CRM
 | Talk time totals, by avatar and by day, per client time zone | Built |
 | Client dashboard, conversations and transcripts | Built |
 | Activity log | Built |
-| Talk-time and concurrency limits, overage email and pause | Not yet |
-| Stripe billing, invoices, enhancements store | Not yet |
+| Packages, and each client's subscription through Stripe (subscribe, change package, payment method, cancel, invoices) | Built, tested against a mock Stripe |
+| Usage against the package: one warning email, pause at the limit, automatic resume | Built, tested against mock Tavus and email |
+| Text-message notices | Placeholder: recorded as skipped until a text provider is connected |
+| Concurrency limit per package | Shown to clients; not yet enforced in Tavus |
+| Enhancements store | Not yet |
 | Transcript summaries and the questions each visitor asked | Built, tested against a mock Claude API |
 | Questions inbox: answer once, added to the avatar's Tavus knowledge | Built, tested against a mock Tavus |
 | Branded transcript PDF for each call | Built |
@@ -58,6 +61,9 @@ Tavus ──► tavus-webhook/<avatar token>   checks the signature
   - `conversation-insights` summarises new transcripts with Claude and lists the questions asked.
   - `knowledge-publish` sends a client's answers to Tavus as a knowledge document on each avatar.
   - `knowledge-page` is the page Tavus reads those answers from (public, reached only by a long random address).
+  - `billing` starts a Stripe checkout, opens Stripe's billing page, changes package, and cancels or resumes a subscription.
+  - `stripe-webhook` keeps subscriptions and invoices in step with Stripe.
+  - `usage-check` compares talk time with each client's package: one warning email, a pause at the limit, a resume when there is room.
   - `export-share` turns an export a person uploaded into a private link that expires after 7 days, emails that link to the person who asked, and (on a schedule) removes old export files.
 - `src` — the React app. `src/lib/api.ts` is every read and write the screens make.
 
@@ -128,6 +134,12 @@ The browser tests check every page against WCAG 2.2 AA with axe, in light and da
    - **Save to Dropbox** needs `VITE_DROPBOX_APP_KEY` on the app (a Dropbox app with this site's address in its allowed domains).
    - **Save to Google Drive** needs `VITE_GOOGLE_CLIENT_ID` on the app (a Google OAuth web client with this site as an authorised JavaScript origin and the Drive API enabled). The app asks only for permission to add files.
    Each button stays hidden until its setting exists. Download, share and private links need nothing extra. Add a daily schedule for `export-share` (same form as the ones below) to remove export files after 7 days.
+   Billing (start with Stripe **test mode** keys):
+   - `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` from a Stripe webhook endpoint pointing at `<functions URL>/stripe-webhook` with the events `checkout.session.completed`, `customer.subscription.*` and `invoice.*`.
+   - In Stripe, create a product with a recurring monthly price for each package, then add the packages under **Packages** in the admin area with those price IDs. Prices live in Stripe and in the database, not in this code.
+   - For a one-time setup fee on a client's first checkout, add a setting `billing.setup_fee_price_id` whose value is the Stripe price ID of the fee.
+   - Turn on the customer portal in Stripe (Settings, Billing, Customer portal) so "Payment method" works.
+   - Schedule `usage-check` every 10 minutes (same form as the schedules below). It also runs whenever a call ends.
 5. Deploy the functions: `npx supabase functions deploy`.
 6. Deploy the app (for example on Vercel, with this folder as the root directory) with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set. Leave `VITE_FUNCTIONS_URL` unset.
 7. **Create the Owner.** In the SQL editor, name the email address that will be the Owner:
@@ -175,6 +187,7 @@ Everything Tavus-related was built from the public API reference (docs.tavus.io)
 3. **`pal_id` on listed conversations.** The backup check matches conversations to avatars by `pal_id`. Its result includes `unattributed`, the number of recent conversations Tavus listed with no `pal_id`.
 4. **Timing.** Talk time is the time between `system.pal_joined` and `system.shutdown`, rounded to the nearest 6 seconds with a 30-second minimum, which is how Tavus's pricing page describes billing. Both numbers are settings (`usage.round_to_seconds`, `usage.minimum_seconds`). Compare a few calls with the Tavus invoice.
 
+6. **Pausing works.** When a client's minutes run out the app sets each of their deployments to `inactive` with a JSON Patch on `/status`, and back to `active` on resume. Confirm on one test deployment that the patch is accepted and that an inactive deployment stops new calls.
 5. **Answers reach the avatar.** Answer one question in a client's Questions page, then check in Tavus that the avatar has a new knowledge document named after it and that the avatar uses the answer on the next call. The answers are published as a web page that Tavus crawls; the app adds that document to the PAL's `document_ids` and asks Tavus to re-read it when an answer changes.
 
 Linking an avatar replaces its PAL-level `callback_url`. If the PAL already sends events somewhere else, the app says so and asks before replacing it, saves the old address, and restores it when the avatar is unlinked.

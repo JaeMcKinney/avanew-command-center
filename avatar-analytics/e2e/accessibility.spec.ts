@@ -14,7 +14,7 @@ for (const scheme of ["light", "dark"] as const) {
 
     test("admin pages", async ({ page }) => {
       await signIn(page, OWNER)
-      for (const path of ["/admin", "/admin/clients", "/admin/clients/new", "/admin/clients/northline", "/admin/avatars", "/admin/team", "/admin/activity"]) {
+      for (const path of ["/admin", "/admin/clients", "/admin/clients/new", "/admin/clients/northline", "/admin/avatars", "/admin/team", "/admin/plans", "/admin/activity"]) {
         await page.goto(path)
         await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
         await expectAccessible(page)
@@ -29,7 +29,7 @@ for (const scheme of ["light", "dark"] as const) {
 
     test("client portal pages", async ({ page }) => {
       await signIn(page, CLIENT_ADMIN)
-      for (const path of ["/c/northline", "/c/northline/conversations", "/c/northline/questions", "/c/northline/avatars", "/c/northline/team"]) {
+      for (const path of ["/c/northline", "/c/northline/conversations", "/c/northline/questions", "/c/northline/avatars", "/c/northline/team", "/c/northline/billing"]) {
         await page.goto(path)
         await expect(page.getByRole("heading").first()).toBeVisible()
         await expectAccessible(page)
