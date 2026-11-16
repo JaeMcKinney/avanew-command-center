@@ -1,0 +1,29 @@
+// Runs the server functions on this machine with Deno, for local development
+// and tests. In production Supabase runs each function itself.
+//
+//   npm run functions        (reads supabase/functions/.env)
+//
+// Serves http://127.0.0.1:54399/functions/v1/<name>
+
+import { handler as avatarLink } from "../supabase/functions/avatar-link/handler.ts"
+import { handler as tavusBackfill } from "../supabase/functions/tavus-backfill/handler.ts"
+import { handler as tavusSync } from "../supabase/functions/tavus-sync/handler.ts"
+import { handler as tavusWebhook } from "../supabase/functions/tavus-webhook/handler.ts"
+import { handler as userInvite } from "../supabase/functions/user-invite/handler.ts"
+
+const routes: Record<string, (req: Request) => Promise<Response>> = {
+  "avatar-link": avatarLink,
+  "tavus-backfill": tavusBackfill,
+  "tavus-sync": tavusSync,
+  "tavus-webhook": tavusWebhook,
+  "user-invite": userInvite,
+}
+
+const port = Number(Deno.env.get("FUNCTIONS_PORT") ?? 54399)
+
+Deno.serve({ port, hostname: "127.0.0.1" }, (req) => {
+  const name = new URL(req.url).pathname.match(/^\/functions\/v1\/([^/]+)/)?.[1]
+  const handler = name ? routes[name] : undefined
+  if (!handler) return new Response(JSON.stringify({ error: "No such function" }), { status: 404 })
+  return handler(req)
+})
