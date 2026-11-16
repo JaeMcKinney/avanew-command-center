@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { AlertTriangle, CheckCircle2, Clock, CreditCard, ExternalLink, PauseCircle, XCircle } from "lucide-react"
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/PageHeader"
@@ -38,10 +38,11 @@ function SubscriptionPill({ summary }: { summary: BillingSummary }) {
 }
 
 /** How much of the period's included minutes are used, in words and as a bar. */
-function UsageMeter({ summary }: { summary: BillingSummary }) {
+function UsageMeter({ summary, onTopUp, busy }: { summary: BillingSummary; onTopUp?: (amountCents: number) => void; busy: boolean }) {
   const id = useId()
   if (!summary.plan || summary.included_seconds == null) return null
   const percent = summary.used_percent ?? 0
+  const total = summary.plan.included_minutes + summary.extra_minutes
   const left = Math.max(0, summary.included_seconds - summary.used_seconds)
   const tone = percent >= 100 ? "bg-bad" : percent >= 90 ? "bg-warn" : "bg-brand"
   return (
@@ -50,11 +51,14 @@ function UsageMeter({ summary }: { summary: BillingSummary }) {
       <p className="text-sm text-muted-foreground">{formatDay(summary.period_start)} to {formatDay(summary.period_end, true)}</p>
       <p className="flex flex-wrap items-baseline gap-x-2">
         <span className="tabular font-display text-4xl font-semibold">{minutes(summary.used_seconds)}</span>
-        <span className="text-muted-foreground">of {count(summary.plan.included_minutes)} minutes used ({Math.floor(percent)}%)</span>
+        <span className="text-muted-foreground">of {count(total)} minutes used ({Math.floor(percent)}%)</span>
       </p>
+      {summary.extra_minutes > 0 && (
+        <p className="text-sm text-muted-foreground">{count(summary.plan.included_minutes)} minutes from your package, plus {count(summary.extra_minutes)} extra minutes you added this period.</p>
+      )}
       <div
         role="progressbar" aria-labelledby={`${id}-title`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.floor(percent))}
-        aria-valuetext={`${minutes(summary.used_seconds)} of ${count(summary.plan.included_minutes)} minutes used`}
+        aria-valuetext={`${minutes(summary.used_seconds)} of ${count(total)} minutes used`}
         className="h-3 overflow-hidden rounded-full border bg-muted"
       >
         <div className={cn("h-full rounded-full", tone)} style={{ width: `${Math.min(100, percent)}%` }} />
@@ -62,8 +66,26 @@ function UsageMeter({ summary }: { summary: BillingSummary }) {
       <p className="text-sm text-muted-foreground">
         {percent >= 100
           ? "All of this period's minutes are used."
-          : `${minutes(left)} minutes left. If they run out, your avatars pause until the next period starts, or until you choose a larger package.`}
+          : `${minutes(left)} minutes left. If they run out, your avatars pause until the next period starts, or until you add minutes or choose a larger package.`}
       </p>
+      {onTopUp && summary.topup_options.length > 0 && (
+        <div className="flex flex-col gap-2 border-t pt-4">
+          <h3 id={`${id}-more`} className="text-sm font-semibold">Add minutes to this period</h3>
+          <p className="text-sm text-muted-foreground">
+            A one-time payment on Stripe's secure page, without changing your package. The minutes are added as soon as you pay{summary.paused_for_usage ? ", and your avatars turn back on" : ""}. They last until {formatDay(summary.period_end, true)}.
+          </p>
+          <ul aria-labelledby={`${id}-more`} className="flex flex-wrap gap-2">
+            {summary.topup_options.map((option) => (
+              <li key={option.amount_cents}>
+                <Button variant="gold" className="min-h-12 flex-col gap-0 px-5" disabled={busy} onClick={() => onTopUp(option.amount_cents)}>
+                  <span className="text-base font-semibold">{money(option.amount_cents, summary.plan!.currency)}</span>
+                  <span className="text-xs font-medium"><span className="sr-only">for </span>{count(option.minutes)} minutes</span>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   )
 }
@@ -98,11 +120,13 @@ export default function Billing() {
   const [reason, setReason] = useState("")
 
   const justPaid = params.get("checkout") === "done"
+  const justToppedUp = params.get("topup") === "done"
+  const minutesBefore = useRef<number | null>(null)
   const summary = useQuery({
     queryKey: ["billing", client.id],
     queryFn: () => getBillingSummary(client.id),
     // Stripe confirms a new subscription a few seconds after the person returns.
-    refetchInterval: (query) => (justPaid && !query.state.data?.has_subscription ? 2000 : false),
+    refetchInterval: (query) => ((justPaid && !query.state.data?.has_subscription) || justToppedUp ? 2000 : false),
   })
   const plans = useQuery({ queryKey: ["plans"], queryFn: listPlans })
   const invoices = useQuery({ queryKey: ["invoices", client.id], queryFn: () => listInvoices(client.id) })
@@ -119,9 +143,24 @@ export default function Billing() {
     }
   }, [justPaid, summary.data?.has_subscription, setParams])
 
+  // Back from paying for extra minutes: Stripe confirms a moment later, so watch for the total to rise.
+  useEffect(() => {
+    if (!justToppedUp || !summary.data) return
+    if (minutesBefore.current === null) {
+      minutesBefore.current = summary.data.extra_minutes
+      const giveUp = setTimeout(() => setParams({}, { replace: true }), 20_000)
+      return () => clearTimeout(giveUp)
+    }
+    if (summary.data.extra_minutes > minutesBefore.current) {
+      toast.success(`Thank you. ${count(summary.data.extra_minutes - minutesBefore.current)} minutes were added.`)
+      setParams({}, { replace: true })
+      void queryClient.invalidateQueries({ queryKey: ["client", client.slug] })
+    }
+  }, [justToppedUp, summary.data, setParams, queryClient, client.slug])
+
   /** Sends the person to one of Stripe's own pages. */
   const goToStripe = useMutation({
-    mutationFn: (body: { action: "checkout"; plan_id: string } | { action: "portal" }) => billingAction(client.id, body),
+    mutationFn: (body: { action: "checkout"; plan_id: string } | { action: "portal" } | { action: "topup"; amount_cents: number }) => billingAction(client.id, body),
     onSuccess: (result) => { if (result.url) window.location.assign(result.url) },
     onError: (err) => toast.error((err as Error).message),
   })
@@ -196,7 +235,8 @@ export default function Billing() {
               </div>
             )}
           </section>
-          <UsageMeter summary={s} />
+          {justToppedUp && <p role="status" className="rounded-lg bg-info-soft p-3 text-sm">Thank you. We are confirming your payment; your extra minutes appear here in a few seconds.</p>}
+          <UsageMeter summary={s} busy={busy} onTopUp={canManage ? (amount_cents) => goToStripe.mutate({ action: "topup", amount_cents }) : undefined} />
         </>
       ) : (
         <section aria-labelledby="choose-title" className="flex flex-col gap-4">

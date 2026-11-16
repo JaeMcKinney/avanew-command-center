@@ -267,6 +267,81 @@ describe("changing package and cancelling", () => {
   })
 })
 
+describe("extra minutes without changing package", () => {
+  let topupId: string
+
+  it("offers fixed amounts, priced from the client's own package", async () => {
+    // Large: $300 for 100 minutes, so $3 a minute.
+    expect((await summary(dana)).data.topup_options).toEqual([
+      { amount_cents: 1000, minutes: 3 }, { amount_cents: 2000, minutes: 6 }, { amount_cents: 5000, minutes: 16 },
+    ])
+    await admin.from("settings").update({ value: 150 }).eq("key", "billing.topup_rate_percent")
+    expect((await summary(dana)).data.topup_options[2]).toEqual({ amount_cents: 5000, minutes: 11 })
+    await admin.from("settings").update({ value: 100 }).eq("key", "billing.topup_rate_percent")
+    expect((await summary(pat, harbor.id)).data.topup_options).toEqual([]) // no package, nothing to buy
+  })
+
+  it("sends the client to Stripe to pay, as a one-off charge", async () => {
+    const res = await callFunction("billing", { action: "topup", client_id: northline.id, amount_cents: 2000 }, { token: dana.token })
+    expect(res).toMatchObject({ status: 200, body: { minutes: 6 } })
+    const form = (await mockTavusState()).stripe.sessions.at(-1)!.form
+    expect(form).toMatchObject({
+      mode: "payment", customer: "cus_mock1", "line_items[0][quantity]": "1", "line_items[0][price_data][currency]": "usd",
+      "line_items[0][price_data][unit_amount]": "2000", "metadata[client_id]": northline.id, success_url: "http://127.0.0.1:5180/c/northline/billing?topup=done",
+    })
+    expect(form["line_items[0][price_data][product_data][name]"]).toMatch(/^6 extra minutes of avatar talk time/)
+    topupId = form["metadata[topup_id]"]
+    const { data } = await dana.client.from("usage_topups").select("status, minutes, amount_cents").eq("id", topupId).single()
+    expect(data).toEqual({ status: "pending", minutes: 6, amount_cents: 2000 })
+    // Nothing is added until the payment arrives.
+    expect((await summary(dana)).data).toMatchObject({ extra_minutes: 0, included_seconds: 6000 })
+  })
+
+  it("refuses other amounts, people who cannot manage billing, and clients without a subscription", async () => {
+    expect((await callFunction("billing", { action: "topup", client_id: northline.id, amount_cents: 1 }, { token: dana.token })).status).toBe(400)
+    expect((await callFunction("billing", { action: "topup", client_id: northline.id, amount_cents: 2500 }, { token: dana.token })).status).toBe(400)
+    expect((await callFunction("billing", { action: "topup", client_id: northline.id, amount_cents: 2000 }, { token: lee.token })).status).toBe(403)
+    expect((await callFunction("billing", { action: "topup", client_id: harbor.id, amount_cents: 2000 }, { token: pat.token })).status).toBe(409)
+    expect((await dana.client.from("usage_topups").insert({ client_id: northline.id, amount_cents: 1, minutes: 9999, status: "paid", period_start: new Date().toISOString(), period_end: new Date(Date.now() + 1e9).toISOString() })).error).not.toBeNull()
+  })
+
+  it("adds the minutes once Stripe confirms payment, and only once", async () => {
+    const session = { id: "cs_topup", customer: "cus_mock1", mode: "payment", payment_status: "paid", metadata: { client_id: northline.id, topup_id: topupId } }
+    // A session that is finished but not yet paid (a slow payment method) adds nothing.
+    await stripeEvent("checkout.session.completed", { ...session, payment_status: "unpaid" })
+    expect((await summary(dana)).data.extra_minutes).toBe(0)
+    expect((await stripeEvent("checkout.session.completed", session)).status).toBe(200)
+    await stripeEvent("checkout.session.completed", session)
+    await stripeEvent("checkout.session.async_payment_succeeded", session)
+    expect((await summary(dana)).data).toMatchObject({ extra_minutes: 6, included_seconds: 6360, used_percent: 9.6 })
+    expect((await emailsTo("dana@northline.test")).at(-1)!.subject).toBe("6 extra minutes added (Northline Realty)")
+    expect((await emailsTo("owner@divigner.test")).at(-1)!.text).toBe("Northline Realty bought 6 extra minutes for $20.00.")
+    expect((await emailsTo("dana@northline.test")).filter((e) => e.subject.startsWith("6 extra minutes"))).toHaveLength(1)
+  })
+
+  it("turns paused avatars back on, and an abandoned payment adds nothing", async () => {
+    // Use up the package and the extra minutes: 106 minutes in all.
+    await talk(96 * 60)
+    expect((await callFunction("usage-check", {}, CRON)).body).toMatchObject({ paused: 1 })
+    expect(await clientStatus(northline.id)).toBe("paused")
+
+    const abandoned = await callFunction("billing", { action: "topup", client_id: northline.id, amount_cents: 5000 }, { token: dana.token })
+    const abandonedId = (await mockTavusState()).stripe.sessions.at(-1)!.form["metadata[topup_id]"]
+    expect(abandoned.status).toBe(200)
+    await stripeEvent("checkout.session.expired", { id: "cs_gone", customer: "cus_mock1", mode: "payment", payment_status: "unpaid", metadata: { topup_id: abandonedId } })
+    expect((await admin.from("usage_topups").select("status").eq("id", abandonedId).single()).data).toEqual({ status: "expired" })
+    expect(await clientStatus(northline.id)).toBe("paused")
+
+    await callFunction("billing", { action: "topup", client_id: northline.id, amount_cents: 5000 }, { token: dana.token })
+    const paidId = (await mockTavusState()).stripe.sessions.at(-1)!.form["metadata[topup_id]"]
+    await stripeEvent("checkout.session.completed", { id: "cs_paid", customer: "cus_mock1", mode: "payment", payment_status: "paid", metadata: { topup_id: paidId } })
+    expect(await clientStatus(northline.id)).toBe("active")
+    expect((await summary(dana)).data).toMatchObject({ extra_minutes: 22, paused_for_usage: false })
+    const tavus = await mockTavusState()
+    expect(tavus.deployments.filter((d) => ["d-maya-embed", "d-maya-widget", "d-theo-embed"].includes(d.deployment_id)).every((d) => d.status === "active")).toBe(true)
+  })
+})
+
 describe("invoices and the end of a subscription", () => {
   const invoice = (overrides: Record<string, unknown> = {}) => ({
     id: "in_1", customer: "cus_mock1", number: "DIV-0001", status: "paid", amount_due: 10000, amount_paid: 10000, currency: "usd",
@@ -290,9 +365,11 @@ describe("invoices and the end of a subscription", () => {
   })
 
   it("a new billing period starts the allowance again", async () => {
-    await stripeEvent("customer.subscription.updated", subscription({ items: { data: [{ id: "si_1", price: { id: "price_large" }, current_period_start: NOW + 1, current_period_end: NOW + 30 * DAY }] } }))
+    await stripeEvent("customer.subscription.updated", subscription({ items: { data: [{ id: "si_1", price: { id: "price_large" }, current_period_start: Math.floor(Date.now() / 1000) + 5, current_period_end: NOW + 30 * DAY }] } }))
     // The calls above were before this period began, so nothing is used yet.
     expect((await summary(dana)).data).toMatchObject({ used_seconds: 0, used_percent: 0, plan: { name: "Large" } })
+    // Extra minutes belonged to the period they were bought in. They do not carry over.
+    expect((await summary(dana)).data).toMatchObject({ extra_minutes: 0, included_seconds: 6000 })
   })
 
   it("when the subscription ends, the avatars are turned off and the client is marked cancelled", async () => {

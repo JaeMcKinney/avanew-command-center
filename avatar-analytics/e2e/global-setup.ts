@@ -4,7 +4,7 @@ import { seedDemo } from "../scripts/seed-demo.mjs"
 /** Every run starts from the same sample data. */
 export default async function globalSetup() {
   const sql = `
-    truncate public.notifications, public.invoices, public.stripe_events, public.client_billing, public.plans,
+    truncate public.usage_topups, public.notifications, public.invoices, public.stripe_events, public.client_billing, public.plans,
       public.avatar_knowledge, public.questions, public.question_groups, public.conversation_insights,
       public.usage_daily, public.transcripts, public.conversations, public.tavus_events,
       public.avatar_secrets, public.avatars, public.tavus_deployments, public.tavus_pals,

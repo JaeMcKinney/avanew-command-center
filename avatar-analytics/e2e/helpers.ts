@@ -19,7 +19,7 @@ export async function expectAccessible(page: Page) {
   await page.waitForLoadState("networkidle")
   // axe ships its own copy of Playwright's types, which lags a version behind.
   const results = await new AxeBuilder({ page: page as never }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze()
-  const summary = results.violations.map((v) => `${v.id}: ${v.help} → ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(" | ")}`)
+  const summary = results.violations.map((v) => `${v.id}: ${v.help} → ${v.nodes.slice(0, 3).map((n) => `${n.target.join(" ")}${v.id === "color-contrast" ? ` [${n.html.slice(0, 140)}] ${n.any[0]?.message ?? ""}` : ""}`).join(" | ")}`)
   expect(summary).toEqual([])
 }
 

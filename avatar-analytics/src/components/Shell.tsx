@@ -7,6 +7,8 @@ import { NavLink, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/hooks/useAuth"
+import logoOnDark from "@/assets/divigner-logo-on-dark.webp"
+import logoOnLight from "@/assets/divigner-logo-on-light.webp"
 import { cn } from "@/lib/utils"
 
 export type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean }
@@ -19,12 +21,14 @@ function SkipLink() {
   )
 }
 
-export function DivignerMark({ className }: { className?: string }) {
+/** The Divigner Group logo, in the version that suits the surface it sits on. */
+export function DivignerLogo({ on = "auto", className }: { on?: "dark" | "auto"; className?: string }) {
+  if (on === "dark") return <img src={logoOnDark} alt="Divigner Group" width={626} height={200} className={cn("h-12 w-auto", className)} />
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-7 shrink-0", className)}>
-      <rect width="32" height="32" rx="6" fill="#2F5BFF" />
-      <path d="M10 8h6a8 8 0 0 1 0 16h-6z" fill="none" stroke="#fff" strokeWidth="3" strokeLinejoin="round" />
-    </svg>
+    <>
+      <img src={logoOnLight} alt="Divigner Group" width={626} height={200} className={cn("h-12 w-auto dark:hidden", className)} />
+      <img src={logoOnDark} alt="Divigner Group" width={626} height={200} className={cn("hidden h-12 w-auto dark:block", className)} />
+    </>
   )
 }
 
@@ -108,13 +112,10 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_minmax(0,1fr)]">
       <SkipLink />
-      <aside className="hidden bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:gap-6 md:p-4">
-        <div className="flex items-center gap-2 px-2 pt-1">
-          <DivignerMark />
-          <div className="leading-tight">
-            <p className="font-display text-lg font-semibold">Divigner</p>
-            <p className="text-xs text-sidebar-muted">Avatar Analytics</p>
-          </div>
+      <aside className="hidden border-r border-sidebar-border bg-linear-to-b from-[#081521] via-[#0b1c2b] to-[#14374b] text-sidebar-foreground md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:gap-6 md:p-4">
+        <div className="flex flex-col items-start gap-1.5 px-2 pt-2">
+          <DivignerLogo on="dark" className="h-14" />
+          <p className="text-xs font-medium tracking-[0.18em] text-sidebar-muted uppercase">Avatar Analytics</p>
         </div>
         <nav aria-label="Main" className="flex-1">
           <ul className="flex flex-col gap-1">
@@ -141,12 +142,15 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b bg-card px-4 py-2 md:hidden">
-          <div className="flex items-center gap-2">
-            <DivignerMark />
-            <span className="font-display text-base font-semibold">Avatar Analytics</span>
+        <header className="site-header md:hidden">
+          <div className="flex items-center justify-between gap-3 px-4 py-2">
+            <div className="flex items-center gap-3">
+              <DivignerLogo className="h-9" />
+              <span className="sr-only">Avatar Analytics</span>
+            </div>
+            <UserBlock tone="plain" />
           </div>
-          <UserBlock tone="plain" />
+          <div aria-hidden="true" className="edge-line" />
         </header>
         <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-6 pb-24 outline-none *:min-w-0 sm:px-6 md:pb-10">
           {children}
@@ -174,7 +178,7 @@ export function PortalShell({
     <div className="flex min-h-dvh flex-col">
       <SkipLink />
       {banner}
-      <header className="border-b bg-card">
+      <header className="site-header border-b">
         {/* The client's colour, as a thin band across the top. */}
         <div aria-hidden="true" className="h-1.5 bg-brand" />
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -210,11 +214,15 @@ export function PortalShell({
           </ul>
         </nav>
       </header>
-      <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-6 pb-24 outline-none *:min-w-0 sm:px-6 md:pb-10">
+      <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-6 pb-10 outline-none *:min-w-0 sm:px-6">
         {children}
       </main>
-      <footer className="hidden items-center justify-center gap-2 border-t py-4 text-xs text-muted-foreground md:flex">
-        <DivignerMark className="size-4" /> Avatar analytics by Divigner
+      <footer className="mb-16 md:mb-0">
+        <div aria-hidden="true" className="edge-line" />
+        <div className="flex flex-col items-center gap-1.5 px-4 py-5 text-xs text-muted-foreground">
+          <DivignerLogo className="h-11" />
+          <p className="tracking-[0.14em] uppercase">Avatar analytics by Divigner Group</p>
+        </div>
       </footer>
       <BottomTabs items={items} label="Main" />
     </div>

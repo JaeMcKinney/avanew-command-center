@@ -101,16 +101,16 @@ export async function checkUsage(admin: SupabaseClient, onlyClientId?: string): 
       await notify(admin, {
         clientId: s.client_id, kind: "usage_paused", periodStart: s.period_start,
         subject: `Your avatars are paused: this period's minutes are used up (${s.client_name})`,
-        text: `You have used all ${included} minutes included in your ${s.plan?.name ?? ""} package for this period, so your avatars have stopped taking new calls.\n\nThey start again automatically on ${day(s.period_end)}, when your next period begins. To turn them back on now, choose a larger package:\n\n${billingLink(s.slug)}\n\nDivigner`,
+        text: `You have used all ${included} minutes included in your ${s.plan?.name ?? ""} package for this period, so your avatars have stopped taking new calls.\n\nThey start again automatically on ${day(s.period_end)}, when your next period begins. To turn them back on now, add extra minutes or choose a larger package:\n\n${billingLink(s.slug)}\n\nDivigner`,
         staffText: `${s.client_name} has used ${used} of ${included} minutes (${s.used_percent}%) and their avatars have been paused.${failed.length ? ` ${failed.length} deployment(s) could not be paused in Tavus and need a look.` : ""}`,
-        sms: `Divigner: your included minutes are used up and your avatars are paused. Choose a larger package to turn them back on: ${billingLink(s.slug)}`,
+        sms: `Divigner: your included minutes are used up and your avatars are paused. Add minutes or choose a larger package to turn them back on: ${billingLink(s.slug)}`,
       })
       result.paused++
     } else if (!over && !s.paused_for_usage && s.used_percent >= alertAt) {
       const tally = await notify(admin, {
         clientId: s.client_id, kind: "usage_alert", periodStart: s.period_start,
         subject: `You have used ${Math.floor(s.used_percent)}% of this period's minutes (${s.client_name})`,
-        text: `You have used ${used} of the ${included} minutes included in your ${s.plan?.name ?? ""} package for this period.\n\n${pauseEnabled ? `When the included minutes are used up, your avatars pause until your next period begins on ${day(s.period_end)}. ` : ""}To add more minutes now, choose a larger package:\n\n${billingLink(s.slug)}\n\nThis is the only reminder you will get this period.\n\nDivigner`,
+        text: `You have used ${used} of the ${included} minutes included in your ${s.plan?.name ?? ""} package for this period.\n\n${pauseEnabled ? `When the included minutes are used up, your avatars pause until your next period begins on ${day(s.period_end)}. ` : ""}To get more minutes now, add extra minutes or choose a larger package:\n\n${billingLink(s.slug)}\n\nThis is the only reminder you will get this period.\n\nDivigner`,
         staffText: `${s.client_name} has used ${used} of ${included} minutes (${s.used_percent}%) this period.`,
         sms: `Divigner: you have used ${Math.floor(s.used_percent)}% of this period's minutes. Details: ${billingLink(s.slug)}`,
       })

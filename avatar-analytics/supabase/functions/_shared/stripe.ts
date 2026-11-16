@@ -107,6 +107,20 @@ export const createCheckoutSession = (params: {
     subscription_data: { metadata: { client_id: params.clientId, plan_id: params.planId } },
   })
 
+/** A one-off payment on Stripe's checkout page, priced here rather than from a saved Stripe price. */
+export const createPaymentSession = (params: {
+  customer: string; amountCents: number; currency: string; description: string; metadata: Record<string, string>; successUrl: string; cancelUrl: string
+}) =>
+  request<{ id: string; url: string }>("POST", "/checkout/sessions", {
+    mode: "payment",
+    customer: params.customer,
+    line_items: [{ quantity: 1, price_data: { currency: params.currency, unit_amount: params.amountCents, product_data: { name: params.description } } }],
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+    metadata: params.metadata,
+    payment_intent_data: { metadata: params.metadata },
+  })
+
 export const createPortalSession = (customer: string, returnUrl: string) =>
   request<{ url: string }>("POST", "/billing_portal/sessions", { customer, return_url: returnUrl })
 

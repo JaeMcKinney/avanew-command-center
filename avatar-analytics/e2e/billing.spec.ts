@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process"
+import { createHmac } from "node:crypto"
 import { expect, test, type Page } from "@playwright/test"
 import { CLIENT_ADMIN, CLIENT_MEMBER, OWNER, expectAccessible, expectNoSidewaysScroll, signIn } from "./helpers"
 
@@ -126,6 +127,54 @@ test("when the minutes run out the client sees a pause notice, and a bigger pack
   sql("update public.client_billing set plan_id = (select id from public.plans where name = 'Standard') where stripe_subscription_id = 'sub_demoNorthline'")
 })
 
+/** Delivers an event the way Stripe would, signed with the local webhook secret. */
+async function stripeEvent(type: string, object: unknown) {
+  const body = JSON.stringify({ id: `evt_${Math.random().toString(36).slice(2)}`, type, data: { object } })
+  const t = Math.floor(Date.now() / 1000)
+  const v1 = createHmac("sha256", "whsec_local_test").update(`${t}.${body}`).digest("hex")
+  return fetch("http://127.0.0.1:54399/functions/v1/stripe-webhook", { method: "POST", headers: { "Stripe-Signature": `t=${t},v1=${v1}` }, body })
+}
+
+test("a client pays for extra minutes without changing package, and paused avatars come back", async ({ page }) => {
+  await resetStripe()
+  await page.route("https://checkout.stripe.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Stripe checkout</h1>" }))
+  // On the smallest package and over its allowance, so the avatars are paused.
+  sql("update public.client_billing set plan_id = (select id from public.plans where name = 'Starter'), current_period_start = now() - interval '28 days', current_period_end = now() + interval '2 days' where stripe_subscription_id = 'sub_demoNorthline'")
+  await fetch("http://127.0.0.1:54399/functions/v1/usage-check", { method: "POST", headers: { "x-cron-secret": "local-cron-secret" }, body: "{}" })
+  expect(sql("select status from public.clients where slug = 'northline'")).toBe("paused")
+
+  await openBilling(page)
+  await expect(page.getByRole("status").filter({ hasText: "Your avatars are paused." }).getByRole("link", { name: "Add minutes or see billing" })).toBeVisible()
+  const usage = page.getByRole("region", { name: "Talk time this period" })
+  // Starter is $99 for 150 minutes, so $10 buys 15 minutes, $20 buys 30 and $50 buys 75.
+  const options = usage.getByRole("list", { name: "Add minutes to this period" }).getByRole("button")
+  await expect(options).toHaveText(["$10for 15 minutes", "$20for 30 minutes", "$50for 75 minutes"])
+  await expect(usage).toContainText("your avatars turn back on")
+  await expectAccessible(page)
+  await expectNoSidewaysScroll(page)
+
+  await usage.getByRole("button", { name: "$50 for 75 minutes" }).click()
+  await expect(page.getByRole("heading", { name: "Stripe checkout" })).toBeVisible()
+  const session = (await stripeCalls()).find((c) => c.path === "/checkout/sessions")!
+  expect(session.form).toMatchObject({ mode: "payment", "line_items[0][price_data][unit_amount]": "5000" })
+
+  // Before Stripe confirms, nothing has been added. Then the payment arrives while the client is back on the page.
+  const usedMinutes = Math.round(Number(sql("select (s->>'used_seconds') from public.usage_standings() s where s->>'slug' = 'northline'")) / 60)
+  await page.goto("/c/northline/billing?topup=done")
+  await expect(page.getByText("We are confirming your payment")).toBeVisible()
+  await stripeEvent("checkout.session.completed", { id: "cs_e2e", customer: "cus_demoNorthline", mode: "payment", payment_status: "paid", metadata: { topup_id: session.form["metadata[topup_id]"] } })
+  await expect(page.getByText("Thank you. 75 minutes were added.")).toBeVisible({ timeout: 15_000 })
+  await expect(usage).toContainText("150 minutes from your package, plus 75 extra minutes you added this period.")
+  await expect(usage).toContainText("of 225 minutes used")
+  // Whether that is enough to un-pause depends on how much was used.
+  expect(sql("select status from public.clients where slug = 'northline'")).toBe(usedMinutes < 225 ? "active" : "paused")
+  if (usedMinutes < 225) await expect(page.getByText("Your avatars are paused.")).toHaveCount(0)
+  expect((await emails()).some((e) => e.to.includes(OWNER) && e.text.includes("bought 75 extra minutes for $50.00"))).toBe(true)
+
+  // Leave the sample data as other tests expect it.
+  sql("delete from public.usage_topups; update public.client_billing set plan_id = (select id from public.plans where name = 'Standard'), paused_for_usage_at = null, paused_deployments = '[]' where stripe_subscription_id = 'sub_demoNorthline'; update public.clients set status = 'active' where slug = 'northline'")
+})
+
 test("a client without a subscription chooses a package and is sent to Stripe to pay", async ({ page }) => {
   await resetStripe()
   await page.route("https://checkout.stripe.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Stripe checkout</h1>" }))
@@ -179,9 +228,12 @@ test("staff set up packages and the usage rules", async ({ page }) => {
   await expect(row).toContainText("On offer")
 
   const rules = page.getByRole("region", { name: "When minutes run low" })
+  await expect(rules.getByLabel("Extra-minute amounts clients can pay (US dollars)")).toHaveValue("10, 20, 50")
+  await rules.getByLabel("Extra-minute amounts clients can pay (US dollars)").fill("10, 25, 60, 100")
   await rules.getByLabel("Send one warning email at (% of minutes used)").fill("80")
   await rules.getByRole("button", { name: "Save usage rules" }).click()
   await expect(page.getByText("Usage rules saved")).toBeVisible()
   expect(sql("select value from public.settings where key = 'usage.alert_percent'")).toBe("80")
-  sql("update public.settings set value = '90' where key = 'usage.alert_percent'; delete from public.plans where name = 'Enterprise'")
+  expect(sql("select value from public.settings where key = 'billing.topup_amounts_cents'")).toBe("[1000, 2500, 6000, 10000]")
+  sql("update public.settings set value = '90' where key = 'usage.alert_percent'; update public.settings set value = '[1000, 2000, 5000]' where key = 'billing.topup_amounts_cents'; delete from public.plans where name = 'Enterprise'")
 })

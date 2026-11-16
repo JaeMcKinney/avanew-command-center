@@ -62,7 +62,7 @@ export default function PortalLayout() {
                     <strong>{c.status === "paused" ? "Your avatars are paused." : "Your subscription has ended."}</strong>{" "}
                     {c.status === "paused" ? "They are not taking new calls right now." : "Your avatars are not taking calls."}
                   </p>
-                  {can("billing.view") && <Link to={`${base}/billing`} className="inline-flex min-h-8 items-center font-semibold underline">See billing</Link>}
+                  {can("billing.view") && <Link to={`${base}/billing`} className="inline-flex min-h-8 items-center font-semibold underline">{c.status === "paused" ? "Add minutes or see billing" : "See billing"}</Link>}
                 </div>
               </div>
             )}

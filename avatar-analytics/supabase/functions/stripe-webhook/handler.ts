@@ -2,7 +2,7 @@
 // Every event is checked against Stripe's signature and handled once.
 
 import { checkUsage, syncSubscription } from "../_shared/billing.ts"
-import { serviceClient } from "../_shared/clients.ts"
+import { serviceClient, writeAudit } from "../_shared/clients.ts"
 import { json } from "../_shared/http.ts"
 import { notify } from "../_shared/notify.ts"
 import { getSubscription, type StripeInvoice, type StripeSubscription, verifyStripeSignature } from "../_shared/stripe.ts"
@@ -29,8 +29,34 @@ export const handler = async (req: Request): Promise<Response> => {
 
   try {
     const object = event.data.object
-    if (event.type === "checkout.session.completed") {
-      const metadata = (object.metadata ?? {}) as Record<string, string>
+    const sessionMeta = (object.metadata ?? {}) as Record<string, string>
+    if (event.type.startsWith("checkout.session.") && sessionMeta.topup_id) {
+      // Extra minutes. They count only once Stripe says the money has arrived.
+      const paid = (event.type === "checkout.session.completed" && object.payment_status === "paid") || event.type === "checkout.session.async_payment_succeeded"
+      const gone = event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed"
+      if (paid) {
+        const { data: done } = await admin.from("usage_topups").update({ status: "paid", paid_at: new Date().toISOString() })
+          .eq("id", sessionMeta.topup_id).eq("status", "pending").select("client_id, minutes, amount_cents, currency").maybeSingle()
+        if (done) {
+          const { data: client } = await admin.from("clients").select("name, slug").eq("id", done.client_id).single()
+          const amount = new Intl.NumberFormat("en-US", { style: "currency", currency: done.currency.toUpperCase() }).format(done.amount_cents / 100)
+          const link = `${(Deno.env.get("APP_URL") ?? "").replace(/\/+$/, "")}/c/${client?.slug}/billing`
+          await writeAudit(admin, { actorId: null, action: "usage.topup_paid", targetType: "client", targetId: done.client_id, clientId: done.client_id, detail: { minutes: done.minutes, amount_cents: done.amount_cents } })
+          await notify(admin, {
+            clientId: done.client_id, kind: `topup_paid:${sessionMeta.topup_id}`,
+            subject: `${done.minutes} extra minutes added (${client?.name})`,
+            text: `Thank you. Your payment of ${amount} added ${done.minutes} minutes of talk time to the current period. Stripe has emailed your receipt.\n\n${link}\n\nDivigner`,
+            staffText: `${client?.name} bought ${done.minutes} extra minutes for ${amount}.`,
+            sms: `Divigner: ${done.minutes} extra minutes added.`,
+          })
+          // More room may turn paused avatars back on.
+          await checkUsage(admin, done.client_id)
+        }
+      } else if (gone) {
+        await admin.from("usage_topups").update({ status: "expired" }).eq("id", sessionMeta.topup_id).eq("status", "pending")
+      }
+    } else if (event.type === "checkout.session.completed") {
+      const metadata = sessionMeta
       const subscriptionId = object.subscription as string | undefined
       if (metadata.client_id && subscriptionId) {
         await admin.from("client_billing").update({ stripe_subscription_id: subscriptionId, stripe_customer_id: object.customer as string, ...(metadata.plan_id ? { plan_id: metadata.plan_id } : {}) })

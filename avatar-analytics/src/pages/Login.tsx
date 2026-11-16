@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { LoadingBlock } from "@/components/States"
-import { DivignerMark } from "@/components/Shell"
+import { DivignerLogo } from "@/components/Shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,11 +12,12 @@ import { supabase } from "@/lib/supabase"
 export function AuthCard({ title, children }: { title: string; children: React.ReactNode }) {
   useDocumentTitle(title)
   return (
-    <div className="grid min-h-dvh place-items-center bg-sidebar px-4 py-10">
-      <main id="main" className="flex w-full max-w-sm flex-col gap-6 rounded-xl bg-card p-6 shadow-xl sm:p-8">
-        <div className="flex items-center gap-2">
-          <DivignerMark />
-          <p className="font-display text-lg font-semibold">Divigner <span className="font-sans text-sm font-normal text-muted-foreground">Avatar Analytics</span></p>
+    // The sign-in page always wears the dark Divigner look, whatever the device setting.
+    <div className="dark site-backdrop grid min-h-dvh place-items-center px-4 py-10 text-foreground">
+      <main id="main" className="flex w-full max-w-sm flex-col gap-6 rounded-lg border bg-card p-6 sm:p-8">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <DivignerLogo on="dark" className="h-20" />
+          <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">Avatar Analytics</p>
         </div>
         <h1 className="text-2xl font-semibold">{title}</h1>
         {children}

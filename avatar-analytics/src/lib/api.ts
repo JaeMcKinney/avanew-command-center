@@ -324,8 +324,12 @@ export type BillingSummary = {
   has_subscription: boolean
   paused_for_usage: boolean
   used_seconds: number
+  /** Minutes bought on top of the package for this period. */
+  extra_minutes: number
   included_seconds: number | null
   used_percent: number | null
+  /** What each fixed amount buys right now. Empty when there is no package. */
+  topup_options: Array<{ amount_cents: number; minutes: number }>
 }
 
 export async function listPlans(): Promise<Plan[]> {
@@ -351,22 +355,33 @@ export async function listInvoices(clientId: string): Promise<Invoice[]> {
   return unwrap(await supabase.from("invoices").select("*").eq("client_id", clientId).order("issued_at", { ascending: false }).limit(60))
 }
 
-type BillingAction = { action: "checkout" | "change_plan"; plan_id: string } | { action: "portal" | "resume" } | { action: "cancel"; reason: string }
+type BillingAction =
+  | { action: "checkout" | "change_plan"; plan_id: string }
+  | { action: "portal" | "resume" }
+  | { action: "cancel"; reason: string }
+  | { action: "topup"; amount_cents: number }
 
 export function billingAction(clientId: string, body: BillingAction) {
   return callFunction<{ ok: true; url?: string; resumed?: boolean; ends_at?: string }>("billing", { ...body, client_id: clientId })
 }
 
-export type UsageRules = { alertPercent: number; pauseEnabled: boolean; pausePercent: number }
+export type UsageRules = { alertPercent: number; pauseEnabled: boolean; pausePercent: number; topupAmountsCents: number[]; topupRatePercent: number }
 
 export async function getUsageRules(): Promise<UsageRules> {
-  const rows = unwrap(await supabase.from("settings").select("key, value").in("key", ["usage.alert_percent", "usage.pause_enabled", "usage.pause_percent"]))
+  const rows = unwrap(await supabase.from("settings").select("key, value").in("key", ["usage.alert_percent", "usage.pause_enabled", "usage.pause_percent", "billing.topup_amounts_cents", "billing.topup_rate_percent"]))
   const value = (key: string) => rows.find((r) => r.key === key)?.value
-  return { alertPercent: Number(value("usage.alert_percent") ?? 90), pauseEnabled: value("usage.pause_enabled") !== false, pausePercent: Number(value("usage.pause_percent") ?? 100) }
+  const amounts = value("billing.topup_amounts_cents")
+  return {
+    alertPercent: Number(value("usage.alert_percent") ?? 90), pauseEnabled: value("usage.pause_enabled") !== false, pausePercent: Number(value("usage.pause_percent") ?? 100),
+    topupAmountsCents: Array.isArray(amounts) ? amounts.map(Number) : [], topupRatePercent: Number(value("billing.topup_rate_percent") ?? 100),
+  }
 }
 
 export async function saveUsageRules(rules: UsageRules): Promise<void> {
-  const changes: Array<[string, number | boolean]> = [["usage.alert_percent", rules.alertPercent], ["usage.pause_enabled", rules.pauseEnabled], ["usage.pause_percent", rules.pausePercent]]
+  const changes: Array<[string, number | boolean | number[]]> = [
+    ["usage.alert_percent", rules.alertPercent], ["usage.pause_enabled", rules.pauseEnabled], ["usage.pause_percent", rules.pausePercent],
+    ["billing.topup_amounts_cents", rules.topupAmountsCents], ["billing.topup_rate_percent", rules.topupRatePercent],
+  ]
   for (const [key, value] of changes) {
     const { data, error } = await supabase.from("settings").update({ value }).eq("key", key).select("key")
     if (error) fail(error)

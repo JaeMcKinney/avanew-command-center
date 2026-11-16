@@ -97,12 +97,20 @@ function PlanDialog({ plan, onClose }: { plan: Plan | "new"; onClose: (saved: bo
   )
 }
 
+const amountsOf = (text: string) => text.split(",").map((part) => part.trim().replace(/^\$/, "")).filter(Boolean).map(Number)
+
 function UsageRulesForm({ initial }: { initial: UsageRules }) {
   const id = useId()
-  const [rules, setRules] = useState({ alert: String(initial.alertPercent), pause: String(initial.pausePercent), enabled: initial.pauseEnabled })
+  const [rules, setRules] = useState({
+    alert: String(initial.alertPercent), pause: String(initial.pausePercent), enabled: initial.pauseEnabled,
+    amounts: initial.topupAmountsCents.map((c) => c / 100).join(", "), rate: String(initial.topupRatePercent),
+  })
   const [problem, setProblem] = useState("")
   const save = useMutation({
-    mutationFn: () => saveUsageRules({ alertPercent: Number(rules.alert), pauseEnabled: rules.enabled, pausePercent: Number(rules.pause) }),
+    mutationFn: () => saveUsageRules({
+      alertPercent: Number(rules.alert), pauseEnabled: rules.enabled, pausePercent: Number(rules.pause),
+      topupAmountsCents: amountsOf(rules.amounts).map((dollars) => Math.round(dollars * 100)), topupRatePercent: Number(rules.rate),
+    }),
     onSuccess: () => toast.success("Usage rules saved"),
     onError: (err) => toast.error((err as Error).message),
   })
@@ -111,6 +119,9 @@ function UsageRulesForm({ initial }: { initial: UsageRules }) {
     const alert = Number(rules.alert), pause = Number(rules.pause)
     if (!(alert >= 1 && alert <= 100) || !(pause >= 1 && pause <= 500)) return setProblem("Enter percentages as whole numbers, for example 90 and 100.")
     if (rules.enabled && alert >= pause) return setProblem("The warning must come before the pause.")
+    const amounts = amountsOf(rules.amounts)
+    if (amounts.some((a) => !(a >= 1 && a <= 1000)) || amounts.length > 6) return setProblem("Enter up to six extra-minute amounts in dollars, separated by commas, for example 10, 20, 50. Leave it empty to turn extra minutes off.")
+    if (!(Number(rules.rate) >= 1 && Number(rules.rate) <= 1000)) return setProblem("Enter the extra-minute price as a percentage, for example 100.")
     setProblem("")
     save.mutate()
   }
@@ -131,6 +142,18 @@ function UsageRulesForm({ initial }: { initial: UsageRules }) {
         <div>
           <Label htmlFor={`${id}-enabled`}>Pause a client's avatars when their minutes are used up</Label>
           <p className="text-xs text-muted-foreground">They turn back on when the next period starts, or when the client moves to a larger package. The client and the Owner are emailed.</p>
+        </div>
+      </div>
+      <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`${id}-amounts`}>Extra-minute amounts clients can pay (US dollars)</Label>
+          <Input id={`${id}-amounts`} value={rules.amounts} onChange={(e) => setRules({ ...rules, amounts: e.target.value })} className="min-h-11" aria-describedby={`${id}-amounts-help${problem ? ` ${id}-problem` : ""}`} />
+          <p id={`${id}-amounts-help`} className="text-xs text-muted-foreground">Separated by commas. Clients pay one of these on Stripe to add minutes for the current period, without changing package.</p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`${id}-rate`}>Price of an extra minute (% of the package's price per minute)</Label>
+          <Input id={`${id}-rate`} inputMode="numeric" value={rules.rate} onChange={(e) => setRules({ ...rules, rate: e.target.value })} className="min-h-11 max-w-32" aria-describedby={`${id}-rate-help${problem ? ` ${id}-problem` : ""}`} />
+          <p id={`${id}-rate-help`} className="text-xs text-muted-foreground">100 charges the same per minute as their package. 125 charges a quarter more.</p>
         </div>
       </div>
       {problem && <p id={`${id}-problem`} role="alert" className="text-sm font-medium text-bad">{problem}</p>}

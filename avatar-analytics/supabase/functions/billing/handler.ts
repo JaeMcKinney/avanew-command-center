@@ -6,16 +6,17 @@
 //   "change_plan" { plan_id }  → moves to another package now, prorated
 //   "cancel"      { reason? }  → ends at the end of the paid period; the Owner is told
 //   "resume"                   → undoes a cancellation that has not taken effect yet
+//   "topup"       { amount_cents } → { url }  Stripe's page to pay for extra minutes this period
 
 import { checkUsage, syncSubscription } from "../_shared/billing.ts"
 import { requireAccess, requireUser, serviceClient, writeAudit } from "../_shared/clients.ts"
 import { endpoint, HttpError, json, readJson } from "../_shared/http.ts"
 import { notify } from "../_shared/notify.ts"
 import {
-  changeSubscriptionPrice, createCheckoutSession, createCustomer, createPortalSession, getSubscription, periodOf, setCancelAtPeriodEnd, StripeError,
+  changeSubscriptionPrice, createCheckoutSession, createCustomer, createPaymentSession, createPortalSession, getSubscription, periodOf, setCancelAtPeriodEnd, StripeError,
 } from "../_shared/stripe.ts"
 
-type Body = { action?: string; client_id?: string; plan_id?: string; reason?: string }
+type Body = { action?: string; client_id?: string; plan_id?: string; reason?: string; amount_cents?: number }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const money = (cents: number, currency: string) => new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() }).format(cents / 100)
 const day = (iso: string | null) => iso ? new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }) : "the end of the current period"
@@ -127,6 +128,27 @@ export const handler = endpoint(async (req) => {
           sms: `Divigner: your subscription continues.`,
         })
         return json(200, { ok: true })
+      }
+
+      case "topup": {
+        if (!subscribed || !billing.stripe_customer_id) throw new HttpError(409, "Extra minutes are for clients with a subscription. Choose a package first.")
+        const amount = Number(body.amount_cents)
+        const { data: offers, error: offerError } = await admin.rpc("topup_offer", { p_client_id: client.id, p_amount_cents: Number.isInteger(amount) ? amount : 0 })
+        if (offerError) throw new Error(offerError.message)
+        const offer = (offers ?? [])[0] as { minutes: number; period_start: string; period_end: string; currency: string } | undefined
+        if (!offer) throw new HttpError(400, "Choose one of the amounts offered")
+        const { data: topup, error: insertError } = await admin.from("usage_topups").insert({
+          client_id: client.id, amount_cents: amount, currency: offer.currency, minutes: offer.minutes,
+          period_start: offer.period_start, period_end: offer.period_end, created_by: caller.userId,
+        }).select("id").single()
+        if (insertError || !topup) throw new Error(insertError?.message ?? "could not record the top-up")
+        const session = await createPaymentSession({
+          customer: billing.stripe_customer_id, amountCents: amount, currency: offer.currency,
+          description: `${offer.minutes} extra minutes of avatar talk time (until ${day(offer.period_end)})`,
+          metadata: { client_id: client.id, topup_id: topup.id }, successUrl: `${page}?topup=done`, cancelUrl: page,
+        })
+        await admin.from("usage_topups").update({ stripe_session_id: session.id }).eq("id", topup.id)
+        return json(200, { ok: true, url: session.url, minutes: offer.minutes })
       }
 
       default:

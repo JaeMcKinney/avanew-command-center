@@ -24,6 +24,7 @@ This folder is self-contained. It does not share code or a database with the CRM
 | Activity log | Built |
 | Packages, and each client's subscription through Stripe (subscribe, change package, payment method, cancel, invoices) | Built, tested against a mock Stripe |
 | Usage against the package: one warning email, pause at the limit, automatic resume | Built, tested against mock Tavus and email |
+| Extra minutes: a one-time $10, $20 or $50 payment on Stripe adds minutes to the current period without changing package | Built, tested against a mock Stripe |
 | Text-message notices | Placeholder: recorded as skipped until a text provider is connected |
 | Concurrency limit per package | Shown to clients; not yet enforced in Tavus |
 | Enhancements store | Not yet |
@@ -138,6 +139,7 @@ The browser tests check every page against WCAG 2.2 AA with axe, in light and da
    - `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` from a Stripe webhook endpoint pointing at `<functions URL>/stripe-webhook` with the events `checkout.session.completed`, `customer.subscription.*` and `invoice.*`.
    - In Stripe, create a product with a recurring monthly price for each package, then add the packages under **Packages** in the admin area with those price IDs. Prices live in Stripe and in the database, not in this code.
    - For a one-time setup fee on a client's first checkout, add a setting `billing.setup_fee_price_id` whose value is the Stripe price ID of the fee.
+   - Extra minutes need no Stripe product: the amounts and the price per extra minute are settings on the Packages page, and each purchase is a one-time Checkout payment. Add `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired` to the webhook's events. Turn on the payment methods you want (PayPal, Google Pay, Apple Pay, Link) in Stripe under Settings, Payment methods; Checkout then offers them.
    - Turn on the customer portal in Stripe (Settings, Billing, Customer portal) so "Payment method" works.
    - Schedule `usage-check` every 10 minutes (same form as the schedules below). It also runs whenever a call ends.
 5. Deploy the functions: `npx supabase functions deploy`.
