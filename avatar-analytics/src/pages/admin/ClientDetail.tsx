@@ -35,8 +35,8 @@ function UsageSummary({ client }: { client: Client }) {
   return (
     <section aria-label="Talk time" className="grid gap-3 sm:grid-cols-3">
       <Stat label="Today" value={minutes(day.billable_seconds)} unit="min" note={`${count(day.conversations)} conversations`} />
-      <Stat highlight label="This month" value={minutes(month.billable_seconds)} unit="min" note={`${count(month.conversations)} conversations`} />
-      <Stat label="This year" value={minutes(all.billable_seconds)} unit="min" note={`${count(all.conversations)} conversations`} />
+      <Stat highlight label="This Month" value={minutes(month.billable_seconds)} unit="min" note={`${count(month.conversations)} conversations`} />
+      <Stat label="This Year" value={minutes(all.billable_seconds)} unit="min" note={`${count(all.conversations)} conversations`} />
     </section>
   )
 }
@@ -63,7 +63,7 @@ export default function ClientDetail() {
   if (client.isError) return <ErrorBlock error={client.error} onRetry={() => void client.refetch()} />
   if (!client.data) {
     return (
-      <EmptyState title="Client not found" action={<Button asChild variant="outline"><Link to="/admin/clients">Back to clients</Link></Button>}>
+      <EmptyState title="Client Not Found" action={<Button asChild variant="outline"><Link to="/admin/clients">Back to clients</Link></Button>}>
         It may have been removed, or you may not have access to it.
       </EmptyState>
     )
@@ -108,7 +108,7 @@ export default function ClientDetail() {
             manage={canLink}
             showEmbeds={can("embeds.view")}
             empty={
-              <EmptyState title="No avatars linked yet" action={canLink && <Button className="min-h-10" onClick={() => setLinking(true)}>Link avatars</Button>}>
+              <EmptyState title="No Avatars Linked Yet" action={canLink && <Button className="min-h-10" onClick={() => setLinking(true)}>Link avatars</Button>}>
                 Link this client's Tavus avatars to start counting their talk time and to get their embed codes.
               </EmptyState>
             }
@@ -152,7 +152,7 @@ export default function ClientDetail() {
       <Dialog open={linking} onOpenChange={setLinking}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Link avatars to {c.name}</DialogTitle>
+            <DialogTitle>Link Avatars to {c.name}</DialogTitle>
             <DialogDescription>Linking tells Tavus to report each call to this app. Nothing else about the avatar changes.</DialogDescription>
           </DialogHeader>
           <AvatarPicker clientId={c.id} clientName={c.name} />

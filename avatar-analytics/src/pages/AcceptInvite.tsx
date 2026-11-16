@@ -23,7 +23,7 @@ export default function AcceptInvite() {
 
   if (!session) {
     return (
-      <AuthCard title="This link no longer works">
+      <AuthCard title="This Link No Longer Works">
         <p className="text-sm">The link may have expired or already been used. Ask the person who invited you to send a new one, or go to sign in.</p>
         <Button className="min-h-11" onClick={() => navigate("/login")}>Go to sign in</Button>
       </AuthCard>
@@ -43,7 +43,7 @@ export default function AcceptInvite() {
   }
 
   return (
-    <AuthCard title="Choose a password">
+    <AuthCard title="Choose a Password">
       <p className="text-sm text-muted-foreground">
         {access?.full_name ? `Welcome, ${access.full_name}. ` : "Welcome. "}Choose a password to finish setting up your account.
       </p>

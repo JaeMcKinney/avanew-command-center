@@ -152,7 +152,7 @@ export default function Questions({ client: given, embedded = false }: { client?
 
   const all = groups.data ?? []
   const tabs = [
-    { value: "open", label: "Needs an answer", rows: all.filter((g) => g.status === "open"), empty: "Nothing is waiting for an answer.", help: "When a visitor asks something an avatar cannot answer well, it appears here." },
+    { value: "open", label: "Needs an Answer", rows: all.filter((g) => g.status === "open"), empty: "Nothing is waiting for an answer.", help: "When a visitor asks something an avatar cannot answer well, it appears here." },
     { value: "answered", label: "Answered", rows: all.filter((g) => g.status === "answered"), empty: "No answers yet.", help: "Answers you write are added to the avatar's knowledge." },
     { value: "dismissed", label: "Dismissed", rows: all.filter((g) => g.status === "dismissed"), empty: "Nothing has been dismissed.", help: "Questions you chose not to answer." },
   ]

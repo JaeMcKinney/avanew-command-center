@@ -20,8 +20,8 @@ export function ClientsTable({ filter = "", empty }: { filter?: string; empty?: 
 
   const needle = filter.trim().toLowerCase()
   const rows = clients.data.filter((c) => !needle || c.name.toLowerCase().includes(needle) || c.slug.includes(needle))
-  if (clients.data.length === 0) return <>{empty ?? <EmptyState title="No clients yet" />}</>
-  if (rows.length === 0) return <EmptyState title="No clients match">Try a different name.</EmptyState>
+  if (clients.data.length === 0) return <>{empty ?? <EmptyState title="No Clients Yet" />}</>
+  if (rows.length === 0) return <EmptyState title="No Clients Match">Try a different name.</EmptyState>
 
   const avatarCount = (clientId: string) => (avatars.data ?? []).filter((a) => a.client_id === clientId).length
 
@@ -35,8 +35,8 @@ export function ClientsTable({ filter = "", empty }: { filter?: string; empty?: 
             <th scope="col" className="hidden px-4 py-2.5 font-semibold tracking-wide sm:table-cell">Status</th>
             <th scope="col" className="hidden px-4 py-2.5 text-right font-semibold tracking-wide md:table-cell">Avatars</th>
             <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Today</th>
-            <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">This month</th>
-            <th scope="col" className="hidden px-4 py-2.5 text-right font-semibold tracking-wide lg:table-cell">Calls this month</th>
+            <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">This Month</th>
+            <th scope="col" className="hidden px-4 py-2.5 text-right font-semibold tracking-wide lg:table-cell">Calls This Month</th>
           </tr>
         </thead>
         <tbody>

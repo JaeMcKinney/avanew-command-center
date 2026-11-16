@@ -34,9 +34,9 @@ test("a client sees their own talk time, avatars and charts", async ({ page }) =
   await expect(page.getByText("Zara")).toHaveCount(0)
 
   // The ring chart is described in words, and can be read as a table.
-  await expect(page.getByRole("img", { name: /Talk time by avatar\. Maya \d+ min, \d+%/ })).toBeVisible()
+  await expect(page.getByRole("img", { name: /Talk time by avatar\. Maya \d+ min, \d+%/i })).toBeVisible()
   await page.getByRole("button", { name: "Show as table" }).first().click()
-  const table = page.getByRole("table", { name: /Talk time by avatar/ })
+  const table = page.getByRole("table", { name: /Talk time by avatar/i })
   await expect(table.getByRole("rowheader", { name: "Maya" })).toBeVisible()
   await expect(table.getByRole("columnheader", { name: "Share" })).toBeVisible()
 
@@ -63,9 +63,9 @@ test("a client reads a conversation and copies an embed code", async ({ page, co
   await signIn(page, CLIENT_ADMIN)
   await page.getByRole("link", { name: "Conversations" }).click()
   await page.getByRole("button", { name: "This year" }).click()
-  await page.getByRole("button", { name: /^Read the conversation/ }).first().click()
+  await page.getByRole("button", { name: /^Read the conversation/i }).first().click()
   const dialog = page.getByRole("dialog")
-  await expect(dialog.getByRole("heading", { level: 2 })).toContainText("Conversation with")
+  await expect(dialog.getByRole("heading", { level: 2 })).toContainText("Conversation With")
   await expect(dialog.getByText("Visitor").first()).toBeVisible()
   await expect(dialog.getByText(/two-bedroom homes/).first()).toBeVisible()
   await page.keyboard.press("Escape")
@@ -76,7 +76,7 @@ test("a client reads a conversation and copies an embed code", async ({ page, co
   await expect(page.getByRole("button", { name: "Copied" })).toBeVisible()
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('<tavus-embed deployment-id="d-maya-embed"></tavus-embed>')
   // Clients cannot unlink or edit avatars.
-  await expect(page.getByRole("button", { name: /Unlink/ })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: /Unlink/i })).toHaveCount(0)
 })
 
 test("a client cannot reach the admin area or another client's portal", async ({ page }) => {
@@ -159,7 +159,7 @@ test("a client pulls every conversation for one avatar over a period, page by pa
   await page.getByRole("button", { name: "This year" }).click()
   const status = page.getByRole("status").filter({ hasText: "conversation" })
   await expect(status).toContainText(`Showing 1–25 of ${all} conversations`)
-  const table = page.getByRole("table", { name: /Conversations/ })
+  const table = page.getByRole("table", { name: /Conversations/i })
   await expect(table.locator("tbody tr")).toHaveCount(25)
 
   // Only this client's own avatars are offered.
@@ -188,8 +188,8 @@ test("a client pulls every conversation for one avatar over a period, page by pa
   await expect(table.locator("tbody tr").first()).not.toHaveText(firstOnPage1)
 
   // A transcript still opens from a later page.
-  await table.getByRole("button", { name: /^Read the conversation/ }).first().click()
-  await expect(page.getByRole("dialog").getByRole("heading")).toHaveText("Conversation with Theo")
+  await table.getByRole("button", { name: /^Read the conversation/i }).first().click()
+  await expect(page.getByRole("dialog").getByRole("heading")).toHaveText("Conversation With Theo")
   await page.keyboard.press("Escape")
 
   // Changing the period goes back to the first page; an empty result says so.

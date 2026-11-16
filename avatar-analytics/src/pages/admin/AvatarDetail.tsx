@@ -88,7 +88,7 @@ function Detail({ d }: { d: PalDetail }) {
         ]} />
       </Section>
 
-      <Section id="prompt" title="System prompt">
+      <Section id="prompt" title="System Prompt">
         {prompt ? <Verbatim label="System prompt" value={prompt} /> : <p className="text-sm text-muted-foreground">This avatar has no system prompt in Tavus.</p>}
         <Facts rows={[
           ["Greeting", text(pal.greeting) ?? (pal.dynamic_greeting ? "Written fresh for each call" : "None: the avatar waits for the visitor")],
@@ -98,7 +98,7 @@ function Detail({ d }: { d: PalDetail }) {
         ]} />
       </Section>
 
-      <Section id="knowledge" title="Knowledge base" count={d.documents.length}>
+      <Section id="knowledge" title="Knowledge Base" count={d.documents.length}>
         {d.documents.length === 0 && d.document_tags.length === 0 && <p className="text-sm text-muted-foreground">No documents are attached to this avatar.</p>}
         {d.document_tags.length > 0 && <p className="text-sm">Also uses every document tagged: {d.document_tags.map((t) => <code key={t} className="mr-1 rounded-sm bg-muted px-1.5 py-0.5 text-xs">{t}</code>)}</p>}
         <ul className="flex flex-col gap-2">
@@ -159,7 +159,7 @@ function Detail({ d }: { d: PalDetail }) {
         </ol>
       </Section>
 
-      <Section id="tools" title="Tool calls" count={tools.length + legacyTools.length}>
+      <Section id="tools" title="Tool Calls" count={tools.length + legacyTools.length}>
         <Unavailable what="The tools" part={d.tools} />
         {d.tools.ok && tools.length + legacyTools.length === 0 && <p className="text-sm text-muted-foreground">This avatar has no tools.</p>}
         <ul className="flex flex-col gap-2">
@@ -184,7 +184,7 @@ function Detail({ d }: { d: PalDetail }) {
         </ul>
         {skills.length > 0 && (
           <div className="flex flex-col gap-2 border-t pt-3">
-            <h3 className="text-sm font-semibold">Built-in skills ({skills.length})</h3>
+            <h3 className="text-sm font-semibold">Built-in Skills ({skills.length})</h3>
             <ul className="flex flex-col gap-2">
               {skills.map(([name, settings]) => (
                 <li key={name} className="rounded-md border p-3 text-sm"><p className="font-mono font-medium">{name}</p><Raw summary={`Show the settings for ${name}`} value={settings} /></li>
@@ -194,7 +194,7 @@ function Detail({ d }: { d: PalDetail }) {
         )}
       </Section>
 
-      <Section id="face" title="Face, voice and models">
+      <Section id="face" title="Face, Voice and Models">
         {d.face && <Unavailable what="The face" part={d.face} />}
         <Facts rows={[
           ["Face", face ? `${text(face.face_name) ?? "Unnamed"}${text(face.model_name) ? ` · ${text(face.model_name)}` : ""}${text(face.status) ? ` · ${text(face.status)}` : ""}` : null],
@@ -225,7 +225,7 @@ function Detail({ d }: { d: PalDetail }) {
         </ul>
       </Section>
 
-      <Section id="everything" title="Everything Tavus returned">
+      <Section id="everything" title="Everything Tavus Returned">
         <p className="text-sm text-muted-foreground">The complete record for this avatar, for anything not laid out above. Keys and passwords are hidden.</p>
         <Raw summary="Show the full record" value={d.pal} />
       </Section>

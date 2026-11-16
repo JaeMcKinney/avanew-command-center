@@ -96,11 +96,11 @@ export default function Team() {
     <>
       <PageHeader title="Team" description="The Divigner people who can sign in, and what each role may do." />
       <section aria-labelledby="people-heading" className="flex flex-col gap-3">
-        <h2 id="people-heading" className="text-xl font-semibold">Divigner users</h2>
+        <h2 id="people-heading" className="text-xl font-semibold">Divigner Users</h2>
         <UsersPanel scope={{ side: "divigner" }} canManage={manage} />
       </section>
       <section aria-labelledby="roles-heading" className="flex flex-col gap-3">
-        <h2 id="roles-heading" className="text-xl font-semibold">Roles and permissions</h2>
+        <h2 id="roles-heading" className="text-xl font-semibold">Roles and Permissions</h2>
         <p className="max-w-prose text-sm text-muted-foreground">
           {manage ? "Tick a box to let a role do something. Changes apply straight away. The Owner role always has everything." : "Only people who manage the team can change these."}
         </p>

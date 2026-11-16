@@ -25,7 +25,7 @@ export function ErrorBlock({ error, onRetry }: { error: unknown; onRetry?: () =>
     <div role="alert" className="flex flex-col items-start gap-3 rounded-lg border border-bad/40 bg-bad-soft p-4 text-sm">
       <p className="flex items-center gap-2 font-medium text-bad">
         <AlertTriangle className="size-4" aria-hidden="true" />
-        This could not be loaded
+        This Could Not Be Loaded
       </p>
       <p>{message}</p>
       {onRetry && (

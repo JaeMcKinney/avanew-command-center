@@ -41,7 +41,7 @@ function RenameDialog({ avatar, onClose }: { avatar: Avatar; onClose: () => void
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit avatar</DialogTitle>
+          <DialogTitle>Edit Avatar</DialogTitle>
           <DialogDescription>This changes how the avatar is shown here. It does not change anything in Tavus.</DialogDescription>
         </DialogHeader>
         <form id={`${id}-form`} className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); if (name.trim()) save.mutate() }}>
@@ -95,7 +95,7 @@ export function AvatarCards({ clientId, manage, showEmbeds, empty }: { clientId:
 
   if (avatars.isPending) return <LoadingBlock label="Loading avatars" />
   if (avatars.isError) return <ErrorBlock error={avatars.error} onRetry={() => void avatars.refetch()} />
-  if (avatars.data.length === 0) return <>{empty ?? <EmptyState title="No avatars yet" />}</>
+  if (avatars.data.length === 0) return <>{empty ?? <EmptyState title="No Avatars Yet" />}</>
 
   return (
     <ul className="flex flex-col gap-4">

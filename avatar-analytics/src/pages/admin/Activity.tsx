@@ -37,7 +37,7 @@ export default function Activity() {
       ) : log.isError ? (
         <ErrorBlock error={log.error} onRetry={() => void log.refetch()} />
       ) : log.data.length === 0 ? (
-        <EmptyState title="Nothing yet">Changes to clients, avatars and users will be listed here.</EmptyState>
+        <EmptyState title="Nothing Yet">Changes to clients, avatars and users will be listed here.</EmptyState>
       ) : (
         <TableScroll label="Activity table" className="rounded-lg border bg-card">
           <table className="w-full text-sm">

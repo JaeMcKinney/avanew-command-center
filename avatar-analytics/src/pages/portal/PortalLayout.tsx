@@ -25,7 +25,7 @@ export default function PortalLayout() {
     return (
       <main id="main" className="mx-auto max-w-lg p-6 pt-16">
         <EmptyState
-          title="This page is not available"
+          title="This Page Is Not Available"
           action={<div className="flex gap-2"><Button asChild><Link to="/">Go to your home page</Link></Button><Button variant="outline" onClick={() => void signOut()}>Sign out</Button></div>}
         >
           The address may be wrong, or your account does not have access to it.

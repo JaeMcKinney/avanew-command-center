@@ -55,7 +55,7 @@ function Home() {
 
 function Need({ permission, children }: { permission: string; children: ReactNode }) {
   const { can } = useAuth()
-  if (!can(permission)) return <EmptyState title="You do not have access to this page">Ask an Owner if you need it.</EmptyState>
+  if (!can(permission)) return <EmptyState title="You Do Not Have Access to This Page">Ask an Owner if you need it.</EmptyState>
   return <>{children}</>
 }
 

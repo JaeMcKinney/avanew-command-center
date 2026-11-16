@@ -82,7 +82,7 @@ function UsageMeter({ summary, onTopUp, busy, custom }: { summary: BillingSummar
   const tone = percent >= 100 ? "bg-bad" : percent >= 90 ? "bg-warn" : "bg-brand"
   return (
     <section aria-labelledby={`${id}-title`} className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:p-5">
-      <h2 id={`${id}-title`} className="text-base font-semibold">Talk time this period</h2>
+      <h2 id={`${id}-title`} className="text-base font-semibold">Talk Time This Period</h2>
       <p className="text-sm text-muted-foreground">{formatDay(summary.period_start)} to {formatDay(summary.period_end, true)}</p>
       <p className="flex flex-wrap items-baseline gap-x-2">
         <span className="tabular font-display text-4xl font-semibold">{minutes(summary.used_seconds)}</span>
@@ -105,7 +105,7 @@ function UsageMeter({ summary, onTopUp, busy, custom }: { summary: BillingSummar
       </p>
       {onTopUp && summary.topup_options.length > 0 && (
         <div className="flex flex-col gap-2 border-t pt-4">
-          <h3 id={`${id}-more`} className="text-sm font-semibold">Add minutes to this period</h3>
+          <h3 id={`${id}-more`} className="text-sm font-semibold">Add Minutes to This Period</h3>
           <p className="text-sm text-muted-foreground">
             A one-time payment on Stripe's secure page, without changing your package. The minutes are added as soon as you pay{summary.paused_for_usage ? ", and your avatars turn back on" : ""}. They last until {formatDay(summary.period_end, true)}.
           </p>
@@ -254,7 +254,7 @@ export default function Billing() {
         <>
           <section aria-labelledby="package-title" className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="package-title" className="text-base font-semibold">Your package</h2>
+              <h2 id="package-title" className="text-base font-semibold">Your Package</h2>
               <SubscriptionPill summary={s} />
             </div>
             <div className="flex flex-wrap items-end justify-between gap-4">
@@ -292,12 +292,12 @@ export default function Billing() {
       ) : (
         <section aria-labelledby="choose-title" className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 id="choose-title" className="text-lg font-semibold">{s.status === "cancelled" ? "Your subscription has ended" : "Choose a package"}</h2>
+            <h2 id="choose-title" className="text-lg font-semibold">{s.status === "cancelled" ? "Your Subscription Has Ended" : "Choose a Package"}</h2>
             <SubscriptionPill summary={s} />
           </div>
           {justPaid && <p role="status" className="rounded-lg bg-info-soft p-3 text-sm">Thank you. We are confirming your payment; this page updates by itself in a few seconds.</p>}
           {offered.length === 0 ? (
-            <EmptyState title="No packages are available yet">Divigner is still setting up your packages. Check back soon.</EmptyState>
+            <EmptyState title="No Packages Are Available Yet">Divigner is still setting up your packages. Check back soon.</EmptyState>
           ) : (
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {offered.map((plan) => (
@@ -370,7 +370,7 @@ export default function Billing() {
       <Dialog open={changing} onOpenChange={(open) => !busy && setChanging(open)}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Change package</DialogTitle>
+            <DialogTitle>Change Package</DialogTitle>
             <DialogDescription>
               The change takes effect straight away. Your next invoice adjusts for the part of this period you have already paid for.
             </DialogDescription>
@@ -393,7 +393,7 @@ export default function Billing() {
       <AlertDialog open={cancelling} onOpenChange={(open) => !busy && setCancelling(open)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
+            <AlertDialogTitle>Cancel Your Subscription?</AlertDialogTitle>
             <AlertDialogDescription>
               Your avatars keep working until {dayOf(s.renews_at, client.timezone)}, then stop taking calls. You will not be charged again. Your conversations and transcripts stay available to download, and you can change your mind any time before that date.
             </AlertDialogDescription>

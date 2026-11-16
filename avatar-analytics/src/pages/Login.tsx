@@ -40,7 +40,7 @@ export default function Login() {
   // Signed in, but no active profile: an old login, or a deactivated account.
   if (session && !access) {
     return (
-      <AuthCard title="No access">
+      <AuthCard title="No Access">
         <p role="alert" className="text-sm">
           This account is signed in but does not have access to Avalytics. It may have been deactivated. Ask your Divigner contact for help.
         </p>
@@ -68,7 +68,7 @@ export default function Login() {
   }
 
   return (
-    <AuthCard title="Sign in">
+    <AuthCard title="Sign In">
       <form onSubmit={signIn} className="flex flex-col gap-4" noValidate>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">Email</Label>

@@ -47,7 +47,7 @@ function ClientsView({ clients, canSeeMoney }: { clients: CrmClient[]; canSeeMon
         </div>
       </div>
       <p role="status" className="text-sm text-muted-foreground">{count(rows.length)} of {count(clients.length)} client{clients.length === 1 ? "" : "s"}</p>
-      {rows.length === 0 ? <EmptyState title="No clients match">Try a different word or status.</EmptyState> : (
+      {rows.length === 0 ? <EmptyState title="No Clients Match">Try a different word or status.</EmptyState> : (
         <TableScroll label="Clients table" className="rounded-lg border bg-card">
           <table className="w-full text-sm">
             <caption className="sr-only">Clients, with their package, main contact and recent activity</caption>
@@ -56,11 +56,11 @@ function ClientsView({ clients, canSeeMoney }: { clients: CrmClient[]; canSeeMon
                 <th scope="col" className={th}>Client</th>
                 <th scope="col" className={th}>Status</th>
                 <th scope="col" className={th}>Package</th>
-                <th scope="col" className={th}>Main contact</th>
+                <th scope="col" className={th}>Main Contact</th>
                 <th scope="col" className={`${th} text-right`}>Avatars</th>
-                <th scope="col" className={`${th} text-right`}>Minutes, 30 days</th>
-                {canSeeMoney && <th scope="col" className={`${th} text-right`}>Paid to date</th>}
-                <th scope="col" className={th}>Last call</th>
+                <th scope="col" className={`${th} text-right`}>Minutes, 30 Days</th>
+                {canSeeMoney && <th scope="col" className={`${th} text-right`}>Paid to Date</th>}
+                <th scope="col" className={th}>Last Call</th>
                 <th scope="col" className={th}>Notes</th>
               </tr>
             </thead>
@@ -108,7 +108,7 @@ function ContactsView() {
   const needle = text.trim().toLowerCase()
   const rows = contacts.data.filter((c) => !needle || [c.full_name, c.title, c.email, c.phone, c.clients?.name].some((v) => v?.toLowerCase().includes(needle)))
     .sort((a, b) => a.full_name.localeCompare(b.full_name))
-  if (contacts.data.length === 0) return <EmptyState title="No contacts yet">Open a client and add the people you deal with there. They all appear here.</EmptyState>
+  if (contacts.data.length === 0) return <EmptyState title="No Contacts Yet">Open a client and add the people you deal with there. They all appear here.</EmptyState>
   return (
     <div className="flex flex-col gap-4">
       <div className="flex w-full max-w-sm flex-col gap-1.5">
@@ -119,7 +119,7 @@ function ContactsView() {
         </div>
       </div>
       <p role="status" className="text-sm text-muted-foreground">{count(rows.length)} of {count(contacts.data.length)} contact{contacts.data.length === 1 ? "" : "s"}</p>
-      {rows.length === 0 ? <EmptyState title="No contacts match">Try a different word.</EmptyState> : (
+      {rows.length === 0 ? <EmptyState title="No Contacts Match">Try a different word.</EmptyState> : (
         <TableScroll label="Contacts table" className="rounded-lg border bg-card">
           <table className="w-full text-sm">
             <caption className="sr-only">Contacts at every client</caption>
@@ -158,14 +158,14 @@ export default function Clients() {
     <>
       <PageHeader title="Clients" description="Every client in one view. Open one for their file: avatars, people, contacts, notes and details." actions={newClient} />
       {clients.isPending ? <LoadingBlock label="Loading clients" /> : clients.isError ? <ErrorBlock error={clients.error} onRetry={() => void clients.refetch()} /> : all.length === 0 ? (
-        <EmptyState title="No clients yet" action={newClient}>Add a client to get started.</EmptyState>
+        <EmptyState title="No Clients Yet" action={newClient}>Add a client to get started.</EmptyState>
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Clients" value={count(all.length)} note={`${count(all.filter((c) => c.status === "active").length)} active`} />
-            <Stat label="On a package" value={count(all.filter((c) => c.plan && !["none", "cancelled"].includes(c.billing_status)).length)} note={`${count(all.filter((c) => c.cancel_at_period_end).length)} ending`} />
-            <Stat label="Avatars linked" value={count(all.reduce((n, c) => n + c.avatars, 0))} />
-            <Stat label="Need attention" value={count(all.filter((c) => c.status === "paused" || ["past_due", "unpaid"].includes(c.billing_status)).length)} note="Paused or payment needed" />
+            <Stat label="On a Package" value={count(all.filter((c) => c.plan && !["none", "cancelled"].includes(c.billing_status)).length)} note={`${count(all.filter((c) => c.cancel_at_period_end).length)} ending`} />
+            <Stat label="Avatars Linked" value={count(all.reduce((n, c) => n + c.avatars, 0))} />
+            <Stat label="Need Attention" value={count(all.filter((c) => c.status === "paused" || ["past_due", "unpaid"].includes(c.billing_status)).length)} note="Paused or payment needed" />
           </div>
           <Tabs defaultValue="clients" className="flex flex-col gap-4">
             <TabsList className="h-auto">

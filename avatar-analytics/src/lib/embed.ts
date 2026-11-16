@@ -15,10 +15,10 @@ export function embedFor(deployment: { deployment_id: string; channel: string; p
     case "widget":
       return {
         kind: "code",
-        label: "Floating widget",
+        label: "Floating Widget",
         code: `<tavus-widget deployment-id="${id}"></tavus-widget>\n<script src="https://unpkg.com/@tavus/widget"></script>`,
       }
     default:
-      return { kind: "link", label: "Landing page", url: deployment.page_url }
+      return { kind: "link", label: "Landing Page", url: deployment.page_url }
   }
 }

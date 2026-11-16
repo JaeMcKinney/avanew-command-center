@@ -23,7 +23,7 @@ export default function Avatars() {
 
   return (
     <>
-      <PageHeader title="Tavus avatars" description="A copy of the avatars in your Tavus account. Open one to see its prompt, knowledge, guardrails, objectives and tools. To link one, open a client and choose “Link avatars”." />
+      <PageHeader title="Tavus Avatars" description="A copy of the avatars in your Tavus account. Open one to see its prompt, knowledge, guardrails, objectives and tools. To link one, open a client and choose “Link avatars”." />
       <TavusSyncStatus />
       <div className="flex max-w-md flex-col gap-1.5">
         <Label htmlFor="avatar-search">Search by name or website</Label>
@@ -38,7 +38,7 @@ export default function Avatars() {
       ) : hits.isError ? (
         <ErrorBlock error={hits.error} onRetry={() => void hits.refetch()} />
       ) : hits.data.length === 0 ? (
-        <EmptyState title={query ? "No avatars match" : "No avatars loaded yet"}>
+        <EmptyState title={query ? "No Avatars Match" : "No Avatars Loaded Yet"}>
           {query ? "Try a shorter word." : "Choose “Refresh from Tavus” to load the avatars in your Tavus account."}
         </EmptyState>
       ) : (

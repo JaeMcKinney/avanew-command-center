@@ -118,7 +118,7 @@ export function ClientForm({
       )}
 
       <fieldset className="flex flex-col gap-4 rounded-lg border p-4">
-        <legend className="px-1 text-sm font-semibold">Branding (optional)</legend>
+        <legend className="px-1 text-sm font-semibold">Branding (Optional)</legend>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={`${id}-brand_color`}>Brand colour</Label>
           <div className="flex items-center gap-2">

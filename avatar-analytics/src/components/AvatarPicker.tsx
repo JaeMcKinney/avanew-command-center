@@ -158,7 +158,7 @@ export function AvatarPicker({
 
       {problems.length > 0 && (
         <div role="alert" className="rounded-lg border border-bad/40 bg-bad-soft p-4 text-sm">
-          <p className="font-semibold">Some avatars need attention</p>
+          <p className="font-semibold">Some Avatars Need Attention</p>
           <ul className="mt-1 list-disc pl-5">
             {problems.map((r) => (
               <li key={r.pal_id}>
@@ -178,7 +178,7 @@ export function AvatarPicker({
       ) : results.isError ? (
         <ErrorBlock error={results.error} onRetry={() => void results.refetch()} />
       ) : hits.length === 0 ? (
-        <EmptyState title="No avatars match">
+        <EmptyState title="No Avatars Match">
           Try a shorter word, or refresh the list from Tavus if the avatar was created in the last few minutes.
         </EmptyState>
       ) : (

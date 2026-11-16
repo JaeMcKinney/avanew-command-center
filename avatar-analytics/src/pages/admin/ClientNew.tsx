@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { createClient, inviteUser, listRoles, type Client } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-const STEPS = ["Client details", "Link avatars", "Invite the client"] as const
+const STEPS = ["Client Details", "Link Avatars", "Invite the Client"] as const
 
 function Steps({ current }: { current: number }) {
   return (
@@ -91,10 +91,10 @@ export default function ClientNew() {
 
   return (
     <>
-      <PageHeader title="New client" back={{ to: "/admin/clients", label: "Clients" }} />
+      <PageHeader title="New Client" back={{ to: "/admin/clients", label: "Clients" }} />
       {!done && <Steps current={step} />}
       <h2 ref={headingRef} tabIndex={-1} className="text-xl font-semibold outline-none">
-        {done ? `${client?.name} is set up` : STEPS[step]}
+        {done ? `${client?.name} Is Set Up` : STEPS[step]}
       </h2>
 
       {step === 0 && !done && (

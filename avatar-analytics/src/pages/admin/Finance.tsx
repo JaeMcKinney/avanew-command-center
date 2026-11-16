@@ -98,7 +98,7 @@ export default function Finance() {
           </span>
           <div className="min-w-0 flex-1 basis-72">
             <h2 id="verdict" className="text-2xl font-semibold sm:text-3xl">
-              {!costsSet ? `${money(revenue)} came in` : profit >= 0 ? `Profitable: ${money(profit)} profit` : `Losing money: ${money(-profit)} loss`}
+              {!costsSet ? `${money(revenue)} Came In` : profit >= 0 ? `Profitable: ${money(profit)} Profit` : `Losing Money: ${money(-profit)} Loss`}
             </h2>
             <p className="text-muted-foreground">
               {!costsSet
@@ -113,23 +113,23 @@ export default function Finance() {
           <Stat label="Costs" value={costsSet ? money(usageCost + fixedCost) : "—"} note={costsSet ? `${money(usageCost)} usage · ${money(fixedCost)} fixed` : "Not entered yet"} />
           <Stat label="Profit" value={costsSet ? money(profit) : "—"} note={costsSet ? (profit >= 0 ? "After all costs" : "Costs are higher than revenue") : "Needs your costs"} highlight={costsSet} />
           <Stat label="Margin" value={costsSet ? margin : "—"} note="Profit as a share of revenue" />
-          <Stat label="Recurring each month" value={money(f.mrr_cents)} note={`${count(f.subscribers)} subscribing client${f.subscribers === 1 ? "" : "s"}${f.ending_mrr_cents > 0 ? ` · ${money(f.ending_mrr_cents)} ending` : ""}`} />
-          <Stat label="Average per paying client" value={paying.length ? money(revenue / paying.length) : "—"} note={`${count(paying.length)} paying client${paying.length === 1 ? "" : "s"} in this period`} />
-          <Stat label="Earned per minute" value={minutesUsed > 0 ? money(revenue / minutesUsed) : "—"} note={f.cost_per_minute_cents > 0 ? `Each minute costs you ${money(f.cost_per_minute_cents)}` : `${count(minutesUsed)} minutes used`} />
-          <Stat label="Payments to chase" value={count(f.past_due)} note={f.past_due === 0 ? "Nobody is behind" : "Clients with a failed or late payment"} />
+          <Stat label="Recurring Each Month" value={money(f.mrr_cents)} note={`${count(f.subscribers)} subscribing client${f.subscribers === 1 ? "" : "s"}${f.ending_mrr_cents > 0 ? ` · ${money(f.ending_mrr_cents)} ending` : ""}`} />
+          <Stat label="Average Per Paying Client" value={paying.length ? money(revenue / paying.length) : "—"} note={`${count(paying.length)} paying client${paying.length === 1 ? "" : "s"} in this period`} />
+          <Stat label="Earned Per Minute" value={minutesUsed > 0 ? money(revenue / minutesUsed) : "—"} note={f.cost_per_minute_cents > 0 ? `Each minute costs you ${money(f.cost_per_minute_cents)}` : `${count(minutesUsed)} minutes used`} />
+          <Stat label="Payments to Chase" value={count(f.past_due)} note={f.past_due === 0 ? "Nobody is behind" : "Clients with a failed or late payment"} />
         </div>
 
         {revenue === 0 && minutesUsed === 0 ? (
-          <EmptyState title="Nothing in this period yet">Revenue appears here as Stripe confirms each payment. Choose a longer period to look further back.</EmptyState>
+          <EmptyState title="Nothing in This Period Yet">Revenue appears here as Stripe confirms each payment. Choose a longer period to look further back.</EmptyState>
         ) : (
           <>
             <div className="grid gap-4 lg:grid-cols-2">
               <ChartCard
-                title="Where revenue came from"
+                title="Where Revenue Came From"
                 subtitle={formatRange(state.range)}
                 chart={<Donut unit="" centerValue={money(revenue)} centerLabel="revenue" slices={[
                   { id: "subscription", label: "Packages", value: dollars(subscription), color: seriesColor(0) },
-                  { id: "extra", label: "Extra minutes", value: dollars(extra), color: seriesColor(1) },
+                  { id: "extra", label: "Extra Minutes", value: dollars(extra), color: seriesColor(1) },
                   { id: "addons", label: "Add-ons", value: dollars(addons), color: seriesColor(2) },
                 ]} />}
                 table={<DataTable caption="Revenue by source" head={["Source", "Revenue", "Share"]} rows={[
@@ -140,14 +140,14 @@ export default function Finance() {
               />
               {costsSet && profit >= 0 ? (
                 <ChartCard
-                  title="Where each dollar went"
+                  title="Where Each Dollar Went"
                   subtitle="Revenue split into costs and what is left"
                   chart={<Donut unit="" centerValue={margin} centerLabel="margin" slices={[
                     { id: "profit", label: "Profit", value: dollars(profit), color: seriesColor(2) },
-                    { id: "usage", label: "Usage cost", value: dollars(usageCost), color: seriesColor(1) },
-                    { id: "fixed", label: "Fixed costs", value: dollars(fixedCost), color: seriesColor(3) },
+                    { id: "usage", label: "Usage Cost", value: dollars(usageCost), color: seriesColor(1) },
+                    { id: "fixed", label: "Fixed Costs", value: dollars(fixedCost), color: seriesColor(3) },
                   ]} />}
-                  table={<DataTable caption="Where each dollar went" head={["Part", "Amount", "Share of revenue"]} rows={[
+                  table={<DataTable caption="Where each dollar went" head={["Part", "Amount", "Share of Revenue"]} rows={[
                     ["Profit", money(profit), percent(profit, revenue)],
                     ["Usage cost", money(usageCost), percent(usageCost, revenue)],
                     ["Fixed costs", money(fixedCost), percent(fixedCost, revenue)],
@@ -155,7 +155,7 @@ export default function Finance() {
                 />
               ) : (
                 <section aria-labelledby="dollar-went" className="flex flex-col gap-2 rounded-lg border bg-card p-4 sm:p-5">
-                  <h3 id="dollar-went" className="font-sans text-base font-semibold">Where each dollar went</h3>
+                  <h3 id="dollar-went" className="font-sans text-base font-semibold">Where Each Dollar Went</h3>
                   <p className="text-sm text-muted-foreground">
                     {costsSet ? `Costs of ${money(usageCost + fixedCost)} are higher than revenue of ${money(revenue)}, so there is no profit to show as a share.` : "Enter your costs at the bottom of this page to see how each dollar splits between costs and profit."}
                   </p>
@@ -165,21 +165,21 @@ export default function Finance() {
 
             <div className="grid gap-4 lg:grid-cols-2">
               <ChartCard
-                title="Revenue by month"
+                title="Revenue by Month"
                 subtitle="In dollars, when Stripe received each payment"
                 chart={<Columns columns={columns} unit="dollars" color={seriesColor(0)} label="Revenue by month" />}
                 table={<DataTable caption="Revenue by month" head={["Month", "Revenue"]} rows={months.map((m) => [monthName(m.month), money(revenueOf(m))])} />}
               />
               {costsSet ? (
                 <ChartCard
-                  title="Profit by month"
+                  title="Profit by Month"
                   subtitle="Above the line is profit; below it is a loss"
                   chart={<SignedColumns columns={profitColumns} label="Profit by month" format={(v) => `${v < 0 ? "-" : ""}$${Math.abs(v).toLocaleString("en-US")}`} />}
                   table={<DataTable caption="Profit by month" head={["Month", "Revenue", "Costs", "Profit"]} rows={months.map((m) => [monthName(m.month), money(revenueOf(m)), money(Number(m.usage_cost_cents) + Number(m.fixed_cost_cents)), money(revenueOf(m) - Number(m.usage_cost_cents) - Number(m.fixed_cost_cents))])} />}
                 />
               ) : (
                 <section aria-labelledby="profit-month" className="flex flex-col gap-2 rounded-lg border bg-card p-4 sm:p-5">
-                  <h3 id="profit-month" className="font-sans text-base font-semibold">Profit by month</h3>
+                  <h3 id="profit-month" className="font-sans text-base font-semibold">Profit by Month</h3>
                   <p className="text-sm text-muted-foreground">Enter your costs at the bottom of this page to see profit for each month.</p>
                 </section>
               )}
@@ -188,7 +188,7 @@ export default function Finance() {
             {f.clients.length > 0 && (
               <section aria-labelledby="client-bars" className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
                 <div>
-                  <h3 id="client-bars" className="font-sans text-base font-semibold">Revenue by client</h3>
+                  <h3 id="client-bars" className="font-sans text-base font-semibold">Revenue by Client</h3>
                   <p className="text-sm text-muted-foreground">Who pays the most in this period{f.cost_per_minute_cents > 0 ? ", with each client's margin after usage cost" : ""}.</p>
                 </div>
                 <RankedBars
@@ -201,9 +201,9 @@ export default function Finance() {
               </section>
             )}
 
-            <h2 className="text-xl font-semibold">The detail</h2>
+            <h2 className="text-xl font-semibold">The Detail</h2>
             <section aria-labelledby="by-month" className="flex flex-col gap-3">
-              <h3 id="by-month" className="text-lg font-semibold">Month by month</h3>
+              <h3 id="by-month" className="text-lg font-semibold">Month by Month</h3>
               <TableScroll label="Month by month table" className="rounded-lg border bg-card">
                 <table className="w-full text-sm">
                   <caption className="sr-only">Revenue, cost and profit for each month</caption>
@@ -211,10 +211,10 @@ export default function Finance() {
                     <tr className="border-b bg-muted/60 text-left text-xs text-muted-foreground uppercase">
                       <th scope="col" className={th}>Month</th>
                       <th scope="col" className={`${th} text-right`}>Packages</th>
-                      <th scope="col" className={`${th} text-right`}>Extra minutes</th>
+                      <th scope="col" className={`${th} text-right`}>Extra Minutes</th>
                       <th scope="col" className={`${th} text-right`}>Add-ons</th>
                       <th scope="col" className={`${th} text-right`}>Revenue</th>
-                      <th scope="col" className={`${th} text-right`}>Minutes used</th>
+                      <th scope="col" className={`${th} text-right`}>Minutes Used</th>
                       <th scope="col" className={`${th} text-right`}>Costs</th>
                       <th scope="col" className={`${th} text-right`}>Profit</th>
                     </tr>
@@ -253,7 +253,7 @@ export default function Finance() {
             </section>
 
             <section aria-labelledby="by-client" className="flex flex-col gap-3">
-              <h3 id="by-client" className="text-lg font-semibold">Client by client</h3>
+              <h3 id="by-client" className="text-lg font-semibold">Client by Client</h3>
               <TableScroll label="Client by client table" className="rounded-lg border bg-card">
                 <table className="w-full text-sm">
                   <caption className="sr-only">Revenue, usage cost and margin for each client in this period</caption>
@@ -261,10 +261,10 @@ export default function Finance() {
                     <tr className="border-b bg-muted/60 text-left text-xs text-muted-foreground uppercase">
                       <th scope="col" className={th}>Client</th>
                       <th scope="col" className={`${th} text-right`}>Packages</th>
-                      <th scope="col" className={`${th} text-right`}>Extra minutes</th>
+                      <th scope="col" className={`${th} text-right`}>Extra Minutes</th>
                       <th scope="col" className={`${th} text-right`}>Revenue</th>
-                      <th scope="col" className={`${th} text-right`}>Minutes used</th>
-                      <th scope="col" className={`${th} text-right`}>Usage cost</th>
+                      <th scope="col" className={`${th} text-right`}>Minutes Used</th>
+                      <th scope="col" className={`${th} text-right`}>Usage Cost</th>
                       <th scope="col" className={`${th} text-right`}>Margin</th>
                     </tr>
                   </thead>
@@ -292,7 +292,7 @@ export default function Finance() {
         )}
 
         <section aria-labelledby="costs" className="flex flex-col gap-3">
-          <h2 id="costs" className="text-lg font-semibold">Your costs</h2>
+          <h2 id="costs" className="text-lg font-semibold">Your Costs</h2>
           {can("settings.manage") ? <CostsForm key={`${f.cost_per_minute_cents}-${f.fixed_monthly_cost_cents}`} data={f} /> : (
             <p className="text-sm text-muted-foreground">{money(f.cost_per_minute_cents)} a minute and {money(f.fixed_monthly_cost_cents)} a month in fixed costs. Only people who can change settings can edit these.</p>
           )}

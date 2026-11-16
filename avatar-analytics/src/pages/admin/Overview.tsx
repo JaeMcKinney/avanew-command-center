@@ -41,18 +41,18 @@ export default function Overview() {
 
       <section aria-label="Talk time" className="grid gap-3 sm:grid-cols-3">
         <Stat hero label="Today" value={minutes(todayTotal.billable_seconds)} unit="min" note={`${count(todayTotal.conversations)} conversations`} />
-        <Stat hero highlight label="This month" value={minutes(monthTotal.billable_seconds)} unit="min" note={`${count(monthTotal.conversations)} conversations`} />
-        <Stat hero label="This year" value={minutes(yearTotal.billable_seconds)} unit="min" note={`${count(yearTotal.conversations)} conversations`} />
+        <Stat hero highlight label="This Month" value={minutes(monthTotal.billable_seconds)} unit="min" note={`${count(monthTotal.conversations)} conversations`} />
+        <Stat hero label="This Year" value={minutes(yearTotal.billable_seconds)} unit="min" note={`${count(yearTotal.conversations)} conversations`} />
       </section>
 
       <section aria-label="Totals" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Stat label="Clients" value={count(clients.data?.length)} />
-        <Stat label="Avatars linked" value={count(avatars.data?.length)} />
-        <Stat label="Average call this month" value={monthTotal.conversations ? `${(monthTotal.talk_seconds / monthTotal.conversations / 60).toFixed(1)}` : "—"} unit={monthTotal.conversations ? "min" : undefined} />
+        <Stat label="Avatars Linked" value={count(avatars.data?.length)} />
+        <Stat label="Average Call This Month" value={monthTotal.conversations ? `${(monthTotal.talk_seconds / monthTotal.conversations / 60).toFixed(1)}` : "—"} unit={monthTotal.conversations ? "min" : undefined} />
       </section>
 
       <ChartCard
-        title="Talk time this month"
+        title="Talk Time This Month"
         subtitle={`Minutes per day, all clients · ${formatRange(month)}`}
         chart={<Columns columns={columns} unit="min" color={seriesColor(0)} />}
         table={<DataTable caption="Talk time per day this month" head={["Day", "Minutes"]} rows={columns.map((c) => [c.longLabel, Math.round(c.value)])} />}
@@ -63,7 +63,7 @@ export default function Overview() {
         <ClientsTable
           empty={
             <EmptyState
-              title="No clients yet"
+              title="No Clients Yet"
               action={can("clients.manage") && <Button asChild className="min-h-10"><Link to="/admin/clients/new">Add your first client</Link></Button>}
             >
               Add a client, link their Tavus avatars, and their talk time will start showing here.

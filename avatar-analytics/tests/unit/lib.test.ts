@@ -82,7 +82,7 @@ describe("embed code", () => {
     const widget = embedFor({ deployment_id: "abc-123", channel: "widget", page_url: null })
     expect(widget.kind === "code" && widget.code).toContain('<tavus-widget deployment-id="abc-123"></tavus-widget>')
     expect(embedFor({ deployment_id: "x", channel: "landing-page", page_url: "https://x.maker.tavus.io" })).toEqual({
-      kind: "link", label: "Landing page", url: "https://x.maker.tavus.io",
+      kind: "link", label: "Landing Page", url: "https://x.maker.tavus.io",
     })
   })
 })

@@ -43,7 +43,7 @@ export default function Dashboard({ client: given, embedded = false }: { client?
   const secondsFor = (id: string) => Number(usage.get(id)?.billable_seconds ?? 0)
   const named: Slice[] = list.slice(0, MAX_SERIES).map((a, i) => ({ id: a.id, label: a.display_name, value: secondsFor(a.id) / 60, color: seriesColor(i) }))
   const restSeconds = [...usage.entries()].filter(([id]) => !list.slice(0, MAX_SERIES).some((a) => a.id === id)).reduce((sum, [, u]) => sum + Number(u.billable_seconds), 0)
-  const slices = restSeconds > 0 ? [...named, { id: "other", label: "Other avatars", value: restSeconds / 60, color: seriesColor(-1) }] : named
+  const slices = restSeconds > 0 ? [...named, { id: "other", label: "Other Avatars", value: restSeconds / 60, color: seriesColor(-1) }] : named
   const rangeTotal = sumUsage(usage.values())
   const totalMinutes = rangeTotal.billable_seconds / 60
   const columns = bucketColumns(range, new Map((byDay.data ?? []).map((r) => [r.usage_date, Number(r.billable_seconds)])))
@@ -51,25 +51,25 @@ export default function Dashboard({ client: given, embedded = false }: { client?
 
   return (
     <>
-      {!embedded && <h1 className="sr-only">{client.name} dashboard</h1>}
+      {!embedded && <h1 className="sr-only">{client.name} Dashboard</h1>}
 
       <section aria-labelledby="talk-time-heading" className="flex flex-col gap-3">
-        <h2 id="talk-time-heading" className="text-2xl font-semibold">Talk time you have used</h2>
+        <h2 id="talk-time-heading" className="text-2xl font-semibold">Talk Time You Have Used</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat hero highlight label="This month" value={minutes(month.billable_seconds)} unit="min" note={`${formatDay(startOfMonth(today))} to today · ${count(month.conversations)} conversations`} />
-          <Stat hero label="This quarter" value={minutes(quarter.billable_seconds)} unit="min" note={`${formatDay(startOfQuarter(today))} to today · ${count(quarter.conversations)} conversations`} />
-          <Stat hero label="This year" value={minutes(yearTotal.billable_seconds)} unit="min" note={`${formatDay(year.from)} to today · ${count(yearTotal.conversations)} conversations`} />
+          <Stat hero highlight label="This Month" value={minutes(month.billable_seconds)} unit="min" note={`${formatDay(startOfMonth(today))} to today · ${count(month.conversations)} conversations`} />
+          <Stat hero label="This Quarter" value={minutes(quarter.billable_seconds)} unit="min" note={`${formatDay(startOfQuarter(today))} to today · ${count(quarter.conversations)} conversations`} />
+          <Stat hero label="This Year" value={minutes(yearTotal.billable_seconds)} unit="min" note={`${formatDay(year.from)} to today · ${count(yearTotal.conversations)} conversations`} />
         </div>
       </section>
 
       {list.length === 0 ? (
-        <EmptyState title="Your avatars are being set up">
+        <EmptyState title="Your Avatars Are Being Set Up">
           Once Divigner links your avatars, you will see them here, with how much talk time each one has used.
         </EmptyState>
       ) : (
         <section aria-labelledby="period-heading" className="flex flex-col gap-4">
           <div className="flex flex-col gap-3">
-            <h2 id="period-heading" className="text-2xl font-semibold">Explore a period</h2>
+            <h2 id="period-heading" className="text-2xl font-semibold">Explore a Period</h2>
             <DateRangeControl value={state} onChange={setState} today={today} />
             <p role="status" className="text-sm text-muted-foreground">
               Showing {rangeText}: <strong className="text-foreground">{minutes(rangeTotal.billable_seconds)} min</strong> across {count(rangeTotal.conversations)} conversations.
@@ -94,7 +94,7 @@ export default function Dashboard({ client: given, embedded = false }: { client?
 
           <div className="grid gap-4 lg:grid-cols-2">
             <ChartCard
-              title="Talk time by avatar"
+              title="Talk Time by Avatar"
               subtitle={rangeText}
               chart={<Donut slices={slices} centerValue={Math.round(totalMinutes).toLocaleString("en-US")} centerLabel="minutes" unit="min" />}
               table={
@@ -106,7 +106,7 @@ export default function Dashboard({ client: given, embedded = false }: { client?
               }
             />
             <ChartCard
-              title="Talk time over time"
+              title="Talk Time Over Time"
               subtitle={`${GRAIN_LABEL[grainFor(range)]}, in minutes · ${rangeText}`}
               chart={byDay.isPending ? <LoadingBlock /> : <Columns columns={columns} unit="min" color={seriesColor(0)} />}
               table={<DataTable caption={`Talk time over time, ${rangeText}`} head={["Period", "Minutes"]} rows={columns.map((col) => [col.longLabel, Math.round(col.value)])} />}
@@ -115,7 +115,7 @@ export default function Dashboard({ client: given, embedded = false }: { client?
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Stat label="Conversations" value={count(rangeTotal.conversations)} note={rangeText} />
-            <Stat label="Average call" value={rangeTotal.conversations ? duration(rangeTotal.talk_seconds / rangeTotal.conversations) : "—"} note="From the avatar joining to the call ending" />
+            <Stat label="Average Call" value={rangeTotal.conversations ? duration(rangeTotal.talk_seconds / rangeTotal.conversations) : "—"} note="From the avatar joining to the call ending" />
             <Stat label="Avatars" value={count(list.length)} />
           </div>
         </section>

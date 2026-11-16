@@ -65,7 +65,7 @@ function PlanDialog({ plan, onClose }: { plan: Plan | "new"; onClose: (saved: bo
     <Dialog open onOpenChange={(open) => !open && !save.isPending && onClose(false)}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>{plan === "new" ? "Add a package" : `Edit ${plan.name}`}</DialogTitle>
+          <DialogTitle>{plan === "new" ? "Add a Package" : `Edit ${plan.name}`}</DialogTitle>
           <DialogDescription>What clients see on their Billing page. The price charged is the one on the Stripe price; keep the two the same.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
@@ -161,7 +161,7 @@ function UsageRulesForm({ initial }: { initial: UsageRules }) {
         </div>
       </div>
       <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-2 text-sm font-medium">Custom amount (US dollars)</legend>
+        <legend className="mb-2 text-sm font-medium">Custom Amount (US Dollars)</legend>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={`${id}-cmin`}>Smallest amount a client can enter</Label>
           <Input id={`${id}-cmin`} inputMode="numeric" value={rules.customMin} onChange={(e) => setRules({ ...rules, customMin: e.target.value })} className="min-h-11 max-w-32" aria-describedby={`${id}-cmin-help`} />
@@ -193,7 +193,7 @@ export default function Plans() {
         actions={<Button className="min-h-10" onClick={() => setEditing("new")}><Plus aria-hidden="true" />Add a package</Button>}
       />
       {plans.isPending ? <LoadingBlock label="Loading packages" /> : plans.isError ? <ErrorBlock error={plans.error} onRetry={() => void plans.refetch()} /> : plans.data.length === 0 ? (
-        <EmptyState title="No packages yet" action={<Button className="min-h-10" onClick={() => setEditing("new")}>Add a package</Button>}>
+        <EmptyState title="No Packages Yet" action={<Button className="min-h-10" onClick={() => setEditing("new")}>Add a package</Button>}>
           Add the packages you sell. Each one needs a matching recurring price in Stripe.
         </EmptyState>
       ) : (
@@ -203,9 +203,9 @@ export default function Plans() {
             <thead>
               <tr className="border-b bg-muted/60 text-left text-xs text-muted-foreground uppercase">
                 <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">Package</th>
-                <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Price a month</th>
+                <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Price a Month</th>
                 <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Minutes</th>
-                <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Calls at once</th>
+                <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Calls at Once</th>
                 <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">Status</th>
                 <th scope="col" className="px-4 py-2.5"><span className="sr-only">Edit</span></th>
               </tr>
@@ -233,7 +233,7 @@ export default function Plans() {
       )}
 
       <section aria-labelledby="rules-title" className="flex flex-col gap-3">
-        <h2 id="rules-title" className="text-lg font-semibold">When minutes run low</h2>
+        <h2 id="rules-title" className="text-lg font-semibold">When Minutes Run Low</h2>
         {rules.isPending ? <LoadingBlock label="Loading rules" /> : rules.isError ? <ErrorBlock error={rules.error} /> : can("settings.manage") ? (
           <UsageRulesForm initial={rules.data} />
         ) : (

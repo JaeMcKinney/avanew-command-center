@@ -105,7 +105,7 @@ export function LogoEditor({ clientId, clientName, current, onSaved }: { clientI
 
       {current && !image && (
         <div className="flex flex-col gap-1.5">
-          <p className="text-sm font-medium">Current logo</p>
+          <p className="text-sm font-medium">Current Logo</p>
           <div className="flex flex-wrap gap-3">
             <img src={current} alt={`${clientName} logo on a light background`} className="h-16 max-w-56 rounded-md border bg-white object-contain p-2" />
             <img src={current} alt={`${clientName} logo on a dark background`} className="h-16 max-w-56 rounded-md border bg-[#0b1c2b] object-contain p-2" />

@@ -85,7 +85,7 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Conversation with {avatarName}</DialogTitle>
+          <DialogTitle>Conversation With {avatarName}</DialogTitle>
           <DialogDescription>
             {formatDateTime(conversation.started_at ?? conversation.ended_at, timeZone)} · {duration(conversation.talk_seconds)} · {endedBecause(conversation.shutdown_reason)}
           </DialogDescription>
@@ -127,9 +127,9 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
                   <p role="status" className="rounded-lg bg-muted p-3 text-sm">
                     The visitor asked <strong>{count(questions.length)}</strong> question{questions.length === 1 ? "" : "s"}. The avatar answered <strong>{count(split.answered.length)}</strong>, partly answered <strong>{count(split.partly.length)}</strong> and did not answer <strong>{count(split.unanswered.length)}</strong>.
                   </p>
-                  <QuestionSection id="answered-heading" title="Questions answered" questions={split.answered} empty="None." />
-                  <QuestionSection id="partly-heading" title="Questions partly answered" questions={split.partly} empty="None." questionsPath={`/c/${client.slug}/questions`} />
-                  <QuestionSection id="unanswered-heading" title="Questions not answered" questions={split.unanswered} empty="None." questionsPath={`/c/${client.slug}/questions`} />
+                  <QuestionSection id="answered-heading" title="Questions Answered" questions={split.answered} empty="None." />
+                  <QuestionSection id="partly-heading" title="Questions Partly Answered" questions={split.partly} empty="None." questionsPath={`/c/${client.slug}/questions`} />
+                  <QuestionSection id="unanswered-heading" title="Questions Not Answered" questions={split.unanswered} empty="None." questionsPath={`/c/${client.slug}/questions`} />
                 </>
               )
             )}
@@ -237,7 +237,7 @@ export default function Conversations({ client: given, embedded = false }: { cli
       ) : conversations.isError ? (
         <ErrorBlock error={conversations.error} onRetry={() => void conversations.refetch()} />
       ) : total === 0 ? (
-        <EmptyState title={`No conversations${who} in this period`}>Try a longer period{avatarId ? " or all avatars" : ""}.</EmptyState>
+        <EmptyState title={`No Conversations${who.replace(" with ", " With ")} in This Period`}>Try a longer period{avatarId ? " or all avatars" : ""}.</EmptyState>
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -265,7 +265,7 @@ export default function Conversations({ client: given, embedded = false }: { cli
                   <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">When</th>
                   <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">Avatar</th>
                   <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Length</th>
-                  <th scope="col" className="hidden px-4 py-2.5 font-semibold tracking-wide sm:table-cell">How it ended</th>
+                  <th scope="col" className="hidden px-4 py-2.5 font-semibold tracking-wide sm:table-cell">How It Ended</th>
                   <th scope="col" className="px-4 py-2.5"><span className="sr-only">Transcript</span></th>
                 </tr>
               </thead>

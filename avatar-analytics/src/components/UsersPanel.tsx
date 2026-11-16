@@ -28,7 +28,7 @@ function ClientChecklist({ value, onChange }: { value: Set<string>; onChange: (n
   if (!clients.data?.length) return <p className="text-sm text-muted-foreground">There are no clients yet.</p>
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-1 text-sm font-medium">Clients this person can see</legend>
+      <legend className="mb-1 text-sm font-medium">Clients This Person Can See</legend>
       {clients.data.map((c) => (
         <label key={c.id} className="flex min-h-9 items-center gap-2 text-sm">
           <Checkbox
@@ -83,7 +83,7 @@ function InviteDialog({ scope, roles, open, onOpenChange }: { scope: Scope; role
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{"side" in scope ? "Invite a Divigner user" : `Invite someone at ${scope.clientName}`}</DialogTitle>
+          <DialogTitle>{"side" in scope ? "Invite a Divigner User" : `Invite Someone at ${scope.clientName}`}</DialogTitle>
           <DialogDescription>They get an email with a link to choose a password.</DialogDescription>
         </DialogHeader>
         <form
@@ -197,7 +197,7 @@ export function UsersPanel({ scope, canManage }: { scope: Scope; canManage: bool
       )}
 
       {people.data.length === 0 ? (
-        <EmptyState title="Nobody yet">{isTeam ? "Invite your team." : "Invite someone at this client so they can sign in and see their dashboard."}</EmptyState>
+        <EmptyState title="Nobody Yet">{isTeam ? "Invite your team." : "Invite someone at this client so they can sign in and see their dashboard."}</EmptyState>
       ) : (
         <ul className="flex flex-col gap-2">
           {people.data.map((person) => {

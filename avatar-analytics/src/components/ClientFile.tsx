@@ -75,7 +75,7 @@ export function ClientNotes({ client }: { client: Client }) {
         </form>
       )}
       {notes.isPending ? <LoadingBlock label="Loading notes" /> : notes.isError ? <ErrorBlock error={notes.error} /> : notes.data.length === 0 ? (
-        <EmptyState title="No notes yet">Keep a record of calls, meetings and anything worth remembering about this client.</EmptyState>
+        <EmptyState title="No Notes Yet">Keep a record of calls, meetings and anything worth remembering about this client.</EmptyState>
       ) : (
         <ul className="flex flex-col gap-3">
           {notes.data.map((note) => {
@@ -138,7 +138,7 @@ function ContactDialog({ client, contact, onClose }: { client: Client; contact: 
     <Dialog open onOpenChange={(open) => !open && !save.isPending && onClose(false)}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{contact === "new" ? `Add a contact at ${client.name}` : `Edit ${contact.full_name}`}</DialogTitle>
+          <DialogTitle>{contact === "new" ? `Add a Contact at ${client.name}` : `Edit ${contact.full_name}`}</DialogTitle>
           <DialogDescription>A person to remember at this client. This does not give them a sign-in; invite them under People for that.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
@@ -182,7 +182,7 @@ export function ClientContacts({ client }: { client: Client }) {
   return (
     <div className="flex flex-col gap-4">
       {contacts.isPending ? <LoadingBlock label="Loading contacts" /> : contacts.isError ? <ErrorBlock error={contacts.error} /> : contacts.data.length === 0 ? (
-        <EmptyState title="No contacts yet" action={add}>Add the people you deal with at {client.name}.</EmptyState>
+        <EmptyState title="No Contacts Yet" action={add}>Add the people you deal with at {client.name}.</EmptyState>
       ) : (
         <>
           <div>{add}</div>
@@ -247,7 +247,7 @@ export function ClientAccount({ client }: { client: Client }) {
   )
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
-      <h3 className="text-base font-semibold">Account details</h3>
+      <h3 className="text-base font-semibold">Account Details</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         {input("website", "Website", { type: "url", placeholder: "https://", "aria-describedby": problem ? `${id}-problem` : undefined })}
         {input("industry", "Industry")}

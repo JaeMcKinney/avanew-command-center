@@ -11,14 +11,14 @@ async function openConversations(page: Page) {
   await page.getByRole("link", { name: "Conversations" }).click()
   await expect(page.getByRole("heading", { name: "Conversations", level: 1 })).toBeVisible()
   await page.getByRole("button", { name: "This year" }).click()
-  await expect(page.getByRole("checkbox", { name: /^Select the conversation from/ }).first()).toBeVisible()
+  await expect(page.getByRole("checkbox", { name: /^Select the conversation from/i }).first()).toBeVisible()
 }
 const bar = (page: Page) => page.getByRole("region", { name: "Export selected transcripts" })
 
 test("a client ticks several conversations and downloads them as one ZIP of PDFs", async ({ page }) => {
   await openConversations(page)
   await expect(bar(page)).toHaveCount(0)
-  const boxes = page.getByRole("checkbox", { name: /^Select the conversation from/ })
+  const boxes = page.getByRole("checkbox", { name: /^Select the conversation from/i })
 
   // One on its own is a PDF.
   await boxes.nth(0).check()
@@ -60,7 +60,7 @@ test("a client selects every transcript for one avatar, then copies a private li
   const status = bar(page).getByRole("status")
   await expect(status).toContainText(/\d+ transcripts selected/)
   const selected = Number(/(\d+) transcripts selected/.exec(await status.innerText())![1])
-  expect(selected).toBeGreaterThan(await page.getByRole("checkbox", { name: /^Select the conversation from/ }).count() - 1)
+  expect(selected).toBeGreaterThan(await page.getByRole("checkbox", { name: /^Select the conversation from/i }).count() - 1)
 
   await bar(page).getByRole("button", { name: "Copy private link" }).click()
   await expect(page.getByText("Private link copied. It works for 7 days.")).toBeVisible()
@@ -104,7 +104,7 @@ test("a client saves an export to Dropbox and to Google Drive, and shares it fro
   })
 
   await openConversations(page)
-  const boxes = page.getByRole("checkbox", { name: /^Select the conversation from/ })
+  const boxes = page.getByRole("checkbox", { name: /^Select the conversation from/i })
   await boxes.nth(0).check()
   await boxes.nth(1).check()
 
