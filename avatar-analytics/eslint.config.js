@@ -19,8 +19,13 @@ export default defineConfig([
     languageOptions: { globals: globals.browser },
   },
   {
+    // Copied shadcn/ui components export their style variants next to the component.
+    files: ["src/components/ui/**"],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
+  {
     files: ["tests/**", "e2e/**", "*.config.ts"],
     languageOptions: { globals: globals.node },
-    rules: { "react-hooks/rules-of-hooks": "off" },
+    rules: { "react-hooks/rules-of-hooks": "off", "@typescript-eslint/no-explicit-any": "off" },
   },
 ])

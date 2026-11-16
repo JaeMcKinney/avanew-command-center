@@ -41,10 +41,10 @@ export async function setup() {
     children.push(spawn("node", ["tests/mock-tavus.mjs"], { stdio: "inherit" }))
     await waitFor("http://127.0.0.1:54398/__control/health", "Mock Tavus")
   }
-  const functionsProbe = "http://127.0.0.1:54399/functions/v1/tavus-sync"
-  if (!(await isUp(functionsProbe, { method: "OPTIONS" }))) {
+  const functionsProbe = "http://127.0.0.1:54399/health"
+  if (!(await isUp(functionsProbe))) {
     children.push(spawn("npm", ["run", "functions"], { stdio: "inherit", detached: true }))
-    await waitFor(functionsProbe, "Server functions", { method: "OPTIONS" })
+    await waitFor(functionsProbe, "Server functions")
   }
 }
 

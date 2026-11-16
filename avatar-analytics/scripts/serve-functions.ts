@@ -22,6 +22,7 @@ const routes: Record<string, (req: Request) => Promise<Response>> = {
 const port = Number(Deno.env.get("FUNCTIONS_PORT") ?? 54399)
 
 Deno.serve({ port, hostname: "127.0.0.1" }, (req) => {
+  if (new URL(req.url).pathname === "/health") return new Response("ok")
   const name = new URL(req.url).pathname.match(/^\/functions\/v1\/([^/]+)/)?.[1]
   const handler = name ? routes[name] : undefined
   if (!handler) return new Response(JSON.stringify({ error: "No such function" }), { status: 404 })

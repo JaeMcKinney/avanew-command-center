@@ -16,7 +16,9 @@
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local --schema public > src/types/db.ts",
     "functions": "DENO_NO_PACKAGE_JSON=1 deno run --allow-net --allow-env --env-file=supabase/functions/.env scripts/serve-functions.ts",
-    "functions:check": "DENO_NO_PACKAGE_JSON=1 deno check scripts/serve-functions.ts supabase/functions/*/index.ts"
+    "functions:check": "DENO_NO_PACKAGE_JSON=1 deno check scripts/serve-functions.ts supabase/functions/*/index.ts",
+    "seed": "node scripts/seed-demo.mjs",
+    "mock-tavus": "node tests/mock-tavus.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",
