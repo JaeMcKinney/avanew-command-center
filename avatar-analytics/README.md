@@ -1,4 +1,4 @@
-# Divigner Avatar Analytics
+# Avalytics by Divigner
 
 A portal on top of Tavus for Divigner and its clients.
 

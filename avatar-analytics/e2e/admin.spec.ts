@@ -58,7 +58,7 @@ test("the Owner adds a client, links its avatar by name and invites the client",
   await invited.waitForURL("**/c/cedar-law-group")
   await expect(invited.getByRole("heading", { name: "Talk time you have used" })).toBeVisible()
   await expect(invited.getByRole("list", { name: "Your avatars" })).toContainText("Cedar Law Intake")
-  await expect(invited).toHaveTitle("Cedar Law Group dashboard · Divigner Avatar Analytics")
+  await expect(invited).toHaveTitle("Cedar Law Group dashboard · Avalytics by Divigner")
 })
 
 test("linking warns before taking over a webhook an avatar already uses", async ({ page }) => {

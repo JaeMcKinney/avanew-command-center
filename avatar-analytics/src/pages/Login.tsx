@@ -17,7 +17,7 @@ export function AuthCard({ title, children }: { title: string; children: React.R
       <main id="main" className="flex w-full max-w-sm flex-col gap-6 rounded-lg border bg-card p-6 sm:p-8">
         <div className="flex flex-col items-center gap-2 text-center">
           <DivignerLogo on="dark" className="h-20" />
-          <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">Avatar Analytics</p>
+          <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">Avalytics</p>
         </div>
         <h1 className="text-2xl font-semibold">{title}</h1>
         {children}
@@ -42,7 +42,7 @@ export default function Login() {
     return (
       <AuthCard title="No access">
         <p role="alert" className="text-sm">
-          This account is signed in but does not have access to Avatar Analytics. It may have been deactivated. Ask your Divigner contact for help.
+          This account is signed in but does not have access to Avalytics. It may have been deactivated. Ask your Divigner contact for help.
         </p>
         <Button variant="outline" className="min-h-11" onClick={() => void signOut()}>Sign out</Button>
       </AuthCard>

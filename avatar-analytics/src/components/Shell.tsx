@@ -115,7 +115,7 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
       <aside className="hidden border-r border-sidebar-border bg-linear-to-b from-[#081521] via-[#0b1c2b] to-[#14374b] text-sidebar-foreground md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:gap-6 md:p-4">
         <div className="flex flex-col items-start gap-1.5 px-2 pt-2">
           <DivignerLogo on="dark" className="h-14" />
-          <p className="text-xs font-medium tracking-[0.18em] text-sidebar-muted uppercase">Avatar Analytics</p>
+          <p className="text-xs font-medium tracking-[0.18em] text-sidebar-muted uppercase">Avalytics</p>
         </div>
         <nav aria-label="Main" className="flex-1">
           <ul className="flex flex-col gap-1">
@@ -146,7 +146,7 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
           <div className="flex items-center justify-between gap-3 px-4 py-2">
             <div className="flex items-center gap-3">
               <DivignerLogo className="h-9" />
-              <span className="sr-only">Avatar Analytics</span>
+              <span className="sr-only">Avalytics</span>
             </div>
             <UserBlock tone="plain" />
           </div>
@@ -221,7 +221,7 @@ export function PortalShell({
         <div aria-hidden="true" className="edge-line" />
         <div className="flex flex-col items-center gap-1.5 px-4 py-5 text-xs text-muted-foreground">
           <DivignerLogo className="h-11" />
-          <p className="tracking-[0.14em] uppercase">Avatar analytics by Divigner Group</p>
+          <p className="tracking-[0.14em] uppercase">Avalytics by Divigner Group</p>
         </div>
       </footer>
       <BottomTabs items={items} label="Main" />

@@ -31,7 +31,7 @@ async function publishAvatar(admin: SupabaseClient, avatarId: string): Promise<{
     if (!page.tavus_document_id) {
       const doc = await createDocument({
         document_url: `${functionsBaseUrl()}/knowledge-page/${page.page_token}`,
-        document_name: `${avatar.display_name} · answers from Avatar Analytics`,
+        document_name: `${avatar.display_name} · answers from Avalytics`,
         tags: ["avatar-analytics"],
         // One page, no links to follow. A crawl configuration is what allows re-reading later.
         crawl: { depth: 1, max_pages: 1 },

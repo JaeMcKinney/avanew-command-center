@@ -1,5 +1,5 @@
 -- ─────────────────────────────────────────────────────────────────────────────
--- Divigner Avatar Analytics — foundation
+-- Avalytics by Divigner — foundation
 --
 -- Two sides log in:
 --   * divigner — Divigner staff. What they can do comes from their role's

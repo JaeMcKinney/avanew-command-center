@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 
-const APP = "Divigner Avatar Analytics"
+const APP = "Avalytics by Divigner"
 
 /** Names the page in the browser tab and history. */
 export function useDocumentTitle(title: string | null | undefined) {
