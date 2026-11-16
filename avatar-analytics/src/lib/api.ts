@@ -187,18 +187,35 @@ export function sumUsage(rows: Iterable<UsageTotals>): UsageTotals {
   return total
 }
 
-export async function listConversations(clientId: string, range: DateRange, limit = 100): Promise<Conversation[]> {
-  return unwrap(
-    await supabase
-      .from("conversations")
-      .select("*")
-      .eq("client_id", clientId)
-      .gte("usage_date", range.from)
-      .lte("usage_date", range.to)
-      .not("talk_seconds", "is", null)
-      .order("started_at", { ascending: false, nullsFirst: false })
-      .limit(limit),
-  )
+/** Every avatar the client has had, including ones since unlinked, so old conversations keep their name. */
+export async function listAvatarsEver(clientId: string): Promise<Avatar[]> {
+  return unwrap(await supabase.from("avatars").select("*").eq("client_id", clientId).order("linked_at").order("id"))
+}
+
+export const CONVERSATIONS_PAGE_SIZE = 25
+
+/** One page of finished calls, newest first, optionally for a single avatar. `page` starts at 1. */
+export async function listConversations(
+  clientId: string,
+  range: DateRange,
+  options: { avatarId?: string | null; page?: number } = {},
+): Promise<{ rows: Conversation[]; total: number }> {
+  const page = Math.max(1, options.page ?? 1)
+  let query = supabase
+    .from("conversations")
+    .select("*", { count: "exact" })
+    .eq("client_id", clientId)
+    .gte("usage_date", range.from)
+    .lte("usage_date", range.to)
+    .not("talk_seconds", "is", null)
+  if (options.avatarId) query = query.eq("avatar_id", options.avatarId)
+  const { data, error, count } = await query
+    .order("started_at", { ascending: false, nullsFirst: false })
+    .order("conversation_id")
+    .range((page - 1) * CONVERSATIONS_PAGE_SIZE, page * CONVERSATIONS_PAGE_SIZE - 1)
+  // Asking for a page past the end is not an error; it is an empty page.
+  if (error && error.code !== "PGRST103") fail(error)
+  return { rows: data ?? [], total: count ?? 0 }
 }
 
 export type TranscriptTurn = { role: string; content: string; seconds_from_start?: number; duration?: number }

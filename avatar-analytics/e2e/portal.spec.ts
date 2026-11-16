@@ -138,3 +138,64 @@ test("signing in with a wrong password explains what happened", async ({ page })
   await page.goto("/admin")
   await page.waitForURL("**/login")
 })
+
+test("a client pulls every conversation for one avatar over a period, page by page", async ({ page }) => {
+  const year = todayIn("America/New_York").slice(0, 4)
+  const { data: client } = await admin.from("clients").select("id").eq("slug", "northline").single()
+  const { data: theo } = await admin.from("avatars").select("id").eq("client_id", client!.id).eq("display_name", "Theo").single()
+  const countFor = async (avatarId?: string) => {
+    let query = admin.from("conversations").select("conversation_id", { count: "exact", head: true })
+      .eq("client_id", client!.id).gte("usage_date", `${year}-01-01`).not("talk_seconds", "is", null)
+    if (avatarId) query = query.eq("avatar_id", avatarId)
+    return (await query).count!
+  }
+  const all = await countFor()
+  const theoCount = await countFor(theo!.id)
+  expect(all).toBeGreaterThan(50)
+  expect(theoCount).toBeGreaterThan(25)
+
+  await signIn(page, CLIENT_ADMIN)
+  await page.getByRole("link", { name: "Conversations" }).click()
+  await page.getByRole("button", { name: "This year" }).click()
+  const status = page.getByRole("status").filter({ hasText: "conversation" })
+  await expect(status).toContainText(`Showing 1–25 of ${all} conversations`)
+  const table = page.getByRole("table", { name: /Conversations/ })
+  await expect(table.locator("tbody tr")).toHaveCount(25)
+
+  // Only this client's own avatars are offered.
+  await expect(page.getByLabel("Avatar").locator("option")).toHaveText(["All avatars", "Maya", "Theo", "Ivy"])
+
+  // One avatar: every row is theirs, and the count matches the database.
+  await page.getByLabel("Avatar").selectOption({ label: "Theo" })
+  await expect(status).toContainText(`Showing 1–25 of ${theoCount} conversations with Theo`)
+  await expect(table.locator("tbody tr td:nth-child(2)").filter({ hasNotText: "Theo" })).toHaveCount(0)
+  const firstOnPage1 = await table.locator("tbody tr").first().innerText()
+
+  // Page through to the end. Nothing is repeated and nothing is cut off.
+  const pager = page.getByRole("navigation", { name: "Pages of conversations" })
+  await expect(pager.getByRole("button", { name: "Newer" })).toBeDisabled()
+  const pages = Math.ceil(theoCount / 25)
+  let seen = 25
+  for (let p = 2; p <= pages; p++) {
+    await pager.getByRole("button", { name: "Older" }).click()
+    const last = Math.min(theoCount, p * 25)
+    await expect(status).toContainText(`Showing ${(p - 1) * 25 + 1}–${last} of ${theoCount}`)
+    await expect(table.locator("tbody tr")).toHaveCount(last - (p - 1) * 25)
+    seen = last
+  }
+  expect(seen).toBe(theoCount)
+  await expect(pager.getByRole("button", { name: "Older" })).toBeDisabled()
+  await expect(table.locator("tbody tr").first()).not.toHaveText(firstOnPage1)
+
+  // A transcript still opens from a later page.
+  await table.getByRole("button", { name: /^Read the conversation/ }).first().click()
+  await expect(page.getByRole("dialog").getByRole("heading")).toHaveText("Conversation with Theo")
+  await page.keyboard.press("Escape")
+
+  // Changing the period goes back to the first page; an empty result says so.
+  await page.getByRole("button", { name: "Custom" }).click()
+  await page.getByLabel("From", { exact: true }).fill(`${year}-01-01`)
+  await page.getByLabel("To", { exact: true }).fill(`${year}-01-01`)
+  await page.getByRole("button", { name: "Show", exact: true }).click()
+  await expect(page.getByText("No conversations with Theo in this period")).toBeVisible()
+})
