@@ -3,7 +3,8 @@
 // and "Page X of Y" on every page. Loaded only when someone downloads.
 
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib"
-import type { Conversation, Question, TranscriptTurn } from "@/lib/api"
+import divignerLogoUrl from "@/assets/divigner-logo.png"
+import { splitQuestions, type Conversation, type Question, type TranscriptTurn } from "@/lib/api"
 import { formatDateTime } from "@/lib/dates"
 import { duration, endedBecause } from "@/lib/format"
 
@@ -26,16 +27,17 @@ export type PdfInput = {
 
 const PAGE = { width: 612, height: 792 } // US Letter, in points
 const MARGIN = 54
-const HEADER_HEIGHT = 58
+const BAND_HEIGHT = 74 // the dark letterhead band across the top of every page
 const FOOTER_HEIGHT = 40
 const WIDTH = PAGE.width - MARGIN * 2
+const BAND = rgb(0.043, 0.075, 0.11)
+const WHITE = rgb(1, 1, 1)
 const NAVY = rgb(0.078, 0.216, 0.294)
 const BLUE = rgb(0.184, 0.357, 1)
 const INK = rgb(0.1, 0.12, 0.16)
 const MUTED = rgb(0.36, 0.4, 0.46)
 const RULE = rgb(0.85, 0.87, 0.9)
 
-const OUTCOME_LABEL: Record<string, string> = { answered: "Answered", weak: "Partly answered", unanswered: "Not answered" }
 
 const REPLACEMENTS: Record<string, string> = {
   "→": "->", "←": "<-", "≤": "<=", "≥": ">=", "≠": "!=", "−": "-", "‑": "-",
@@ -91,10 +93,10 @@ export function wrapText(text: string, font: PDFFont, size: number, maxWidth: nu
   return lines
 }
 
-async function loadLogo(doc: PDFDocument, url: string | null | undefined): Promise<PDFImage | null> {
+async function loadLogo(doc: PDFDocument, url: string | null | undefined, sameSite = false): Promise<PDFImage | null> {
   if (!url) return null
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
+    const res = await fetch(url, sameSite ? undefined : { signal: AbortSignal.timeout(8000) })
     if (!res.ok) return null
     const bytes = new Uint8Array(await res.arrayBuffer())
     if (bytes[0] === 0x89 && bytes[1] === 0x50) return await doc.embedPng(bytes)
@@ -111,6 +113,7 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
   const bold = await doc.embedFont(StandardFonts.HelveticaBold)
   const italic = await doc.embedFont(StandardFonts.HelveticaOblique)
   const logo = await loadLogo(doc, input.logoUrl)
+  const divigner = await loadLogo(doc, divignerLogoUrl, true)
   const clientName = printable(input.clientName, bold)
 
   const single = input.conversations.length === 1
@@ -126,19 +129,29 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
 
   const newPage = () => {
     page = doc.addPage([PAGE.width, PAGE.height])
-    const top = PAGE.height - MARGIN
-    // Letterhead: Divigner on the left, the client on the right.
-    page.drawText("Divigner", { x: MARGIN, y: top - 20, size: 20, font: bold, color: NAVY })
-    page.drawText("AI video avatars", { x: MARGIN, y: top - 34, size: 8.5, font: regular, color: MUTED })
-    if (logo) {
-      const scale = Math.min(30 / logo.height, 150 / logo.width)
-      page.drawImage(logo, { x: PAGE.width - MARGIN - logo.width * scale, y: top - 32, width: logo.width * scale, height: logo.height * scale })
+    // Letterhead: a dark band with the Divigner logo on the left and the client on the right.
+    // The logo is drawn for dark backgrounds, so the band is part of the letterhead.
+    const bandY = PAGE.height - BAND_HEIGHT
+    page.drawRectangle({ x: 0, y: bandY, width: PAGE.width, height: BAND_HEIGHT, color: BAND })
+    if (divigner) {
+      const height = BAND_HEIGHT - 20
+      page.drawImage(divigner, { x: MARGIN - 8, y: bandY + 10, width: (divigner.width / divigner.height) * height, height })
     } else {
-      const size = Math.min(13, (13 * 260) / Math.max(260, bold.widthOfTextAtSize(clientName, 13)))
-      page.drawText(clientName, { x: PAGE.width - MARGIN - bold.widthOfTextAtSize(clientName, size), y: top - 22, size, font: bold, color: INK })
+      page.drawText("DIVIGNER GROUP", { x: MARGIN, y: bandY + 30, size: 15, font: bold, color: WHITE })
     }
-    page.drawRectangle({ x: MARGIN, y: top - 46, width: WIDTH, height: 2, color: BLUE })
-    y = top - HEADER_HEIGHT - 12
+    if (logo) {
+      // Client logos are usually drawn for light backgrounds, so theirs sits on a white plate.
+      const scale = Math.min(34 / logo.height, 150 / logo.width)
+      const w = logo.width * scale, h = logo.height * scale
+      page.drawRectangle({ x: PAGE.width - MARGIN - w - 16, y: bandY + (BAND_HEIGHT - h) / 2 - 7, width: w + 16, height: h + 14, color: WHITE })
+      page.drawImage(logo, { x: PAGE.width - MARGIN - w - 8, y: bandY + (BAND_HEIGHT - h) / 2, width: w, height: h })
+    } else {
+      const size = Math.min(13, (13 * 250) / Math.max(250, bold.widthOfTextAtSize(clientName, 13)))
+      page.drawText("PREPARED FOR", { x: PAGE.width - MARGIN - regular.widthOfTextAtSize("PREPARED FOR", 7), y: bandY + 43, size: 7, font: regular, color: rgb(0.72, 0.77, 0.82) })
+      page.drawText(clientName, { x: PAGE.width - MARGIN - bold.widthOfTextAtSize(clientName, size), y: bandY + 26, size, font: bold, color: WHITE })
+    }
+    page.drawRectangle({ x: 0, y: bandY - 2, width: PAGE.width, height: 2, color: BLUE })
+    y = bandY - 26
   }
 
   const need = (height: number) => {
@@ -182,16 +195,33 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
     heading("Summary")
     paragraph(item.summary ?? "A summary is not available for this conversation yet.", item.summary ? { gap: 6 } : { font: italic, color: MUTED, gap: 6 })
 
-    if (item.questions.length > 0) {
-      heading("Questions the visitor asked")
-      item.questions.forEach((q, i) => {
-        const label = OUTCOME_LABEL[q.outcome] ?? q.outcome
+    const { answered, unanswered } = splitQuestions(item.questions)
+    if (item.summary && item.questions.length > 0) {
+      const total = item.questions.length
+      paragraph(`The visitor asked ${total} question${total === 1 ? "" : "s"}. The avatar answered ${answered.length} and did not fully answer ${unanswered.length}.`, { font: bold, size: 10, color: NAVY, gap: 6 })
+    }
+    const list = (title: string, questions: Question[], empty: string) => {
+      heading(`${title} (${questions.length})`)
+      if (questions.length === 0) paragraph(empty, { font: italic, color: MUTED, gap: 6 })
+      questions.forEach((q, i) => {
         need(30)
-        const number = `${i + 1}.`
-        page.drawText(number, { x: MARGIN, y: y - 10.5, size: 10.5, font: bold, color: INK })
-        paragraph(q.question, { indent: 18 })
-        paragraph(label, { indent: 18, size: 9, font: bold, color: q.outcome === "answered" ? MUTED : NAVY, gap: 5 })
+        page.drawText(`${i + 1}.`, { x: MARGIN, y: y - 10.5, size: 10.5, font: bold, color: INK })
+        paragraph(q.question, { indent: 18, gap: q.outcome === "answered" ? 5 : 0 })
+        if (q.outcome !== "answered") {
+          paragraph(q.outcome === "weak" ? "Partly answered" : "Not answered", { indent: 18, size: 9, font: bold, color: NAVY, gap: 2 })
+          if (q.group?.status === "answered" && q.group.answer) {
+            paragraph(`Answer since added to the avatar's knowledge: ${q.group.answer}`, { indent: 18, size: 9.5, color: MUTED })
+          }
+          y -= 5
+        }
       })
+    }
+    if (item.questions.length > 0) {
+      list("Questions answered", answered, "The avatar did not fully answer any of the questions.")
+      list("Questions not answered", unanswered, "The avatar answered every question.")
+    } else if (item.summary) {
+      heading("Questions")
+      paragraph("The visitor did not ask any questions.", { font: italic, color: MUTED, gap: 6 })
     }
 
     heading("Transcript")

@@ -229,13 +229,20 @@ export async function getTranscript(conversationId: string): Promise<TranscriptT
 // ── Summaries and questions ──────────────────────────────────────────────────
 
 export type Insight = Tables["conversation_insights"]["Row"]
-export type Question = Tables["questions"]["Row"]
+/** A question from one call. `group` is the client-wide entry it belongs to, when the avatar did not answer it well. */
+export type Question = Tables["questions"]["Row"] & { group?: { status: string; answer: string | null } | null }
+const QUESTION_COLUMNS = "*, group:question_groups(status, answer)"
+
+/** Splits a call's questions into the ones the avatar answered and the ones it did not (fully). */
+export function splitQuestions(questions: Question[]): { answered: Question[]; unanswered: Question[] } {
+  return { answered: questions.filter((q) => q.outcome === "answered"), unanswered: questions.filter((q) => q.outcome !== "answered") }
+}
 export type QuestionGroup = Tables["question_groups"]["Row"]
 
 export async function getInsight(conversationId: string): Promise<{ insight: Insight | null; questions: Question[] }> {
   const [insight, questions] = await Promise.all([
     supabase.from("conversation_insights").select("*").eq("conversation_id", conversationId).maybeSingle(),
-    supabase.from("questions").select("*").eq("conversation_id", conversationId).order("position"),
+    supabase.from("questions").select(QUESTION_COLUMNS).eq("conversation_id", conversationId).order("position"),
   ])
   if (insight.error) fail(insight.error)
   return { insight: insight.data, questions: unwrap(questions) }
@@ -279,7 +286,7 @@ export async function listForExport(clientId: string, range: DateRange, avatarId
   const [transcripts, insights, questions] = await Promise.all([
     supabase.from("transcripts").select("conversation_id, turns").in("conversation_id", ids),
     supabase.from("conversation_insights").select("conversation_id, summary").in("conversation_id", ids).eq("status", "ready"),
-    supabase.from("questions").select("*").in("conversation_id", ids).order("position"),
+    supabase.from("questions").select(QUESTION_COLUMNS).in("conversation_id", ids).order("position"),
   ])
   const turns = new Map(unwrap(transcripts).map((t) => [t.conversation_id, t.turns as unknown as TranscriptTurn[]]))
   const summaries = new Map(unwrap(insights).map((i) => [i.conversation_id, i.summary]))

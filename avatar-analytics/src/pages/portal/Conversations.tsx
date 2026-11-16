@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { TableScroll } from "@/components/TableScroll"
 import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, Download } from "lucide-react"
 import { useId, useState } from "react"
+import { Link } from "react-router-dom"
 import { toast } from "sonner"
 import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
 import { PageHeader } from "@/components/PageHeader"
@@ -11,18 +12,47 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
-  CONVERSATIONS_PAGE_SIZE, EXPORT_LIMIT, getInsight, getTranscript, listAvatarsEver, listConversations, listForExport,
-  type Client, type Conversation,
+  CONVERSATIONS_PAGE_SIZE, EXPORT_LIMIT, getInsight, getTranscript, listAvatarsEver, listConversations, listForExport, splitQuestions,
+  type Client, type Conversation, type Question,
 } from "@/lib/api"
 import { formatDateTime, formatRange, presetRange, todayIn } from "@/lib/dates"
 import { count, duration, endedBecause } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
 
-function OutcomePill({ outcome }: { outcome: string }) {
-  if (outcome === "answered") return <StatusPill tone="ok" icon={<CheckCircle2 />}>Answered</StatusPill>
-  if (outcome === "weak") return <StatusPill tone="warn" icon={<CircleHelp />}>Partly answered</StatusPill>
-  return <StatusPill tone="bad" icon={<AlertTriangle />}>Not answered</StatusPill>
+/** One of the two question lists on a call: what the avatar answered, or what it did not. */
+function QuestionSection({ id, title, questions, empty, questionsPath }: { id: string; title: string; questions: Question[]; empty: string; questionsPath?: string }) {
+  return (
+    <section aria-labelledby={id} className="flex flex-col gap-1.5">
+      <h3 id={id} className="text-sm font-semibold">{title} ({count(questions.length)})</h3>
+      {questions.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{empty}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {questions.map((q) => (
+            <li key={q.id} className="flex flex-col gap-1.5 rounded-lg border p-3 text-sm">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <span className="min-w-0 flex-1 basis-56">{q.question}</span>
+                {q.outcome === "answered" ? (
+                  <StatusPill tone="ok" icon={<CheckCircle2 />}>Answered</StatusPill>
+                ) : q.outcome === "weak" ? (
+                  <StatusPill tone="warn" icon={<CircleHelp />}>Partly answered</StatusPill>
+                ) : (
+                  <StatusPill tone="bad" icon={<AlertTriangle />}>Not answered</StatusPill>
+                )}
+              </div>
+              {q.outcome !== "answered" && q.group?.status === "answered" && q.group.answer && (
+                <p className="rounded-md bg-muted p-2 text-sm"><span className="font-semibold">Your answer, now in the avatar's knowledge: </span>{q.group.answer}</p>
+              )}
+              {q.outcome !== "answered" && q.group?.status === "open" && questionsPath && (
+                <p><Link to={questionsPath} className="inline-flex min-h-6 items-center font-medium text-primary-text underline">Write an answer in Questions</Link></p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
 }
 
 /** Builds the PDF only when asked, so the PDF code is not loaded for people who never download. */
@@ -40,6 +70,7 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
   const turns = (transcript.data ?? []).filter((t) => t.role === "user" || t.role === "assistant")
   const summary = insight.data?.insight?.status === "ready" ? insight.data.insight.summary : null
   const questions = insight.data?.questions ?? []
+  const split = splitQuestions(questions)
 
   const download = async () => {
     setSaving(true)
@@ -87,18 +118,21 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
               )}
             </section>
 
-            {questions.length > 0 && (
-              <section aria-labelledby="questions-heading" className="flex flex-col gap-1.5">
-                <h3 id="questions-heading" className="text-sm font-semibold">Questions the visitor asked</h3>
-                <ul className="flex flex-col gap-2">
-                  {questions.map((q) => (
-                    <li key={q.id} className="flex flex-wrap items-start justify-between gap-2 rounded-lg border p-3 text-sm">
-                      <span className="min-w-0 flex-1 basis-56">{q.question}</span>
-                      <OutcomePill outcome={q.outcome} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
+            {insight.data?.insight?.status === "ready" && (
+              questions.length === 0 ? (
+                <section aria-labelledby="questions-heading" className="flex flex-col gap-1.5">
+                  <h3 id="questions-heading" className="text-sm font-semibold">Questions</h3>
+                  <p className="text-sm text-muted-foreground">The visitor did not ask any questions.</p>
+                </section>
+              ) : (
+                <>
+                  <p role="status" className="rounded-lg bg-muted p-3 text-sm">
+                    The visitor asked <strong>{count(questions.length)}</strong> question{questions.length === 1 ? "" : "s"}. The avatar answered <strong>{count(split.answered.length)}</strong> and did not fully answer <strong>{count(split.unanswered.length)}</strong>.
+                  </p>
+                  <QuestionSection id="answered-heading" title="Questions answered" questions={split.answered} empty="The avatar did not fully answer any of the questions." />
+                  <QuestionSection id="unanswered-heading" title="Questions not answered" questions={split.unanswered} empty="The avatar answered every question." questionsPath={`/c/${client.slug}/questions`} />
+                </>
+              )
             )}
 
             <section aria-labelledby="transcript-heading" className="flex flex-col gap-1.5">

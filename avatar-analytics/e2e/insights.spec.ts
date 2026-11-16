@@ -13,9 +13,13 @@ test("a client reads the summary and questions for a call and downloads it as a 
   const dialog = page.getByRole("dialog")
   await expect(dialog.getByRole("heading", { name: "Summary" })).toBeVisible()
   await expect(dialog.getByText(/The visitor asked about/)).toBeVisible()
-  await expect(dialog.getByRole("heading", { name: "Questions the visitor asked" })).toBeVisible()
-  await expect(dialog.getByText("Do you have two-bedroom homes available in January?")).toBeVisible()
-  await expect(dialog.getByText("Answered", { exact: true }).first()).toBeVisible()
+  // The questions are split into what the avatar answered and what it did not, with a count of each.
+  await expect(dialog.getByRole("status")).toContainText(/The visitor asked \d+ questions?\. The avatar answered \d+ and did not fully answer \d+\./)
+  const answered = dialog.getByRole("region", { name: /^Questions answered \(\d+\)$/ })
+  const unanswered = dialog.getByRole("region", { name: /^Questions not answered \(\d+\)$/ })
+  await expect(answered.getByText("Do you have two-bedroom homes available in January?")).toBeVisible()
+  await expect(unanswered.getByText("Do you have two-bedroom homes available in January?")).toHaveCount(0)
+  await expect(answered.getByText(/Partly answered|Not answered/)).toHaveCount(0)
   await expectAccessible(page)
 
   const [download] = await Promise.all([page.waitForEvent("download"), dialog.getByRole("button", { name: "Download PDF" }).click()])
