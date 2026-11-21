@@ -47,10 +47,24 @@ function GlassStatusPill({ connection }: { connection: GlassConnection }) {
   }
 }
 
-const STATUS_HELP: Partial<Record<GlassConnection["status"], string>> = {
-  invalid: "Glass Health did not accept this key. Create a new key in your Glass account and enter it here.",
-  past_due: "Glass Health says the subscription on this account is unpaid, so your avatars cannot look anything up. Settle it in your Glass account, then check the connection again.",
-  no_key: "Your avatars cannot look anything up until a key is entered.",
+/**
+ * What to do about a connection that is not working. The same screen is shown
+ * to the client and, inside the client's file, to Divigner staff, so the
+ * wording depends on who is reading: `clientName` is set for staff.
+ */
+function statusHelp(status: GlassConnection["status"], clientName?: string): string | undefined {
+  switch (status) {
+    case "invalid":
+      return clientName
+        ? `Glass Health did not accept this key. ${clientName} needs to create a new key in their Glass account, and it can be entered here.`
+        : "Glass Health did not accept this key. Create a new key in your Glass account and enter it here."
+    case "past_due":
+      return clientName
+        ? `Glass Health says the subscription on this account is unpaid, so ${clientName}'s avatars cannot look anything up. Once it is settled in their Glass account, check the connection again.`
+        : "Glass Health says the subscription on this account is unpaid, so your avatars cannot look anything up. Settle it in your Glass account, then check the connection again."
+    case "no_key":
+      return clientName ? `${clientName}'s avatars cannot look anything up until a key is entered.` : "Your avatars cannot look anything up until a key is entered."
+  }
 }
 
 /**
@@ -107,6 +121,7 @@ export function GlassConnectionCard({ client }: { client: Client }) {
   }
 
   const hasKey = c.status !== "no_key"
+  const help = statusHelp(c.status, staff ? client.name : undefined)
   return (
     <section aria-labelledby={`${id}-title`} className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -121,8 +136,8 @@ export function GlassConnectionCard({ client }: { client: Client }) {
           <div><dt className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Last Used by an Avatar</dt><dd>{c.last_used_at ? timeAgo(c.last_used_at) : "Not yet"}</dd></div>
         </dl>
       ) : null}
-      {(STATUS_HELP[c.status] || c.status_detail) && (
-        <p role="status" className="max-w-prose text-sm">{STATUS_HELP[c.status] ?? c.status_detail}</p>
+      {(help || c.status_detail) && (
+        <p role="status" className="max-w-prose text-sm">{help ?? c.status_detail}</p>
       )}
 
       {manage ? (
@@ -149,7 +164,9 @@ export function GlassConnectionCard({ client }: { client: Client }) {
               aria-describedby={`${id}-key-help`}
             />
             <p id={`${id}-key-help`} className="text-sm text-muted-foreground">
-              Create a key in your Glass Health account, under API settings, and paste it here. It is stored encrypted and is never shown again, to you or to Divigner.
+              {staff
+                ? `Paste a key created in ${client.name}'s Glass Health account, under API settings. It is stored encrypted and is never shown again, to the client or to Divigner.`
+                : "Create a key in your Glass Health account, under API settings, and paste it here. It is stored encrypted and is never shown again, to you or to Divigner."}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -160,7 +177,7 @@ export function GlassConnectionCard({ client }: { client: Client }) {
           </div>
         </form>
       ) : (
-        <p className="text-sm text-muted-foreground">Only an account admin can enter or change the key.</p>
+        <p className="text-sm text-muted-foreground">{staff ? "You do not have permission to enter or change the key." : "Only an account admin can enter or change the key."}</p>
       )}
 
       <AlertDialog open={confirming !== null} onOpenChange={(open) => !open && setConfirming(null)}>
@@ -230,6 +247,9 @@ export function GlassSummary({ client, today, moreHref }: { client: Client; toda
 
 /** Glass use for a chosen period: totals, a chart over time, and each avatar's share beside its talk time. */
 export function GlassUsage({ client }: { client: Client }) {
+  const { access } = useAuth()
+  // Divigner staff read this inside the client's file, so it names the client instead of saying "your".
+  const staff = access?.side === "divigner"
   const today = todayIn(client.timezone)
   const [state, setState] = useState<RangeState>({ preset: "month", range: presetRange("month", today) })
   const { range } = state
@@ -257,14 +277,14 @@ export function GlassUsage({ client }: { client: Client }) {
         <h2 id="glass-usage-heading" className="text-2xl font-semibold">Usage</h2>
         <DateRangeControl value={state} onChange={setState} today={today} />
         <p role="status" className="text-sm text-muted-foreground">
-          Showing {rangeText}: <strong className="text-foreground">{count(total.questions)} {total.questions === 1 ? "question" : "questions"}</strong> sent to Glass Health by your avatars.
+          Showing {rangeText}: <strong className="text-foreground">{count(total.questions)} {total.questions === 1 ? "question" : "questions"}</strong> sent to Glass Health by {staff ? `${client.name}'s` : "your"} avatars.
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat highlight label="Questions Answered" value={count(total.questions)} note={total.failed > 0 ? `${count(total.failed)} more could not be answered` : "Each one is a request on your Glass account"} />
+        <Stat highlight label="Questions Answered" value={count(total.questions)} note={total.failed > 0 ? `${count(total.failed)} more could not be answered` : staff ? "Each one is a request on the client's Glass account" : "Each one is a request on your Glass account"} />
         <Stat label="Tokens" value={compact(total.input_tokens + total.output_tokens)} note={`${count(total.input_tokens)} in · ${count(total.output_tokens)} out`} />
-        <Stat label="Estimated Cost" value={estimate(total.cost_cents)} note={total.cost_cents == null ? "Shown once Glass rates are entered by Divigner" : "From the token counts Glass reported"} />
+        <Stat label="Estimated Cost" value={estimate(total.cost_cents)} note={total.cost_cents == null ? (staff ? "Shown once the Glass rates are entered in settings" : "Shown once Glass rates are entered by Divigner") : "From the token counts Glass reported"} />
         <Stat label="Time Waiting on Glass" value={duration(total.duration_ms / 1000)} note={total.questions ? `About ${Math.round(total.duration_ms / 1000 / (total.questions + total.failed))} seconds a question` : "While Glass searched and answered"} />
       </div>
 
@@ -291,7 +311,10 @@ export function GlassUsage({ client }: { client: Client }) {
       </div>
 
       <p className="max-w-prose text-sm text-muted-foreground">
-        Your Glass Health account shows everything used on it. This page shows the part your avatars used, so the difference is anything else on that account. Glass charges by the question, in tokens, so this is counted in questions and tokens rather than minutes.
+        {staff
+          ? `${client.name}'s Glass Health account shows everything used on it. This page shows the part their avatars used, so the difference is anything else on that account.`
+          : "Your Glass Health account shows everything used on it. This page shows the part your avatars used, so the difference is anything else on that account."}{" "}
+        Glass charges by the question, in tokens, so this is counted in questions and tokens rather than minutes.
       </p>
     </section>
   )
