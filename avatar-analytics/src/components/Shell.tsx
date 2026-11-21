@@ -113,9 +113,10 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_minmax(0,1fr)]">
       <SkipLink />
       <aside className="hidden border-r border-sidebar-border bg-linear-to-b from-[#081521] via-[#0b1c2b] to-[#14374b] text-sidebar-foreground md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:gap-6 md:p-4">
-        <div className="flex flex-col items-start gap-1.5 px-2 pt-2">
+        <div className="flex flex-col items-center gap-2 pt-2 text-center">
           <DivignerLogo on="dark" className="h-14" />
-          <p className="text-xs font-medium tracking-[0.18em] text-sidebar-muted uppercase">Avalytics</p>
+          {/* Letter spacing trails each letter, so the same indent in front keeps the word optically centred. */}
+          <p className="indent-[0.18em] text-xs font-medium tracking-[0.18em] text-balance text-sidebar-muted uppercase">Avalytics</p>
           <p className="rounded-sm bg-sidebar-accent px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">Divigner Admin</p>
         </div>
         <nav aria-label="Main" className="flex-1">
@@ -224,7 +225,7 @@ export function PortalShell({
         <div aria-hidden="true" className="edge-line" />
         <div className="flex flex-col items-center gap-1.5 px-4 py-5 text-xs text-muted-foreground">
           <DivignerLogo className="h-11" />
-          <p className="tracking-[0.14em] uppercase">Avalytics by Divigner Group</p>
+          <p className="indent-[0.14em] text-center tracking-[0.14em] text-balance uppercase">Avalytics by Divigner Group</p>
         </div>
       </footer>
       <BottomTabs items={items} label="Main" />

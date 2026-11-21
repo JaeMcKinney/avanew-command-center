@@ -17,7 +17,7 @@ export function AuthCard({ title, children }: { title: string; children: React.R
       <main id="main" className="flex w-full max-w-sm flex-col gap-6 rounded-lg border bg-card p-6 sm:p-8">
         <div className="flex flex-col items-center gap-2 text-center">
           <DivignerLogo on="dark" className="h-20" />
-          <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">Avalytics</p>
+          <p className="indent-[0.18em] text-xs font-medium tracking-[0.18em] text-balance text-muted-foreground uppercase">Avalytics</p>
         </div>
         <h1 className="text-2xl font-semibold">{title}</h1>
         {children}
