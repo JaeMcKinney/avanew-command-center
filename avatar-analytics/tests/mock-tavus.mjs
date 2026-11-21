@@ -60,6 +60,8 @@ function seed() {
     recrawlStatus: 202,
     anthropicCalls: 0,
     anthropicStatus: 200,
+    glassCalls: [],
+    glassStatus: 200,
     patches: [],
     deploymentPatches: [],
     failDeploymentPatchFor: [],
@@ -131,6 +133,34 @@ const server = http.createServer(async (req, res) => {
       id: "msg_mock", type: "message", role: "assistant", model: body.model,
       content: [{ type: "text", text: JSON.stringify(result) }],
       stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 100, output_tokens: 50 },
+    })
+  }
+
+  // ── A stand-in for the Glass Health Messages API (glass.health/api/external/openapi) ──
+  // Keys that start "sk-gla-test-" are accepted, except ones containing
+  // "invalid" (401) or "pastdue" (402). Every answer reports the same usage.
+  if (path === "/glass/v2/messages" && req.method === "POST") {
+    const key = String(req.headers["x-api-key"] ?? "")
+    const text = (status, message) => { res.writeHead(status, { "Content-Type": "text/plain;charset=UTF-8" }); res.end(message) }
+    if (!key) return text(401, "API key not found in header")
+    if (!key.startsWith("sk-gla-test-") || key.includes("invalid")) return text(401, "Invalid API key")
+    if (key.includes("pastdue")) return send(res, 402, { success: false, error: "API subscription payment is past due and the grace period has expired." })
+    const body = await readBody(req)
+    if (!body || !Array.isArray(body.messages) || body.messages.length === 0 || body.messages.at(-1).role !== "user") {
+      return send(res, 400, { success: false, error: [{ path: "$input" }] })
+    }
+    state.glassCalls.push({ key_hint: key.slice(-4), version: body.version, stream: body.stream, metadata: body.metadata ?? null, prompt: body.messages.at(-1).content })
+    res.setHeader("x-glass-request-id", `mock-glass-${state.glassCalls.length}`)
+    if (state.glassStatus !== 200) return send(res, state.glassStatus, { success: false, error: "mock failure" })
+    return send(res, 200, {
+      id: `mock-glass-${state.glassCalls.length}`, role: "assistant", metadata: body.metadata ?? {},
+      text: "**Thiazide-type diuretics**, ACE inhibitors, ARBs and calcium channel blockers are all first-line choices [1].<ref_1/><ref_2/> \n\n- Pick by comorbidity [2,3].<ref_2/>",
+      references: [
+        { index: 1, type: "literature", title: "Guideline for High Blood Pressure in Adults", journal_title: "Hypertension", year: 2025, url: "https://pubmed.example/1", display: { heading: "Guideline for High Blood Pressure in Adults", subheading: "Hypertension" } },
+        { index: 2, type: "literature", title: "Choosing a First Antihypertensive", journal_title: "JAMA", year: 2024, url: "https://pubmed.example/2", display: { heading: "Choosing a First Antihypertensive", subheading: "JAMA" } },
+        { index: 3, type: "literature", title: "Choosing a First Antihypertensive", journal_title: "JAMA", year: 2024, url: "https://pubmed.example/2#section-4", display: { heading: "Choosing a First Antihypertensive", subheading: "JAMA" } },
+      ],
+      progress: [], usage: { inputTokens: 12000, outputTokens: 180 },
     })
   }
 

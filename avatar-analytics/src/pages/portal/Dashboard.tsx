@@ -3,6 +3,7 @@ import { useState } from "react"
 import { AvatarPhoto } from "@/components/AvatarPhoto"
 import { ChartCard, Columns, DataTable, Donut, type Slice } from "@/components/Charts"
 import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
+import { GlassSummary } from "@/components/Glass"
 import { Stat } from "@/components/Stat"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
 import { listAvatars, sumUsage, usageByAvatar, usageByDay, type Client } from "@/lib/api"
@@ -61,6 +62,8 @@ export default function Dashboard({ client: given, embedded = false }: { client?
           <Stat hero label="This Year" value={minutes(yearTotal.billable_seconds)} unit="min" note={`${formatDay(year.from)} to today · ${count(yearTotal.conversations)} conversations`} />
         </div>
       </section>
+
+      <GlassSummary client={client} today={today} moreHref={embedded ? undefined : `/c/${client.slug}/glass`} />
 
       {list.length === 0 ? (
         <EmptyState title="Your Avatars Are Being Set Up">

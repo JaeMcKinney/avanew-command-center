@@ -22,6 +22,7 @@ export function resetDatabase() {
       public.tavus_sync_runs, public.staff_client_assignments, public.audit_log, public.clients
       restart identity cascade;
     delete from auth.users;
+    delete from vault.secrets where name like 'glass:%';
     delete from public.roles where not is_system;
   `
   execFileSync(
@@ -51,6 +52,7 @@ export async function mockTavusState(): Promise<{
     calls: Array<{ method: string; path: string; form: Record<string, string> }>
   }
   anthropicCalls: number
+  glassCalls: Array<{ key_hint: string; version: string; stream: boolean; metadata: Record<string, string> | null; prompt: string }>
 }> {
   return (await fetch(`${MOCK_TAVUS}/__control/state`)).json()
 }

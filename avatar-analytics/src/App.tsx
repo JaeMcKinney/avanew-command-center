@@ -22,6 +22,7 @@ import Billing from "@/pages/portal/Billing"
 import Questions from "@/pages/portal/Questions"
 import Support, { SupportTicket } from "@/pages/portal/Support"
 import Dashboard from "@/pages/portal/Dashboard"
+import Glass from "@/pages/portal/Glass"
 import PortalAvatars from "@/pages/portal/PortalAvatars"
 import PortalLayout from "@/pages/portal/PortalLayout"
 import PortalTeam from "@/pages/portal/PortalTeam"
@@ -107,6 +108,7 @@ export default function App() {
           <Route index element={<Need permission="analytics.view"><Dashboard /></Need>} />
           <Route path="conversations" element={<Need permission="transcripts.view"><Conversations /></Need>} />
           <Route path="questions" element={<Questions />} />
+          <Route path="glass" element={<Need permission="analytics.view"><Glass /></Need>} />
           <Route path="support" element={<Support />} />
           <Route path="support/:number" element={<SupportTicket />} />
           <Route path="avatars" element={<Need permission="embeds.view"><PortalAvatars /></Need>} />

@@ -11,6 +11,7 @@ export default async function globalSetup() {
       public.tavus_sync_runs, public.staff_client_assignments, public.audit_log, public.clients
       restart identity cascade;
     delete from auth.users;
+    delete from vault.secrets where name like 'glass:%';
     delete from public.roles where not is_system;
     -- Put back anything a test left changed on the built-in roles.
     delete from public.role_permissions rp using public.roles r

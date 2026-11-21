@@ -4,6 +4,7 @@
 
 import type { PostgrestError } from "@supabase/supabase-js"
 import type { DateRange } from "@/lib/dates"
+import { sumGlass, type GlassTotals } from "@/lib/glass"
 import { callFunction, callFunctionRaw, supabase } from "@/lib/supabase"
 import type { Database } from "@/types/db"
 
@@ -696,4 +697,62 @@ export async function updateTicket(ticketId: string, patch: { priority?: string;
 
 export async function listSupportStaff(clientId: string): Promise<SupportStaff[]> {
   return unwrap(await supabase.rpc("support_staff", { p_client_id: clientId })) as SupportStaff[]
+}
+
+// ── Glass Health ──
+
+export { sumGlass, type GlassTotals }
+
+export type GlassStatus = "no_key" | "unchecked" | "ok" | "invalid" | "past_due" | "error"
+/** A client's Glass Health connection. The key itself is never sent to the browser. */
+export type GlassConnection = {
+  client_id: string
+  key_hint: string | null
+  status: GlassStatus
+  status_detail: string | null
+  checked_at: string | null
+  last_used_at: string | null
+  enabled_at: string
+  key_set_at: string | null
+}
+
+const GLASS_COLUMNS = "client_id, key_hint, status, status_detail, checked_at, last_used_at, enabled_at, key_set_at"
+
+/** Null when Glass Health is not turned on for the client. */
+export async function getGlassConnection(clientId: string): Promise<GlassConnection | null> {
+  return unwrap(await supabase.from("client_glass").select(GLASS_COLUMNS).eq("client_id", clientId).maybeSingle()) as GlassConnection | null
+}
+
+export async function setGlassEnabled(clientId: string, enabled: boolean): Promise<void> {
+  const { error } = await supabase.rpc("glass_enable", { p_client_id: clientId, p_enabled: enabled })
+  if (error) fail(error)
+}
+
+function glassConnection(body: { action: "save"; client_id: string; key: string } | { action: "check" | "remove"; client_id: string }) {
+  return callFunction<{ connection: GlassConnection | null }>("glass-connection", body).then((r) => r.connection)
+}
+export const saveGlassKey = (clientId: string, key: string) => glassConnection({ action: "save", client_id: clientId, key })
+export const checkGlassKey = (clientId: string) => glassConnection({ action: "check", client_id: clientId })
+export const removeGlassKey = (clientId: string) => glassConnection({ action: "remove", client_id: clientId })
+
+type GlassRow = { questions: number; failed: number; input_tokens: number; output_tokens: number; duration_ms: number; cost_cents: number | null }
+const glassTotals = (r: GlassRow): GlassTotals => ({
+  questions: Number(r.questions), failed: Number(r.failed), input_tokens: Number(r.input_tokens), output_tokens: Number(r.output_tokens),
+  duration_ms: Number(r.duration_ms), cost_cents: r.cost_cents == null ? null : Number(r.cost_cents),
+})
+
+export async function glassUsageByDay(clientId: string, range: DateRange): Promise<Array<GlassTotals & { usage_date: string }>> {
+  const rows = unwrap(await supabase.rpc("glass_usage_by_day", { p_client_id: clientId, p_from: range.from, p_to: range.to }))
+  return rows.map((r) => ({ usage_date: r.usage_date, ...glassTotals(r) }))
+}
+
+export async function glassUsageByAvatar(clientId: string, range: DateRange): Promise<Map<string, GlassTotals>> {
+  const rows = unwrap(await supabase.rpc("glass_usage_by_avatar", { p_client_id: clientId, p_from: range.from, p_to: range.to }))
+  return new Map(rows.map((r) => [r.avatar_id, glassTotals(r)]))
+}
+
+export async function glassUsageByConversation(conversationIds: string[]): Promise<Map<string, GlassTotals>> {
+  if (conversationIds.length === 0) return new Map()
+  const rows = unwrap(await supabase.rpc("glass_usage_by_conversation", { p_conversation_ids: conversationIds }))
+  return new Map(rows.map((r) => [r.conversation_id, glassTotals(r)]))
 }

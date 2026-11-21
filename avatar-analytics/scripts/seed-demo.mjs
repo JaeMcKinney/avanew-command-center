@@ -49,7 +49,7 @@ const SAMPLE_TOPICS = {
   "That works. Can I book a tour for Saturday?": "Can I book a tour for Saturday?",
 }
 
-export async function seedDemo({ days = 75, log = console.log } = {}) {
+export async function seedDemo({ days = 75, log = console.log, glass = false } = {}) {
   const { url, serviceKey, anonKey, functionsUrl } = settings()
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
 
@@ -225,13 +225,66 @@ export async function seedDemo({ days = 75, log = console.log } = {}) {
 
   await open(pat, harbor.id, "Which package suits one avatar?", "We expect about 300 minutes of calls a month. Which package should we choose?", "billing")
 
+  if (glass) {
+    // A clinic whose avatar looks things up in Glass Health. Off by default so
+    // the browser tests keep their two clients; `npm run seed` turns it on.
+    log("Creating a clinic that uses Glass Health…")
+    const clinic = must(await ownerClient.rpc("create_client", { p_name: "Riverside Clinic", p_slug: "riverside-clinic", p_timezone: "America/Chicago", p_brand_color: "#1D4ED8" }), "clinic")
+    must(await admin.from("clients").update({ status: "active", industry: "Primary care" }).eq("id", clinic.id), "activate clinic")
+    await call("avatar-link", { action: "link", client_id: clinic.id, pals: [{ pal_id: "pa00c0de0004", display_name: "Ada" }] })
+    const ada = must(await admin.from("avatars").select("id").eq("client_id", clinic.id).single(), "Ada")
+    must(await admin.from("avatars").update({ role_label: "Clinical evidence guide" }).eq("id", ada.id), "label")
+    await user("noor@riverside.test", "Noor Haddad", "client_admin", clinic.id)
+
+    must(await ownerClient.rpc("glass_enable", { p_client_id: clinic.id, p_enabled: true }), "turn Glass on")
+    // A stand-in key that only the mock Glass accepts.
+    await call("glass-connection", { action: "save", client_id: clinic.id, key: "sk-gla-test-demo-riverside-0001" })
+    // Made-up rates, for the demo only.
+    const inRate = 250, outRate = 1500
+    must(await admin.from("settings").update({ value: inRate }).eq("key", "glass.input_cents_per_million"), "rate")
+    must(await admin.from("settings").update({ value: outRate }).eq("key", "glass.output_cents_per_million"), "rate")
+
+    const clinicEvents = []
+    const asked = []
+    for (let d = days - 1; d >= 0; d--) {
+      const calls = Math.floor(rand() * 3.4)
+      for (let i = 0; i < calls; i++) {
+        const start = Math.min(now - 120_000 - Math.floor(rand() * 3_000_000), now - d * 86_400_000 - Math.floor(rand() * 43_200_000))
+        const seconds = 90 + Math.floor(rand() ** 2 * 600)
+        const id = `demo-${String(++n).padStart(5, "0")}`
+        clinicEvents.push({ conversation_id: id, event_type: "system.pal_joined", timestamp: new Date(start).toISOString(), properties: {} })
+        clinicEvents.push({ conversation_id: id, event_type: "system.shutdown", timestamp: new Date(start + seconds * 1000).toISOString(), properties: { shutdown_reason: "participant_left_timeout" } })
+        const questions = rand() < 0.75 ? 1 + Math.floor(rand() * 3) : 0
+        for (let q = 0; q < questions; q++) {
+          const at = new Date(start + (20 + q * 45) * 1000)
+          const input = 10_000 + Math.floor(rand() * 30_000), output = 140 + Math.floor(rand() * 260)
+          const failed = rand() < 0.04
+          asked.push({
+            client_id: clinic.id, avatar_id: ada.id, conversation_id: id, asked_at: at.toISOString(),
+            usage_date: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(at),
+            status: failed ? "error" : "ok", error_code: failed ? "timeout" : null,
+            input_tokens: failed ? 0 : input, output_tokens: failed ? 0 : output, duration_ms: failed ? 45_000 : 4400 + output * 12,
+            cost_cents: failed ? null : Math.round(((input * inRate + output * outRate) / 1_000_000) * 10_000) / 10_000, glass_version: "5.5-2026-03-31",
+          })
+        }
+      }
+    }
+    for (let i = 0; i < clinicEvents.length; i += 25) {
+      await Promise.all(clinicEvents.slice(i, i + 25).map(async (payload) =>
+        must(await admin.rpc("ingest_tavus_event", { p_avatar_id: ada.id, p_payload: payload, p_source: "webhook" }), "ingest")))
+    }
+    for (let i = 0; i < asked.length; i += 200) must(await admin.from("glass_calls").insert(asked.slice(i, i + 200)), "Glass questions")
+    must(await admin.from("client_glass").update({ last_used_at: asked.at(-1)?.asked_at ?? null }).eq("client_id", clinic.id), "last used")
+    log(`Riverside Clinic: ${asked.length} Glass questions. Sign in as noor@riverside.test.`)
+  }
+
   log(`Done: ${n} calls for ${avatars.length} avatars.`)
   log(`Sign in as owner@divigner.test (Divigner) or dana@northline.test (client). Password: ${DEMO_PASSWORD}`)
   return { northline, harbor, calls: n }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  seedDemo().catch((err) => {
+  seedDemo({ glass: true }).catch((err) => {
     console.error(err.message)
     process.exit(1)
   })

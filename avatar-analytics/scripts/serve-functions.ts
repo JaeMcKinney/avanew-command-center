@@ -21,6 +21,8 @@ import { handler as tavusWebhook } from "../supabase/functions/tavus-webhook/han
 import { handler as userInvite } from "../supabase/functions/user-invite/handler.ts"
 import { handler as supportNotify } from "../supabase/functions/support-notify/handler.ts"
 import { handler as supportInbound } from "../supabase/functions/support-inbound/handler.ts"
+import { handler as glassConsult } from "../supabase/functions/glass-consult/handler.ts"
+import { handler as glassConnection } from "../supabase/functions/glass-connection/handler.ts"
 
 const routes: Record<string, (req: Request) => Promise<Response>> = {
   "avatar-link": avatarLink,
@@ -39,6 +41,8 @@ const routes: Record<string, (req: Request) => Promise<Response>> = {
   "user-invite": userInvite,
   "support-notify": supportNotify,
   "support-inbound": supportInbound,
+  "glass-consult": glassConsult,
+  "glass-connection": glassConnection,
 }
 
 const port = Number(Deno.env.get("FUNCTIONS_PORT") ?? 54399)

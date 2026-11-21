@@ -19,6 +19,7 @@ This folder is self-contained. It does not share code or a database with the CRM
 | Tavus list sync, search by name (typo-tolerant), link and unlink avatars | Built, tested against a mock Tavus |
 | Embed codes for each deployment | Built |
 | Support desk: tickets, replies, internal notes, assignment, priority, attached files, email in and out | Built, tested against a mock email service |
+| Glass Health for clinical avatars: each client's own Glass key (stored encrypted, never shown again), a signed address the avatar's tool calls, and Glass questions, tokens, estimated cost and waiting time beside talk time | Built, tested against a mock Glass. One live check against the real Glass API on a local stack. Not yet connected to a real avatar (see below) |
 | Call events from Tavus (webhook) and an hourly backup check | Built, tested against a mock Tavus |
 | Talk time totals, by avatar and by day, per client time zone | Built |
 | Client dashboard, conversations and transcripts | Built |
@@ -81,6 +82,31 @@ Tavus ──► tavus-webhook/<avatar token>   checks the signature
 
 Who can see what is enforced in the database, not in the screens. A client user can only ever read rows for their own client, whatever the app asks for.
 
+### Glass Health
+
+A clinical avatar can look up published evidence through the client's **own** Glass Health account. This app sits in between so every question is counted.
+
+```
+The avatar's tool (Tavus, API delivery, HMAC auth)
+        │
+        ▼
+glass-consult/<avatar token>     checks Tavus's signature with the avatar's secret
+        │
+        ├─► glass_read_key()     the client's key, from Supabase Vault
+        ├─► Glass Health         POST /v2/messages, not streamed, short spoken answer
+        ▼
+glass_record_call()              tokens, seconds and estimated cost, per conversation
+        │
+        ▼
+  glass_calls ─► Glass Health page, dashboard, conversations
+```
+
+- Divigner turns Glass on for a client (the client's file, **Glass Health** tab). The client's admin then enters the key in their portal. Nobody can read it back; the app shows its last four characters.
+- The question and the answer are not stored, only the counts.
+- Glass bills by the question, in tokens, so usage is shown in questions and tokens, not minutes. Glass has no usage API, so the account total is only in the client's Glass console; this app shows the part the avatars used.
+- The estimated cost uses two settings, `glass.input_cents_per_million` and `glass.output_cents_per_million`. They start at 0 (no estimate). Prices are data, not code.
+- **Connecting an avatar is still a manual step.** In Tavus, give the avatar a tool (for example `consult_clinical_evidence`, with a required `question` string and an optional `language` of `en` or `es`) with `delivery.api.url` set to `<functions URL>/glass-consult/<the avatar's webhook token>`, `auth` of `{ "type": "hmac", "secret": "<the avatar's callback secret>" }`, a `timeout` of 60 and `on_resolve` of `generate_response`. The token and secret are in `avatar_secrets`, readable by the service role only. A button that sets this up is not built yet, and the address has not been called by a real Tavus avatar.
+
 ## Run it on your computer
 
 You need Node 22 and Docker.
@@ -127,6 +153,8 @@ npm run e2e                 # the app in a browser, incl. accessibility (needs d
 
 The integration and browser tests empty the local database and reload sample data. They work through the local Docker database, so they cannot touch a hosted project.
 
+`npm run functions` points Anthropic and Glass Health at stand-ins, and the local `supabase/functions/.env` does the same for Tavus, Stripe and Resend, so the tests never call the real services.
+
 The browser tests check every page against WCAG 2.2 AA with axe, in light and dark, on a desktop and a phone.
 
 ## Putting it online
@@ -154,6 +182,7 @@ The browser tests check every page against WCAG 2.2 AA with axe, in light and da
    - Turn on the customer portal in Stripe (Settings, Billing, Customer portal) so "Payment method" works.
    - Schedule `usage-check` every 10 minutes (same form as the schedules below). It also runs whenever a call ends.
    - **Support desk email.** Replies are emailed with `RESEND_API_KEY` and `EMAIL_FROM`. Schedule `support-notify` every 5 minutes (same form as the schedules below). To let people answer those emails, and email new tickets in, add a receiving address in Resend, set `SUPPORT_INBOUND_ADDRESS` to it, add a Resend webhook for `email.received` that points at `<functions URL>/support-inbound`, and set `RESEND_WEBHOOK_SECRET` to that webhook's signing secret. Without these the desk works in the app and by outgoing email only. Receiving email has been tested against a stand-in for Resend, not the real service.
+   - **Glass Health.** Nothing to set: each client's key is entered in the app. Enter Glass's current rates in the two `glass.*` settings if you want an estimated cost. Ask Glass about higher rate limits before a client with busy avatars goes live; the standard limit is per account, per minute.
 5. Deploy the functions: `npx supabase functions deploy`.
 6. Deploy the app (for example on Vercel, with this folder as the root directory) with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set. Leave `VITE_FUNCTIONS_URL` unset.
 7. **Create the Owner.** In the SQL editor, name the email address that will be the Owner:

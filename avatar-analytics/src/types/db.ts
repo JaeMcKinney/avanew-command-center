@@ -137,6 +137,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"client_glass": {
+                  Row: {
+                    "checked_at": string | null,"client_id": string,"enabled_at": string,"enabled_by": string | null,"key_hint": string | null,"key_set_at": string | null,"key_set_by": string | null,"last_used_at": string | null,"secret_id": string | null,"status": string,"status_detail": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "checked_at"?: string | null,"client_id": string,"enabled_at"?: string,"enabled_by"?: string | null,"key_hint"?: string | null,"key_set_at"?: string | null,"key_set_by"?: string | null,"last_used_at"?: string | null,"secret_id"?: string | null,"status"?: string,"status_detail"?: string | null
+                  }
+                  Update: {
+                    "checked_at"?: string | null,"client_id"?: string,"enabled_at"?: string,"enabled_by"?: string | null,"key_hint"?: string | null,"key_set_at"?: string | null,"key_set_by"?: string | null,"last_used_at"?: string | null,"secret_id"?: string | null,"status"?: string,"status_detail"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "client_glass_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: true
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"client_notes": {
                   Row: {
                     "author_id": string | null,"body": string,"client_id": string,"created_at": string,"id": string,"kind": string,"pinned": boolean,"updated_at": string
@@ -217,6 +237,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     },{
       foreignKeyName: "conversations_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"glass_calls": {
+                  Row: {
+                    "asked_at": string,"avatar_id": string,"client_id": string,"conversation_id": string,"cost_cents": number | null,"duration_ms": number,"error_code": string | null,"glass_request_id": string | null,"glass_version": string | null,"id": number,"input_tokens": number,"output_tokens": number,"status": string,"tool_call_id": string | null,"usage_date": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "asked_at"?: string,"avatar_id": string,"client_id": string,"conversation_id": string,"cost_cents"?: number | null,"duration_ms"?: number,"error_code"?: string | null,"glass_request_id"?: string | null,"glass_version"?: string | null,"id"?: never,"input_tokens"?: number,"output_tokens"?: number,"status": string,"tool_call_id"?: string | null,"usage_date": string
+                  }
+                  Update: {
+                    "asked_at"?: string,"avatar_id"?: string,"client_id"?: string,"conversation_id"?: string,"cost_cents"?: number | null,"duration_ms"?: number,"error_code"?: string | null,"glass_request_id"?: string | null,"glass_version"?: string | null,"id"?: never,"input_tokens"?: number,"output_tokens"?: number,"status"?: string,"tool_call_id"?: string | null,"usage_date"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "glass_calls_avatar_id_fkey"
+      columns: ["avatar_id"]
+isOneToOne: false
+      referencedRelation: "avatars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "glass_calls_client_id_fkey"
       columns: ["client_id"]
 isOneToOne: false
       referencedRelation: "clients"
@@ -746,6 +792,39 @@ isOneToOne: false
                            },
 "finance_summary":
 { Args: { "p_from": string,"p_to": string }; Returns: Json
+                           },
+"glass_enable":
+{ Args: { "p_client_id": string,"p_enabled": boolean }; Returns: undefined
+                           },
+"glass_read_key":
+{ Args: { "p_client_id": string }; Returns: string
+                           },
+"glass_record_call":
+{ Args: { "p_avatar_id": string,"p_conversation_id": string,"p_duration_ms": number,"p_error_code": string,"p_input_tokens": number,"p_output_tokens": number,"p_request_id": string,"p_status": string,"p_tool_call_id": string,"p_version": string }; Returns: number
+                           },
+"glass_remove_key":
+{ Args: { "p_client_id": string }; Returns: undefined
+                           },
+"glass_set_key":
+{ Args: { "p_client_id": string,"p_key": string }; Returns: undefined
+                           },
+"glass_set_status":
+{ Args: { "p_client_id": string,"p_detail"?: string,"p_status": string }; Returns: undefined
+                           },
+"glass_usage_by_avatar":
+{ Args: { "p_client_id": string,"p_from": string,"p_to": string }; Returns: {
+              "avatar_id": string,"cost_cents": number,"duration_ms": number,"failed": number,"input_tokens": number,"output_tokens": number,"questions": number
+            }[]
+                           },
+"glass_usage_by_conversation":
+{ Args: { "p_conversation_ids": (string)[] }; Returns: {
+              "conversation_id": string,"cost_cents": number,"duration_ms": number,"failed": number,"input_tokens": number,"output_tokens": number,"questions": number
+            }[]
+                           },
+"glass_usage_by_day":
+{ Args: { "p_client_id": string,"p_from": string,"p_to": string }; Returns: {
+              "cost_cents": number,"duration_ms": number,"failed": number,"input_tokens": number,"output_tokens": number,"questions": number,"usage_date": string
+            }[]
                            },
 "ingest_tavus_event":
 { Args: { "p_avatar_id": string,"p_payload": Json,"p_source"?: string }; Returns: Json

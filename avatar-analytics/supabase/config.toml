@@ -475,3 +475,12 @@ verify_jwt = false
 # function checks the webhook signature itself.
 [functions.support-inbound]
 verify_jwt = false
+
+# The address of an avatar's Glass Health tool. Tavus calls it without a
+# Supabase login; the handler checks Tavus's signature on every request.
+[functions.glass-consult]
+verify_jwt = false
+
+# Saves, checks and removes a client's Glass Health key for a signed-in person.
+[functions.glass-connection]
+verify_jwt = false

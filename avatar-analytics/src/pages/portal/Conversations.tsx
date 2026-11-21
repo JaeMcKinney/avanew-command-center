@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
 import { CopyId } from "@/components/CopyId"
 import { ExportBar } from "@/components/ExportBar"
+import { useGlassConnection } from "@/components/Glass"
 import { PageHeader } from "@/components/PageHeader"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
 import { StatusPill } from "@/components/StatusPill"
@@ -16,11 +17,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
-  CONVERSATIONS_PAGE_SIZE, getInsight, getTranscript, listAvatarsEver, listConversations, listTranscriptConversations, splitQuestions,
+  CONVERSATIONS_PAGE_SIZE, getInsight, getTranscript, glassUsageByConversation, listAvatarsEver, listConversations, listTranscriptConversations, splitQuestions,
   type Client, type Conversation, type Question,
 } from "@/lib/api"
 import { formatDateTime, formatRange, presetRange, todayIn } from "@/lib/dates"
-import { count, duration, endedBecause } from "@/lib/format"
+import { compact, count, duration, endedBecause } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/useAuth"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
@@ -208,6 +209,12 @@ export default function Conversations({ client: given, embedded = false }: { cli
   const last = Math.min(total, page * CONVERSATIONS_PAGE_SIZE)
   const who = avatarId ? ` with ${nameOf(avatarId)}` : ""
 
+  // What each call asked of Glass Health, for clients whose avatars use it.
+  const glassOn = useGlassConnection(client.id)
+  const ids = rows.map((r) => r.conversation_id)
+  const glass = useQuery({ queryKey: ["glass-by-conversation", client.id, ids], queryFn: () => glassUsageByConversation(ids), enabled: ids.length > 0 })
+  const showGlass = Boolean(glassOn.data) || (glass.data?.size ?? 0) > 0
+
   const withTranscript = rows.filter((r) => r.has_transcript)
   const pageChecked = withTranscript.length > 0 && withTranscript.every((r) => selected.has(r.conversation_id))
   const pageSome = withTranscript.some((r) => selected.has(r.conversation_id))
@@ -288,6 +295,7 @@ export default function Conversations({ client: given, embedded = false }: { cli
                   <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">Conversation ID</th>
                   <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">Avatar</th>
                   <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Length</th>
+                  {showGlass && <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Glass Questions</th>}
                   <th scope="col" className="hidden px-4 py-2.5 font-semibold tracking-wide sm:table-cell">How It Ended</th>
                   <th scope="col" className="px-4 py-2.5"><span className="sr-only">Transcript</span></th>
                 </tr>
@@ -309,6 +317,18 @@ export default function Conversations({ client: given, embedded = false }: { cli
                     <td className="px-4 py-3"><CopyId label="Conversation ID" hideLabel value={conv.conversation_id} /></td>
                     <td className="px-4 py-3">{nameOf(conv.avatar_id)}</td>
                     <td className="tabular px-4 py-3 text-right">{duration(conv.talk_seconds)}</td>
+                    {showGlass && (
+                      <td className="tabular px-4 py-3 text-right">
+                        {glass.data?.get(conv.conversation_id)?.questions ? (
+                          <>
+                            {count(glass.data.get(conv.conversation_id)!.questions)}
+                            <span className="block text-xs text-muted-foreground">{compact(glass.data.get(conv.conversation_id)!.input_tokens + glass.data.get(conv.conversation_id)!.output_tokens)} tokens</span>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
+                      </td>
+                    )}
                     <td className="hidden px-4 py-3 sm:table-cell">{endedBecause(conv.shutdown_reason)}</td>
                     <td className="px-4 py-3 text-right">
                       {conv.has_transcript ? (

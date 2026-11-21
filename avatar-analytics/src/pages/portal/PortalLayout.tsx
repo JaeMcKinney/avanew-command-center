@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
-import { ArrowLeft, CircleHelp, Code2, CreditCard, LayoutDashboard, LifeBuoy, MessagesSquare, Users } from "lucide-react"
+import { ArrowLeft, CircleHelp, Code2, CreditCard, LayoutDashboard, LifeBuoy, MessagesSquare, Stethoscope, Users } from "lucide-react"
 import { Link, Outlet, useOutletContext, useParams } from "react-router-dom"
 import { PortalShell, type NavItem } from "@/components/Shell"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
-import { getClientBySlug, type Client } from "@/lib/api"
+import { getClientBySlug, getGlassConnection, type Client } from "@/lib/api"
 import { isHexColor, readableOn } from "@/lib/color"
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -18,6 +18,9 @@ export default function PortalLayout() {
   const { slug = "" } = useParams()
   const { access, can, signOut } = useAuth()
   const client = useQuery({ queryKey: ["client", slug], queryFn: () => getClientBySlug(slug) })
+  const clientId = client.data?.id
+  // Glass Health is for clinical avatars, so it only shows for a client that has it turned on.
+  const glass = useQuery({ queryKey: ["glass-connection", clientId], queryFn: () => getGlassConnection(clientId!), enabled: Boolean(clientId) && can("analytics.view") })
 
   if (client.isPending) return <LoadingBlock label="Loading" />
   if (client.isError) return <div className="p-6"><ErrorBlock error={client.error} onRetry={() => void client.refetch()} /></div>
@@ -40,6 +43,7 @@ export default function PortalLayout() {
     { to: base, label: "Dashboard", icon: LayoutDashboard, end: true },
     ...(can("transcripts.view") ? [{ to: `${base}/conversations`, label: "Conversations", icon: MessagesSquare }] : []),
     ...(can("transcripts.view") || can("questions.answer") ? [{ to: `${base}/questions`, label: "Questions", icon: CircleHelp }] : []),
+    ...(glass.data ? [{ to: `${base}/glass`, label: "Glass Health", icon: Stethoscope }] : []),
     ...(can("support.use") || can("support.manage") ? [{ to: `${base}/support`, label: "Support", icon: LifeBuoy }] : []),
     ...(can("embeds.view") ? [{ to: `${base}/avatars`, label: "Avatars", icon: Code2 }] : []),
     ...(can("client_users.manage") ? [{ to: `${base}/team`, label: "Team", icon: Users }] : []),

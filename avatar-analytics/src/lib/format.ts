@@ -20,6 +20,11 @@ export function count(n: number | null | undefined): string {
   return (n ?? 0).toLocaleString("en-US")
 }
 
+/** A large number in short form: 1,234,567 → "1.2M". Used for token counts in headline figures. */
+export function compact(n: number | null | undefined): string {
+  return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n ?? 0)
+}
+
 export function percent(part: number, whole: number): string {
   if (!whole) return "0%"
   return `${Math.round((part / whole) * 100)}%`
@@ -56,6 +61,12 @@ const SHUTDOWN_REASONS: Array<[RegExp, string]> = [
 export function endedBecause(reason: string | null | undefined): string {
   if (!reason) return "—"
   return SHUTDOWN_REASONS.find(([pattern]) => pattern.test(reason))?.[1] ?? reason.replace(/_/g, " ")
+}
+
+/** An estimated amount, to the cent: "$17.68". "—" when there is nothing to estimate from. */
+export function estimate(cents: number | null | undefined): string {
+  if (cents == null) return "—"
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100)
 }
 
 /** "$397" or "$397.50", from an amount in cents. */

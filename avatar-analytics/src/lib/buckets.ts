@@ -18,8 +18,11 @@ export function grainFor(range: DateRange): Grain {
 
 export const GRAIN_LABEL: Record<Grain, string> = { day: "By day", week: "By week", month: "By month" }
 
-/** `secondsByDay` maps "YYYY-MM-DD" to seconds. Values come back in minutes. */
-export function bucketColumns(range: DateRange, secondsByDay: Map<string, number>): Column[] {
+/**
+ * `secondsByDay` maps "YYYY-MM-DD" to seconds. Values come back in minutes.
+ * Pass `per = 1` to add up plain counts instead.
+ */
+export function bucketColumns(range: DateRange, secondsByDay: Map<string, number>, per = 60): Column[] {
   const grain = grainFor(range)
   const days = eachDay(range)
   const columns: Column[] = []
@@ -49,7 +52,7 @@ export function bucketColumns(range: DateRange, secondsByDay: Map<string, number
       byKey.set(key, column)
       columns.push(column)
     }
-    column.value += (secondsByDay.get(day) ?? 0) / 60
+    column.value += (secondsByDay.get(day) ?? 0) / per
   }
   return columns
 }
