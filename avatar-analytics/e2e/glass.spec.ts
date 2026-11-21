@@ -43,6 +43,7 @@ test("Divigner turns Glass on, the client connects their account, and avatar que
   await page.getByRole("button", { name: "Turn on Glass Health" }).click()
   await expect(page.getByText("Glass Health is turned on.")).toBeVisible()
   await expect(page.getByText("Waiting for a key")).toBeVisible()
+  await expect(page.getByText("Harbor Dental's avatars cannot look anything up until a key is entered.")).toBeVisible()
   await expectAccessible(page)
 
   // The client enters their own key. It is checked with Glass and never shown again.
@@ -82,6 +83,7 @@ test("Divigner turns Glass on, the client connects their account, and avatar que
   const byAvatar = client.getByRole("table", { name: /Talk time and Glass Health use by avatar/ })
   await expect(byAvatar.getByRole("row", { name: /Zara/ })).toContainText("24,360")
   await expect(client.getByText("Last Used by an Avatar")).toBeVisible()
+  await expect(client.getByText("sent to Glass Health by your avatars.")).toBeVisible()
   await expectAccessible(client)
   await expectNoSidewaysScroll(client)
 
@@ -102,6 +104,12 @@ test("Divigner turns Glass on, the client connects their account, and avatar que
   await expect(page.getByText("Ends in 7788")).toBeVisible()
   await expect(page.getByText("2 questions", { exact: true })).toBeVisible()
   expect(await page.content()).not.toContain(TEST_KEY)
+  // Staff read it about the client, not as the client.
+  const staffTab = page.getByRole("tabpanel", { name: "Glass Health" })
+  await expect(staffTab.getByText("sent to Glass Health by Harbor Dental's avatars.")).toBeVisible()
+  await expect(staffTab.getByText("Paste a key created in Harbor Dental's Glass Health account")).toBeVisible()
+  await expect(staffTab.getByText("Harbor Dental's Glass Health account shows everything used on it.")).toBeVisible()
+  await expect(staffTab.getByText(/\byour\b/i)).toHaveCount(0)
 
   // A member of the client's team sees the usage but cannot change the key.
   sql(`update public.profiles set role_id = (select id from public.roles where key = 'client_member') where email = 'pat@harbor.test'`)
