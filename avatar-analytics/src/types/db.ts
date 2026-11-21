@@ -469,6 +469,78 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"support_messages": {
+                  Row: {
+                    "attachments": NonNullable<Json>,"author_id": string | null,"author_name": string,"author_side": string,"body": string,"client_id": string,"created_at": string,"email_message_id": string | null,"id": string,"is_internal": boolean,"kind": string,"notified_at": string | null,"notify_attempts": number,"notify_claimed_at": string | null,"notify_result": string | null,"ticket_id": string,"via": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attachments"?: NonNullable<Json>,"author_id"?: string | null,"author_name"?: string,"author_side": string,"body": string,"client_id": string,"created_at"?: string,"email_message_id"?: string | null,"id"?: string,"is_internal"?: boolean,"kind"?: string,"notified_at"?: string | null,"notify_attempts"?: number,"notify_claimed_at"?: string | null,"notify_result"?: string | null,"ticket_id": string,"via"?: string
+                  }
+                  Update: {
+                    "attachments"?: NonNullable<Json>,"author_id"?: string | null,"author_name"?: string,"author_side"?: string,"body"?: string,"client_id"?: string,"created_at"?: string,"email_message_id"?: string | null,"id"?: string,"is_internal"?: boolean,"kind"?: string,"notified_at"?: string | null,"notify_attempts"?: number,"notify_claimed_at"?: string | null,"notify_result"?: string | null,"ticket_id"?: string,"via"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "support_messages_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "support_messages_ticket_id_fkey"
+      columns: ["ticket_id"]
+isOneToOne: false
+      referencedRelation: "support_tickets"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"support_ticket_secrets": {
+                  Row: {
+                    "reply_token": string,"ticket_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "reply_token"?: string,"ticket_id": string
+                  }
+                  Update: {
+                    "reply_token"?: string,"ticket_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "support_ticket_secrets_ticket_id_fkey"
+      columns: ["ticket_id"]
+isOneToOne: true
+      referencedRelation: "support_tickets"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"support_tickets": {
+                  Row: {
+                    "assignee_id": string | null,"assignee_name": string | null,"category": string,"client_id": string,"conversation_id": string | null,"created_at": string,"first_response_at": string | null,"id": string,"last_message_at": string,"last_message_side": string,"message_count": number,"number": number,"opened_by": string | null,"opened_by_name": string,"opened_via": string,"priority": string,"resolved_at": string | null,"status": string,"subject": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "assignee_id"?: string | null,"assignee_name"?: string | null,"category"?: string,"client_id": string,"conversation_id"?: string | null,"created_at"?: string,"first_response_at"?: string | null,"id"?: string,"last_message_at"?: string,"last_message_side"?: string,"message_count"?: number,"number"?: number,"opened_by"?: string | null,"opened_by_name"?: string,"opened_via"?: string,"priority"?: string,"resolved_at"?: string | null,"status"?: string,"subject": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "assignee_id"?: string | null,"assignee_name"?: string | null,"category"?: string,"client_id"?: string,"conversation_id"?: string | null,"created_at"?: string,"first_response_at"?: string | null,"id"?: string,"last_message_at"?: string,"last_message_side"?: string,"message_count"?: number,"number"?: number,"opened_by"?: string | null,"opened_by_name"?: string,"opened_via"?: string,"priority"?: string,"resolved_at"?: string | null,"status"?: string,"subject"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "support_tickets_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "support_tickets_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "conversations"
+      referencedColumns: ["conversation_id"]
+    }
+                  ]
                 },"tavus_deployments": {
                   Row: {
                     "allowed_origins": (string)[],"channel": string,"deployment_id": string,"limits": NonNullable<Json>,"name": string,"page_url": string | null,"pal_id": string,"removed_at": string | null,"status": string,"synced_at": string,"tavus_created_at": string | null,"tavus_updated_at": string | null,"thumbnail_image_url": string | null,"usage_today": number | null,"usage_total": number | null
@@ -722,6 +794,63 @@ isOneToOne: false
                            },
 "set_user_role":
 { Args: { "p_role_id": string,"p_user_id": string }; Returns: undefined
+                           },
+"support_assign":
+{ Args: { "p_assignee_id": string,"p_ticket_id": string }; Returns: undefined
+                           },
+"support_claim_notifications":
+{ Args: { "p_limit"?: number }; Returns: {
+              "attachment_count": number,"author_name": string,"author_side": string,"body": string,"client_name": string,"client_slug": string,"message_id": string,"priority": string,"recipients": (string)[],"reply_token": string,"subject": string,"ticket_number": number
+            }[]
+                           },
+"support_ingest_email":
+{ Args: { "p_body": string,"p_from": string,"p_message_id": string,"p_reference": string,"p_subject": string }; Returns: Json
+                           },
+"support_mark_notified":
+{ Args: { "p_done": boolean,"p_message_id": string,"p_result": string }; Returns: undefined
+                           },
+"support_open_ticket":
+{ Args: { "p_attachments"?: Json,"p_body": string,"p_category"?: string,"p_client_id": string,"p_conversation_id"?: string,"p_subject": string }; Returns: {
+              "assignee_id": string | null,
+"assignee_name": string | null,
+"category": string,
+"client_id": string,
+"conversation_id": string | null,
+"created_at": string,
+"first_response_at": string | null,
+"id": string,
+"last_message_at": string,
+"last_message_side": string,
+"message_count": number,
+"number": number,
+"opened_by": string | null,
+"opened_by_name": string,
+"opened_via": string,
+"priority": string,
+"resolved_at": string | null,
+"status": string,
+"subject": string,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "support_tickets"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"support_reply":
+{ Args: { "p_attachments"?: Json,"p_body": string,"p_internal"?: boolean,"p_ticket_id": string }; Returns: string
+                           },
+"support_set_status":
+{ Args: { "p_status": string,"p_ticket_id": string }; Returns: undefined
+                           },
+"support_staff":
+{ Args: { "p_client_id": string }; Returns: {
+              "email": string,"full_name": string,"id": string
+            }[]
+                           },
+"support_update_ticket":
+{ Args: { "p_category"?: string,"p_priority"?: string,"p_ticket_id": string }; Returns: undefined
                            },
 "topup_custom_rule":
 { Args: { "p_client_id": string }; Returns: Json

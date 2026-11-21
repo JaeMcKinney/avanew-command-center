@@ -190,7 +190,7 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
       { size: 10, color: MUTED },
     )
     if (input.scope && !single) paragraph(`Part of: ${input.scope}`, { size: 9, color: MUTED })
-    paragraph(`Reference: ${conv.conversation_id}`, { size: 8.5, color: MUTED, gap: 8 })
+    paragraph(`Conversation ID: ${conv.conversation_id}`, { size: 8.5, color: MUTED, gap: 8 })
 
     heading("Summary")
     paragraph(item.summary ?? "A summary is not available for this conversation yet.", item.summary ? { gap: 6 } : { font: italic, color: MUTED, gap: 6 })

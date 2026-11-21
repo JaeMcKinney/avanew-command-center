@@ -2,7 +2,8 @@
 
 import { createHmac } from "node:crypto"
 import { describe, expect, it } from "vitest"
-import { hmacSha256Hex, timingSafeEqual, verifyTavusSignature } from "../../supabase/functions/_shared/signature.ts"
+import { hmacSha256Hex, timingSafeEqual, verifySvixSignature, verifyTavusSignature } from "../../supabase/functions/_shared/signature.ts"
+import { emailAddress, htmlToText, replyAddress, stripQuotedReply, ticketReference } from "../../supabase/functions/_shared/support.ts"
 import { toIso } from "../../supabase/functions/_shared/time.ts"
 
 const bytes = (s: string) => new TextEncoder().encode(s)
@@ -46,5 +47,43 @@ describe("Tavus timestamps", () => {
     expect(toIso("soon")).toBeNull()
     expect(toIso(undefined)).toBeNull()
     expect(toIso(1779475660.12)).toBeNull()
+  })
+})
+
+describe("support email", () => {
+  it("reads an address out of a From line", () => {
+    expect(emailAddress("Dana Reyes <Dana@Northline.test>")).toBe("dana@northline.test")
+    expect(emailAddress("lee@northline.test")).toBe("lee@northline.test")
+    expect(emailAddress("nobody")).toBeNull()
+  })
+
+  it("builds the reply address and reads the ticket back from it", () => {
+    const address = replyAddress("Support <support@inbound.example.com>", 1001, "abcdef0123456789abcdef01")!
+    expect(address).toBe("support+t1001-abcdef0123456789abcdef01@inbound.example.com")
+    expect(ticketReference(["someone@else.com", address], "support@inbound.example.com")).toBe("t1001-abcdef0123456789abcdef01")
+    expect(ticketReference(["support@inbound.example.com"], "support@inbound.example.com")).toBe("")
+    expect(ticketReference(["support@other.example.com"], "support@inbound.example.com")).toBeNull()
+    expect(ticketReference(["support+hello@inbound.example.com"], "support@inbound.example.com")).toBeNull()
+  })
+
+  it("keeps only what the person wrote", () => {
+    expect(stripQuotedReply("Thanks!\n\nOn Fri, Nov 20, 2026 at 9:00 AM Divigner <a@b.co> wrote:\n> Fixed.")).toBe("Thanks!")
+    expect(stripQuotedReply("Yes.\n\n— Reply above this line —\n\nOlder text")).toBe("Yes.")
+    expect(stripQuotedReply("First line\n> quoted\nSecond line")).toBe("First line\nSecond line")
+  })
+
+  it("turns an HTML email into plain text", () => {
+    expect(htmlToText("<style>p{}</style><p>Hello &amp; welcome</p><p>Line two<br>three</p>")).toBe("Hello & welcome\nLine two\nthree")
+  })
+
+  it("checks a webhook signature and its age", async () => {
+    const secret = "whsec_" + Buffer.from("unit-test-secret").toString("base64")
+    const body = '{"type":"email.received"}'
+    const now = 1_800_000_000
+    const sign = (t: number) => `v1,${createHmac("sha256", Buffer.from("unit-test-secret")).update(`msg_1.${t}.${body}`).digest("base64")}`
+    expect(await verifySvixSignature(secret, body, { id: "msg_1", timestamp: String(now), signature: `v1,wrong ${sign(now)}` }, now)).toBe(true)
+    expect(await verifySvixSignature(secret, body + " ", { id: "msg_1", timestamp: String(now), signature: sign(now) }, now)).toBe(false)
+    expect(await verifySvixSignature(secret, body, { id: "msg_1", timestamp: String(now - 900), signature: sign(now - 900) }, now)).toBe(false)
+    expect(await verifySvixSignature(secret, body, { id: null, timestamp: String(now), signature: sign(now) }, now)).toBe(false)
   })
 })

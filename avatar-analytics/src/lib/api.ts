@@ -600,3 +600,100 @@ export async function setAssignments(userId: string, clientIds: string[]) {
 export async function listAudit(limit = 100): Promise<AuditEntry[]> {
   return unwrap(await supabase.from("audit_log").select("*").order("id", { ascending: false }).limit(limit))
 }
+
+// ── Support desk ─────────────────────────────────────────────────────────────
+
+export type Ticket = Tables["support_tickets"]["Row"]
+export type TicketMessage = Omit<Tables["support_messages"]["Row"], "attachments"> & { attachments: TicketFile[] }
+export type TicketFile = { path: string; name: string; size: number }
+export type TicketWithClient = Ticket & { clients?: { name: string; slug: string } | null }
+export type SupportStaff = { id: string; full_name: string; email: string }
+
+export const TICKET_CATEGORIES = [
+  { value: "avatar_down", label: "My Avatar Is Not Working" },
+  { value: "question", label: "A Question" },
+  { value: "change_request", label: "A Change to My Avatar" },
+  { value: "billing", label: "Billing" },
+  { value: "other", label: "Something Else" },
+] as const
+export const TICKET_PRIORITIES = [
+  { value: "low", label: "Low" },
+  { value: "normal", label: "Normal" },
+  { value: "high", label: "High" },
+  { value: "urgent", label: "Urgent" },
+] as const
+export const MAX_TICKET_FILES = 5
+export const MAX_TICKET_FILE_BYTES = 10 * 1024 * 1024
+
+/** A client's tickets, or (for staff, with no client) every ticket they may see. Newest activity first. */
+export async function listTickets(clientId?: string): Promise<TicketWithClient[]> {
+  let query = supabase.from("support_tickets").select("*, clients(name, slug)").order("last_message_at", { ascending: false }).limit(500)
+  if (clientId) query = query.eq("client_id", clientId)
+  return unwrap(await query) as TicketWithClient[]
+}
+
+export async function getTicket(number: number): Promise<TicketWithClient | null> {
+  return unwrap(await supabase.from("support_tickets").select("*, clients(name, slug)").eq("number", number).maybeSingle()) as TicketWithClient | null
+}
+
+export async function listTicketMessages(ticketId: string): Promise<TicketMessage[]> {
+  return unwrap(await supabase.from("support_messages").select("*").eq("ticket_id", ticketId).order("created_at")) as unknown as TicketMessage[]
+}
+
+/** Emails the other side about a new reply. The schedule does the same, so a failure here is not a problem. */
+function notifySupport() {
+  void callFunction("support-notify", {}).catch(() => null)
+}
+
+/** Stores the files someone attached to a message and returns what the message should record. */
+export async function uploadTicketFiles(clientId: string, userId: string, files: File[]): Promise<TicketFile[]> {
+  const stored: TicketFile[] = []
+  for (const file of files) {
+    const safe = file.name.replace(/[^A-Za-z0-9._-]+/g, "-").slice(-80) || "file"
+    const path = `${clientId}/${userId}/${crypto.randomUUID()}/${safe}`
+    const { error } = await supabase.storage.from("support").upload(path, file, { contentType: file.type || "application/octet-stream" })
+    if (error) throw new Error(`"${file.name}" could not be attached. Files can be images, PDFs, text, Word or Excel, up to 10 MB each.`)
+    stored.push({ path, name: file.name, size: file.size })
+  }
+  return stored
+}
+
+/** A link to an attached file that works for one minute. */
+export async function ticketFileUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage.from("support").createSignedUrl(path, 60)
+  if (error || !data) throw new Error("The file could not be opened.")
+  return data.signedUrl
+}
+
+export async function openTicket(input: {
+  clientId: string; subject: string; body: string; category: string; conversationId?: string | null; files?: TicketFile[]
+}): Promise<Ticket> {
+  const ticket = unwrap(await supabase.rpc("support_open_ticket", {
+    p_client_id: input.clientId, p_subject: input.subject, p_body: input.body, p_category: input.category,
+    p_conversation_id: input.conversationId ?? undefined, p_attachments: input.files ?? [],
+  })) as Ticket
+  notifySupport()
+  return ticket
+}
+
+export async function replyToTicket(ticketId: string, body: string, internal: boolean, files: TicketFile[] = []): Promise<void> {
+  unwrap(await supabase.rpc("support_reply", { p_ticket_id: ticketId, p_body: body, p_internal: internal, p_attachments: files }))
+  if (!internal) notifySupport()
+}
+
+export async function setTicketStatus(ticketId: string, status: "open" | "waiting" | "resolved"): Promise<void> {
+  unwrap(await supabase.rpc("support_set_status", { p_ticket_id: ticketId, p_status: status }))
+}
+
+export async function assignTicket(ticketId: string, assigneeId: string | null): Promise<void> {
+  // The database function takes null for "nobody"; the generated types do not say so.
+  unwrap(await supabase.rpc("support_assign", { p_ticket_id: ticketId, p_assignee_id: assigneeId as string }))
+}
+
+export async function updateTicket(ticketId: string, patch: { priority?: string; category?: string }): Promise<void> {
+  unwrap(await supabase.rpc("support_update_ticket", { p_ticket_id: ticketId, p_priority: patch.priority, p_category: patch.category }))
+}
+
+export async function listSupportStaff(clientId: string): Promise<SupportStaff[]> {
+  return unwrap(await supabase.rpc("support_staff", { p_client_id: clientId })) as SupportStaff[]
+}

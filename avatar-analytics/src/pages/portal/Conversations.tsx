@@ -1,8 +1,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { TableScroll } from "@/components/TableScroll"
-import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, Download } from "lucide-react"
+import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, Download, LifeBuoy } from "lucide-react"
 import { useId, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
 import { CopyId } from "@/components/CopyId"
@@ -10,6 +10,7 @@ import { ExportBar } from "@/components/ExportBar"
 import { PageHeader } from "@/components/PageHeader"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
 import { StatusPill } from "@/components/StatusPill"
+import { NewTicketDialog } from "@/components/Support"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -21,6 +22,7 @@ import {
 import { formatDateTime, formatRange, presetRange, todayIn } from "@/lib/dates"
 import { count, duration, endedBecause } from "@/lib/format"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/hooks/useAuth"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
 
 /** One of the two question lists on a call: what the avatar answered, or what it did not. */
@@ -63,6 +65,11 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
   const transcript = useQuery({ queryKey: ["transcript", conversation.conversation_id], queryFn: () => getTranscript(conversation.conversation_id) })
   const insight = useQuery({ queryKey: ["insight", conversation.conversation_id], queryFn: () => getInsight(conversation.conversation_id) })
   const [saving, setSaving] = useState(false)
+  const [reporting, setReporting] = useState(false)
+  const { access, can } = useAuth()
+  const navigate = useNavigate()
+  const staff = access?.side === "divigner"
+  const canReport = staff ? can("support.manage") : can("support.use")
   const turns = (transcript.data ?? []).filter((t) => t.role === "user" || t.role === "assistant")
   const summary = insight.data?.insight?.status === "ready" ? insight.data.insight.summary : null
   const questions = insight.data?.questions ?? []
@@ -90,17 +97,22 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
             {formatDateTime(conversation.started_at ?? conversation.ended_at, timeZone)} · {duration(conversation.talk_seconds)} · {endedBecause(conversation.shutdown_reason)}
           </DialogDescription>
         </DialogHeader>
-        <CopyId label="Tavus conversation ID" value={conversation.conversation_id} />
+        <CopyId label={staff ? "Tavus Conversation ID" : "Conversation ID"} value={conversation.conversation_id} />
         {transcript.isPending ? (
           <LoadingBlock label="Loading transcript" />
         ) : transcript.isError ? (
           <ErrorBlock error={transcript.error} />
         ) : (
           <>
-            <div>
+            <div className="flex flex-wrap gap-2">
               <Button variant="outline" className="min-h-10" onClick={() => void download()} disabled={saving || insight.isPending}>
                 <Download aria-hidden="true" />{saving ? "Preparing PDF…" : "Download PDF"}
               </Button>
+              {canReport && (
+                <Button variant="outline" className="min-h-10" onClick={() => setReporting(true)}>
+                  <LifeBuoy aria-hidden="true" />Report a problem
+                </Button>
+              )}
             </div>
 
             <section aria-labelledby="summary-heading" className="flex flex-col gap-1.5">
@@ -153,6 +165,16 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
               )}
             </section>
           </>
+        )}
+        {reporting && (
+          <NewTicketDialog
+            client={client}
+            conversationId={conversation.conversation_id}
+            onClose={(ticket) => {
+              setReporting(false)
+              if (ticket) navigate(staff ? `/admin/support/${ticket.number}` : `/c/${client.slug}/support/${ticket.number}`)
+            }}
+          />
         )}
       </DialogContent>
     </Dialog>
@@ -263,6 +285,7 @@ export default function Conversations({ client: given, embedded = false }: { cli
                     />
                   </th>
                   <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">When</th>
+                  <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">Conversation ID</th>
                   <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">Avatar</th>
                   <th scope="col" className="px-4 py-2.5 text-right font-semibold tracking-wide">Length</th>
                   <th scope="col" className="hidden px-4 py-2.5 font-semibold tracking-wide sm:table-cell">How It Ended</th>
@@ -282,10 +305,8 @@ export default function Conversations({ client: given, embedded = false }: { cli
                         />
                       )}
                     </td>
-                    <td className="tabular px-4 py-3">
-                      {formatDateTime(conv.started_at ?? conv.ended_at, client.timezone)}
-                      <span className="block font-mono text-[0.7rem] text-muted-foreground select-all" title="Tavus conversation ID">{conv.conversation_id}</span>
-                    </td>
+                    <td className="tabular px-4 py-3">{formatDateTime(conv.started_at ?? conv.ended_at, client.timezone)}</td>
+                    <td className="px-4 py-3"><CopyId label="Conversation ID" hideLabel value={conv.conversation_id} /></td>
                     <td className="px-4 py-3">{nameOf(conv.avatar_id)}</td>
                     <td className="tabular px-4 py-3 text-right">{duration(conv.talk_seconds)}</td>
                     <td className="hidden px-4 py-3 sm:table-cell">{endedBecause(conv.shutdown_reason)}</td>

@@ -44,3 +44,33 @@ export function randomHex(bytes: number): string {
   crypto.getRandomValues(buf)
   return Array.from(buf, (b) => b.toString(16).padStart(2, "0")).join("")
 }
+
+/**
+ * Resend signs its webhooks the Svix way: the header "svix-signature" holds one
+ * or more "v1,<base64>" values, each the HMAC-SHA256 of "<id>.<timestamp>.<body>"
+ * keyed with the bytes after "whsec_" in the signing secret (base64).
+ * https://resend.com/docs/dashboard/webhooks/verify-webhooks-requests
+ */
+export async function verifySvixSignature(
+  secret: string,
+  rawBody: string,
+  headers: { id: string | null; timestamp: string | null; signature: string | null },
+  nowSeconds = Math.floor(Date.now() / 1000),
+): Promise<boolean> {
+  if (!headers.id || !headers.timestamp || !headers.signature) return false
+  const sentAt = Number(headers.timestamp)
+  if (!Number.isFinite(sentAt) || Math.abs(nowSeconds - sentAt) > 300) return false
+  let keyBytes: Uint8Array
+  try {
+    keyBytes = Uint8Array.from(atob(secret.replace(/^whsec_/, "")), (c) => c.charCodeAt(0))
+  } catch {
+    return false
+  }
+  const key = await crypto.subtle.importKey("raw", keyBytes as BufferSource, { name: "HMAC", hash: "SHA-256" }, false, ["sign"])
+  const digest = await crypto.subtle.sign("HMAC", key, encoder.encode(`${headers.id}.${headers.timestamp}.${rawBody}`))
+  const expected = btoa(String.fromCharCode(...new Uint8Array(digest)))
+  return headers.signature.split(/\s+/).some((part) => {
+    const [version, value] = part.split(",")
+    return version === "v1" && Boolean(value) && timingSafeEqual(expected, value)
+  })
+}

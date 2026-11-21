@@ -19,6 +19,8 @@ import { handler as tavusBackfill } from "../supabase/functions/tavus-backfill/h
 import { handler as tavusSync } from "../supabase/functions/tavus-sync/handler.ts"
 import { handler as tavusWebhook } from "../supabase/functions/tavus-webhook/handler.ts"
 import { handler as userInvite } from "../supabase/functions/user-invite/handler.ts"
+import { handler as supportNotify } from "../supabase/functions/support-notify/handler.ts"
+import { handler as supportInbound } from "../supabase/functions/support-inbound/handler.ts"
 
 const routes: Record<string, (req: Request) => Promise<Response>> = {
   "avatar-link": avatarLink,
@@ -35,6 +37,8 @@ const routes: Record<string, (req: Request) => Promise<Response>> = {
   "tavus-sync": tavusSync,
   "tavus-webhook": tavusWebhook,
   "user-invite": userInvite,
+  "support-notify": supportNotify,
+  "support-inbound": supportInbound,
 }
 
 const port = Number(Deno.env.get("FUNCTIONS_PORT") ?? 54399)

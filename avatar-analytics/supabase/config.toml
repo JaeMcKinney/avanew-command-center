@@ -465,3 +465,13 @@ verify_jwt = false
 # Read by Tavus without a login; protected by a long random token in the address.
 [functions.knowledge-page]
 verify_jwt = false
+
+# Emails the other side about a new reply on a support ticket. Called by the
+# app (signed-in user) and by the schedule; the function checks the caller.
+[functions.support-notify]
+verify_jwt = false
+
+# Resend posts incoming support email here without a Supabase login. The
+# function checks the webhook signature itself.
+[functions.support-inbound]
+verify_jwt = false

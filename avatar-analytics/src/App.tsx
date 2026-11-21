@@ -1,4 +1,4 @@
-import { Activity as ActivityIcon, Bot, Building2, LayoutDashboard, Users, CircleDollarSign, Package } from "lucide-react"
+import { Activity as ActivityIcon, Bot, Building2, LayoutDashboard, LifeBuoy, Users, CircleDollarSign, Package } from "lucide-react"
 import { useEffect, useRef, type ReactNode } from "react"
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 import { StaffShell, type NavItem } from "@/components/Shell"
@@ -15,10 +15,12 @@ import ClientDetail from "@/pages/admin/ClientDetail"
 import ClientNew from "@/pages/admin/ClientNew"
 import Clients from "@/pages/admin/Clients"
 import Overview from "@/pages/admin/Overview"
+import SupportDesk, { SupportDeskTicket } from "@/pages/admin/Support"
 import Team from "@/pages/admin/Team"
 import Conversations from "@/pages/portal/Conversations"
 import Billing from "@/pages/portal/Billing"
 import Questions from "@/pages/portal/Questions"
+import Support, { SupportTicket } from "@/pages/portal/Support"
 import Dashboard from "@/pages/portal/Dashboard"
 import PortalAvatars from "@/pages/portal/PortalAvatars"
 import PortalLayout from "@/pages/portal/PortalLayout"
@@ -65,6 +67,7 @@ function AdminLayout() {
   const items: NavItem[] = [
     { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
     { to: "/admin/clients", label: "Clients", icon: Building2 },
+    ...(can("support.manage") ? [{ to: "/admin/support", label: "Support", icon: LifeBuoy }] : []),
     ...(can("avatars.link") ? [{ to: "/admin/avatars", label: "Avatars", icon: Bot }] : []),
     ...(can("finance.view") ? [{ to: "/admin/finance", label: "Finance", icon: CircleDollarSign }] : []),
     ...(can("plans.manage") ? [{ to: "/admin/plans", label: "Packages", icon: Package }] : []),
@@ -93,6 +96,8 @@ export default function App() {
           <Route path="clients/:slug" element={<ClientDetail />} />
           <Route path="avatars" element={<Need permission="avatars.link"><Avatars /></Need>} />
           <Route path="avatars/:palId" element={<Need permission="avatars.link"><AvatarDetail /></Need>} />
+          <Route path="support" element={<Need permission="support.manage"><SupportDesk /></Need>} />
+          <Route path="support/:number" element={<Need permission="support.manage"><SupportDeskTicket /></Need>} />
           <Route path="team" element={<Team />} />
           <Route path="plans" element={<Need permission="plans.manage"><Plans /></Need>} />
           <Route path="finance" element={<Need permission="finance.view"><Finance /></Need>} />
@@ -102,6 +107,8 @@ export default function App() {
           <Route index element={<Need permission="analytics.view"><Dashboard /></Need>} />
           <Route path="conversations" element={<Need permission="transcripts.view"><Conversations /></Need>} />
           <Route path="questions" element={<Questions />} />
+          <Route path="support" element={<Support />} />
+          <Route path="support/:number" element={<SupportTicket />} />
           <Route path="avatars" element={<Need permission="embeds.view"><PortalAvatars /></Need>} />
           <Route path="team" element={<Need permission="client_users.manage"><PortalTeam /></Need>} />
           <Route path="billing" element={<Need permission="billing.view"><Billing /></Need>} />

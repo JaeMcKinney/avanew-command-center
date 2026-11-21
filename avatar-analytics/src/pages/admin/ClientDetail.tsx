@@ -19,6 +19,7 @@ import { UsersPanel } from "@/components/UsersPanel"
 import Conversations from "@/pages/portal/Conversations"
 import Dashboard from "@/pages/portal/Dashboard"
 import Questions from "@/pages/portal/Questions"
+import SupportDesk from "@/pages/admin/Support"
 import { useAuth } from "@/hooks/useAuth"
 import { getClientBySlug, sumUsage, updateClient, usageByDay, type Client } from "@/lib/api"
 import { browserToday, presetRange, startOfMonth } from "@/lib/dates"
@@ -93,6 +94,7 @@ export default function ClientDetail() {
           {can("analytics.view") && <TabsTrigger value="analytics" className="min-h-10 px-4">Analytics</TabsTrigger>}
           {can("transcripts.view") && <TabsTrigger value="conversations" className="min-h-10 px-4">Conversations</TabsTrigger>}
           {can("transcripts.view") && <TabsTrigger value="questions" className="min-h-10 px-4">Questions</TabsTrigger>}
+          {can("support.manage") && <TabsTrigger value="support" className="min-h-10 px-4">Support</TabsTrigger>}
           <TabsTrigger value="people" className="min-h-10 px-4">People</TabsTrigger>
           <TabsTrigger value="notes" className="min-h-10 px-4">Notes</TabsTrigger>
           <TabsTrigger value="contacts" className="min-h-10 px-4">Contacts</TabsTrigger>
@@ -119,6 +121,8 @@ export default function ClientDetail() {
         {can("analytics.view") && <TabsContent value="analytics" className="flex flex-col gap-6"><Dashboard client={c} embedded /></TabsContent>}
         {can("transcripts.view") && <TabsContent value="conversations" className="flex flex-col gap-4"><Conversations client={c} embedded /></TabsContent>}
         {can("transcripts.view") && <TabsContent value="questions" className="flex flex-col gap-4"><Questions client={c} embedded /></TabsContent>}
+
+        {can("support.manage") && <TabsContent value="support" className="flex flex-col gap-4"><SupportDesk client={c} embedded /></TabsContent>}
 
         <TabsContent value="people">
           <UsersPanel scope={{ clientId: c.id, clientName: c.name }} canManage={can("client_users.manage")} />

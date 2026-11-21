@@ -195,6 +195,36 @@ export async function seedDemo({ days = 75, log = console.log } = {}) {
     }
   }
 
+  log("Opening support tickets…")
+  const signedIn = async (email) => {
+    const c = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } })
+    must(await c.auth.signInWithPassword({ email, password: DEMO_PASSWORD }), `sign in ${email}`)
+    return c
+  }
+  const dana = await signedIn("dana@northline.test")
+  const lee = await signedIn("lee@northline.test")
+  const pat = await signedIn("pat@harbor.test")
+  const withTranscript = must(await admin.from("conversations").select("conversation_id").eq("client_id", northline.id).eq("has_transcript", true)
+    .order("started_at", { ascending: false }).limit(1), "a conversation")[0]
+  const open = async (as, clientId, subject, body, category, conversationId = null) =>
+    must(await as.rpc("support_open_ticket", { p_client_id: clientId, p_subject: subject, p_body: body, p_category: category, p_conversation_id: conversationId ?? undefined }), `ticket "${subject}"`)
+  const reply = async (as, ticket, body, internal = false) => must(await as.rpc("support_reply", { p_ticket_id: ticket.id, p_body: body, p_internal: internal }), "reply")
+
+  const hours = await open(dana, northline.id, "Maya gave the wrong office hours",
+    "A visitor was told the leasing office closes at 5 pm on Saturdays. We close at 2 pm on Saturdays. Can you correct this?", "change_request", withTranscript?.conversation_id)
+  must(await ownerClient.rpc("support_assign", { p_ticket_id: hours.id, p_assignee_id: ownerId }), "assign")
+  await reply(ownerClient, hours, "Maya's knowledge still has last year's hours page. Updating the Saturday hours and re-testing before I answer.", true)
+  await reply(ownerClient, hours, "Thanks, Dana. Maya now says the office closes at 2 pm on Saturdays. Could you confirm the Sunday hours are still 12 to 4?")
+
+  await open(dana, northline.id, "Avatar is not loading on our listings page",
+    "Since this morning the Maya window stays blank on northlinerealty.example/listings. It works on the home page.", "avatar_down")
+
+  const teammate = await open(lee, northline.id, "How do I add a teammate?", "Our new leasing agent needs to read transcripts. Where do I invite her?", "question")
+  await reply(ownerClient, teammate, "Dana can invite her from the Team page in your portal. Choose Client member so she can read transcripts.")
+  must(await lee.rpc("support_set_status", { p_ticket_id: teammate.id, p_status: "resolved" }), "resolve")
+
+  await open(pat, harbor.id, "Which package suits one avatar?", "We expect about 300 minutes of calls a month. Which package should we choose?", "billing")
+
   log(`Done: ${n} calls for ${avatars.length} avatars.`)
   log(`Sign in as owner@divigner.test (Divigner) or dana@northline.test (client). Password: ${DEMO_PASSWORD}`)
   return { northline, harbor, calls: n }

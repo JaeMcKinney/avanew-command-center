@@ -17,6 +17,8 @@ export async function signIn(page: Page, email: string, password = PASSWORD) {
 /** Fails on any WCAG 2.2 A or AA problem axe can detect. */
 export async function expectAccessible(page: Page) {
   await page.waitForLoadState("networkidle")
+  // A dialog that is still fading in reads as low contrast, so let animations finish first.
+  await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => undefined))))
   // axe ships its own copy of Playwright's types, which lags a version behind.
   const results = await new AxeBuilder({ page: page as never }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze()
   const summary = results.violations.map((v) => `${v.id}: ${v.help} → ${v.nodes.slice(0, 3).map((n) => `${n.target.join(" ")}${v.id === "color-contrast" ? ` [${n.html.slice(0, 140)}] ${n.any[0]?.message ?? ""}` : ""}`).join(" | ")}`)

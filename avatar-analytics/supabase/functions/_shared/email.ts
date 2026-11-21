@@ -1,6 +1,6 @@
 // Sends email through Resend. Settings: RESEND_API_KEY and EMAIL_FROM (both needed).
 
-export type EmailMessage = { to: string; subject: string; text: string; html?: string }
+export type EmailMessage = { to: string; subject: string; text: string; html?: string; replyTo?: string }
 
 export function emailSettings(): { key: string; from: string; base: string } | null {
   const key = Deno.env.get("RESEND_API_KEY")
@@ -26,7 +26,10 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
     const res = await fetch(`${settings.base}/emails`, {
       method: "POST",
       headers: { Authorization: `Bearer ${settings.key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: settings.from, to: [message.to], subject: message.subject, text: message.text, html: message.html ?? textToHtml(message.text) }),
+      body: JSON.stringify({
+        from: settings.from, to: [message.to], subject: message.subject, text: message.text, html: message.html ?? textToHtml(message.text),
+        ...(message.replyTo ? { reply_to: message.replyTo } : {}),
+      }),
       signal: AbortSignal.timeout(20_000),
     })
     if (res.ok) return { status: "sent" }

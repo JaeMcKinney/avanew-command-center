@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { ArrowLeft, CircleHelp, Code2, CreditCard, LayoutDashboard, MessagesSquare, Users } from "lucide-react"
+import { ArrowLeft, CircleHelp, Code2, CreditCard, LayoutDashboard, LifeBuoy, MessagesSquare, Users } from "lucide-react"
 import { Link, Outlet, useOutletContext, useParams } from "react-router-dom"
 import { PortalShell, type NavItem } from "@/components/Shell"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
@@ -40,6 +40,7 @@ export default function PortalLayout() {
     { to: base, label: "Dashboard", icon: LayoutDashboard, end: true },
     ...(can("transcripts.view") ? [{ to: `${base}/conversations`, label: "Conversations", icon: MessagesSquare }] : []),
     ...(can("transcripts.view") || can("questions.answer") ? [{ to: `${base}/questions`, label: "Questions", icon: CircleHelp }] : []),
+    ...(can("support.use") || can("support.manage") ? [{ to: `${base}/support`, label: "Support", icon: LifeBuoy }] : []),
     ...(can("embeds.view") ? [{ to: `${base}/avatars`, label: "Avatars", icon: Code2 }] : []),
     ...(can("client_users.manage") ? [{ to: `${base}/team`, label: "Team", icon: Users }] : []),
     ...(can("billing.view") ? [{ to: `${base}/billing`, label: "Billing", icon: CreditCard }] : []),

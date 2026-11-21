@@ -190,14 +190,28 @@ test("a client pays a custom amount for extra minutes and downloads a period's i
   expect(stripe.sessions.at(-1).form).toMatchObject({ mode: "payment", "line_items[0][price_data][unit_amount]": "3700" })
 })
 
-test("every conversation shows its Tavus conversation ID", async ({ page }) => {
+test("every conversation shows its conversation ID, to the client and to staff", async ({ page, browser }) => {
   await signIn(page, CLIENT_ADMIN)
   await page.getByRole("link", { name: "Conversations" }).click()
   await page.getByRole("button", { name: "This year" }).click()
-  await expect(page.getByRole("table", { name: /Conversations/i }).getByText(/^demo-\d{5}$/).first()).toBeVisible()
+  const table = page.getByRole("table", { name: /Conversations/i })
+  await expect(table.getByRole("columnheader", { name: "Conversation ID" })).toBeVisible()
+  // One ID, with a copy button, on every row.
+  await expect(table.locator("tbody tr")).toHaveCount(25)
+  await expect(table.getByRole("button", { name: /^Copy Conversation ID demo-\d{5}$/ })).toHaveCount(25)
   await page.getByRole("button", { name: /^Read the conversation/i }).first().click()
   await expect(page.getByRole("dialog").getByText(/^demo-\d{5}$/)).toBeVisible()
-  await expect(page.getByRole("dialog").getByRole("button", { name: /^Copy Tavus conversation ID demo-/i })).toBeVisible()
+  await expect(page.getByRole("dialog").getByRole("button", { name: /^Copy Conversation ID demo-/ })).toBeVisible()
+
+  // Staff see the same ID, named for what it is.
+  const staff = await (await browser.newContext()).newPage()
+  await signIn(staff, OWNER)
+  await staff.goto("/admin/clients/northline")
+  await staff.getByRole("tab", { name: "Conversations" }).click()
+  await staff.getByRole("button", { name: "This year" }).click()
+  await expect(staff.getByRole("table", { name: /Conversations/i }).getByRole("button", { name: /^Copy Conversation ID demo-\d{5}$/ })).toHaveCount(25)
+  await staff.getByRole("button", { name: /^Read the conversation/i }).first().click()
+  await expect(staff.getByRole("dialog").getByRole("button", { name: /^Copy Tavus Conversation ID demo-/ })).toBeVisible()
 })
 
 test("staff read, export and answer for a client from inside the client's file", async ({ page }) => {

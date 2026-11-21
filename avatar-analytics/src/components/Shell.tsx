@@ -116,6 +116,7 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
         <div className="flex flex-col items-start gap-1.5 px-2 pt-2">
           <DivignerLogo on="dark" className="h-14" />
           <p className="text-xs font-medium tracking-[0.18em] text-sidebar-muted uppercase">Avalytics</p>
+          <p className="rounded-sm bg-sidebar-accent px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">Divigner Admin</p>
         </div>
         <nav aria-label="Main" className="flex-1">
           <ul className="flex flex-col gap-1">
@@ -147,6 +148,7 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
             <div className="flex items-center gap-3">
               <DivignerLogo className="h-9" />
               <span className="sr-only">Avalytics</span>
+              <span className="rounded-sm bg-sidebar px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">Divigner Admin</span>
             </div>
             <UserBlock tone="plain" />
           </div>
@@ -191,6 +193,7 @@ export function PortalShell({
               </span>
             )}
             <p className="truncate font-display text-lg font-semibold">{clientName}</p>
+            <span className="shrink-0 rounded-sm border px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">Client Portal</span>
           </div>
           <UserBlock tone="plain" />
         </div>

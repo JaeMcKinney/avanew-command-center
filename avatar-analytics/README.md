@@ -18,6 +18,7 @@ This folder is self-contained. It does not share code or a database with the CRM
 | Clients, with name, time zone, brand colour and logo | Built |
 | Tavus list sync, search by name (typo-tolerant), link and unlink avatars | Built, tested against a mock Tavus |
 | Embed codes for each deployment | Built |
+| Support desk: tickets, replies, internal notes, assignment, priority, attached files, email in and out | Built, tested against a mock email service |
 | Call events from Tavus (webhook) and an hourly backup check | Built, tested against a mock Tavus |
 | Talk time totals, by avatar and by day, per client time zone | Built |
 | Client dashboard, conversations and transcripts | Built |
@@ -73,6 +74,8 @@ Tavus ──► tavus-webhook/<avatar token>   checks the signature
   - `usage-check` compares talk time with each client's package: one warning email, a pause at the limit, a resume when there is room.
   - `tavus-pal` reads everything Tavus holds about one avatar for the staff detail page, with keys and header values removed.
   - `invoice-export` zips a period's invoice PDFs from Stripe with a summary CSV.
+  - `support-notify` emails the other side when someone replies on a support ticket (never an internal note). The app calls it after each reply and a schedule catches anything missed.
+  - `support-inbound` receives email sent to the support address from Resend and files it on the right ticket, or opens a new one. It accepts mail only from the address of someone who could have written the same thing in the app.
   - `export-share` turns an export a person uploaded into a private link that expires after 7 days, emails that link to the person who asked, and (on a schedule) removes old export files.
 - `src` — the React app. `src/lib/api.ts` is every read and write the screens make.
 
@@ -150,6 +153,7 @@ The browser tests check every page against WCAG 2.2 AA with axe, in light and da
    - Extra minutes need no Stripe product: the amounts and the price per extra minute are settings on the Packages page, and each purchase is a one-time Checkout payment. Add `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired` to the webhook's events. Turn on the payment methods you want (PayPal, Google Pay, Apple Pay, Link) in Stripe under Settings, Payment methods; Checkout then offers them.
    - Turn on the customer portal in Stripe (Settings, Billing, Customer portal) so "Payment method" works.
    - Schedule `usage-check` every 10 minutes (same form as the schedules below). It also runs whenever a call ends.
+   - **Support desk email.** Replies are emailed with `RESEND_API_KEY` and `EMAIL_FROM`. Schedule `support-notify` every 5 minutes (same form as the schedules below). To let people answer those emails, and email new tickets in, add a receiving address in Resend, set `SUPPORT_INBOUND_ADDRESS` to it, add a Resend webhook for `email.received` that points at `<functions URL>/support-inbound`, and set `RESEND_WEBHOOK_SECRET` to that webhook's signing secret. Without these the desk works in the app and by outgoing email only. Receiving email has been tested against a stand-in for Resend, not the real service.
 5. Deploy the functions: `npx supabase functions deploy`.
 6. Deploy the app (for example on Vercel, with this folder as the root directory) with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set. Leave `VITE_FUNCTIONS_URL` unset.
 7. **Create the Owner.** In the SQL editor, name the email address that will be the Owner:

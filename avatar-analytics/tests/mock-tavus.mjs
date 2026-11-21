@@ -54,6 +54,7 @@ function seed() {
     conversations: [],
     documents: [],
     emails: [],
+    received: {},
     emailStatus: 200,
     recrawls: [],
     recrawlStatus: 202,
@@ -178,6 +179,14 @@ const server = http.createServer(async (req, res) => {
     if (state.emailStatus !== 200) return send(res, state.emailStatus, { message: "mock failure" })
     state.emails.push(await readBody(req))
     return send(res, 200, { id: `email-mock-${state.emails.length}` })
+  }
+
+  // An email that arrived at the support address. Tests put them in state.received.
+  const received = path.match(/^\/resend\/emails\/receiving\/([^/]+)$/)
+  if (received && req.method === "GET") {
+    if (!/^Bearer \S+/.test(req.headers.authorization ?? "")) return send(res, 401, { message: "Missing API key" })
+    const email = (state.received ?? {})[decodeURIComponent(received[1])]
+    return email ? send(res, 200, email) : send(res, 404, { message: "Email not found" })
   }
 
   if (!req.headers["x-api-key"]) return send(res, 401, { message: "Invalid access token" })
