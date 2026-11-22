@@ -5,19 +5,39 @@ export type Database = {
   
   "public": {
           Tables: {
-            "audit_log": {
+            "agencies": {
                   Row: {
-                    "action": string,"actor_id": string | null,"client_id": string | null,"created_at": string,"detail": NonNullable<Json>,"id": number,"target_id": string | null,"target_type": string | null
+                    "created_at": string,"created_by": string | null,"domain": string | null,"fee_cents": number | null,"icon_url": string | null,"id": string,"logo_dark_url": string | null,"logo_light_url": string | null,"name": string,"payment_model": string | null,"slug": string,"status": string,"theme": Json | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "action": string,"actor_id"?: string | null,"client_id"?: string | null,"created_at"?: string,"detail"?: NonNullable<Json>,"id"?: never,"target_id"?: string | null,"target_type"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"domain"?: string | null,"fee_cents"?: number | null,"icon_url"?: string | null,"id"?: string,"logo_dark_url"?: string | null,"logo_light_url"?: string | null,"name": string,"payment_model"?: string | null,"slug": string,"status"?: string,"theme"?: Json | null,"updated_at"?: string
                   }
                   Update: {
-                    "action"?: string,"actor_id"?: string | null,"client_id"?: string | null,"created_at"?: string,"detail"?: NonNullable<Json>,"id"?: never,"target_id"?: string | null,"target_type"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"domain"?: string | null,"fee_cents"?: number | null,"icon_url"?: string | null,"id"?: string,"logo_dark_url"?: string | null,"logo_light_url"?: string | null,"name"?: string,"payment_model"?: string | null,"slug"?: string,"status"?: string,"theme"?: Json | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"audit_log": {
+                  Row: {
+                    "action": string,"actor_id": string | null,"agency_id": string | null,"client_id": string | null,"created_at": string,"detail": NonNullable<Json>,"id": number,"target_id": string | null,"target_type": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": string,"actor_id"?: string | null,"agency_id"?: string | null,"client_id"?: string | null,"created_at"?: string,"detail"?: NonNullable<Json>,"id"?: never,"target_id"?: string | null,"target_type"?: string | null
+                  }
+                  Update: {
+                    "action"?: string,"actor_id"?: string | null,"agency_id"?: string | null,"client_id"?: string | null,"created_at"?: string,"detail"?: NonNullable<Json>,"id"?: never,"target_id"?: string | null,"target_type"?: string | null
                   }
                   Relationships: [
                     {
+      foreignKeyName: "audit_log_agency_id_fkey"
+      columns: ["agency_id"]
+isOneToOne: false
+      referencedRelation: "agencies"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "audit_log_client_id_fkey"
       columns: ["client_id"]
 isOneToOne: false
@@ -179,17 +199,23 @@ isOneToOne: false
                   ]
                 },"clients": {
                   Row: {
-                    "account_manager_id": string | null,"address": string | null,"brand_color": string | null,"created_at": string,"created_by": string | null,"id": string,"industry": string | null,"logo_url": string | null,"name": string,"phone": string | null,"slug": string,"status": string,"timezone": string,"updated_at": string,"website": string | null
+                    "account_manager_id": string | null,"address": string | null,"agency_id": string | null,"brand_color": string | null,"created_at": string,"created_by": string | null,"id": string,"industry": string | null,"logo_url": string | null,"name": string,"phone": string | null,"slug": string,"status": string,"timezone": string,"updated_at": string,"website": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "account_manager_id"?: string | null,"address"?: string | null,"brand_color"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"industry"?: string | null,"logo_url"?: string | null,"name": string,"phone"?: string | null,"slug": string,"status"?: string,"timezone"?: string,"updated_at"?: string,"website"?: string | null
+                    "account_manager_id"?: string | null,"address"?: string | null,"agency_id"?: string | null,"brand_color"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"industry"?: string | null,"logo_url"?: string | null,"name": string,"phone"?: string | null,"slug": string,"status"?: string,"timezone"?: string,"updated_at"?: string,"website"?: string | null
                   }
                   Update: {
-                    "account_manager_id"?: string | null,"address"?: string | null,"brand_color"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"industry"?: string | null,"logo_url"?: string | null,"name"?: string,"phone"?: string | null,"slug"?: string,"status"?: string,"timezone"?: string,"updated_at"?: string,"website"?: string | null
+                    "account_manager_id"?: string | null,"address"?: string | null,"agency_id"?: string | null,"brand_color"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"industry"?: string | null,"logo_url"?: string | null,"name"?: string,"phone"?: string | null,"slug"?: string,"status"?: string,"timezone"?: string,"updated_at"?: string,"website"?: string | null
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "clients_agency_id_fkey"
+      columns: ["agency_id"]
+isOneToOne: false
+      referencedRelation: "agencies"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"conversation_insights": {
                   Row: {
@@ -325,31 +351,43 @@ isOneToOne: false
                   ]
                 },"plans": {
                   Row: {
-                    "created_at": string,"currency": string,"description": string,"id": string,"included_minutes": number,"is_active": boolean,"max_concurrent": number | null,"monthly_price_cents": number,"name": string,"sort": number,"stripe_price_id": string | null,"updated_at": string
+                    "agency_id": string | null,"created_at": string,"currency": string,"description": string,"id": string,"included_minutes": number,"is_active": boolean,"max_concurrent": number | null,"monthly_price_cents": number,"name": string,"sort": number,"stripe_price_id": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"currency"?: string,"description"?: string,"id"?: string,"included_minutes": number,"is_active"?: boolean,"max_concurrent"?: number | null,"monthly_price_cents": number,"name": string,"sort"?: number,"stripe_price_id"?: string | null,"updated_at"?: string
+                    "agency_id"?: string | null,"created_at"?: string,"currency"?: string,"description"?: string,"id"?: string,"included_minutes": number,"is_active"?: boolean,"max_concurrent"?: number | null,"monthly_price_cents": number,"name": string,"sort"?: number,"stripe_price_id"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"currency"?: string,"description"?: string,"id"?: string,"included_minutes"?: number,"is_active"?: boolean,"max_concurrent"?: number | null,"monthly_price_cents"?: number,"name"?: string,"sort"?: number,"stripe_price_id"?: string | null,"updated_at"?: string
-                  }
-                  Relationships: [
-                    
-                  ]
-                },"profiles": {
-                  Row: {
-                    "client_id": string | null,"created_at": string,"email": string,"full_name": string,"id": string,"invited_by": string | null,"is_active": boolean,"phone": string | null,"role_id": string,"side": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "client_id"?: string | null,"created_at"?: string,"email": string,"full_name"?: string,"id": string,"invited_by"?: string | null,"is_active"?: boolean,"phone"?: string | null,"role_id": string,"side": string
-                  }
-                  Update: {
-                    "client_id"?: string | null,"created_at"?: string,"email"?: string,"full_name"?: string,"id"?: string,"invited_by"?: string | null,"is_active"?: boolean,"phone"?: string | null,"role_id"?: string,"side"?: string
+                    "agency_id"?: string | null,"created_at"?: string,"currency"?: string,"description"?: string,"id"?: string,"included_minutes"?: number,"is_active"?: boolean,"max_concurrent"?: number | null,"monthly_price_cents"?: number,"name"?: string,"sort"?: number,"stripe_price_id"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "plans_agency_id_fkey"
+      columns: ["agency_id"]
+isOneToOne: false
+      referencedRelation: "agencies"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"profiles": {
+                  Row: {
+                    "agency_id": string | null,"client_id": string | null,"created_at": string,"email": string,"full_name": string,"id": string,"invited_by": string | null,"is_active": boolean,"phone": string | null,"role_id": string,"side": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "agency_id"?: string | null,"client_id"?: string | null,"created_at"?: string,"email": string,"full_name"?: string,"id": string,"invited_by"?: string | null,"is_active"?: boolean,"phone"?: string | null,"role_id": string,"side": string
+                  }
+                  Update: {
+                    "agency_id"?: string | null,"client_id"?: string | null,"created_at"?: string,"email"?: string,"full_name"?: string,"id"?: string,"invited_by"?: string | null,"is_active"?: boolean,"phone"?: string | null,"role_id"?: string,"side"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "profiles_agency_id_fkey"
+      columns: ["agency_id"]
+isOneToOne: false
+      referencedRelation: "agencies"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "profiles_client_id_fkey"
       columns: ["client_id"]
 isOneToOne: false
@@ -589,17 +627,23 @@ isOneToOne: false
                   ]
                 },"tavus_deployments": {
                   Row: {
-                    "allowed_origins": (string)[],"channel": string,"deployment_id": string,"limits": NonNullable<Json>,"name": string,"page_url": string | null,"pal_id": string,"removed_at": string | null,"status": string,"synced_at": string,"tavus_created_at": string | null,"tavus_updated_at": string | null,"thumbnail_image_url": string | null,"usage_today": number | null,"usage_total": number | null
+                    "agency_id": string | null,"allowed_origins": (string)[],"channel": string,"deployment_id": string,"limits": NonNullable<Json>,"name": string,"page_url": string | null,"pal_id": string,"removed_at": string | null,"status": string,"synced_at": string,"tavus_created_at": string | null,"tavus_updated_at": string | null,"thumbnail_image_url": string | null,"usage_today": number | null,"usage_total": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "allowed_origins"?: (string)[],"channel": string,"deployment_id": string,"limits"?: NonNullable<Json>,"name"?: string,"page_url"?: string | null,"pal_id": string,"removed_at"?: string | null,"status": string,"synced_at"?: string,"tavus_created_at"?: string | null,"tavus_updated_at"?: string | null,"thumbnail_image_url"?: string | null,"usage_today"?: number | null,"usage_total"?: number | null
+                    "agency_id"?: string | null,"allowed_origins"?: (string)[],"channel": string,"deployment_id": string,"limits"?: NonNullable<Json>,"name"?: string,"page_url"?: string | null,"pal_id": string,"removed_at"?: string | null,"status": string,"synced_at"?: string,"tavus_created_at"?: string | null,"tavus_updated_at"?: string | null,"thumbnail_image_url"?: string | null,"usage_today"?: number | null,"usage_total"?: number | null
                   }
                   Update: {
-                    "allowed_origins"?: (string)[],"channel"?: string,"deployment_id"?: string,"limits"?: NonNullable<Json>,"name"?: string,"page_url"?: string | null,"pal_id"?: string,"removed_at"?: string | null,"status"?: string,"synced_at"?: string,"tavus_created_at"?: string | null,"tavus_updated_at"?: string | null,"thumbnail_image_url"?: string | null,"usage_today"?: number | null,"usage_total"?: number | null
+                    "agency_id"?: string | null,"allowed_origins"?: (string)[],"channel"?: string,"deployment_id"?: string,"limits"?: NonNullable<Json>,"name"?: string,"page_url"?: string | null,"pal_id"?: string,"removed_at"?: string | null,"status"?: string,"synced_at"?: string,"tavus_created_at"?: string | null,"tavus_updated_at"?: string | null,"thumbnail_image_url"?: string | null,"usage_today"?: number | null,"usage_total"?: number | null
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "tavus_deployments_agency_id_fkey"
+      columns: ["agency_id"]
+isOneToOne: false
+      referencedRelation: "agencies"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"tavus_events": {
                   Row: {
@@ -623,31 +667,43 @@ isOneToOne: false
                   ]
                 },"tavus_pals": {
                   Row: {
-                    "callback_host": string | null,"default_face_id": string | null,"first_seen_at": string,"name": string,"pal_id": string,"pipeline_mode": string | null,"removed_at": string | null,"synced_at": string,"tavus_created_at": string | null,"tavus_updated_at": string | null,"thumbnail_image_url": string | null
+                    "agency_id": string | null,"callback_host": string | null,"default_face_id": string | null,"first_seen_at": string,"name": string,"pal_id": string,"pipeline_mode": string | null,"removed_at": string | null,"synced_at": string,"tavus_created_at": string | null,"tavus_updated_at": string | null,"thumbnail_image_url": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "callback_host"?: string | null,"default_face_id"?: string | null,"first_seen_at"?: string,"name"?: string,"pal_id": string,"pipeline_mode"?: string | null,"removed_at"?: string | null,"synced_at"?: string,"tavus_created_at"?: string | null,"tavus_updated_at"?: string | null,"thumbnail_image_url"?: string | null
+                    "agency_id"?: string | null,"callback_host"?: string | null,"default_face_id"?: string | null,"first_seen_at"?: string,"name"?: string,"pal_id": string,"pipeline_mode"?: string | null,"removed_at"?: string | null,"synced_at"?: string,"tavus_created_at"?: string | null,"tavus_updated_at"?: string | null,"thumbnail_image_url"?: string | null
                   }
                   Update: {
-                    "callback_host"?: string | null,"default_face_id"?: string | null,"first_seen_at"?: string,"name"?: string,"pal_id"?: string,"pipeline_mode"?: string | null,"removed_at"?: string | null,"synced_at"?: string,"tavus_created_at"?: string | null,"tavus_updated_at"?: string | null,"thumbnail_image_url"?: string | null
+                    "agency_id"?: string | null,"callback_host"?: string | null,"default_face_id"?: string | null,"first_seen_at"?: string,"name"?: string,"pal_id"?: string,"pipeline_mode"?: string | null,"removed_at"?: string | null,"synced_at"?: string,"tavus_created_at"?: string | null,"tavus_updated_at"?: string | null,"thumbnail_image_url"?: string | null
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "tavus_pals_agency_id_fkey"
+      columns: ["agency_id"]
+isOneToOne: false
+      referencedRelation: "agencies"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"tavus_sync_runs": {
                   Row: {
-                    "deployments_count": number | null,"error": string | null,"finished_at": string | null,"id": number,"pals_count": number | null,"started_at": string,"status": string,"trigger": string,"triggered_by": string | null
+                    "agency_id": string | null,"deployments_count": number | null,"error": string | null,"finished_at": string | null,"id": number,"pals_count": number | null,"started_at": string,"status": string,"trigger": string,"triggered_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "deployments_count"?: number | null,"error"?: string | null,"finished_at"?: string | null,"id"?: never,"pals_count"?: number | null,"started_at"?: string,"status"?: string,"trigger"?: string,"triggered_by"?: string | null
+                    "agency_id"?: string | null,"deployments_count"?: number | null,"error"?: string | null,"finished_at"?: string | null,"id"?: never,"pals_count"?: number | null,"started_at"?: string,"status"?: string,"trigger"?: string,"triggered_by"?: string | null
                   }
                   Update: {
-                    "deployments_count"?: number | null,"error"?: string | null,"finished_at"?: string | null,"id"?: never,"pals_count"?: number | null,"started_at"?: string,"status"?: string,"trigger"?: string,"triggered_by"?: string | null
+                    "agency_id"?: string | null,"deployments_count"?: number | null,"error"?: string | null,"finished_at"?: string | null,"id"?: never,"pals_count"?: number | null,"started_at"?: string,"status"?: string,"trigger"?: string,"triggered_by"?: string | null
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "tavus_sync_runs_agency_id_fkey"
+      columns: ["agency_id"]
+isOneToOne: false
+      referencedRelation: "agencies"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"transcripts": {
                   Row: {
@@ -727,7 +783,43 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "answer_question":
+            "agency_set_brand":
+{ Args: { "p_agency_id": string,"p_icon_url"?: string,"p_logo_dark_url"?: string,"p_logo_light_url"?: string,"p_theme": Json }; Returns: {
+              "created_at": string,
+"created_by": string | null,
+"domain": string | null,
+"fee_cents": number | null,
+"icon_url": string | null,
+"id": string,
+"logo_dark_url": string | null,
+"logo_light_url": string | null,
+"name": string,
+"payment_model": string | null,
+"slug": string,
+"status": string,
+"theme": Json | null,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "agencies"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"agency_staff":
+{ Args: { "p_agency_id": string }; Returns: {
+              "created_at": string,"email": string,"full_name": string,"id": string,"is_active": boolean,"role_name": string
+            }[]
+                           },
+"agency_usage":
+{ Args: { "p_from": string,"p_to": string }; Returns: Json[]
+                           },
+"agency_usage_by_day":
+{ Args: { "p_agency_id": string,"p_from": string,"p_to": string }; Returns: {
+              "conversations": number,"minutes": number,"usage_date": string
+            }[]
+                           },
+"answer_question":
 { Args: { "p_answer": string,"p_group_id": string }; Returns: {
               "answer": string | null,
 "answered_at": string | null,
@@ -757,13 +849,43 @@ isOneToOne: false
 "billing_summary":
 { Args: { "p_client_id": string }; Returns: Json
                            },
+"brand_for_host":
+{ Args: { "p_host"?: string,"p_slug"?: string }; Returns: Json
+                           },
+"can_invite_to_agency":
+{ Args: { "p_agency_id": string }; Returns: boolean
+                           },
 "check_access":
 { Args: { "p_client_id"?: string,"p_permission": string }; Returns: boolean
                            },
+"create_agency":
+{ Args: { "p_domain"?: string,"p_fee_cents"?: number,"p_name": string,"p_payment_model"?: string,"p_slug": string,"p_theme"?: Json }; Returns: {
+              "created_at": string,
+"created_by": string | null,
+"domain": string | null,
+"fee_cents": number | null,
+"icon_url": string | null,
+"id": string,
+"logo_dark_url": string | null,
+"logo_light_url": string | null,
+"name": string,
+"payment_model": string | null,
+"slug": string,
+"status": string,
+"theme": Json | null,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "agencies"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_client":
 { Args: { "p_brand_color"?: string,"p_logo_url"?: string,"p_name": string,"p_slug": string,"p_timezone"?: string }; Returns: {
               "account_manager_id": string | null,
 "address": string | null,
+"agency_id": string | null,
 "brand_color": string | null,
 "created_at": string,
 "created_by": string | null,
@@ -831,6 +953,9 @@ isOneToOne: false
                            },
 "my_access":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"my_agency":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "refresh_avatar_photos":
 { Args: Record<PropertyKey, never>; Returns: number
@@ -939,6 +1064,29 @@ isOneToOne: false
               "currency": string,"minutes": number,"period_end": string,"period_start": string
             }[]
                            },
+"update_agency":
+{ Args: { "p_agency_id": string,"p_domain": string,"p_fee_cents": number,"p_name": string,"p_payment_model": string,"p_status": string }; Returns: {
+              "created_at": string,
+"created_by": string | null,
+"domain": string | null,
+"fee_cents": number | null,
+"icon_url": string | null,
+"id": string,
+"logo_dark_url": string | null,
+"logo_light_url": string | null,
+"name": string,
+"payment_model": string | null,
+"slug": string,
+"status": string,
+"theme": Json | null,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "agencies"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "update_my_profile":
 { Args: { "p_full_name": string }; Returns: undefined
                            },

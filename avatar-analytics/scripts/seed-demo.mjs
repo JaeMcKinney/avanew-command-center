@@ -49,7 +49,14 @@ const SAMPLE_TOPICS = {
   "That works. Can I book a tour for Saturday?": "Can I book a tour for Saturday?",
 }
 
-export async function seedDemo({ days = 75, log = console.log, glass = false } = {}) {
+// Avanew's look, as lib/brand.ts holds it.
+const AVANEW_THEME = {
+  motion: true,
+  light: { background: "#edf1f7", card: "#f8fafd", text: "#0b1f3a", action: "#1d3a66", action_text: "#ffffff", highlight: "#d4af4c", sidebar: "#0a1a30" },
+  dark: { background: "#0b1828", card: "#10223a", text: "#e6ecf5", action: "#d9b95c", action_text: "#0b1f3a", highlight: "#d9b95c", sidebar: "#07111f" },
+}
+
+export async function seedDemo({ days = 75, log = console.log, glass = false, agency = false } = {}) {
   const { url, serviceKey, anonKey, functionsUrl } = settings()
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
 
@@ -59,9 +66,9 @@ export async function seedDemo({ days = 75, log = console.log, glass = false } =
   }
   const roles = Object.fromEntries(must(await admin.from("roles").select("id, key"), "roles").map((r) => [r.key, r.id]))
 
-  async function user(email, fullName, role, clientId) {
+  async function user(email, fullName, role, clientId, agencyId) {
     const created = must(await admin.auth.admin.createUser({ email, password: DEMO_PASSWORD, email_confirm: true, user_metadata: { full_name: fullName } }), `create ${email}`)
-    must(await admin.from("profiles").upsert({ id: created.user.id, email, full_name: fullName, side: clientId ? "client" : "divigner", role_id: roles[role], client_id: clientId ?? null }), `profile ${email}`)
+    must(await admin.from("profiles").upsert({ id: created.user.id, email, full_name: fullName, side: clientId ? "client" : "divigner", role_id: roles[role], client_id: clientId ?? null, agency_id: clientId ? null : (agencyId ?? null) }), `profile ${email}`)
     return created.user.id
   }
 
@@ -278,13 +285,53 @@ export async function seedDemo({ days = 75, log = console.log, glass = false } =
     log(`Riverside Clinic: ${asked.length} Glass questions. Sign in as noor@riverside.test.`)
   }
 
+  if (agency) {
+    // An agency with a team and a client of its own. Off by default so the
+    // browser tests keep their two clients; `npm run seed` turns it on.
+    log("Creating an agency with a client of its own…")
+    // A made-up fee, for the demo only. The address works on a developer's machine.
+    const avanew = must(await ownerClient.rpc("create_agency", { p_name: "Avanew", p_slug: "avanew", p_domain: "avanew.localhost", p_theme: AVANEW_THEME, p_payment_model: "subscription", p_fee_cents: 25000 }), "agency")
+    await user("ava@avanew.test", "Ava Lindqvist", "owner", null, avanew.id)
+    await user("max@avanew.test", "Max Okafor", "analyst", null, avanew.id)
+    const ava = await signedIn("ava@avanew.test")
+    const lakeside = must(await ava.rpc("create_client", { p_name: "Lakeside Family Practice", p_slug: "lakeside", p_timezone: "America/Chicago" }), "agency client")
+    const hillcrest = must(await ava.rpc("create_client", { p_name: "Hillcrest Pediatrics", p_slug: "hillcrest", p_timezone: "America/Chicago" }), "agency client")
+    must(await admin.from("clients").update({ status: "active", industry: "Primary care" }).eq("id", lakeside.id), "activate")
+    must(await admin.from("clients").update({ status: "active", industry: "Pediatrics" }).eq("id", hillcrest.id), "activate")
+    await user("sam@lakeside.test", "Sam Ortiz", "client_admin", lakeside.id)
+    // The agency's avatars come from its own Tavus account, so they are added here directly.
+    const theirs = []
+    for (const [client, palId, name, label] of [[lakeside, "pa90c0de0009", "Dr. Lake", "Front desk"], [hillcrest, "pa91c0de0010", "Poppy", "Parent helper"]]) {
+      must(await admin.from("tavus_pals").upsert({ pal_id: palId, name, agency_id: avanew.id }), "agency avatar")
+      theirs.push(must(await admin.from("avatars").insert({ client_id: client.id, tavus_pal_id: palId, display_name: name, role_label: label }).select("id").single(), "agency avatar"))
+    }
+    const agencyEvents = []
+    for (let d = days - 1; d >= 0; d--) {
+      for (const [index, avatar] of theirs.entries()) {
+        const calls = Math.floor(rand() * (index === 0 ? 3.6 : 2.2))
+        for (let i = 0; i < calls; i++) {
+          const start = Math.min(now - 120_000 - Math.floor(rand() * 3_000_000), now - d * 86_400_000 - Math.floor(rand() * 43_200_000))
+          const seconds = 60 + Math.floor(rand() ** 2 * 540)
+          const id = `demo-${String(++n).padStart(5, "0")}`
+          agencyEvents.push([avatar.id, { conversation_id: id, event_type: "system.pal_joined", timestamp: new Date(start).toISOString(), properties: {} }])
+          agencyEvents.push([avatar.id, { conversation_id: id, event_type: "system.shutdown", timestamp: new Date(start + seconds * 1000).toISOString(), properties: { shutdown_reason: "participant_left_timeout" } }])
+        }
+      }
+    }
+    for (let i = 0; i < agencyEvents.length; i += 25) {
+      await Promise.all(agencyEvents.slice(i, i + 25).map(async ([avatarId, payload]) =>
+        must(await admin.rpc("ingest_tavus_event", { p_avatar_id: avatarId, p_payload: payload, p_source: "webhook" }), "ingest")))
+    }
+    log("Avanew: sign in as ava@avanew.test (agency Owner) or sam@lakeside.test (its client), at http://avanew.localhost:5180/login.")
+  }
+
   log(`Done: ${n} calls for ${avatars.length} avatars.`)
   log(`Sign in as owner@divigner.test (Divigner) or dana@northline.test (client). Password: ${DEMO_PASSWORD}`)
   return { northline, harbor, calls: n }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  seedDemo({ glass: true }).catch((err) => {
+  seedDemo({ glass: true, agency: true }).catch((err) => {
     console.error(err.message)
     process.exit(1)
   })

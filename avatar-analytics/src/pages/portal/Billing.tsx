@@ -21,7 +21,7 @@ import { formatDay, formatRange, presetRange, todayIn } from "@/lib/dates"
 import { count, minutes, money } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
-import { COMPANY } from "@/lib/edition"
+import { company } from "@/lib/brand"
 
 const dayOf = (iso: string | null, timeZone: string) =>
   iso ? new Intl.DateTimeFormat("en-US", { timeZone, month: "long", day: "numeric", year: "numeric" }).format(new Date(iso)) : "the end of this period"
@@ -298,7 +298,7 @@ export default function Billing() {
           </div>
           {justPaid && <p role="status" className="rounded-lg bg-info-soft p-3 text-sm">Thank you. We are confirming your payment; this page updates by itself in a few seconds.</p>}
           {offered.length === 0 ? (
-            <EmptyState title="No Packages Are Available Yet">{COMPANY} is still setting up your packages. Check back soon.</EmptyState>
+            <EmptyState title="No Packages Are Available Yet">{company()} is still setting up your packages. Check back soon.</EmptyState>
           ) : (
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {offered.map((plan) => (

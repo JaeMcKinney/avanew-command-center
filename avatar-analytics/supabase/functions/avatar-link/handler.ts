@@ -9,7 +9,7 @@
 //   { action: "retry", avatar_id }     set the webhook up again after an error
 //   { action: "unlink", avatar_id }
 
-import { requireAccess, requireUser, serviceClient, webhookUrlFor, functionsBaseUrl, writeAudit, type SupabaseClient } from "../_shared/clients.ts"
+import { requireAccess, requireUser, serviceClient, webhookUrlFor, functionsBaseUrl, writeAudit, type SupabaseClient, requireDivignerAccount } from "../_shared/clients.ts"
 import { endpoint, HttpError, json, readJson } from "../_shared/http.ts"
 import { randomHex } from "../_shared/signature.ts"
 import { getPal, patchPal, TavusError } from "../_shared/tavus.ts"
@@ -159,6 +159,7 @@ async function linkOne(
 
 export const handler = endpoint(async (req) => {
   const caller = await requireUser(req)
+  await requireDivignerAccount(caller, "Tavus")
   const body = await readJson<Body>(req)
   const admin = serviceClient()
 

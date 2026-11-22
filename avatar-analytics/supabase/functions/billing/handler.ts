@@ -9,7 +9,7 @@
 //   "topup"       { amount_cents } → { url }  Stripe's page to pay for extra minutes this period
 
 import { checkUsage, syncSubscription } from "../_shared/billing.ts"
-import { requireAccess, requireUser, serviceClient, writeAudit } from "../_shared/clients.ts"
+import { requireAccess, requireUser, serviceClient, writeAudit, requireDivignerAccount } from "../_shared/clients.ts"
 import { endpoint, HttpError, json, readJson } from "../_shared/http.ts"
 import { notify } from "../_shared/notify.ts"
 import {
@@ -27,6 +27,7 @@ export const handler = endpoint(async (req) => {
   const body = await readJson<Body>(req)
   if (!body.client_id || !UUID.test(body.client_id)) throw new HttpError(400, "Choose a client")
   await requireAccess(caller, "billing.manage", body.client_id)
+  await requireDivignerAccount(caller, "Online payment")
 
   const admin = serviceClient()
   const appUrl = (Deno.env.get("APP_URL") ?? "").replace(/\/+$/, "")

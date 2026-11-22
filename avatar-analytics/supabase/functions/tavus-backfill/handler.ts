@@ -4,7 +4,7 @@
 //
 // Body (all optional): { since_hours: 48, max_pages: 5 }
 
-import { isScheduledCall, requireAccess, requireUser, serviceClient } from "../_shared/clients.ts"
+import { isScheduledCall, requireAccess, requireUser, serviceClient, requireDivignerAccount } from "../_shared/clients.ts"
 import { endpoint, json } from "../_shared/http.ts"
 import { getConversationWithEvents, listConversations } from "../_shared/tavus.ts"
 import { toIso } from "../_shared/time.ts"
@@ -15,6 +15,7 @@ export const handler = endpoint(async (req) => {
   if (!isScheduledCall(req)) {
     const caller = await requireUser(req)
     await requireAccess(caller, "avatars.link")
+    await requireDivignerAccount(caller, "Tavus")
   }
   const body: Body = await req.json().catch(() => ({}))
   const sinceHours = Math.min(Math.max(Number(body.since_hours) || 48, 1), 24 * 90)

@@ -4,7 +4,7 @@
 //
 // Body: { pal_id }
 
-import { requireAccess, requireUser, serviceClient } from "../_shared/clients.ts"
+import { requireAccess, requireUser, serviceClient, requireDivignerAccount } from "../_shared/clients.ts"
 import { endpoint, HttpError, json, readJson } from "../_shared/http.ts"
 import { TavusError, tavusGet } from "../_shared/tavus.ts"
 
@@ -38,6 +38,7 @@ const enc = encodeURIComponent
 export const handler = endpoint(async (req) => {
   const caller = await requireUser(req)
   await requireAccess(caller, "avatars.link")
+  await requireDivignerAccount(caller, "Tavus")
   const { pal_id } = await readJson<{ pal_id?: string }>(req)
   if (!pal_id || !/^[A-Za-z0-9_-]{3,64}$/.test(pal_id)) throw new HttpError(400, "Choose an avatar")
 

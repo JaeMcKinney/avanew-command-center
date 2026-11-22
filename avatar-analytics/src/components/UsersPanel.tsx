@@ -17,7 +17,7 @@ import {
   inviteUser, listAssignments, listClients, listProfiles, listRoles, setAssignments, setUserActive, setUserRole,
   type Profile, type Role,
 } from "@/lib/api"
-import { COMPANY } from "@/lib/edition"
+import { company } from "@/lib/brand"
 
 type Scope = { side: "divigner" } | { clientId: string; clientName: string }
 
@@ -84,7 +84,7 @@ function InviteDialog({ scope, roles, open, onOpenChange }: { scope: Scope; role
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{"side" in scope ? `Invite a ${COMPANY} User` : `Invite Someone at ${scope.clientName}`}</DialogTitle>
+          <DialogTitle>{"side" in scope ? `Invite a ${company()} User` : `Invite Someone at ${scope.clientName}`}</DialogTitle>
           <DialogDescription>They get an email with a link to choose a password.</DialogDescription>
         </DialogHeader>
         <form
@@ -192,7 +192,7 @@ export function UsersPanel({ scope, canManage }: { scope: Scope; canManage: bool
         <div>
           <Button className="min-h-10" onClick={() => setInviting(true)}>
             <UserPlus aria-hidden="true" />
-            {isTeam ? `Invite a ${COMPANY} user` : "Invite a user"}
+            {isTeam ? `Invite a ${company()} user` : "Invite a user"}
           </Button>
         </div>
       )}

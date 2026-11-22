@@ -2,21 +2,22 @@ import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { LoadingBlock } from "@/components/States"
 import { BrandLogo } from "@/components/Shell"
-import { VoiceWaves } from "@/editions/AvanewBackdrop"
+import { VoiceWaves } from "@/components/MotionBackdrop"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/hooks/useAuth"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
-import { COMPANY, EDITION } from "@/lib/edition"
+import { company, useBrand } from "@/lib/brand"
 import { supabase } from "@/lib/supabase"
 
 export function AuthCard({ title, children }: { title: string; children: React.ReactNode }) {
   useDocumentTitle(title)
+  const { motion } = useBrand()
   return (
     // The sign-in page always wears the dark look, whatever the device setting.
     <div className="dark site-backdrop relative grid min-h-dvh place-items-center overflow-hidden px-4 py-10 text-foreground">
-      {EDITION.id === "avanew" && <VoiceWaves theme="dark" />}
+      {motion && <VoiceWaves />}
       <main id="main" className="relative flex w-full max-w-sm flex-col gap-6 rounded-lg border bg-card p-6 sm:p-8">
         <div className="flex flex-col items-center gap-2 text-center">
           <BrandLogo on="dark" className="h-20" />
@@ -45,7 +46,7 @@ export default function Login() {
     return (
       <AuthCard title="No Access">
         <p role="alert" className="text-sm">
-          This account is signed in but does not have access to Avalytics. It may have been deactivated. Ask your {COMPANY} contact for help.
+          This account is signed in but does not have access to Avalytics. It may have been deactivated. Ask your {company()} contact for help.
         </p>
         <Button variant="outline" className="min-h-11" onClick={() => void signOut()}>Sign out</Button>
       </AuthCard>
@@ -88,7 +89,7 @@ export default function Login() {
           Forgot your password?
         </Button>
       </form>
-      <p className="text-xs text-muted-foreground">Accounts are by invitation. Ask your {COMPANY} contact if you need one.</p>
+      <p className="text-xs text-muted-foreground">Accounts are by invitation. Ask your {company()} contact if you need one.</p>
     </AuthCard>
   )
 }

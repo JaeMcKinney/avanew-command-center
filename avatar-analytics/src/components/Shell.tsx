@@ -7,7 +7,7 @@ import { NavLink, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/hooks/useAuth"
-import { COMPANY, EDITION } from "@/lib/edition"
+import { company, useBrand } from "@/lib/brand"
 import { currentTheme, setTheme, type Theme } from "@/lib/theme"
 import { cn } from "@/lib/utils"
 
@@ -21,14 +21,16 @@ function SkipLink() {
   )
 }
 
-/** The company's logo, in the version that suits the surface it sits on. */
+/** The logo of whoever's app this is, in the version that suits the surface it sits on. */
 export function BrandLogo({ on = "auto", className }: { on?: "dark" | "auto"; className?: string }) {
-  const { onDark, onLight, width, height } = EDITION.logo
-  if (on === "dark") return <img src={onDark} alt={EDITION.companyFull} width={width} height={height} className={cn("h-12 w-auto", className)} />
+  const { logo, companyFull } = useBrand()
+  // An agency that has not uploaded a logo yet is shown by name.
+  if (!logo.onDark && !logo.onLight) return <span className={cn("font-display text-2xl font-semibold", on === "dark" && "text-sidebar-foreground")}>{companyFull}</span>
+  if (on === "dark") return <img src={logo.onDark} alt={companyFull} className={cn("h-12 w-auto max-w-full object-contain", className)} />
   return (
     <>
-      <img src={onLight} alt={EDITION.companyFull} width={width} height={height} className={cn("h-12 w-auto dark:hidden", className)} />
-      <img src={onDark} alt={EDITION.companyFull} width={width} height={height} className={cn("hidden h-12 w-auto dark:block", className)} />
+      <img src={logo.onLight} alt={companyFull} className={cn("h-12 w-auto max-w-full object-contain dark:hidden", className)} />
+      <img src={logo.onDark} alt={companyFull} className={cn("hidden h-12 w-auto max-w-full object-contain dark:block", className)} />
     </>
   )
 }
@@ -142,7 +144,7 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
           <BrandLogo on="dark" className="h-14" />
           {/* Letter spacing trails each letter, so the same indent in front keeps the word optically centred. */}
           <p className="indent-[0.18em] text-xs font-medium tracking-[0.18em] text-balance text-sidebar-muted uppercase">Avalytics</p>
-          <p className="rounded-sm bg-sidebar-accent px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">{COMPANY} Admin</p>
+          <p className="rounded-sm bg-sidebar-accent px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">{company()} Admin</p>
         </div>
         <nav aria-label="Main" className="flex-1">
           <ul className="flex flex-col gap-1">
@@ -174,7 +176,7 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
             <div className="flex items-center gap-3">
               <BrandLogo className="h-9" />
               <span className="sr-only">Avalytics</span>
-              <span className="rounded-sm bg-sidebar px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">{COMPANY} Admin</span>
+              <span className="rounded-sm bg-sidebar px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">{company()} Admin</span>
             </div>
             <UserBlock tone="plain" />
           </div>
@@ -202,6 +204,7 @@ export function PortalShell({
   banner?: ReactNode
   children: ReactNode
 }) {
+  const brand = useBrand()
   return (
     <div className="flex min-h-dvh flex-col">
       <SkipLink />
@@ -250,7 +253,7 @@ export function PortalShell({
         <div aria-hidden="true" className="edge-line" />
         <div className="flex flex-col items-center gap-1.5 px-4 py-5 text-xs text-muted-foreground">
           <BrandLogo className="h-11" />
-          <p className="indent-[0.14em] text-center tracking-[0.14em] text-balance uppercase">Avalytics by {EDITION.companyFull}</p>
+          <p className="indent-[0.14em] text-center tracking-[0.14em] text-balance uppercase">Avalytics by {brand.companyFull}</p>
         </div>
       </footer>
       <BottomTabs items={items} label="Main" />

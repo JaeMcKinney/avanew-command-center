@@ -7,7 +7,7 @@ import divignerLogoUrl from "@/assets/divigner-logo.png"
 import { splitQuestions, type Conversation, type Question, type TranscriptTurn } from "@/lib/api"
 import { formatDateTime } from "@/lib/dates"
 import { duration, endedBecause } from "@/lib/format"
-import { COMPANY } from "@/lib/edition"
+import { company } from "@/lib/brand"
 
 export type PdfConversation = {
   conversation: Conversation
@@ -119,7 +119,7 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
 
   const single = input.conversations.length === 1
   doc.setTitle(single ? `Conversation with ${input.conversations[0].avatarName}` : `Conversation transcripts for ${input.clientName}`)
-  doc.setAuthor(`${COMPANY}`)
+  doc.setAuthor(`${company()}`)
   doc.setSubject(`Prepared for ${input.clientName}`)
   doc.setLanguage("en")
   doc.setCreationDate(new Date())
@@ -240,7 +240,7 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
 
   // Footers go on last, once the page count is known.
   const pages = doc.getPages()
-  const note = printable(`Confidential  ·  Prepared by ${COMPANY} for ${input.clientName}`, regular)
+  const note = printable(`Confidential  ·  Prepared by ${company()} for ${input.clientName}`, regular)
   const prepared = `Prepared ${formatDateTime(new Date().toISOString(), input.timeZone)}`
   pages.forEach((p, i) => {
     p.drawRectangle({ x: MARGIN, y: MARGIN + 22, width: WIDTH, height: 0.75, color: RULE })

@@ -1,10 +1,13 @@
 // Invites a person to the app and gives them a role.
 //
-// Body: { email, full_name, role_id, client_id?, assigned_client_ids? }
+// Body: { email, full_name, role_id, client_id?, assigned_client_ids?, agency_id? }
 //
-// The role decides which side they are on. A Divigner role needs the caller
-// to hold team.manage. A client role needs client_users.manage and access to
-// that client, so a client admin can only invite people to their own client.
+// The role decides which side they are on. A staff role needs the caller to
+// hold team.manage, and the new person joins the caller's own team: Divigner's,
+// or the caller's agency. Divigner's agency managers can also invite someone
+// into an agency by naming it, which is how an agency gets its first Owner.
+// A client role needs client_users.manage and access to that client, so a
+// client admin can only invite people to their own client.
 
 import { requireAccess, requireUser, serviceClient, writeAudit } from "../_shared/clients.ts"
 import { endpoint, HttpError, json, readJson } from "../_shared/http.ts"
@@ -15,6 +18,7 @@ type Body = {
   role_id?: string
   client_id?: string | null
   assigned_client_ids?: string[]
+  agency_id?: string | null
 }
 
 export const handler = endpoint(async (req) => {
@@ -32,8 +36,19 @@ export const handler = endpoint(async (req) => {
   if (!role) throw new HttpError(400, "That role does not exist")
 
   let clientId: string | null = null
+  let agencyId: string | null = null
   if (role.side === "divigner") {
-    await requireAccess(caller, "team.manage")
+    if (body.agency_id) {
+      const { data: allowed, error } = await caller.asUser.rpc("can_invite_to_agency", { p_agency_id: body.agency_id })
+      if (error) throw new HttpError(500, "Could not check your permissions")
+      if (allowed !== true) throw new HttpError(403, "You do not have permission to do this")
+      agencyId = body.agency_id
+    } else {
+      await requireAccess(caller, "team.manage")
+      const { data: mine, error } = await caller.asUser.rpc("my_agency")
+      if (error) throw new HttpError(500, "Could not check your account")
+      agencyId = (mine as string | null) ?? null
+    }
   } else {
     if (!body.client_id) throw new HttpError(400, "Choose which client this person belongs to")
     await requireAccess(caller, "client_users.manage", body.client_id)
@@ -61,6 +76,7 @@ export const handler = endpoint(async (req) => {
     side: role.side,
     role_id: role.id,
     client_id: clientId,
+    agency_id: agencyId,
     invited_by: caller.userId,
   })
   if (profileError) {
@@ -70,9 +86,12 @@ export const handler = endpoint(async (req) => {
   }
 
   if (role.side === "divigner" && role.client_scope === "assigned" && body.assigned_client_ids?.length) {
-    await admin
-      .from("staff_client_assignments")
-      .insert(body.assigned_client_ids.map((id) => ({ user_id: userId, client_id: id })))
+    // Only clients that belong to the same team as the new person.
+    const owned = admin.from("clients").select("id").in("id", body.assigned_client_ids)
+    const { data: clients } = await (agencyId ? owned.eq("agency_id", agencyId) : owned.is("agency_id", null))
+    if (clients?.length) {
+      await admin.from("staff_client_assignments").insert(clients.map((c) => ({ user_id: userId, client_id: c.id })))
+    }
   }
 
   await writeAudit(admin, {

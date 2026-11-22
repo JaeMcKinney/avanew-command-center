@@ -107,6 +107,26 @@ glass_record_call()              tokens, seconds and estimated cost, per convers
 - The estimated cost uses two settings, `glass.input_cents_per_million` and `glass.output_cents_per_million`. They start at 0 (no estimate). Prices are data, not code.
 - **Connecting an avatar is still a manual step.** In Tavus, give the avatar a tool (for example `consult_clinical_evidence`, with a required `question` string and an optional `language` of `en` or `es`) with `delivery.api.url` set to `<functions URL>/glass-consult/<the avatar's webhook token>`, `auth` of `{ "type": "hmac", "secret": "<the avatar's callback secret>" }`, a `timeout` of 60 and `on_resolve` of `generate_response`. The token and secret are in `avatar_secrets`, readable by the service role only. A button that sets this up is not built yet, and the address has not been called by a real Tavus avatar.
 
+### Agencies
+
+There are three views in the one app: Divigner's, an agency's, and a client's.
+
+- **Divigner** creates agencies on the Agencies page, sets how each pays (a one-time fee or a subscription, with the amount entered there), gives each a look, and invites its first Owner.
+- **An agency** is a company that runs Avalytics for its own clients under its own name. Its staff use the same pages and the same roles Divigner's staff do, limited to the agency's clients. They change their own look on the Brand page.
+- **A client** belongs either to Divigner or to one agency, and sees the name and look of whoever it belongs to.
+
+What keeps them apart, in `supabase/migrations/20261122001100_agencies.sql`:
+
+- A staff profile with `agency_id` set is agency staff; a client with `agency_id` set is the agency's. `app.can_access_client()` requires the two to match, so every table already scoped by client follows.
+- Divigner's staff cannot open an agency's clients or see their names. `agency_usage()` gives them each agency's counts and minutes, and nothing else.
+- The team list, the activity log, packages, and the Tavus catalogue are each owner's own. Roles are shared by everyone, so only Divigner changes them. Settings hold Divigner's own rates and are Divigner's alone.
+
+An agency's look is data, not code: seven colours for the light version, seven for the dark, and a switch for gentle motion (`agencies.theme`, checked by `app.valid_theme()` so it can hold nothing but colours). `src/lib/brand.ts` works out every other colour from those and keeps text readable. Divigner's own look stays in `src/index.css`.
+
+The sign-in page wears an agency's look when it is opened at the agency's own address (`agencies.domain`), or with `?agency=<short name>` on any address. Locally, the demo agency is at `http://avanew.localhost:5180/login`.
+
+Not built yet: an agency's own Tavus account and its own payment account. Until they are, the functions that use Divigner's Tavus or Stripe account refuse an agency's staff and clients with "not connected for your agency yet", so nothing of an agency's ever runs on Divigner's accounts. Emails and texts are still signed with the one `BRAND_NAME` of the project.
+
 ## Run it on your computer
 
 You need Node 22 and Docker.

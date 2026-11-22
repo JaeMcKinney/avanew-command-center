@@ -1,7 +1,7 @@
 // Copies the list of PALs and deployments from Tavus into the database.
 // Run by a schedule, and by staff pressing "Refresh from Tavus".
 
-import { isScheduledCall, requireAccess, requireUser, serviceClient, functionsBaseUrl, writeAudit } from "../_shared/clients.ts"
+import { isScheduledCall, requireAccess, requireUser, serviceClient, functionsBaseUrl, writeAudit, requireDivignerAccount } from "../_shared/clients.ts"
 import { endpoint, HttpError, json } from "../_shared/http.ts"
 import { listDeployments, listPals, type TavusDeployment, type TavusPal } from "../_shared/tavus.ts"
 import { toIso } from "../_shared/time.ts"
@@ -28,6 +28,7 @@ export const handler = endpoint(async (req) => {
   if (!scheduled) {
     const caller = await requireUser(req)
     await requireAccess(caller, "avatars.link")
+    await requireDivignerAccount(caller, "Tavus")
     userId = caller.userId
   }
 

@@ -46,6 +46,17 @@ export async function requireAccess(caller: Caller, permission: string, clientId
   if (data !== true) throw new HttpError(403, "You do not have permission to do this")
 }
 
+/**
+ * Throws unless the caller is Divigner's own staff or client. Used where the
+ * work runs on Divigner's own Tavus or Stripe account: an agency's work must
+ * run on the agency's own, which is connected separately.
+ */
+export async function requireDivignerAccount(caller: Caller, what: string): Promise<void> {
+  const { data, error } = await caller.asUser.rpc("my_agency")
+  if (error) throw new HttpError(500, "Could not check your account")
+  if (data) throw new HttpError(409, `${what} is not connected for your agency yet.`)
+}
+
 /** True when the request carries the schedule's shared secret. */
 export function isScheduledCall(req: Request): boolean {
   const expected = Deno.env.get("CRON_SECRET")

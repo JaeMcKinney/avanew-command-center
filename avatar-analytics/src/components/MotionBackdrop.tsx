@@ -1,11 +1,12 @@
-// The Avanew backdrop, after avanew.ai: two soft glows that wander behind every
-// page, and, on the sign-in page only, the site's voice lines. Work pages get
-// the glows alone, so nothing moves behind a table someone is reading.
+// The moving backdrop for a brand that asks for one, after avanew.ai: two soft
+// glows that wander behind every page, and, on the sign-in page only, voice
+// lines. Work pages get the glows alone, so nothing moves behind a table
+// someone is reading. Colours come from the brand's own highlight.
 
 import { useEffect, useRef } from "react"
-import { currentTheme, type Theme } from "@/lib/theme"
+import { AVANEW_THEME, brand, mix } from "@/lib/brand"
 
-export function AvanewGlows() {
+export function BrandGlows() {
   return (
     <div aria-hidden="true" className="av-glows">
       <div className="av-glow av-glow-a" />
@@ -14,18 +15,15 @@ export function AvanewGlows() {
   )
 }
 
-// Line colours, quieter than the site's so the form in front stays easy to read.
-const LINES: Record<Theme, { lines: string[]; echo: string; bars: string }> = {
-  light: {
-    lines: ["rgba(184,146,58,.5)", "rgba(212,175,76,.42)", "rgba(227,200,120,.5)", "rgba(11,31,58,.22)", "rgba(227,200,120,.4)", "rgba(19,41,75,.3)"],
-    echo: "rgba(212,175,76,.2)",
-    bars: "rgba(212,175,76,.12)",
-  },
-  dark: {
-    lines: ["rgba(217,185,92,.5)", "rgba(227,200,120,.36)", "rgba(240,224,170,.26)", "rgba(255,255,255,.13)", "rgba(201,151,0,.4)", "rgba(227,200,120,.2)"],
-    echo: "rgba(227,200,120,.12)",
-    bars: "rgba(217,185,92,.1)",
-  },
+const fade = (color: string, opacity: number) => `${color}${Math.round(opacity * 255).toString(16).padStart(2, "0")}`
+
+/** Line colours from the brand's highlight, quiet enough that the form in front stays easy to read. */
+function lineColors(highlight: string, text: string) {
+  return {
+    lines: [fade(highlight, 0.5), fade(highlight, 0.36), fade(mix(highlight, "#ffffff", 0.4), 0.28), fade(text, 0.13), fade(mix(highlight, "#000000", 0.2), 0.4), fade(highlight, 0.2)],
+    echo: fade(highlight, 0.12),
+    bars: fade(highlight, 0.1),
+  }
 }
 
 // Each line: cycles across the screen, speed, phase, share of the height, width.
@@ -39,14 +37,16 @@ const WAVES = [
 ]
 
 /** Layered sine lines that swell and settle like speech, over a row of quiet bars. */
-export function VoiceWaves({ theme }: { theme?: Theme }) {
+export function VoiceWaves() {
   const ref = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     const canvas = ref.current
     const ctx = canvas?.getContext("2d")
     if (!canvas || !ctx) return
-    const colors = LINES[theme ?? currentTheme()]
+    // The sign-in card is always dark, so these are the dark version's colours.
+    const dark = (brand().agency?.theme ?? AVANEW_THEME).dark
+    const colors = lineColors(dark.highlight, dark.text)
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     let width = 1
     let height = 1
@@ -118,7 +118,7 @@ export function VoiceWaves({ theme }: { theme?: Theme }) {
       cancelAnimationFrame(frame)
       observer.disconnect()
     }
-  }, [theme])
+  }, [])
 
   return <canvas ref={ref} aria-hidden="true" className="av-waves" />
 }

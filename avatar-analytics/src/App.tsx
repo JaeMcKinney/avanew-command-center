@@ -1,4 +1,4 @@
-import { Activity as ActivityIcon, Bot, Building2, LayoutDashboard, LifeBuoy, Users, CircleDollarSign, Package } from "lucide-react"
+import { Activity as ActivityIcon, Bot, Building2, LayoutDashboard, LifeBuoy, Users, CircleDollarSign, Package, Palette, Store } from "lucide-react"
 import { useEffect, useRef, type ReactNode } from "react"
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 import { StaffShell, type NavItem } from "@/components/Shell"
@@ -7,6 +7,9 @@ import { useAuth } from "@/hooks/useAuth"
 import AcceptInvite from "@/pages/AcceptInvite"
 import Login from "@/pages/Login"
 import Activity from "@/pages/admin/Activity"
+import Agencies from "@/pages/admin/Agencies"
+import AgencyDetail from "@/pages/admin/AgencyDetail"
+import Brand from "@/pages/admin/Brand"
 import Finance from "@/pages/admin/Finance"
 import Plans from "@/pages/admin/Plans"
 import AvatarDetail from "@/pages/admin/AvatarDetail"
@@ -73,6 +76,9 @@ function AdminLayout() {
     ...(can("finance.view") ? [{ to: "/admin/finance", label: "Finance", icon: CircleDollarSign }] : []),
     ...(can("plans.manage") ? [{ to: "/admin/plans", label: "Packages", icon: Package }] : []),
     { to: "/admin/team", label: "Team", icon: Users },
+    // Agencies are Divigner's to create. An agency's own staff get a Brand page instead.
+    ...(!access.agency && can("agencies.manage") ? [{ to: "/admin/agencies", label: "Agencies", icon: Store }] : []),
+    ...(access.agency && can("brand.manage") ? [{ to: "/admin/brand", label: "Brand", icon: Palette }] : []),
     ...(can("audit.view") ? [{ to: "/admin/activity", label: "Activity", icon: ActivityIcon }] : []),
   ]
   return (
@@ -99,6 +105,9 @@ export default function App() {
           <Route path="avatars/:palId" element={<Need permission="avatars.link"><AvatarDetail /></Need>} />
           <Route path="support" element={<Need permission="support.manage"><SupportDesk /></Need>} />
           <Route path="support/:number" element={<Need permission="support.manage"><SupportDeskTicket /></Need>} />
+          <Route path="agencies" element={<Need permission="agencies.manage"><Agencies /></Need>} />
+          <Route path="agencies/:slug" element={<Need permission="agencies.manage"><AgencyDetail /></Need>} />
+          <Route path="brand" element={<Need permission="brand.manage"><Brand /></Need>} />
           <Route path="team" element={<Team />} />
           <Route path="plans" element={<Need permission="plans.manage"><Plans /></Need>} />
           <Route path="finance" element={<Need permission="finance.view"><Finance /></Need>} />
