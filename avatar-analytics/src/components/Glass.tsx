@@ -1,3 +1,4 @@
+import { AvatarName } from "@/components/AvatarPhoto"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { AlertTriangle, CheckCircle2, Clock, KeyRound, XCircle } from "lucide-react"
 import { useId, useState } from "react"
@@ -24,6 +25,7 @@ import { bucketColumns, GRAIN_LABEL, grainFor } from "@/lib/buckets"
 import { seriesColor } from "@/lib/chartColors"
 import { formatDay, formatRange, presetRange, startOfMonth, startOfQuarter, timeAgo, todayIn } from "@/lib/dates"
 import { compact, count, duration, estimate, minutes } from "@/lib/format"
+import { company } from "@/lib/brand"
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useGlassConnection(clientId: string) {
@@ -111,7 +113,7 @@ export function GlassConnectionCard({ client }: { client: Client }) {
         <h2 id={`${id}-title`} className="text-lg font-semibold">Glass Health Is Not Turned On</h2>
         <p className="max-w-prose text-sm text-muted-foreground">
           Glass Health lets a clinical avatar look up published medical evidence during a call. It uses {staff ? `${client.name}'s` : "your"} own Glass Health account, and every question is counted here.
-          {!staff && " Ask Divigner to turn it on."}
+          {!staff && ` Ask ${company()} to turn it on.`}
         </p>
         {staff && manage && (
           <div><Button className="min-h-10" disabled={enable.isPending} onClick={() => enable.mutate(true)}>{enable.isPending ? "Turning on…" : "Turn on Glass Health"}</Button></div>
@@ -165,8 +167,8 @@ export function GlassConnectionCard({ client }: { client: Client }) {
             />
             <p id={`${id}-key-help`} className="text-sm text-muted-foreground">
               {staff
-                ? `Paste a key created in ${client.name}'s Glass Health account, under API settings. It is stored encrypted and is never shown again, to the client or to Divigner.`
-                : "Create a key in your Glass Health account, under API settings, and paste it here. It is stored encrypted and is never shown again, to you or to Divigner."}
+                ? `Paste a key created in ${client.name}'s Glass Health account, under API settings. It is stored encrypted and is never shown again, to the client or to ${company()}.`
+                : `Create a key in your Glass Health account, under API settings, and paste it here. It is stored encrypted and is never shown again, to you or to ${company()}.`}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -284,7 +286,7 @@ export function GlassUsage({ client }: { client: Client }) {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat highlight label="Questions Answered" value={count(total.questions)} note={total.failed > 0 ? `${count(total.failed)} more could not be answered` : staff ? "Each one is a request on the client's Glass account" : "Each one is a request on your Glass account"} />
         <Stat label="Tokens" value={compact(total.input_tokens + total.output_tokens)} note={`${count(total.input_tokens)} in · ${count(total.output_tokens)} out`} />
-        <Stat label="Estimated Cost" value={estimate(total.cost_cents)} note={total.cost_cents == null ? (staff ? "Shown once the Glass rates are entered in settings" : "Shown once Glass rates are entered by Divigner") : "From the token counts Glass reported"} />
+        <Stat label="Estimated Cost" value={estimate(total.cost_cents)} note={total.cost_cents == null ? (staff ? "Shown once the Glass rates are entered in settings" : `Shown once Glass rates are entered by ${company()}`) : "From the token counts Glass reported"} />
         <Stat label="Time Waiting on Glass" value={duration(total.duration_ms / 1000)} note={total.questions ? `About ${Math.round(total.duration_ms / 1000 / (total.questions + total.failed))} seconds a question` : "While Glass searched and answered"} />
       </div>
 
@@ -304,7 +306,7 @@ export function GlassUsage({ client }: { client: Client }) {
             <DataTable
               caption={`Talk time and Glass Health use by avatar, ${rangeText}`}
               head={["Avatar", "Talk Minutes", "Glass Questions", "Tokens", "Estimated Cost"]}
-              rows={used.map((a) => [a.display_name, minutes(talkBy.get(a.id)?.billable_seconds), count(each(a.id).questions), count(each(a.id).input_tokens + each(a.id).output_tokens), estimate(each(a.id).cost_cents)])}
+              rows={used.map((a) => [<AvatarName key={a.id} avatar={a} />, minutes(talkBy.get(a.id)?.billable_seconds), count(each(a.id).questions), count(each(a.id).input_tokens + each(a.id).output_tokens), estimate(each(a.id).cost_cents)])}
             />
           </div>
         </section>

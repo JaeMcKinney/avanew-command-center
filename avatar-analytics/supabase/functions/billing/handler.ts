@@ -9,12 +9,13 @@
 //   "topup"       { amount_cents } → { url }  Stripe's page to pay for extra minutes this period
 
 import { checkUsage, syncSubscription } from "../_shared/billing.ts"
-import { requireAccess, requireUser, serviceClient, writeAudit } from "../_shared/clients.ts"
+import { requireAccess, requireUser, serviceClient, writeAudit, requireDivignerAccount } from "../_shared/clients.ts"
 import { endpoint, HttpError, json, readJson } from "../_shared/http.ts"
 import { notify } from "../_shared/notify.ts"
 import {
   changeSubscriptionPrice, createCheckoutSession, createCustomer, createPaymentSession, createPortalSession, getSubscription, periodOf, setCancelAtPeriodEnd, StripeError,
 } from "../_shared/stripe.ts"
+import { brandName } from "../_shared/brand.ts"
 
 type Body = { action?: string; client_id?: string; plan_id?: string; reason?: string; amount_cents?: number }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
@@ -26,6 +27,7 @@ export const handler = endpoint(async (req) => {
   const body = await readJson<Body>(req)
   if (!body.client_id || !UUID.test(body.client_id)) throw new HttpError(400, "Choose a client")
   await requireAccess(caller, "billing.manage", body.client_id)
+  await requireDivignerAccount(caller, "Online payment")
 
   const admin = serviceClient()
   const appUrl = (Deno.env.get("APP_URL") ?? "").replace(/\/+$/, "")
@@ -41,7 +43,7 @@ export const handler = endpoint(async (req) => {
     if (!id || !UUID.test(id)) throw new HttpError(400, "Choose a package")
     const { data: plan } = await admin.from("plans").select("*").eq("id", id).eq("is_active", true).maybeSingle()
     if (!plan) throw new HttpError(404, "That package is not available")
-    if (!plan.stripe_price_id) throw new HttpError(409, "That package is not connected to Stripe yet. Ask Divigner to finish setting it up.")
+    if (!plan.stripe_price_id) throw new HttpError(409, `That package is not connected to Stripe yet. Ask ${brandName()} to finish setting it up.`)
     return plan
   }
 
@@ -88,9 +90,9 @@ export const handler = endpoint(async (req) => {
         await notify(admin, {
           clientId: client.id, kind: "plan_changed",
           subject: `Your package is now ${plan.name} (${client.name})`,
-          text: `Your package has changed${old?.name ? ` from ${old.name}` : ""} to ${plan.name}: ${plan.included_minutes.toLocaleString("en-US")} minutes for ${price}. The change is in effect now, and your next invoice adjusts for the part of this period already paid.\n\n${page}\n\nDivigner`,
+          text: `Your package has changed${old?.name ? ` from ${old.name}` : ""} to ${plan.name}: ${plan.included_minutes.toLocaleString("en-US")} minutes for ${price}. The change is in effect now, and your next invoice adjusts for the part of this period already paid.\n\n${page}\n\n${brandName()}`,
           staffText: `${client.name} changed package${old?.name ? ` from ${old.name}` : ""} to ${plan.name} (${price}).`,
-          sms: `Divigner: your package is now ${plan.name}.`,
+          sms: `${brandName()}: your package is now ${plan.name}.`,
         })
         // A bigger allowance may turn paused avatars back on straight away.
         const usage = await checkUsage(admin, client.id)
@@ -109,9 +111,9 @@ export const handler = endpoint(async (req) => {
         await notify(admin, {
           clientId: client.id, kind: "subscription_cancel_requested",
           subject: `Your subscription will end on ${day(ends)} (${client.name})`,
-          text: `Your subscription has been cancelled. Your avatars keep working until ${day(ends)}, and you will not be charged again.\n\nChanged your mind? You can keep the subscription any time before then:\n\n${page}\n\nDivigner`,
+          text: `Your subscription has been cancelled. Your avatars keep working until ${day(ends)}, and you will not be charged again.\n\nChanged your mind? You can keep the subscription any time before then:\n\n${page}\n\n${brandName()}`,
           staffText: `${client.name} cancelled their subscription. It ends on ${day(ends)}.\n\nCancelled by: ${user.user?.email ?? "unknown"}\nReason given: ${reason ?? "none"}`,
-          sms: `Divigner: your subscription is cancelled and ends on ${day(ends)}.`,
+          sms: `${brandName()}: your subscription is cancelled and ends on ${day(ends)}.`,
         })
         return json(200, { ok: true, ends_at: ends })
       }
@@ -123,9 +125,9 @@ export const handler = endpoint(async (req) => {
         await notify(admin, {
           clientId: client.id, kind: "subscription_cancel_undone",
           subject: `Your subscription continues (${client.name})`,
-          text: `Your cancellation has been undone. Your subscription continues as before.\n\n${page}\n\nDivigner`,
+          text: `Your cancellation has been undone. Your subscription continues as before.\n\n${page}\n\n${brandName()}`,
           staffText: `${client.name} undid their cancellation. The subscription continues.`,
-          sms: `Divigner: your subscription continues.`,
+          sms: `${brandName()}: your subscription continues.`,
         })
         return json(200, { ok: true })
       }

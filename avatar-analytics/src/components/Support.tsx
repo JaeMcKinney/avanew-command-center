@@ -25,6 +25,7 @@ import {
 } from "@/lib/api"
 import { formatDateTime, timeAgo } from "@/lib/dates"
 import { cn } from "@/lib/utils"
+import { company } from "@/lib/brand"
 
 export type Viewer = "client" | "divigner"
 
@@ -43,7 +44,7 @@ export function TicketStatusPill({ status, viewer }: { status: string; viewer: V
       : <StatusPill tone="neutral" icon={<Clock />}>Waiting on Client</StatusPill>
   }
   return viewer === "client"
-    ? <StatusPill tone="info" icon={<Clock />}>With Divigner</StatusPill>
+    ? <StatusPill tone="info" icon={<Clock />}>With {company()}</StatusPill>
     : <StatusPill tone="warn" icon={<MessageSquareReply />}>Needs Reply</StatusPill>
 }
 
@@ -56,7 +57,7 @@ export function PriorityPill({ priority }: { priority: string }) {
 /** Shows which side someone is on, so nobody has to guess who wrote what. */
 function SidePill({ side, clientName }: { side: string; clientName: string }) {
   return side === "divigner"
-    ? <span className="rounded-sm bg-sidebar px-1.5 py-0.5 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">Divigner</span>
+    ? <span className="rounded-sm bg-sidebar px-1.5 py-0.5 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">{company()}</span>
     : <span className="rounded-sm border px-1.5 py-0.5 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">{clientName}</span>
 }
 
@@ -146,7 +147,7 @@ export function NewTicketDialog({ client, clients, conversationId, onClose }: {
         <DialogHeader>
           <DialogTitle>New Support Ticket</DialogTitle>
           <DialogDescription>
-            {staff ? "Opens a ticket on the client's behalf. They are emailed and can reply in their portal." : "Tell us what you need. The Divigner team is emailed straight away and replies here."}
+            {staff ? "Opens a ticket on the client's behalf. They are emailed and can reply in their portal." : `Tell us what you need. The ${company()} team is emailed straight away and replies here.`}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
@@ -165,7 +166,7 @@ export function NewTicketDialog({ client, clients, conversationId, onClose }: {
             <select id={`${id}-category`} value={category} onChange={(e) => setCategory(e.target.value)} className={SELECT_CLASS}>
               {TICKET_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
-            {category === "avatar_down" && <p className="text-sm text-muted-foreground">This is marked urgent and the Divigner team is alerted at once.</p>}
+            {category === "avatar_down" && <p className="text-sm text-muted-foreground">This is marked urgent and the {company()} team is alerted at once.</p>}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`${id}-subject`}>Subject</Label>
@@ -227,7 +228,7 @@ export function TicketList({ tickets, viewer, linkTo, showClient = false, empty 
               {viewer === "divigner" && <td className="hidden px-4 py-3 sm:table-cell">{t.assignee_name ?? <span className="text-muted-foreground">Nobody</span>}</td>}
               <td className="px-4 py-3 whitespace-nowrap">
                 {timeAgo(t.last_message_at)}
-                <span className="block text-xs text-muted-foreground">by {t.last_message_side === "divigner" ? "Divigner" : (viewer === "client" ? "your team" : "the client")}</span>
+                <span className="block text-xs text-muted-foreground">by {t.last_message_side === "divigner" ? `${company()}` : (viewer === "client" ? "your team" : "the client")}</span>
               </td>
             </tr>
           ))}
@@ -264,7 +265,7 @@ function MessageItem({ message, clientName, timeZone }: { message: TicketMessage
   if (message.kind === "event") {
     return (
       <li className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-        <span>{message.author_name || (message.author_side === "divigner" ? "Divigner" : clientName)}</span>
+        <span>{message.author_name || (message.author_side === "divigner" ? `${company()}` : clientName)}</span>
         <SidePill side={message.author_side} clientName={clientName} />
         <span>{message.body} · {when}</span>
         {message.is_internal && <span className="inline-flex items-center gap-1 font-semibold text-warn"><Lock className="size-3" aria-hidden="true" />Internal</span>}
@@ -274,7 +275,7 @@ function MessageItem({ message, clientName, timeZone }: { message: TicketMessage
   return (
     <li className={cn("rounded-lg border p-3", message.is_internal ? "border-warn/50 bg-warn-soft" : message.author_side === "divigner" ? "bg-muted" : "bg-card")}>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="text-sm font-semibold">{message.author_name || (message.author_side === "divigner" ? "Divigner" : clientName)}</span>
+        <span className="text-sm font-semibold">{message.author_name || (message.author_side === "divigner" ? `${company()}` : clientName)}</span>
         <SidePill side={message.author_side} clientName={clientName} />
         {message.is_internal && <StatusPill tone="warn" icon={<Lock />}>Internal Note · Not Shown to the Client</StatusPill>}
         {message.via === "email" && <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Mail className="size-3.5" aria-hidden="true" />Sent by email</span>}
@@ -333,7 +334,7 @@ export function TicketThread({ ticket, timeZone, onChanged }: { ticket: TicketWi
     if (!body.trim()) return setProblem(internal ? "Write the note first" : "Write your reply first")
     send.mutate()
   }
-  const via = ticket.opened_via === "email" ? "by email" : ticket.opened_via === "staff" ? "by Divigner for the client" : "in the portal"
+  const via = ticket.opened_via === "email" ? "by email" : ticket.opened_via === "staff" ? `by ${company()} for the client` : "in the portal"
 
   return (
     <>
@@ -346,8 +347,8 @@ export function TicketThread({ ticket, timeZone, onChanged }: { ticket: TicketWi
         <p className="text-sm text-muted-foreground">
           Opened by <span className="font-medium text-foreground">{ticket.opened_by_name || clientName}</span> {via} on {formatDateTime(ticket.created_at, timeZone)}.{" "}
           {ticket.assignee_name
-            ? <>Assigned to <span className="font-medium text-foreground">{ticket.assignee_name}</span> at Divigner.</>
-            : (staff ? "Not assigned to anyone yet." : "The Divigner team has it.")}
+            ? <>Assigned to <span className="font-medium text-foreground">{ticket.assignee_name}</span> at {company()}.</>
+            : (staff ? "Not assigned to anyone yet." : `The ${company()} team has it.`)}
         </p>
         {ticket.conversation_id && <CopyId label="Conversation ID" value={ticket.conversation_id} />}
         {staff && canWrite && (
@@ -376,7 +377,7 @@ export function TicketThread({ ticket, timeZone, onChanged }: { ticket: TicketWi
       </section>
 
       <section aria-labelledby={`${id}-thread`} className="flex flex-col gap-3">
-        <h2 id={`${id}-thread`} className="text-lg font-semibold">Conversation With {staff ? clientName : "Divigner"}</h2>
+        <h2 id={`${id}-thread`} className="text-lg font-semibold">Conversation With {staff ? clientName : `${company()}`}</h2>
         {messages.isPending ? (
           <LoadingBlock label="Loading replies" />
         ) : messages.isError ? (
@@ -391,7 +392,7 @@ export function TicketThread({ ticket, timeZone, onChanged }: { ticket: TicketWi
       {canWrite && (
         <form onSubmit={submit} noValidate className={cn("flex flex-col gap-3 rounded-lg border p-4", internal ? "border-warn/50 bg-warn-soft" : "bg-card")}>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${id}-reply`}>{internal ? "Internal Note" : staff ? `Reply to ${clientName}` : "Reply to Divigner"}</Label>
+            <Label htmlFor={`${id}-reply`}>{internal ? "Internal Note" : staff ? `Reply to ${clientName}` : `Reply to ${company()}`}</Label>
             <textarea id={`${id}-reply`} value={body} maxLength={20000} onChange={(e) => { setBody(e.target.value); setProblem("") }} className={TEXTAREA_CLASS} aria-invalid={problem ? true : undefined} aria-describedby={problem ? `${id}-problem` : undefined} />
             {problem && <p id={`${id}-problem`} role="alert" className="text-sm font-medium text-bad">{problem}</p>}
           </div>
@@ -399,7 +400,7 @@ export function TicketThread({ ticket, timeZone, onChanged }: { ticket: TicketWi
           {staff && (
             <div className="flex items-center gap-2">
               <Checkbox id={`${id}-internal`} className="size-5" checked={internal} onCheckedChange={(on) => setInternal(on === true)} />
-              <Label htmlFor={`${id}-internal`}>Internal note. Only Divigner staff see it, and the client is not emailed.</Label>
+              <Label htmlFor={`${id}-internal`}>Internal note. Only {company()} staff see it, and the client is not emailed.</Label>
             </div>
           )}
           <div className="flex flex-wrap items-center gap-2">
@@ -415,7 +416,7 @@ export function TicketThread({ ticket, timeZone, onChanged }: { ticket: TicketWi
               <Button type="button" variant="ghost" className="min-h-10" disabled={change.isPending} onClick={() => change.mutate({ status: "waiting" })}>Set to waiting on client</Button>
             )}
           </div>
-          {!internal && <p className="text-xs text-muted-foreground">{staff ? `${clientName} is emailed your reply and can answer in their portal.` : "The Divigner team is emailed your reply."}</p>}
+          {!internal && <p className="text-xs text-muted-foreground">{staff ? `${clientName} is emailed your reply and can answer in their portal.` : `The ${company()} team is emailed your reply.`}</p>}
         </form>
       )}
     </>
@@ -425,7 +426,7 @@ export function TicketThread({ ticket, timeZone, onChanged }: { ticket: TicketWi
 export function NoTickets({ viewer }: { viewer: Viewer }) {
   return (
     <EmptyState title="No Tickets Here">
-      {viewer === "client" ? "When you need something from Divigner, open a ticket and the whole conversation stays on this page." : "Nothing matches this view right now."}
+      {viewer === "client" ? `When you need something from ${company()}, open a ticket and the whole conversation stays on this page.` : "Nothing matches this view right now."}
     </EmptyState>
   )
 }

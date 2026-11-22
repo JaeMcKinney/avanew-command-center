@@ -1,3 +1,4 @@
+import { AvatarName } from "@/components/AvatarPhoto"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { AlertTriangle, CheckCircle2, Clock } from "lucide-react"
 import { useId, useState } from "react"
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/useAuth"
-import { answerQuestion, listAvatarsEver, listQuestionGroups, publishKnowledge, setQuestionStatus, type Client, type QuestionGroup } from "@/lib/api"
+import { answerQuestion, listAvatarsEver, listQuestionGroups, publishKnowledge, setQuestionStatus, type Avatar, type Client, type QuestionGroup } from "@/lib/api"
 import { formatDateTime } from "@/lib/dates"
 import { count } from "@/lib/format"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
@@ -22,9 +23,9 @@ function KnowledgePill({ group }: { group: QuestionGroup }) {
   return <StatusPill tone="info" icon={<Clock />}>Being added to avatar knowledge</StatusPill>
 }
 
-function QuestionCard({ group, avatarNames, timeZone, canAnswer, onChanged }: {
+function QuestionCard({ group, askedOf, timeZone, canAnswer, onChanged }: {
   group: QuestionGroup
-  avatarNames: string
+  askedOf: Avatar[]
   timeZone: string
   canAnswer: boolean
   onChanged: () => void
@@ -82,9 +83,14 @@ function QuestionCard({ group, avatarNames, timeZone, canAnswer, onChanged }: {
         <h3 className="text-base font-semibold">{group.question}</h3>
         <p className="text-sm text-muted-foreground">
           Asked {count(group.times_asked)} time{group.times_asked === 1 ? "" : "s"}
-          {avatarNames && <> · {avatarNames}</>}
           {group.last_asked_at && <> · last on {formatDateTime(group.last_asked_at, timeZone)}</>}
         </p>
+        {askedOf.length > 0 && (
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <span className="sr-only">Asked of </span>
+            {askedOf.map((a) => <AvatarName key={a.id} avatar={a} />)}
+          </p>
+        )}
       </div>
 
       {group.status === "answered" && !editing && (
@@ -147,7 +153,7 @@ export default function Questions({ client: given, embedded = false }: { client?
   const groups = useQuery({ queryKey: ["question-groups", client.id], queryFn: () => listQuestionGroups(client.id) })
   const avatars = useQuery({ queryKey: ["avatars-ever", client.id], queryFn: () => listAvatarsEver(client.id) })
   const canAnswer = can("questions.answer")
-  const namesFor = (ids: string[]) => ids.map((id) => avatars.data?.find((a) => a.id === id)?.display_name).filter(Boolean).join(", ")
+  const askedOf = (ids: string[]) => ids.map((id) => avatars.data?.find((a) => a.id === id)).filter((a): a is Avatar => Boolean(a))
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ["question-groups", client.id] })
 
   const all = groups.data ?? []
@@ -186,7 +192,7 @@ export default function Questions({ client: given, embedded = false }: { client?
               ) : (
                 <ul className="flex flex-col gap-3">
                   {tab.rows.map((group) => (
-                    <QuestionCard key={`${group.id}-${group.status}-${group.answer ?? ""}`} group={group} avatarNames={namesFor(group.avatar_ids)} timeZone={client.timezone} canAnswer={canAnswer} onChanged={refresh} />
+                    <QuestionCard key={`${group.id}-${group.status}-${group.answer ?? ""}`} group={group} askedOf={askedOf(group.avatar_ids)} timeZone={client.timezone} canAnswer={canAnswer} onChanged={refresh} />
                   ))}
                 </ul>
               )}

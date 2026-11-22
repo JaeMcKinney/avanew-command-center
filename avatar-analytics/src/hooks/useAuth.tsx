@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import type { Session } from "@supabase/supabase-js"
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import { fetchAccess, type Access } from "@/lib/api"
+import { setUserBrand } from "@/lib/brand"
 import { supabase } from "@/lib/supabase"
 
 type AuthValue = {
@@ -41,6 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     enabled: Boolean(userId),
     staleTime: 60_000,
   })
+
+  // The signed-in person settles whose name and look the app wears: their
+  // agency's, or Divigner's. Signed out, the address the page was opened at decides.
+  const known = !userId || accessQuery.isFetched
+  const agency = userId ? (accessQuery.data?.is_active ? accessQuery.data.agency : null) : undefined
+  useEffect(() => {
+    if (known) setUserBrand(agency)
+  }, [known, agency])
 
   const value = useMemo<AuthValue>(() => {
     const access = userId ? (accessQuery.data ?? null) : null

@@ -5,10 +5,11 @@
 
 import { HttpError } from "./http.ts"
 import { timingSafeEqual } from "./signature.ts"
+import { brandName } from "./brand.ts"
 
 function config() {
   const key = Deno.env.get("STRIPE_SECRET_KEY")
-  if (!key) throw new HttpError(503, "Payments are not set up yet. Ask Divigner to connect Stripe.")
+  if (!key) throw new HttpError(503, `Payments are not set up yet. Ask ${brandName()} to connect Stripe.`)
   return { key, base: (Deno.env.get("STRIPE_API_BASE") ?? "https://api.stripe.com").replace(/\/+$/, "") }
 }
 

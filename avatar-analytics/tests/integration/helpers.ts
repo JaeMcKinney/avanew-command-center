@@ -19,7 +19,7 @@ export function resetDatabase() {
       public.avatar_knowledge, public.questions, public.question_groups, public.conversation_insights,
       public.usage_daily, public.transcripts, public.conversations, public.tavus_events,
       public.avatar_secrets, public.avatars, public.tavus_deployments, public.tavus_pals,
-      public.tavus_sync_runs, public.staff_client_assignments, public.audit_log, public.clients
+      public.tavus_sync_runs, public.staff_client_assignments, public.audit_log, public.clients, public.agencies
       restart identity cascade;
     delete from auth.users;
     delete from vault.secrets where name like 'glass:%';
@@ -71,6 +71,8 @@ export async function createUser(opts: {
   role: string
   clientId?: string
   assignedClientIds?: string[]
+  /** Staff of an agency. Leave out for Divigner's own staff. */
+  agencyId?: string
 }): Promise<TestUser> {
   const { data, error } = await admin.auth.admin.createUser({
     email: opts.email,
@@ -90,6 +92,7 @@ export async function createUser(opts: {
     side,
     role_id: role,
     client_id: opts.clientId ?? null,
+    agency_id: opts.clientId ? null : (opts.agencyId ?? null),
   })
   if (profileError) throw profileError
 

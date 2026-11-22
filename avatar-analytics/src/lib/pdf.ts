@@ -7,6 +7,7 @@ import divignerLogoUrl from "@/assets/divigner-logo.png"
 import { splitQuestions, type Conversation, type Question, type TranscriptTurn } from "@/lib/api"
 import { formatDateTime } from "@/lib/dates"
 import { duration, endedBecause } from "@/lib/format"
+import { brand, company } from "@/lib/brand"
 
 export type PdfConversation = {
   conversation: Conversation
@@ -113,12 +114,14 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
   const bold = await doc.embedFont(StandardFonts.HelveticaBold)
   const italic = await doc.embedFont(StandardFonts.HelveticaOblique)
   const logo = await loadLogo(doc, input.logoUrl)
-  const divigner = await loadLogo(doc, divignerLogoUrl, true)
+  // The letterhead carries the logo of whoever's app this is: Divigner's, or the agency's.
+  const house = brand().agency
+  const divigner = house ? await loadLogo(doc, brand().logo.onDark) : await loadLogo(doc, divignerLogoUrl, true)
   const clientName = printable(input.clientName, bold)
 
   const single = input.conversations.length === 1
   doc.setTitle(single ? `Conversation with ${input.conversations[0].avatarName}` : `Conversation transcripts for ${input.clientName}`)
-  doc.setAuthor("Divigner")
+  doc.setAuthor(`${company()}`)
   doc.setSubject(`Prepared for ${input.clientName}`)
   doc.setLanguage("en")
   doc.setCreationDate(new Date())
@@ -129,7 +132,7 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
 
   const newPage = () => {
     page = doc.addPage([PAGE.width, PAGE.height])
-    // Letterhead: a dark band with the Divigner logo on the left and the client on the right.
+    // Letterhead: a dark band with the house logo on the left and the client on the right.
     // The logo is drawn for dark backgrounds, so the band is part of the letterhead.
     const bandY = PAGE.height - BAND_HEIGHT
     page.drawRectangle({ x: 0, y: bandY, width: PAGE.width, height: BAND_HEIGHT, color: BAND })
@@ -137,7 +140,7 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
       const height = BAND_HEIGHT - 20
       page.drawImage(divigner, { x: MARGIN - 8, y: bandY + 10, width: (divigner.width / divigner.height) * height, height })
     } else {
-      page.drawText("DIVIGNER GROUP", { x: MARGIN, y: bandY + 30, size: 15, font: bold, color: WHITE })
+      page.drawText(printable(brand().companyFull.toUpperCase(), bold), { x: MARGIN, y: bandY + 30, size: 15, font: bold, color: WHITE })
     }
     if (logo) {
       // Client logos are usually drawn for light backgrounds, so theirs sits on a white plate.
@@ -239,7 +242,7 @@ export async function buildTranscriptPdf(input: PdfInput): Promise<Uint8Array> {
 
   // Footers go on last, once the page count is known.
   const pages = doc.getPages()
-  const note = printable(`Confidential  ·  Prepared by Divigner for ${input.clientName}`, regular)
+  const note = printable(`Confidential  ·  Prepared by ${company()} for ${input.clientName}`, regular)
   const prepared = `Prepared ${formatDateTime(new Date().toISOString(), input.timeZone)}`
   pages.forEach((p, i) => {
     p.drawRectangle({ x: MARGIN, y: MARGIN + 22, width: WIDTH, height: 0.75, color: RULE })

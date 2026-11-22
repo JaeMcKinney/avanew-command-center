@@ -38,6 +38,9 @@ describe("tavus-sync", () => {
     const { data: maya } = await admin.from("tavus_pals").select("*").eq("pal_id", MAYA).single()
     expect(maya).toMatchObject({ name: "Maya · Northline Leasing Concierge", removed_at: null })
     expect(maya!.thumbnail_image_url).toContain(MAYA)
+    // An avatar with no deployment still gets its photo, from its face.
+    const { data: guide } = await admin.from("tavus_pals").select("thumbnail_image_url").eq("pal_id", "pf00c0de0005").single()
+    expect(guide!.thumbnail_image_url).toContain("pf00c0de0005")
     // Tavus's odd timestamp formats are understood.
     expect(maya!.tavus_created_at).toBe("2026-09-01T10:00:00+00:00")
     const { data: dep } = await admin.from("tavus_deployments").select("*").eq("deployment_id", "d-maya-embed").single()

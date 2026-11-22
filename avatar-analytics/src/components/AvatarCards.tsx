@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PastAvatars } from "@/components/PastAvatars"
 import { listAvatars, listDeployments, renameAvatar, retryWebhook, unlinkAvatar, type Avatar } from "@/lib/api"
 import { timeAgo } from "@/lib/dates"
 
@@ -88,6 +89,7 @@ export function AvatarCards({ clientId, manage, showEmbeds, empty }: { clientId:
       else toast.success("Avatar unlinked. Its past usage stays with this client.")
       setUnlinking(null)
       refresh()
+      void queryClient.invalidateQueries({ queryKey: ["avatars-ever"] })
       void queryClient.invalidateQueries({ queryKey: ["pal-search"] })
     },
     onError: (err: Error) => toast.error(err.message),
@@ -95,9 +97,11 @@ export function AvatarCards({ clientId, manage, showEmbeds, empty }: { clientId:
 
   if (avatars.isPending) return <LoadingBlock label="Loading avatars" />
   if (avatars.isError) return <ErrorBlock error={avatars.error} onRetry={() => void avatars.refetch()} />
-  if (avatars.data.length === 0) return <>{empty ?? <EmptyState title="No Avatars Yet" />}</>
+  const past = <PastAvatars clientId={clientId} canLink={manage && isStaff && canSeeDetail} />
+  if (avatars.data.length === 0) return <>{empty ?? <EmptyState title="No Avatars Yet" />}{past}</>
 
   return (
+    <div className="flex flex-col gap-6">
     <ul className="flex flex-col gap-4">
       {avatars.data.map((avatar) => {
         const own = (deployments.data ?? []).filter((d) => d.pal_id === avatar.tavus_pal_id)
@@ -170,5 +174,7 @@ export function AvatarCards({ clientId, manage, showEmbeds, empty }: { clientId:
         </AlertDialogContent>
       </AlertDialog>
     </ul>
+    {past}
+    </div>
   )
 }

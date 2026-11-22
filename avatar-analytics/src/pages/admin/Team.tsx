@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { UsersPanel } from "@/components/UsersPanel"
 import { useAuth } from "@/hooks/useAuth"
 import { listPermissions, listRolePermissions, listRoles, setRolePermission } from "@/lib/api"
+import { company } from "@/lib/brand"
 
 /** Which role may do what. Tick or untick to change it. */
 function PermissionsMatrix({ editable }: { editable: boolean }) {
@@ -90,21 +91,23 @@ function PermissionsMatrix({ editable }: { editable: boolean }) {
 }
 
 export default function Team() {
-  const { can } = useAuth()
+  const { can, access } = useAuth()
   const manage = can("team.manage")
   return (
     <>
-      <PageHeader title="Team" description="The Divigner people who can sign in, and what each role may do." />
+      <PageHeader title="Team" description={`The ${company()} people who can sign in, and what each role may do.`} />
       <section aria-labelledby="people-heading" className="flex flex-col gap-3">
-        <h2 id="people-heading" className="text-xl font-semibold">Divigner Users</h2>
+        <h2 id="people-heading" className="text-xl font-semibold">{company()} Users</h2>
         <UsersPanel scope={{ side: "divigner" }} canManage={manage} />
       </section>
       <section aria-labelledby="roles-heading" className="flex flex-col gap-3">
         <h2 id="roles-heading" className="text-xl font-semibold">Roles and Permissions</h2>
         <p className="max-w-prose text-sm text-muted-foreground">
-          {manage ? "Tick a box to let a role do something. Changes apply straight away. The Owner role always has everything." : "Only people who manage the team can change these."}
+          {access?.agency
+            ? "What each role may do. These roles are the same for everyone who uses Avalytics, so they are set by Divigner."
+            : manage ? "Tick a box to let a role do something. Changes apply straight away. The Owner role always has everything." : "Only people who manage the team can change these."}
         </p>
-        <PermissionsMatrix editable={manage} />
+        <PermissionsMatrix editable={manage && !access?.agency} />
       </section>
     </>
   )

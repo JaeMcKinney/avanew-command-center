@@ -1,0 +1,133 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Agency brands.
+
+   An agency's colours are set as CSS variables by lib/brand.ts, from the
+   colours saved for that agency. This file holds what colours alone cannot
+   say: the panel edge for an agency brand, and the motion a brand may turn on
+   (after avanew.ai): slow drifting glows, a soft fade on arrival, a brief glow
+   on the page you land on, and 160ms hovers.
+
+   Divigner's own look is untouched: every rule here needs data-brand="agency"
+   or data-motion="on" on the page.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Panels: a faint edge in the brand's highlight. */
+[data-brand="agency"] .rounded-lg.border.bg-card {
+  border-color: var(--card-edge);
+}
+
+/* ── The backdrop: two soft glows that wander ─────────────────────────────── */
+
+.av-glows {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.av-glow {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+.av-glow-a {
+  width: 62vmax;
+  height: 62vmax;
+  left: -18vmax;
+  top: -22vmax;
+  background: radial-gradient(closest-side, var(--glow-a), transparent);
+  animation: av-drift-a 22s ease-in-out infinite alternate;
+}
+.av-glow-b {
+  width: 70vmax;
+  height: 70vmax;
+  right: -24vmax;
+  bottom: -30vmax;
+  background: radial-gradient(closest-side, var(--glow-b), transparent);
+  animation: av-drift-b 26s ease-in-out infinite alternate;
+}
+@keyframes av-drift-a {
+  to {
+    transform: translate(5vmax, 3.5vmax) scale(1.1);
+  }
+}
+@keyframes av-drift-b {
+  to {
+    transform: translate(-6vmax, -3vmax) scale(1.07);
+  }
+}
+
+/* The voice lines behind the sign-in card. */
+.av-waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+}
+
+/* ── Motion ───────────────────────────────────────────────────────────────── */
+
+/* Hovers ease over 160ms, as on the site. */
+[data-motion="on"] :is(a, button, [data-slot="button"], input, select, textarea, [role="tab"]),
+[data-motion="on"] .rounded-lg.border.bg-card {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+/* The main action lifts on a soft gold shadow. */
+[data-motion="on"] [data-slot="button"][data-variant="default"]:hover {
+  box-shadow: 0 8px 20px -10px var(--gold-glow);
+}
+
+/* A page fades in as you arrive; each block follows the one above it. */
+[data-motion="on"] #main > * {
+  animation: av-arrive 480ms ease both;
+}
+[data-motion="on"] #main > :nth-child(2) {
+  animation-delay: 60ms;
+}
+[data-motion="on"] #main > :nth-child(3) {
+  animation-delay: 120ms;
+}
+[data-motion="on"] #main > :nth-child(n + 4) {
+  animation-delay: 180ms;
+}
+@keyframes av-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* The sign-in card breathes in. */
+[data-motion="on"] .site-backdrop > #main {
+  animation: av-art-in 900ms ease 80ms both;
+}
+@keyframes av-art-in {
+  from {
+    opacity: 0;
+    scale: 1.03;
+  }
+}
+
+/* The page you are on: a gold marker in the sidebar that glows once, then settles. */
+[data-motion="on"] aside nav a[aria-current="page"] {
+  box-shadow: inset 3px 0 0 var(--gold);
+  animation: av-nav-glow 2.2s ease-out 200ms both;
+}
+@keyframes av-nav-glow {
+  0% {
+    box-shadow: inset 3px 0 0 var(--gold), 0 0 0 0 transparent;
+  }
+  25% {
+    box-shadow: inset 3px 0 0 var(--gold), 0 0 0 1px var(--gold-glow), 0 0 18px 2px var(--gold-glow);
+  }
+  100% {
+    box-shadow: inset 3px 0 0 var(--gold), 0 0 0 0 transparent;
+  }
+}

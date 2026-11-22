@@ -6,6 +6,7 @@ import { serviceClient, writeAudit } from "../_shared/clients.ts"
 import { json } from "../_shared/http.ts"
 import { notify } from "../_shared/notify.ts"
 import { getSubscription, type StripeInvoice, type StripeSubscription, verifyStripeSignature } from "../_shared/stripe.ts"
+import { brandName } from "../_shared/brand.ts"
 
 type StripeEvent = { id: string; type: string; data: { object: Record<string, unknown> } }
 const at = (seconds: number | undefined) => seconds ? new Date(seconds * 1000).toISOString() : null
@@ -45,9 +46,9 @@ export const handler = async (req: Request): Promise<Response> => {
           await notify(admin, {
             clientId: done.client_id, kind: `topup_paid:${sessionMeta.topup_id}`,
             subject: `${done.minutes} extra minutes added (${client?.name})`,
-            text: `Thank you. Your payment of ${amount} added ${done.minutes} minutes of talk time to the current period. Stripe has emailed your receipt.\n\n${link}\n\nDivigner`,
+            text: `Thank you. Your payment of ${amount} added ${done.minutes} minutes of talk time to the current period. Stripe has emailed your receipt.\n\n${link}\n\n${brandName()}`,
             staffText: `${client?.name} bought ${done.minutes} extra minutes for ${amount}.`,
-            sms: `Divigner: ${done.minutes} extra minutes added.`,
+            sms: `${brandName()}: ${done.minutes} extra minutes added.`,
           })
           // More room may turn paused avatars back on.
           await checkUsage(admin, done.client_id)
@@ -85,9 +86,9 @@ export const handler = async (req: Request): Promise<Response> => {
           await notify(admin, {
             clientId: billing.client_id, kind: `payment_failed:${invoice.id}`,
             subject: `A payment did not go through (${client?.name})`,
-            text: `We could not take payment for your latest invoice${invoice.number ? ` (${invoice.number})` : ""}. Please update your payment method so your avatars keep running:\n\n${link}\n\nDivigner`,
+            text: `We could not take payment for your latest invoice${invoice.number ? ` (${invoice.number})` : ""}. Please update your payment method so your avatars keep running:\n\n${link}\n\n${brandName()}`,
             staffText: `A payment failed for ${client?.name}${invoice.number ? ` (invoice ${invoice.number})` : ""}.`,
-            sms: `Divigner: a payment did not go through. Update your payment method: ${link}`,
+            sms: `${brandName()}: a payment did not go through. Update your payment method: ${link}`,
           })
         }
       }

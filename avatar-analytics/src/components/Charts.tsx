@@ -263,7 +263,7 @@ export function Columns({ columns, unit, color, label = "Talk time over time" }:
   )
 }
 
-export function DataTable({ caption, head, rows }: { caption: string; head: string[]; rows: Array<Array<string | number>> }) {
+export function DataTable({ caption, head, rows }: { caption: string; head: string[]; rows: Array<Array<ReactNode>> }) {
   return (
     <table className="w-full text-sm">
       <caption className="sr-only">{caption}</caption>
@@ -275,8 +275,8 @@ export function DataTable({ caption, head, rows }: { caption: string; head: stri
         </tr>
       </thead>
       <tbody>
-        {rows.map((row) => (
-          <tr key={String(row[0])} className="border-b last:border-0">
+        {rows.map((row, index) => (
+          <tr key={index} className="border-b last:border-0">
             {row.map((cell, i) =>
               i === 0 ? (
                 <th key={i} scope="row" className="px-2 py-2 text-left font-normal">{cell}</th>

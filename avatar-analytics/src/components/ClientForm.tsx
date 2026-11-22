@@ -5,7 +5,16 @@ import { Label } from "@/components/ui/label"
 import { isHexColor } from "@/lib/color"
 import { slugify } from "@/lib/format"
 
-export type ClientFormValues = { name: string; slug: string; timezone: string; brand_color: string; logo_url: string; status?: string }
+export type ClientFormValues = {
+  name: string
+  slug: string
+  timezone: string
+  brand_color: string
+  logo_url: string
+  status?: string
+  /** A logo chosen from this computer, when creating a client. It is saved once the client exists. */
+  logo_file?: File | null
+}
 
 const COMMON_ZONES = ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"]
 
@@ -47,6 +56,8 @@ export function ClientForm({
     if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(values.slug)) found.slug = "Use lowercase letters, numbers and hyphens, for example northline-realty."
     if (values.brand_color && !isHexColor(values.brand_color)) found.brand_color = "Use a colour like #0F766E."
     if (values.logo_url && !/^https:\/\/\S+$/.test(values.logo_url)) found.logo_url = "The logo address must start with https://"
+    if (values.logo_file && !/^image\/(png|jpeg|webp|svg\+xml|gif)$/.test(values.logo_file.type)) found.logo_file = "Choose a PNG, JPG, SVG or WebP image."
+    else if (values.logo_file && values.logo_file.size > 8 * 1024 * 1024) found.logo_file = "That file is over 8 MB. Choose a smaller one."
     setProblems(found)
     if (Object.keys(found).length === 0) onSubmit({ ...values, name: values.name.trim() })
     else document.getElementById(`${id}-${Object.keys(found)[0]}`)?.focus()
@@ -133,10 +144,27 @@ export function ClientForm({
           </div>
           {problem("brand_color")}
         </div>
+        {mode === "create" && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`${id}-logo_file`}>Logo file</Label>
+            <input
+              id={`${id}-logo_file`} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"
+              onChange={(e) => set({ logo_file: e.target.files?.[0] ?? null })}
+              className="min-h-11 max-w-md rounded-md border border-input bg-transparent text-sm file:mr-3 file:min-h-11 file:border-0 file:bg-secondary file:px-4 file:font-medium"
+              {...describe("logo_file", "help")}
+            />
+            <p id={`${id}-logo_file-help`} className="text-xs text-muted-foreground">Upload their logo from this computer: PNG, JPG, SVG or WebP. You can adjust its size and position afterwards, in the client's Details.</p>
+            {problem("logo_file")}
+          </div>
+        )}
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${id}-logo_url`}>Logo web address</Label>
+          <Label htmlFor={`${id}-logo_url`}>{mode === "create" ? "Or a logo web address" : "Logo web address"}</Label>
           <Input id={`${id}-logo_url`} type="url" value={values.logo_url} onChange={(e) => set({ logo_url: e.target.value.trim() })} placeholder="https://example.com/logo.png" className="min-h-11" autoComplete="off" {...describe("logo_url", "help")} />
-          <p id={`${id}-logo_url-help`} className="text-xs text-muted-foreground">A link to their logo image. Shown at the top of their portal.</p>
+          <p id={`${id}-logo_url-help`} className="text-xs text-muted-foreground">
+            {mode === "create"
+              ? "A link to their logo image, if it is already online. If you give both, the uploaded file is used."
+              : "A link to their logo image. To upload a file instead, use Logo above."}
+          </p>
           {problem("logo_url")}
         </div>
       </fieldset>

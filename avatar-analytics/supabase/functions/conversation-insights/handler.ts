@@ -3,7 +3,7 @@
 //
 // Body (optional): { limit: 10 }
 
-import { isScheduledCall, requireAccess, requireUser, serviceClient } from "../_shared/clients.ts"
+import { isScheduledCall, requireAccess, requireUser, serviceClient, requireDivignerAccount } from "../_shared/clients.ts"
 import { endpoint, json } from "../_shared/http.ts"
 import { processPendingInsights } from "../_shared/insights.ts"
 
@@ -11,6 +11,7 @@ export const handler = endpoint(async (req) => {
   if (!isScheduledCall(req)) {
     const caller = await requireUser(req)
     await requireAccess(caller, "avatars.link")
+    await requireDivignerAccount(caller, "This")
   }
   const body = await req.json().catch(() => ({})) as { limit?: number }
   const limit = Math.min(Math.max(Number(body.limit) || 10, 1), 50)

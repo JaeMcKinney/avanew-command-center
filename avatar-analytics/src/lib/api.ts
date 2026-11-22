@@ -3,6 +3,7 @@
 // security.
 
 import type { PostgrestError } from "@supabase/supabase-js"
+import type { AgencyBrand, Theme } from "@/lib/brand"
 import type { DateRange } from "@/lib/dates"
 import { sumGlass, type GlassTotals } from "@/lib/glass"
 import { callFunction, callFunctionRaw, supabase } from "@/lib/supabase"
@@ -28,6 +29,8 @@ export type Access = {
   role: { id: string; key: string; name: string; client_scope: "all" | "assigned" }
   permissions: string[]
   client: Pick<Client, "id" | "name" | "slug" | "logo_url" | "brand_color" | "timezone" | "status"> | null
+  /** The agency this person works for, or whose client they belong to. Null for Divigner's own. */
+  agency: AgencyBrand | null
 }
 
 export type UsageTotals = { conversations: number; talk_seconds: number; billable_seconds: number }
@@ -578,6 +581,8 @@ export function inviteUser(body: {
   role_id: string
   client_id?: string
   assigned_client_ids?: string[]
+  /** Divigner inviting someone into an agency's team. Left out, staff join the inviter's own team. */
+  agency_id?: string
 }) {
   return callFunction<{ user_id: string }>("user-invite", body)
 }
@@ -755,4 +760,119 @@ export async function glassUsageByConversation(conversationIds: string[]): Promi
   if (conversationIds.length === 0) return new Map()
   const rows = unwrap(await supabase.rpc("glass_usage_by_conversation", { p_conversation_ids: conversationIds }))
   return new Map(rows.map((r) => [r.conversation_id, glassTotals(r)]))
+}
+
+// ── Agencies ─────────────────────────────────────────────────────────────────
+
+export type Agency = Tables["agencies"]["Row"]
+/** What Divigner sees of an agency: its account and totals. No client or avatar names. */
+export type AgencyUsage = {
+  id: string
+  name: string
+  slug: string
+  status: "active" | "paused"
+  domain: string | null
+  payment_model: "one_time" | "subscription" | null
+  fee_cents: number | null
+  created_at: string
+  has_brand: boolean
+  staff: number
+  clients: number
+  active_clients: number
+  avatars: number
+  minutes: number
+  conversations: number
+  glass_questions: number
+  last_call_at: string | null
+}
+
+function failAgency(error: PostgrestError): never {
+  if (error.code === "23505") {
+    throw new Error(error.message.includes("domain") ? "Another agency already uses that address." : "Another agency already uses that short name.")
+  }
+  if (error.code === "23514") throw new Error("Check the short name and the address: lowercase letters, numbers and hyphens only.")
+  fail(error)
+}
+
+export async function listAgencyUsage(range: DateRange): Promise<AgencyUsage[]> {
+  return (unwrap(await supabase.rpc("agency_usage", { p_from: range.from, p_to: range.to })) ?? []) as AgencyUsage[]
+}
+
+export async function getAgency(slug: string): Promise<Agency | null> {
+  return unwrap(await supabase.from("agencies").select("*").eq("slug", slug).maybeSingle())
+}
+
+/** The signed-in person's own agency, for its staff. */
+export async function getAgencyById(id: string): Promise<Agency | null> {
+  return unwrap(await supabase.from("agencies").select("*").eq("id", id).maybeSingle())
+}
+
+export type AgencyDetails = { name: string; domain: string; status: "active" | "paused"; payment_model: "" | "one_time" | "subscription"; fee_cents: number | null }
+
+export async function createAgency(input: { name: string; slug: string; domain: string; theme: Theme | null; payment_model: string; fee_cents: number | null }): Promise<Agency> {
+  const result = await supabase.rpc("create_agency", {
+    p_name: input.name, p_slug: input.slug, p_domain: input.domain || undefined, p_theme: input.theme ?? undefined,
+    p_payment_model: input.payment_model || undefined, p_fee_cents: input.fee_cents ?? undefined,
+  })
+  if (result.error) failAgency(result.error)
+  return result.data as Agency
+}
+
+export async function updateAgency(id: string, input: AgencyDetails): Promise<Agency> {
+  const result = await supabase.rpc("update_agency", {
+    p_agency_id: id, p_name: input.name, p_domain: input.domain, p_status: input.status,
+    p_payment_model: input.payment_model, p_fee_cents: input.fee_cents as number,
+  })
+  if (result.error) failAgency(result.error)
+  return result.data as Agency
+}
+
+export async function saveAgencyBrand(id: string, input: { theme: Theme | null; logo_light_url: string | null; logo_dark_url: string | null; icon_url: string | null }): Promise<Agency> {
+  return unwrap(await supabase.rpc("agency_set_brand", {
+    p_agency_id: id, p_theme: input.theme as never,
+    p_logo_light_url: input.logo_light_url ?? undefined, p_logo_dark_url: input.logo_dark_url ?? undefined, p_icon_url: input.icon_url ?? undefined,
+  })) as Agency
+}
+
+/** Saves a logo or icon for an agency and returns its address. The image is stored as a PNG. */
+export async function uploadAgencyImage(agencyId: string, png: Blob): Promise<string> {
+  const path = `${agencyId}/${crypto.randomUUID()}.png`
+  const { error } = await supabase.storage.from("logos").upload(path, png, { contentType: "image/png", cacheControl: "31536000" })
+  if (error) throw new Error("The image could not be saved. Check that it is under 1 MB and try again.")
+  return supabase.storage.from("logos").getPublicUrl(path).data.publicUrl
+}
+
+export async function agencyUsageByDay(agencyId: string, range: DateRange): Promise<Array<{ usage_date: string; minutes: number; conversations: number }>> {
+  return unwrap(await supabase.rpc("agency_usage_by_day", { p_agency_id: agencyId, p_from: range.from, p_to: range.to })) ?? []
+}
+
+export type AgencyStaff = { id: string; full_name: string; email: string; role_name: string; is_active: boolean; created_at: string }
+
+/** An agency's own staff, for Divigner. Not its clients' users. */
+export async function listAgencyStaff(agencyId: string): Promise<AgencyStaff[]> {
+  return unwrap(await supabase.rpc("agency_staff", { p_agency_id: agencyId })) ?? []
+}
+
+/** The brand for a sign-in page: by the address it was opened at, or by an agency's short name. */
+export async function brandForHost(host: string, slug: string | null): Promise<AgencyBrand | null> {
+  const { data } = await supabase.rpc("brand_for_host", { p_host: host, p_slug: slug ?? undefined })
+  return (data as AgencyBrand | null) ?? null
+}
+
+// ── Transcript access ────────────────────────────────────────────────────────
+
+export type TranscriptAccess = Tables["transcript_access"]["Row"]
+
+/** The client's standing permission for its support team to read transcripts, if it has given one that has not run out. */
+export async function getTranscriptAccess(clientId: string): Promise<TranscriptAccess | null> {
+  const row = unwrap(await supabase.from("transcript_access").select("*").eq("client_id", clientId).maybeSingle()) as TranscriptAccess | null
+  return row && new Date(row.expires_at).getTime() > Date.now() ? row : null
+}
+
+export async function grantTranscriptAccess(clientId: string, hours: number, reason: string): Promise<TranscriptAccess> {
+  return unwrap(await supabase.rpc("grant_transcript_access", { p_client_id: clientId, p_hours: hours, p_reason: reason })) as TranscriptAccess
+}
+
+export async function revokeTranscriptAccess(clientId: string): Promise<void> {
+  unwrap(await supabase.rpc("revoke_transcript_access", { p_client_id: clientId }))
 }

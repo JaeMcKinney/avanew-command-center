@@ -4,13 +4,14 @@ import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 import { AvatarPicker } from "@/components/AvatarPicker"
-import { ClientForm } from "@/components/ClientForm"
+import { ClientForm, type ClientFormValues } from "@/components/ClientForm"
 import { PageHeader } from "@/components/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/hooks/useAuth"
-import { createClient, inviteUser, listRoles, type Client } from "@/lib/api"
+import { createClient, inviteUser, listRoles, uploadClientLogo, type Client } from "@/lib/api"
+import { toFramedPng } from "@/lib/image"
 import { cn } from "@/lib/utils"
 
 const STEPS = ["Client Details", "Link Avatars", "Invite the Client"] as const
@@ -77,7 +78,18 @@ export default function ClientNew() {
   useEffect(() => { headingRef.current?.focus() }, [step, invited])
 
   const create = useMutation({
-    mutationFn: createClient,
+    mutationFn: async ({ logo_file, ...values }: ClientFormValues) => {
+      const created = await createClient({ ...values, logo_url: logo_file ? "" : values.logo_url })
+      if (!logo_file) return created
+      // The logo needs the client to exist first. If it cannot be saved, the client still stands.
+      try {
+        const logo_url = await uploadClientLogo(created.id, await toFramedPng(logo_file, 900, 300))
+        return { ...created, logo_url }
+      } catch (err) {
+        toast.error(`${created.name} was created, but its logo could not be saved: ${(err as Error).message} Add it from the client's Details.`)
+        return created
+      }
+    },
     onSuccess: (created) => {
       setClient(created)
       setStep(can("avatars.link") ? 1 : 2)

@@ -15,6 +15,7 @@ import {
   type Client, type ClientContact, type ContactInput,
 } from "@/lib/api"
 import { formatDateTime } from "@/lib/dates"
+import { company } from "@/lib/brand"
 
 const KINDS = [["note", "Note"], ["call", "Call"], ["meeting", "Meeting"], ["email", "Email"], ["task", "To do"]] as const
 const kindLabel = (kind: string) => KINDS.find(([value]) => value === kind)?.[1] ?? "Note"
@@ -60,7 +61,7 @@ export function ClientNotes({ client }: { client: Client }) {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`${id}-body`}>Add a note to {client.name}'s file</Label>
             <textarea id={`${id}-body`} value={body} onChange={(e) => setBody(e.target.value)} rows={3} maxLength={10000} aria-invalid={problem ? true : undefined} aria-describedby={`${id}-help${problem ? ` ${id}-problem` : ""}`} className="min-h-24 rounded-md border border-input bg-transparent px-3 py-2 text-sm" />
-            <p id={`${id}-help`} className="text-xs text-muted-foreground">Only Divigner staff can see notes. The client never does.</p>
+            <p id={`${id}-help`} className="text-xs text-muted-foreground">Only {company()} staff can see notes. The client never does.</p>
             {problem && <p id={`${id}-problem`} role="alert" className="text-sm font-medium text-bad">{problem}</p>}
           </div>
           <div className="flex flex-wrap items-end gap-3">

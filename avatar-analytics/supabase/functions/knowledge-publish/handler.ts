@@ -9,7 +9,7 @@
 // Body: { group_id }   publish after one answer changed (signed-in user)
 //       {}             retry anything still waiting (schedule)
 
-import { functionsBaseUrl, isScheduledCall, requireAccess, requireUser, serviceClient, type SupabaseClient } from "../_shared/clients.ts"
+import { functionsBaseUrl, isScheduledCall, requireAccess, requireUser, serviceClient, type SupabaseClient, requireDivignerAccount } from "../_shared/clients.ts"
 import { endpoint, HttpError, json } from "../_shared/http.ts"
 import { randomHex } from "../_shared/signature.ts"
 import { createDocument, getPal, patchPal, recrawlDocument, TavusError } from "../_shared/tavus.ts"
@@ -83,6 +83,7 @@ export const handler = endpoint(async (req) => {
     const { data: group } = await admin.from("question_groups").select("id, client_id, avatar_ids").eq("id", body.group_id).maybeSingle()
     if (!group) throw new HttpError(404, "Question not found")
     await requireAccess(caller, "questions.answer", group.client_id)
+    await requireDivignerAccount(caller, "Tavus")
 
     const results = []
     for (const avatarId of group.avatar_ids as string[]) results.push(await publishAvatar(admin, avatarId))
@@ -94,6 +95,7 @@ export const handler = endpoint(async (req) => {
   if (!isScheduledCall(req)) {
     const caller = await requireUser(req)
     await requireAccess(caller, "avatars.link")
+    await requireDivignerAccount(caller, "Tavus")
   }
   const { data: waiting } = await admin.from("avatar_knowledge").select("avatar_id").eq("needs_refresh", true).limit(50)
   let published = 0

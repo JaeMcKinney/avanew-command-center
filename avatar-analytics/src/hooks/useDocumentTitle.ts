@@ -1,10 +1,8 @@
 import { useEffect } from "react"
 
-const APP = "Avalytics by Divigner"
-
 /** Names the page in the browser tab and history. */
 export function useDocumentTitle(title: string | null | undefined) {
   useEffect(() => {
-    document.title = title ? `${title} · ${APP}` : APP
+    document.title = title ? `${title} · Avalytics` : "Avalytics"
   }, [title])
 }
