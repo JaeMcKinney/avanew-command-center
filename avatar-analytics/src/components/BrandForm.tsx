@@ -88,6 +88,19 @@ export function BrandForm({ agency }: { agency: Agency }) {
   const [urls, setUrls] = useState<Record<Slot, string | null>>({ logo_light_url: agency.logo_light_url, logo_dark_url: agency.logo_dark_url, icon_url: agency.icon_url })
   const [pending, setPending] = useState<Partial<Record<Slot, Pending>>>({})
   const [busy, setBusy] = useState<Slot | "preset" | null>(null)
+  // A web address typed for a picture, as the other way to give one.
+  const [typed, setTyped] = useState<Partial<Record<Slot, string>>>({})
+  const badAddress = (slot: Slot) => Boolean(typed[slot]) && !/^https:\/\/\S+$/.test(typed[slot] ?? "")
+  const addressesOk = SLOTS.every((slot) => !badAddress(slot.key))
+
+  function typeAddress(slot: Slot, value: string) {
+    setTyped((t) => ({ ...t, [slot]: value }))
+    if (/^https:\/\/\S+$/.test(value)) {
+      // A typed address replaces a file chosen for the same picture.
+      setPending((p) => Object.fromEntries(Object.entries(p).filter(([key]) => key !== slot)))
+      setUrls((u) => ({ ...u, [slot]: value }))
+    }
+  }
 
   const valid = (["light", "dark"] as const).every((m) => THEME_KEYS.every((k) => isHexColor(theme[m][k])))
   const problems = valid ? themeProblems(theme) : []
@@ -102,6 +115,7 @@ export function BrandForm({ agency }: { agency: Agency }) {
       const blob = await toPng(file, ...box)
       if (blob.size > 1_000_000) throw new Error("That picture is too large once prepared. Use a simpler or smaller one.")
       setPending((p) => ({ ...p, [slot]: { blob, preview: URL.createObjectURL(blob) } }))
+      setTyped((t) => ({ ...t, [slot]: "" }))
     } catch (err) {
       toast.error((err as Error).message)
     } finally {
@@ -136,6 +150,7 @@ export function BrandForm({ agency }: { agency: Agency }) {
     onSuccess: async (row) => {
       setUrls({ logo_light_url: row.logo_light_url, logo_dark_url: row.logo_dark_url, icon_url: row.icon_url })
       setPending({})
+      setTyped({})
       toast.success("Brand saved.")
       await queryClient.invalidateQueries({ queryKey: ["agency"] })
       // Anyone wearing this brand, this person included, sees it at once.
@@ -150,7 +165,7 @@ export function BrandForm({ agency }: { agency: Agency }) {
       noValidate
       onSubmit={(e) => {
         e.preventDefault()
-        if (valid && !problems.length) save.mutate()
+        if (valid && addressesOk && !problems.length) save.mutate()
       }}
     >
       <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-4">
@@ -175,7 +190,16 @@ export function BrandForm({ agency }: { agency: Agency }) {
                 disabled={busy !== null} onChange={(e) => void choose(slot.key, e.target.files?.[0], slot.box)}
                 className="text-sm file:mr-3 file:min-h-9 file:rounded-sm file:border file:border-input file:bg-transparent file:px-3 file:text-sm file:font-medium"
               />
-              <p id={`${id}-${slot.key}-help`} className="text-xs text-muted-foreground">{slot.help} PNG, JPG, WebP or SVG.</p>
+              <p id={`${id}-${slot.key}-help`} className="text-xs text-muted-foreground">{slot.help} Upload a PNG, JPG, WebP or SVG.</p>
+              <Label htmlFor={`${id}-${slot.key}-address`} className="mt-1">Or a Web Address</Label>
+              <Input
+                id={`${id}-${slot.key}-address`} type="url" value={typed[slot.key] ?? ""} onChange={(e) => typeAddress(slot.key, e.target.value.trim())}
+                placeholder="https://example.com/logo.png" autoComplete="off" className="min-h-10"
+                aria-invalid={badAddress(slot.key)} aria-describedby={`${id}-${slot.key}-address-help`}
+              />
+              <p id={`${id}-${slot.key}-address-help`} className={badAddress(slot.key) ? "text-xs text-bad" : "text-xs text-muted-foreground"}>
+                {badAddress(slot.key) ? "The address must start with https://" : "For a picture that is already online."}
+              </p>
             </div>
           ))}
         </div>
@@ -214,7 +238,7 @@ export function BrandForm({ agency }: { agency: Agency }) {
       )}
 
       <div>
-        <Button type="submit" className="min-h-11" disabled={!valid || problems.length > 0 || save.isPending || busy !== null}>{save.isPending ? "Saving…" : "Save brand"}</Button>
+        <Button type="submit" className="min-h-11" disabled={!valid || !addressesOk || problems.length > 0 || save.isPending || busy !== null}>{save.isPending ? "Saving…" : "Save brand"}</Button>
       </div>
     </form>
   )

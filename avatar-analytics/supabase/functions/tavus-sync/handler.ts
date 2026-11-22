@@ -3,7 +3,7 @@
 
 import { isScheduledCall, requireAccess, requireUser, serviceClient, functionsBaseUrl, writeAudit, requireDivignerAccount } from "../_shared/clients.ts"
 import { endpoint, HttpError, json } from "../_shared/http.ts"
-import { listDeployments, listPals, type TavusDeployment, type TavusPal } from "../_shared/tavus.ts"
+import { listDeployments, listPals, type TavusDeployment, type TavusPal, listFaces } from "../_shared/tavus.ts"
 import { toIso } from "../_shared/time.ts"
 
 function callbackHost(url: string | null | undefined, ownBase: string): string | null {
@@ -69,11 +69,33 @@ export const handler = endpoint(async (req) => {
   const now = new Date().toISOString()
   const ownBase = functionsBaseUrl()
 
+  // An avatar's photo: the one on any of its deployments, or else its face's.
   const thumbByPal = new Map<string, string>()
   for (const d of deployments) {
     const thumb = d.thumbnail_image_url ?? d.replica_thumbnail_image_url
     if (thumb && !thumbByPal.has(d.pal_id)) thumbByPal.set(d.pal_id, thumb)
   }
+  const faceless = pals.filter((p) => p.default_face_id && !thumbByPal.has(p.pal_id))
+  if (faceless.length > 0) {
+    // Photos are a nicety. If Tavus cannot list faces, the sync still stands and the photos fill in next time.
+    try {
+      const wanted = new Set(faceless.map((p) => p.default_face_id))
+      const thumbByFace = new Map<string, string>()
+      for (const type of ["user", "system"] as const) {
+        if ([...wanted].every((id) => thumbByFace.has(id as string))) break
+        for (const face of await listFaces(type)) if (face.thumbnail_image_url) thumbByFace.set(face.face_id, face.thumbnail_image_url)
+      }
+      for (const p of faceless) {
+        const thumb = thumbByFace.get(p.default_face_id as string)
+        if (thumb) thumbByPal.set(p.pal_id, thumb)
+      }
+    } catch {
+      // Left without photos for now.
+    }
+  }
+  // A photo already on file is kept when Tavus did not send one this time.
+  const { data: known } = await admin.from("tavus_pals").select("pal_id, thumbnail_image_url").not("thumbnail_image_url", "is", null)
+  for (const row of known ?? []) if (!thumbByPal.has(row.pal_id)) thumbByPal.set(row.pal_id, row.thumbnail_image_url as string)
 
   const palRows = pals.map((p) => ({
     pal_id: p.pal_id,

@@ -57,6 +57,10 @@ export const handler = endpoint(async (req) => {
   }
   if (ownerId !== caller.userId) throw new HttpError(403, "You can only share files you exported yourself")
   await requireAccess(caller, "transcripts.view", clientId)
+  // Staff share a client's transcripts only while the client allows them to read them.
+  const { data: mayRead, error: readError } = await caller.asUser.rpc("can_read_transcripts", { p_client_id: clientId })
+  if (readError) throw new HttpError(500, "Could not check your permissions")
+  if (mayRead !== true) throw new HttpError(403, "This client has not allowed its transcripts to be read")
 
   const expires = new Date(Date.now() + LINK_DAYS * 86_400_000)
   const { data: signed, error } = await admin.storage.from(BUCKET).createSignedUrl(body.path!, LINK_DAYS * 86_400, { download: fileName })

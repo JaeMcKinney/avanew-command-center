@@ -31,6 +31,13 @@ export type TavusDeployment = {
   updated_at?: string | null
 }
 
+/** A face (the person an avatar looks like). Its thumbnail is the avatar's photo. */
+export type TavusFace = {
+  face_id: string
+  face_name?: string | null
+  thumbnail_image_url?: string | null
+}
+
 export type TavusConversation = {
   conversation_id: string
   status?: string | null
@@ -114,6 +121,23 @@ export async function listDeployments(): Promise<TavusDeployment[]> {
     if (rows.length === 0 || (res.total != null && all.length >= res.total)) break
   }
   return all
+}
+
+/**
+ * Every face the account can use: its own (`user`) or Tavus's stock ones
+ * (`system`). Pages are read until one adds nothing new, so it does not matter
+ * whether Tavus counts them from zero or from one.
+ */
+export async function listFaces(faceType: "user" | "system"): Promise<TavusFace[]> {
+  const byId = new Map<string, TavusFace>()
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const res = await request<{ data?: TavusFace[]; total_count?: number }>(`/faces?limit=${PAGE_SIZE}&page=${page}&face_type=${faceType}`)
+    const before = byId.size
+    for (const face of res.data ?? []) if (face.face_id) byId.set(face.face_id, face)
+    if (byId.size === before && page > 0) break
+    if (res.total_count != null && byId.size >= res.total_count) break
+  }
+  return [...byId.values()]
 }
 
 export function getPal(palId: string): Promise<TavusPal> {

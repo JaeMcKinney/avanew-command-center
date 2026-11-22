@@ -1,3 +1,5 @@
+import { TranscriptLockNotice, useTranscriptAccess } from "@/components/TranscriptAccess"
+import { AvatarName, AvatarPhoto } from "@/components/AvatarPhoto"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { TableScroll } from "@/components/TableScroll"
 import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, Download, LifeBuoy } from "lucide-react"
@@ -61,10 +63,10 @@ function QuestionSection({ id, title, questions, empty, questionsPath }: { id: s
   )
 }
 
-function TranscriptDialog({ conversation, avatarName, client, onClose }: { conversation: Conversation; avatarName: string; client: Client; onClose: () => void }) {
+function TranscriptDialog({ conversation, avatarName, avatarPhoto, client, locked = false, onClose }: { conversation: Conversation; avatarName: string; avatarPhoto?: string | null; locked?: boolean; client: Client; onClose: () => void }) {
   const timeZone = client.timezone
-  const transcript = useQuery({ queryKey: ["transcript", conversation.conversation_id], queryFn: () => getTranscript(conversation.conversation_id) })
-  const insight = useQuery({ queryKey: ["insight", conversation.conversation_id], queryFn: () => getInsight(conversation.conversation_id) })
+  const transcript = useQuery({ queryKey: ["transcript", conversation.conversation_id], queryFn: () => getTranscript(conversation.conversation_id), enabled: !locked })
+  const insight = useQuery({ queryKey: ["insight", conversation.conversation_id], queryFn: () => getInsight(conversation.conversation_id), enabled: !locked })
   const [saving, setSaving] = useState(false)
   const [reporting, setReporting] = useState(false)
   const { access, can } = useAuth()
@@ -93,13 +95,29 @@ function TranscriptDialog({ conversation, avatarName, client, onClose }: { conve
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Conversation With {avatarName}</DialogTitle>
+          <DialogTitle className="flex items-center gap-3"><AvatarPhoto name={avatarName} src={avatarPhoto} size="sm" />Conversation With {avatarName}</DialogTitle>
           <DialogDescription>
             {formatDateTime(conversation.started_at ?? conversation.ended_at, timeZone)} · {duration(conversation.talk_seconds)} · {endedBecause(conversation.shutdown_reason)}
           </DialogDescription>
         </DialogHeader>
         <CopyId label={staff ? "Tavus Conversation ID" : "Conversation ID"} value={conversation.conversation_id} />
-        {transcript.isPending ? (
+        {locked ? (
+          <>
+            <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+              <div><dt className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Length</dt><dd className="tabular">{duration(conversation.talk_seconds)}</dd></div>
+              <div><dt className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Turns</dt><dd className="tabular">{count(conversation.turns)}</dd></div>
+              <div><dt className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">How It Ended</dt><dd>{endedBecause(conversation.shutdown_reason)}</dd></div>
+            </dl>
+            <TranscriptLockNotice client={client} />
+            {canReport && (
+              <div>
+                <Button variant="outline" className="min-h-10" onClick={() => setReporting(true)}>
+                  <LifeBuoy aria-hidden="true" />Report a problem
+                </Button>
+              </div>
+            )}
+          </>
+        ) : transcript.isPending ? (
           <LoadingBlock label="Loading transcript" />
         ) : transcript.isError ? (
           <ErrorBlock error={transcript.error} />
@@ -200,7 +218,16 @@ export default function Conversations({ client: given, embedded = false }: { cli
     queryFn: () => listConversations(client.id, state.range, { avatarId: avatarId || null, page }),
     placeholderData: keepPreviousData,
   })
+  // Staff read what was said only while the client allows it. Everything else here is theirs to see.
+  const { access: me } = useAuth()
+  const permission = useTranscriptAccess(client.id)
+  const isStaff = me?.side === "divigner"
+  const locked = isStaff && !permission.data
   const nameOf = (id: string) => avatars.data?.find((a) => a.id === id)?.display_name ?? "Avatar"
+  const photoOf = (id: string) => {
+    const avatar = avatars.data?.find((a) => a.id === id)
+    return avatar?.custom_photo_url ?? avatar?.photo_url
+  }
 
   const total = conversations.data?.total ?? 0
   const rows = conversations.data?.rows ?? []
@@ -243,7 +270,8 @@ export default function Conversations({ client: given, embedded = false }: { cli
   return (
     <>
       {!embedded && <PageHeader title="Conversations" description="Every finished call with your avatars. Choose a period and an avatar, then open a call to read what was said. Tick one or more to download, share or email them." />}
-      {embedded && <p className="max-w-prose text-sm text-muted-foreground">Every finished call with {client.name}'s avatars. Open a call to read the summary, the questions and the transcript. Tick one or more to download, share or email them.</p>}
+      {embedded && <p className="max-w-prose text-sm text-muted-foreground">Every finished call with {client.name}'s avatars. When {client.name} allows it, open a call to read the summary, the questions and the transcript. Tick one or more to download, share or email them.</p>}
+      {isStaff && <TranscriptLockNotice client={client} />}
       <DateRangeControl value={state} onChange={(next) => { setState(next); setPage(1); clear() }} today={today} />
 
       <div className="flex max-w-xs flex-col gap-1.5">
@@ -273,9 +301,11 @@ export default function Conversations({ client: given, embedded = false }: { cli
             <p role="status" className="text-sm text-muted-foreground">
               {total > CONVERSATIONS_PAGE_SIZE ? `Showing ${first}–${last} of ${count(total)}` : count(total)} conversation{total === 1 ? "" : "s"}{who} · {formatRange(state.range)}
             </p>
-            <Button variant="outline" className="min-h-10" onClick={() => void selectAll()} disabled={selectingAll}>
-              {selectingAll ? "Selecting…" : `Select all transcripts${who} in this period`}
-            </Button>
+            {!locked && (
+              <Button variant="outline" className="min-h-10" onClick={() => void selectAll()} disabled={selectingAll}>
+                {selectingAll ? "Selecting…" : `Select all transcripts${who} in this period`}
+              </Button>
+            )}
           </div>
           <TableScroll label="Conversations table" className={cn("rounded-lg border bg-card", conversations.isPlaceholderData && "opacity-60")}>
             <table className="w-full text-sm">
@@ -283,13 +313,13 @@ export default function Conversations({ client: given, embedded = false }: { cli
               <thead>
                 <tr className="border-b bg-muted/60 text-left text-xs text-muted-foreground uppercase">
                   <th scope="col" className="w-12 py-2.5 pr-0 pl-4">
-                    <Checkbox
+                    {!locked && <Checkbox
                       className="size-5"
                       aria-label="Select every transcript on this page"
                       disabled={withTranscript.length === 0}
                       checked={pageChecked ? true : pageSome ? "indeterminate" : false}
                       onCheckedChange={(on) => toggle(withTranscript, on === true)}
-                    />
+                    />}
                   </th>
                   <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">When</th>
                   <th scope="col" className="px-4 py-2.5 font-semibold tracking-wide">Conversation ID</th>
@@ -304,7 +334,7 @@ export default function Conversations({ client: given, embedded = false }: { cli
                 {rows.map((conv) => (
                   <tr key={conv.conversation_id} className="border-b last:border-0">
                     <td className="py-3 pr-0 pl-4">
-                      {conv.has_transcript && (
+                      {conv.has_transcript && !locked && (
                         <Checkbox
                           className="size-5"
                           aria-label={`Select the conversation from ${formatDateTime(conv.started_at ?? conv.ended_at, client.timezone)}`}
@@ -315,7 +345,7 @@ export default function Conversations({ client: given, embedded = false }: { cli
                     </td>
                     <td className="tabular px-4 py-3">{formatDateTime(conv.started_at ?? conv.ended_at, client.timezone)}</td>
                     <td className="px-4 py-3"><CopyId label="Conversation ID" hideLabel value={conv.conversation_id} /></td>
-                    <td className="px-4 py-3">{nameOf(conv.avatar_id)}</td>
+                    <td className="px-4 py-3"><AvatarName avatar={avatars.data?.find((a) => a.id === conv.avatar_id)} /></td>
                     <td className="tabular px-4 py-3 text-right">{duration(conv.talk_seconds)}</td>
                     {showGlass && (
                       <td className="tabular px-4 py-3 text-right">
@@ -331,7 +361,11 @@ export default function Conversations({ client: given, embedded = false }: { cli
                     )}
                     <td className="hidden px-4 py-3 sm:table-cell">{endedBecause(conv.shutdown_reason)}</td>
                     <td className="px-4 py-3 text-right">
-                      {conv.has_transcript ? (
+                      {locked ? (
+                        <Button variant="outline" size="sm" className="min-h-9" onClick={() => setOpen(conv)} aria-label={`Details of the conversation from ${formatDateTime(conv.started_at ?? conv.ended_at, client.timezone)}`}>
+                          Details
+                        </Button>
+                      ) : conv.has_transcript ? (
                         <Button variant="outline" size="sm" className="min-h-9" onClick={() => setOpen(conv)} aria-label={`Read the conversation from ${formatDateTime(conv.started_at ?? conv.ended_at, client.timezone)}`}>
                           Read
                         </Button>
@@ -359,9 +393,9 @@ export default function Conversations({ client: given, embedded = false }: { cli
         </>
       )}
 
-      {selected.size > 0 && <ExportBar client={client} selected={[...selected.values()]} nameOf={nameOf} onClear={clear} />}
+      {selected.size > 0 && !locked && <ExportBar client={client} selected={[...selected.values()]} nameOf={nameOf} onClear={clear} />}
 
-      {open && <TranscriptDialog conversation={open} avatarName={nameOf(open.avatar_id)} client={client} onClose={() => setOpen(null)} />}
+      {open && <TranscriptDialog conversation={open} avatarName={nameOf(open.avatar_id)} avatarPhoto={photoOf(open.avatar_id)} client={client} locked={locked} onClose={() => setOpen(null)} />}
     </>
   )
 }

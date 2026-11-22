@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
-import { AvatarPhoto } from "@/components/AvatarPhoto"
+import { AvatarName, AvatarPhoto } from "@/components/AvatarPhoto"
 import { ChartCard, Columns, DataTable, Donut, type Slice } from "@/components/Charts"
 import { DateRangeControl, type RangeState } from "@/components/DateRangeControl"
 import { GlassSummary } from "@/components/Glass"
 import { Stat } from "@/components/Stat"
 import { EmptyState, ErrorBlock, LoadingBlock } from "@/components/States"
-import { listAvatars, sumUsage, usageByAvatar, usageByDay, type Client } from "@/lib/api"
+import { listAvatarsEver, sumUsage, usageByAvatar, usageByDay, type Client } from "@/lib/api"
 import { bucketColumns, GRAIN_LABEL, grainFor } from "@/lib/buckets"
 import { MAX_SERIES, seriesColor } from "@/lib/chartColors"
 import { formatDay, formatRange, presetRange, startOfMonth, startOfQuarter, todayIn } from "@/lib/dates"
@@ -24,7 +24,7 @@ export default function Dashboard({ client: given, embedded = false }: { client?
   const [state, setState] = useState<RangeState>({ preset: "month", range: presetRange("month", today) })
   const { range } = state
 
-  const avatars = useQuery({ queryKey: ["avatars", client.id], queryFn: () => listAvatars(client.id) })
+  const avatars = useQuery({ queryKey: ["avatars-ever", client.id], queryFn: () => listAvatarsEver(client.id) })
   const year = presetRange("year", today)
   const yearDays = useQuery({ queryKey: ["usage-by-day", client.id, year.from, year.to], queryFn: () => usageByDay(client.id, year) })
   const byAvatar = useQuery({ queryKey: ["usage-by-avatar", client.id, range.from, range.to], queryFn: () => usageByAvatar(client.id, range) })
@@ -39,10 +39,16 @@ export default function Dashboard({ client: given, embedded = false }: { client?
   const quarter = sumUsage(yearRows.filter((r) => r.usage_date >= startOfQuarter(today)))
   const yearTotal = sumUsage(yearRows)
 
-  // Each avatar keeps its colour whatever the date range, by its place in the list.
-  const list = avatars.data ?? []
   const usage = byAvatar.data ?? new Map()
   const secondsFor = (id: string) => Number(usage.get(id)?.billable_seconds ?? 0)
+  // Linked avatars, then any that have been unlinked but took calls in this
+  // period, so every minute in the total has a name. Each keeps its colour
+  // whatever the date range, by its place in the list.
+  const linked = (avatars.data ?? []).filter((a) => !a.unlinked_at)
+  const past = (avatars.data ?? []).filter((a) => a.unlinked_at && secondsFor(a.id) > 0)
+  const list = [...linked, ...past]
+  // With one avatar there is nothing to compare, so the shares and the split chart are left out.
+  const single = list.length === 1
   const named: Slice[] = list.slice(0, MAX_SERIES).map((a, i) => ({ id: a.id, label: a.display_name, value: secondsFor(a.id) / 60, color: seriesColor(i) }))
   const restSeconds = [...usage.entries()].filter(([id]) => !list.slice(0, MAX_SERIES).some((a) => a.id === id)).reduce((sum, [, u]) => sum + Number(u.billable_seconds), 0)
   const slices = restSeconds > 0 ? [...named, { id: "other", label: "Other Avatars", value: restSeconds / 60, color: seriesColor(-1) }] : named
@@ -87,17 +93,18 @@ export default function Dashboard({ client: given, embedded = false }: { client?
                 <div className="min-w-0">
                   <p className="font-display text-lg font-semibold break-words">{a.display_name}</p>
                   {a.role_label && <p className="text-sm text-muted-foreground">{a.role_label}</p>}
+                  {a.unlinked_at && <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">No longer linked</p>}
                   <p className="tabular mt-1 text-sm">
                     <strong className="text-base">{minutes(secondsFor(a.id))} min</strong>
-                    <span className="text-muted-foreground"> · {percent(secondsFor(a.id), rangeTotal.billable_seconds)} · {count(usage.get(a.id)?.conversations)} calls</span>
+                    <span className="text-muted-foreground">{single ? "" : ` · ${percent(secondsFor(a.id), rangeTotal.billable_seconds)}`} · {count(usage.get(a.id)?.conversations)} calls</span>
                   </p>
                 </div>
               </li>
             ))}
           </ul>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <ChartCard
+          <div className={single ? "grid gap-4" : "grid gap-4 lg:grid-cols-2"}>
+            {!single && <ChartCard
               title="Talk Time by Avatar"
               subtitle={rangeText}
               chart={<Donut slices={slices} centerValue={Math.round(totalMinutes).toLocaleString("en-US")} centerLabel="minutes" unit="min" />}
@@ -105,12 +112,12 @@ export default function Dashboard({ client: given, embedded = false }: { client?
                 <DataTable
                   caption={`Talk time by avatar, ${rangeText}`}
                   head={["Avatar", "Minutes", "Share", "Conversations"]}
-                  rows={list.map((a) => [a.display_name, minutes(secondsFor(a.id)), percent(secondsFor(a.id), rangeTotal.billable_seconds), count(usage.get(a.id)?.conversations)])}
+                  rows={list.map((a) => [<AvatarName key={a.id} avatar={a} />, minutes(secondsFor(a.id)), percent(secondsFor(a.id), rangeTotal.billable_seconds), count(usage.get(a.id)?.conversations)])}
                 />
               }
-            />
+            />}
             <ChartCard
-              title="Talk Time Over Time"
+              title={single ? `${list[0].display_name}'s Talk Time Over Time` : "Talk Time Over Time"}
               subtitle={`${GRAIN_LABEL[grainFor(range)]}, in minutes · ${rangeText}`}
               chart={byDay.isPending ? <LoadingBlock /> : <Columns columns={columns} unit="min" color={seriesColor(0)} />}
               table={<DataTable caption={`Talk time over time, ${rangeText}`} head={["Period", "Minutes"]} rows={columns.map((col) => [col.longLabel, Math.round(col.value)])} />}
@@ -120,7 +127,7 @@ export default function Dashboard({ client: given, embedded = false }: { client?
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Stat label="Conversations" value={count(rangeTotal.conversations)} note={rangeText} />
             <Stat label="Average Call" value={rangeTotal.conversations ? duration(rangeTotal.talk_seconds / rangeTotal.conversations) : "—"} note="From the avatar joining to the call ending" />
-            <Stat label="Avatars" value={count(list.length)} />
+            <Stat label="Avatars" value={count(linked.length)} note={past.length ? `Plus ${count(past.length)} no longer linked that took calls in this period` : undefined} />
           </div>
         </section>
       )}

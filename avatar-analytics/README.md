@@ -127,6 +127,20 @@ The sign-in page wears an agency's look when it is opened at the agency's own ad
 
 Not built yet: an agency's own Tavus account and its own payment account. Until they are, the functions that use Divigner's Tavus or Stripe account refuse an agency's staff and clients with "not connected for your agency yet", so nothing of an agency's ever runs on Divigner's accounts. Emails and texts are still signed with the one `BRAND_NAME` of the project.
 
+### Transcripts Are the Client's Own
+
+Staff, Divigner's or an agency's, see every number about a client's conversations: when, how long, how many turns, which avatar, the ID. They cannot read what was said, the summary of it, or the questions asked in it, until the client allows it (`supabase/migrations/20261122001200_transcript_privacy.sql`).
+
+- A Client admin turns access on from the Support page of the portal, for one, three, seven or thirty days, with an optional reason. It ends on its own, the client can end it early, and staff can hand it back.
+- `app.can_read_transcripts()` is the one rule. It guards the `transcripts`, `conversation_insights` and `questions` tables and the sharing of exports.
+- The grouped questions on the Questions page stay visible to staff who answer them. They do not say who asked or in which conversation.
+
+### Avatars
+
+- **Photos.** An avatar's photo is its face's thumbnail in Tavus. The sync takes it from a deployment when there is one and from the avatar's face (`GET /v2/faces`) when there is not, and keeps a known photo if Tavus sends none. Photos show wherever an avatar is named.
+- **Unlinked avatars.** Unlinking keeps the avatar's past calls and transcripts. The client's Avatars tab lists what was previously linked, with dates and totals, and staff can link one back. Dashboards name an unlinked avatar for any period it took calls in, so totals always add up.
+- **One avatar.** A client with a single avatar gets a dashboard without the split chart or shares, since there is nothing to compare.
+
 ## Run it on your computer
 
 You need Node 22 and Docker.

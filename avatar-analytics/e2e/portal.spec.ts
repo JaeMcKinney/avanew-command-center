@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { expect, test } from "@playwright/test"
-import { CLIENT_ADMIN, CLIENT_MEMBER, OWNER, signIn } from "./helpers"
+import { CLIENT_ADMIN, CLIENT_MEMBER, OWNER, expectAccessible, signIn } from "./helpers"
 
 process.loadEnvFile(".env.local")
 const admin = createClient(process.env.VITE_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
@@ -198,4 +198,15 @@ test("a client pulls every conversation for one avatar over a period, page by pa
   await page.getByLabel("To", { exact: true }).fill(`${year}-01-01`)
   await page.getByRole("button", { name: "Show", exact: true }).click()
   await expect(page.getByText("No conversations with Theo in this period")).toBeVisible()
+})
+
+test("a client with one avatar gets a dashboard for one avatar", async ({ page }) => {
+  await signIn(page, "pat@harbor.test")
+  await expect(page.getByRole("heading", { level: 2, name: "Explore a Period" })).toBeVisible()
+  // One avatar, so there is nothing to compare: no split chart and no shares.
+  await expect(page.getByRole("list", { name: "Your avatars" }).getByRole("listitem")).toHaveCount(1)
+  await expect(page.getByRole("heading", { name: "Talk Time by Avatar" })).toHaveCount(0)
+  await expect(page.getByRole("heading", { name: /'s Talk Time Over Time$/ })).toBeVisible()
+  await expect(page.getByRole("list", { name: "Your avatars" })).not.toContainText("%")
+  await expectAccessible(page)
 })

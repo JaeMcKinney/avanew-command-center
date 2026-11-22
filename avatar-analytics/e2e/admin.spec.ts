@@ -84,6 +84,11 @@ test("linking warns before taking over a webhook an avatar already uses", async 
   await page.getByRole("button", { name: "Unlink Summit Fitness Coach" }).click()
   await page.getByRole("button", { name: "Unlink avatar" }).click()
   await expect(page.getByText("Avatar unlinked.")).toBeVisible()
+  // The avatar stays on record, with what it did, and can be linked back.
+  const history = page.getByRole("region", { name: "Previously Linked" })
+  await expect(history.getByText("Summit Fitness Coach")).toBeVisible()
+  await expect(history).toContainText(/Linked .* · unlinked /)
+  await expect(history.getByRole("button", { name: "Link Summit Fitness Coach again" })).toBeVisible()
   const after = await (await fetch("http://127.0.0.1:54398/__control/state")).json()
   expect(after.pals.find((p: { pal_name: string }) => p.pal_name === "Summit Fitness Coach").callback_url).toBe("https://hooks.summit.example/tavus")
 })

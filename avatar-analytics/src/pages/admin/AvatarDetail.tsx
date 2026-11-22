@@ -1,3 +1,4 @@
+import { AvatarPhoto } from "@/components/AvatarPhoto"
 import { useQuery } from "@tanstack/react-query"
 import { AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react"
 import type { ReactNode } from "react"
@@ -74,6 +75,8 @@ function Detail({ d }: { d: PalDetail }) {
     <>
       <Section id="ids" title="Identifiers">
         <div className="flex flex-col gap-1.5">
+          {/* The avatar's own picture, from its face in Tavus. */}
+          <div className="mb-2"><AvatarPhoto name={text(pal.pal_name) ?? "Avatar"} src={text(face?.thumbnail_image_url)} size="lg" /></div>
           <CopyId label="PAL ID" value={pal.pal_id} />
           <CopyId label="Face ID" value={text(pal.default_face_id)} />
           {text(layers.tts?.voice_id) && <CopyId label="Voice ID" value={text(layers.tts?.voice_id)} />}

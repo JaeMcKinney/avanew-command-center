@@ -705,6 +705,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"transcript_access": {
+                  Row: {
+                    "client_id": string,"expires_at": string,"granted_at": string,"granted_by": string | null,"granted_by_name": string,"reason": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_id": string,"expires_at": string,"granted_at"?: string,"granted_by"?: string | null,"granted_by_name"?: string,"reason"?: string
+                  }
+                  Update: {
+                    "client_id"?: string,"expires_at"?: string,"granted_at"?: string,"granted_by"?: string | null,"granted_by_name"?: string,"reason"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "transcript_access_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: true
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"transcripts": {
                   Row: {
                     "client_id": string,"conversation_id": string,"created_at": string,"turns": NonNullable<Json>
@@ -855,6 +875,9 @@ isOneToOne: false
 "can_invite_to_agency":
 { Args: { "p_agency_id": string }; Returns: boolean
                            },
+"can_read_transcripts":
+{ Args: { "p_client_id": string }; Returns: boolean
+                           },
 "check_access":
 { Args: { "p_client_id"?: string,"p_permission": string }; Returns: boolean
                            },
@@ -948,6 +971,21 @@ isOneToOne: false
               "cost_cents": number,"duration_ms": number,"failed": number,"input_tokens": number,"output_tokens": number,"questions": number,"usage_date": string
             }[]
                            },
+"grant_transcript_access":
+{ Args: { "p_client_id": string,"p_hours": number,"p_reason"?: string }; Returns: {
+              "client_id": string,
+"expires_at": string,
+"granted_at": string,
+"granted_by": string | null,
+"granted_by_name": string,
+"reason": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "transcript_access"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "ingest_tavus_event":
 { Args: { "p_avatar_id": string,"p_payload": Json,"p_source"?: string }; Returns: Json
                            },
@@ -959,6 +997,9 @@ isOneToOne: false
                            },
 "refresh_avatar_photos":
 { Args: Record<PropertyKey, never>; Returns: number
+                           },
+"revoke_transcript_access":
+{ Args: { "p_client_id": string }; Returns: undefined
                            },
 "save_conversation_insights":
 { Args: { "p_conversation_id": string,"p_model"?: string,"p_questions": Json,"p_summary": string }; Returns: undefined

@@ -210,11 +210,12 @@ test("every conversation shows its conversation ID, to the client and to staff",
   await staff.getByRole("tab", { name: "Conversations" }).click()
   await staff.getByRole("button", { name: "This year" }).click()
   await expect(staff.getByRole("table", { name: /Conversations/i }).getByRole("button", { name: /^Copy Conversation ID demo-\d{5}$/ })).toHaveCount(25)
-  await staff.getByRole("button", { name: /^Read the conversation/i }).first().click()
+  // Without the client's permission staff open a conversation's details, not what was said.
+  await staff.getByRole("button", { name: /^Details of the conversation/i }).first().click()
   await expect(staff.getByRole("dialog").getByRole("button", { name: /^Copy Tavus Conversation ID demo-/ })).toBeVisible()
 })
 
-test("staff read, export and answer for a client from inside the client's file", async ({ page }) => {
+test("staff read, export and answer for a client from inside the client's file", async ({ page, browser }) => {
   await signIn(page, OWNER)
   await page.goto("/admin/clients/northline")
   // The client's own analytics.
@@ -227,6 +228,40 @@ test("staff read, export and answer for a client from inside the client's file",
   await page.getByRole("button", { name: "This year" }).click()
   await page.getByRole("combobox", { name: "Avatar" }).selectOption({ label: "Maya" })
   await expect(page.getByRole("status").filter({ hasText: "with Maya" })).toBeVisible()
+
+  // What was said is the client's own. Staff see each conversation and its numbers, and no way to read or export it.
+  await expect(page.getByText("What was said in Northline Realty's conversations is private to Northline Realty.").first()).toBeVisible()
+  await expect(page.getByRole("button", { name: /^Read the conversation/i })).toHaveCount(0)
+  await expect(page.getByRole("checkbox", { name: /^Select the conversation from/i })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: /Select all transcripts/ })).toHaveCount(0)
+  await page.getByRole("button", { name: /^Details of the conversation/i }).first().click()
+  const locked = page.getByRole("dialog")
+  await expect(locked.getByText("Length", { exact: true })).toBeVisible()
+  await expect(locked.getByText("private to Northline Realty")).toBeVisible()
+  await expect(locked.getByRole("heading", { name: "Summary" })).toHaveCount(0)
+  await expect(locked.getByRole("heading", { name: "Transcript" })).toHaveCount(0)
+  await expect(locked.getByRole("button", { name: "Download PDF" })).toHaveCount(0)
+  await expectAccessible(page)
+  await page.keyboard.press("Escape")
+
+  // The client allows it, for a day, from its Support page.
+  const clientContext = await browser.newContext()
+  const client = await clientContext.newPage()
+  await signIn(client, CLIENT_ADMIN)
+  await client.getByRole("link", { name: "Support" }).click()
+  const card = client.getByRole("region", { name: "Transcript Access for Divigner" })
+  await expect(card).toContainText("Your transcripts are private to you.")
+  await card.getByLabel("Reason (Optional)").fill("Ticket about Maya")
+  await card.getByRole("button", { name: "Allow access" }).click()
+  await expect(card.getByRole("status")).toContainText("On. Divigner can read your transcripts until")
+  await expectAccessible(client)
+
+  // Now staff can read and export, and can see who allowed it and why.
+  await page.reload()
+  await page.getByRole("tab", { name: "Conversations" }).click()
+  await page.getByRole("button", { name: "This year" }).click()
+  await page.getByRole("combobox", { name: "Avatar" }).selectOption({ label: "Maya" })
+  await expect(page.getByText(/Northline Realty has allowed you to read its transcripts until .*allowed by Dana.*Ticket about Maya/)).toBeVisible()
   await page.getByRole("button", { name: /^Read the conversation/i }).first().click()
   const dialog = page.getByRole("dialog")
   await expect(dialog.getByRole("heading", { name: "Summary" })).toBeVisible()
@@ -243,10 +278,40 @@ test("staff read, export and answer for a client from inside the client's file",
   await expectAccessible(page)
   await expectNoSidewaysScroll(page)
 
+  // The client turns it off again, and staff are locked out at once.
+  await card.getByRole("button", { name: "Turn off now" }).click()
+  await expect(card.getByRole("button", { name: "Allow access" })).toBeVisible()
+  await clientContext.close()
+  await page.reload()
+  await page.getByRole("tab", { name: "Conversations" }).click()
+  await expect(page.getByText("What was said in Northline Realty's conversations is private to Northline Realty.").first()).toBeVisible()
+
   // And their questions.
   await page.getByRole("tab", { name: "Questions" }).click()
   await expect(page.getByRole("tab", { name: /^Needs an answer/i })).toBeVisible()
   await expect(page.getByRole("tab", { name: /^Answered/i })).toBeVisible()
   // One page title only: the client's name.
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1)
+})
+
+test("staff give a new client its logo as a file or as a web address", async ({ page }) => {
+  await signIn(page, OWNER)
+  await page.goto("/admin/clients/new")
+  await page.getByLabel("Client name").fill("Juniper Dental")
+  // Both ways are offered. A file that is not a picture is refused before anything is created.
+  await expect(page.getByLabel("Or a logo web address")).toBeVisible()
+  await page.getByLabel("Logo file").setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("hello") })
+  await page.getByRole("button", { name: "Create client and continue" }).click()
+  await expect(page.getByText("Choose a PNG, JPG, SVG or WebP image.")).toBeVisible()
+  await page.getByLabel("Logo file").setInputFiles({ name: "juniper.png", mimeType: "image/png", buffer: PNG })
+  await expectAccessible(page)
+  await page.getByRole("button", { name: "Create client and continue" }).click()
+  await expect(page.getByRole("heading", { name: "Link avatars" })).toBeFocused()
+
+  // The file was saved in the shape every client logo is kept in.
+  await page.goto("/admin/clients/juniper-dental")
+  await page.getByRole("tab", { name: "Details" }).click()
+  const logo = page.getByRole("img", { name: "Juniper Dental logo on a light background" })
+  await expect(logo).toBeVisible()
+  await expect.poll(() => logo.evaluate((img: HTMLImageElement) => [img.naturalWidth, img.naturalHeight])).toEqual([900, 300])
 })

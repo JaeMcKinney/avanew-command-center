@@ -2,7 +2,7 @@
 // has to stay readable whatever colours an agency picks.
 
 import { describe, expect, it } from "vitest"
-import { AVANEW_THEME, buildTokens, isTheme, STARTER_THEME, themeCss, themeProblems, type Theme } from "../../src/lib/brand"
+import { AVANEW_THEME, buildTokens, isTheme, STARTER_THEME, themeCss, themeProblems, type Theme } from "../../src/lib/look"
 import { contrast } from "../../src/lib/color"
 
 const LOUD: Theme = {

@@ -1,3 +1,4 @@
+import { TranscriptAccessCard } from "@/components/TranscriptAccess"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { LifeBuoy } from "lucide-react"
 import { useState } from "react"
@@ -30,6 +31,7 @@ export default function Support() {
         description={`Ask the ${company()} team for help, report a problem or request a change to your avatar. Every reply is kept here, so nothing gets lost in email.`}
         actions={canOpen && <Button className="min-h-10" onClick={() => setOpening(true)}><LifeBuoy aria-hidden="true" />New ticket</Button>}
       />
+      {!staff && <TranscriptAccessCard client={client} />}
       {tickets.isPending ? (
         <LoadingBlock label="Loading tickets" />
       ) : tickets.isError ? (

@@ -1,3 +1,4 @@
+import { AvatarName } from "@/components/AvatarPhoto"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { AlertTriangle, CheckCircle2, Clock, KeyRound, XCircle } from "lucide-react"
 import { useId, useState } from "react"
@@ -305,7 +306,7 @@ export function GlassUsage({ client }: { client: Client }) {
             <DataTable
               caption={`Talk time and Glass Health use by avatar, ${rangeText}`}
               head={["Avatar", "Talk Minutes", "Glass Questions", "Tokens", "Estimated Cost"]}
-              rows={used.map((a) => [a.display_name, minutes(talkBy.get(a.id)?.billable_seconds), count(each(a.id).questions), count(each(a.id).input_tokens + each(a.id).output_tokens), estimate(each(a.id).cost_cents)])}
+              rows={used.map((a) => [<AvatarName key={a.id} avatar={a} />, minutes(talkBy.get(a.id)?.billable_seconds), count(each(a.id).questions), count(each(a.id).input_tokens + each(a.id).output_tokens), estimate(each(a.id).cost_cents)])}
             />
           </div>
         </section>

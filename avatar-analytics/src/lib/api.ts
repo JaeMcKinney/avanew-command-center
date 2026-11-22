@@ -858,3 +858,21 @@ export async function brandForHost(host: string, slug: string | null): Promise<A
   const { data } = await supabase.rpc("brand_for_host", { p_host: host, p_slug: slug ?? undefined })
   return (data as AgencyBrand | null) ?? null
 }
+
+// ── Transcript access ────────────────────────────────────────────────────────
+
+export type TranscriptAccess = Tables["transcript_access"]["Row"]
+
+/** The client's standing permission for its support team to read transcripts, if it has given one that has not run out. */
+export async function getTranscriptAccess(clientId: string): Promise<TranscriptAccess | null> {
+  const row = unwrap(await supabase.from("transcript_access").select("*").eq("client_id", clientId).maybeSingle()) as TranscriptAccess | null
+  return row && new Date(row.expires_at).getTime() > Date.now() ? row : null
+}
+
+export async function grantTranscriptAccess(clientId: string, hours: number, reason: string): Promise<TranscriptAccess> {
+  return unwrap(await supabase.rpc("grant_transcript_access", { p_client_id: clientId, p_hours: hours, p_reason: reason })) as TranscriptAccess
+}
+
+export async function revokeTranscriptAccess(clientId: string): Promise<void> {
+  unwrap(await supabase.rpc("revoke_transcript_access", { p_client_id: clientId }))
+}

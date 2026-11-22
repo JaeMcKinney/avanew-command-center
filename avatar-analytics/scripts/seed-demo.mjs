@@ -56,7 +56,7 @@ const AVANEW_THEME = {
   dark: { background: "#0b1828", card: "#10223a", text: "#e6ecf5", action: "#d9b95c", action_text: "#0b1f3a", highlight: "#d9b95c", sidebar: "#07111f" },
 }
 
-export async function seedDemo({ days = 75, log = console.log, glass = false, agency = false } = {}) {
+export async function seedDemo({ days = 75, log = console.log, glass = false, agency = false, history = false } = {}) {
   const { url, serviceKey, anonKey, functionsUrl } = settings()
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
 
@@ -285,6 +285,13 @@ export async function seedDemo({ days = 75, log = console.log, glass = false, ag
     log(`Riverside Clinic: ${asked.length} Glass questions. Sign in as noor@riverside.test.`)
   }
 
+  if (history) {
+    // One avatar that has since been unlinked, so the record of past avatars has something in it.
+    // Off by default so the browser tests keep Northline's three avatars; `npm run seed` turns it on.
+    const { data: ivy } = await admin.from("avatars").select("id").eq("client_id", northline.id).eq("display_name", "Ivy").maybeSingle()
+    if (ivy) must(await admin.from("avatars").update({ unlinked_at: new Date(now - 2 * 86_400_000).toISOString() }).eq("id", ivy.id), "unlink Ivy")
+  }
+
   if (agency) {
     // An agency with a team and a client of its own. Off by default so the
     // browser tests keep their two clients; `npm run seed` turns it on.
@@ -302,8 +309,10 @@ export async function seedDemo({ days = 75, log = console.log, glass = false, ag
     // The agency's avatars come from its own Tavus account, so they are added here directly.
     const theirs = []
     for (const [client, palId, name, label] of [[lakeside, "pa90c0de0009", "Dr. Lake", "Front desk"], [hillcrest, "pa91c0de0010", "Poppy", "Parent helper"]]) {
-      must(await admin.from("tavus_pals").upsert({ pal_id: palId, name, agency_id: avanew.id }), "agency avatar")
-      theirs.push(must(await admin.from("avatars").insert({ client_id: client.id, tavus_pal_id: palId, display_name: name, role_label: label }).select("id").single(), "agency avatar"))
+      // The stand-in for Tavus serves a picture for any avatar, as Tavus does for a real one.
+      const photo = `http://127.0.0.1:54398/photo/${palId}.jpg`
+      must(await admin.from("tavus_pals").upsert({ pal_id: palId, name, agency_id: avanew.id, thumbnail_image_url: photo }), "agency avatar")
+      theirs.push(must(await admin.from("avatars").insert({ client_id: client.id, tavus_pal_id: palId, display_name: name, role_label: label, photo_url: photo }).select("id").single(), "agency avatar"))
     }
     const agencyEvents = []
     for (let d = days - 1; d >= 0; d--) {
@@ -331,7 +340,7 @@ export async function seedDemo({ days = 75, log = console.log, glass = false, ag
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  seedDemo({ glass: true, agency: true }).catch((err) => {
+  seedDemo({ glass: true, agency: true, history: true }).catch((err) => {
     console.error(err.message)
     process.exit(1)
   })

@@ -161,6 +161,45 @@ describe("reading usage", () => {
     expect((await clientB.client.from("transcripts").select("conversation_id")).data).toEqual([])
   })
 
+  it("staff read what was said only while the client allows it", async () => {
+    const said = async (user: TestUser) => ({
+      transcripts: ((await user.client.from("transcripts").select("conversation_id").eq("client_id", northline.id)).data ?? []).length,
+      mayRead: (await user.client.rpc("can_read_transcripts", { p_client_id: northline.id })).data,
+    })
+    // The Owner sees the conversation and its numbers, not the words.
+    expect((await owner.client.from("conversations").select("conversation_id").eq("conversation_id", "c1")).data).toHaveLength(1)
+    expect(await said(owner)).toEqual({ transcripts: 0, mayRead: false })
+    expect(await said(clientA)).toEqual({ transcripts: 1, mayRead: true })
+
+    // Staff cannot give it to themselves, another client cannot give it, and the length is one of a few.
+    expect((await owner.client.rpc("grant_transcript_access", { p_client_id: northline.id, p_hours: 24 })).error?.code).toBe("42501")
+    expect((await clientB.client.rpc("grant_transcript_access", { p_client_id: northline.id, p_hours: 24 })).error?.code).toBe("42501")
+    expect((await clientA.client.rpc("grant_transcript_access", { p_client_id: northline.id, p_hours: 5000 })).error?.code).toBe("22023")
+
+    // The client allows it for a day: staff with the transcripts permission can read, others still cannot.
+    const granted = await clientA.client.rpc("grant_transcript_access", { p_client_id: northline.id, p_hours: 24, p_reason: "Ticket 12" })
+    expect(granted.error).toBeNull()
+    expect(new Date(granted.data.expires_at).getTime() - Date.now()).toBeGreaterThan(23 * 3_600_000)
+    expect(await said(owner)).toEqual({ transcripts: 1, mayRead: true })
+    expect(await said(analyst)).toEqual({ transcripts: 0, mayRead: false })
+    expect((await owner.client.from("transcripts").select("conversation_id").eq("client_id", harbor.id)).data).toEqual([])
+    expect((await owner.client.from("transcript_access").select("reason, granted_by_name")).data).toEqual([{ reason: "Ticket 12", granted_by_name: expect.any(String) }])
+    expect(((await admin.from("audit_log").select("action").eq("action", "transcripts.access_granted")).data ?? []).length).toBe(1)
+
+    // It runs out on its own.
+    await admin.from("transcript_access").update({ expires_at: new Date(Date.now() - 1000).toISOString() }).eq("client_id", northline.id)
+    expect(await said(owner)).toEqual({ transcripts: 0, mayRead: false })
+
+    // And the client, or staff handing it back, can end it early.
+    await clientA.client.rpc("grant_transcript_access", { p_client_id: northline.id, p_hours: 168 })
+    expect((await clientB.client.rpc("revoke_transcript_access", { p_client_id: northline.id })).error?.code).toBe("42501")
+    expect((await owner.client.rpc("revoke_transcript_access", { p_client_id: northline.id })).error).toBeNull()
+    expect(await said(owner)).toEqual({ transcripts: 0, mayRead: false })
+    await clientA.client.rpc("grant_transcript_access", { p_client_id: northline.id, p_hours: 72 })
+    expect((await clientA.client.rpc("revoke_transcript_access", { p_client_id: northline.id })).error).toBeNull()
+    expect((await admin.from("transcript_access").select("client_id")).data).toEqual([])
+  })
+
   it("nobody signed in can inject events or read webhook secrets", async () => {
     const inject = await clientA.client.rpc("ingest_tavus_event", { p_avatar_id: maya.id, p_payload: event("x", "system.shutdown", "2026-11-10T15:00:00Z") })
     expect(inject.error).not.toBeNull()

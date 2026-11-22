@@ -28,7 +28,7 @@ function seed() {
     deployment_id, pal_id, name, channel, status: "active", allowed_origins,
     limits: { max_call_duration: 900, daily_call_limit: null, concurrent_call_limit: null },
     usage_total: 42, usage_today: 3,
-    thumbnail_image_url: `https://cdn.replica.tavus.io/mock/${pal_id}.jpg`,
+    thumbnail_image_url: photoFor(pal_id),
     created_at: "2026-10-06T07:59:33.863176+00:00Z", updated_at: "2026-10-17T11:55:10.643621+00:00Z", ...extra,
   })
   return {
@@ -68,7 +68,20 @@ function seed() {
     stripe: { customers: [], sessions: [], portals: [], subscriptions: {}, calls: [], failNext: 0 },
     failPatchFor: [],
     emptyLists: false,
+    failFaces: false,
   }
+}
+
+// Photos for the made-up avatars: Tavus's own stock faces, so the demo shows
+// real pictures. Each address names the avatar and forwards to one of them.
+const STOCK_PHOTOS = [20258, 20260, 20262, 20264, 20266, 20267, 20269, 20272].map((n) => `https://cdn.replica.tavus.io/${n}/thumbnail.jpg`)
+function photoFor(palId) {
+  return `http://127.0.0.1:${process.env.MOCK_TAVUS_PORT ?? 54398}/photo/${palId}.jpg`
+}
+function stockPhoto(palId) {
+  let sum = 0
+  for (const ch of palId) sum = (sum * 31 + ch.charCodeAt(0)) >>> 0
+  return STOCK_PHOTOS[sum % STOCK_PHOTOS.length]
 }
 
 let state = seed()
@@ -99,6 +112,13 @@ function readBody(req) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`)
   const path = url.pathname
+
+  // An avatar's picture, open to any browser as Tavus's own are.
+  const photo = path.match(/^\/photo\/([^/]+)\.jpg$/)
+  if (photo) {
+    res.writeHead(302, { Location: stockPhoto(photo[1]), "Cache-Control": "public, max-age=86400" })
+    return res.end()
+  }
 
   if (path === "/__control/reset" && req.method === "POST") {
     state = { ...seed(), ...((await readBody(req)) ?? {}) }
@@ -252,6 +272,16 @@ const server = http.createServer(async (req, res) => {
   }
 
   const limit = Number(url.searchParams.get("limit") ?? 10)
+
+  // Each avatar's face carries its photo, as in the real API. Pages start at zero.
+  if (path === "/v2/faces" && req.method === "GET") {
+    const page = Number(url.searchParams.get("page") ?? 0)
+    const all = state.emptyLists || state.failFaces || url.searchParams.get("face_type") === "system" ? [] : state.pals.map((p) => ({
+      face_id: p.default_face_id, face_name: p.pal_name.split(" ")[0], thumbnail_image_url: photoFor(p.pal_id),
+    }))
+    if (state.failFaces) return send(res, 500, { message: "Faces are unavailable" })
+    return send(res, 200, { data: all.slice(page * limit, (page + 1) * limit), total_count: all.length })
+  }
 
   if (path === "/v2/pals" && req.method === "GET") {
     const page = Number(url.searchParams.get("page") ?? 1)

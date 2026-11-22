@@ -26,6 +26,17 @@ test("Divigner sees an agency's totals, gives it a look, and never sees its clie
   await expectAccessible(page)
   await expectNoSidewaysScroll(page)
 
+  // A logo can also be given as a web address, which takes the place of the file.
+  const address = page.getByLabel("Or a Web Address").nth(2)
+  await address.fill("example.test/icon.png")
+  await expect(page.getByText("The address must start with https://")).toBeVisible()
+  await expect(page.getByRole("button", { name: "Save brand" })).toBeDisabled()
+  await address.fill("https://example.test/icon.png")
+  await expect(page.getByRole("img", { name: /Tab Icon/ })).toHaveAttribute("src", "https://example.test/icon.png")
+  // Choosing a file again takes the place of the address.
+  await page.getByRole("button", { name: "Use Avanew's look" }).click()
+  await expect(page.getByRole("img", { name: /Tab Icon/ })).toHaveAttribute("src", /^blob:/)
+
   // A look that cannot be read is refused before it is saved.
   const text = page.getByRole("group", { name: "Light Version" }).getByLabel("Text", { exact: true })
   await text.fill("#f8fafd")
