@@ -51,6 +51,7 @@
   --sidebar-muted: #b9cbd6;
   --sidebar-accent: #14374b;
   --sidebar-border: rgba(238, 245, 249, 0.16);
+  --sidebar-surface: linear-gradient(180deg, #081521 0%, #0b1c2b 50%, #14374b 100%);
 
   /* Chart chrome */
   --chart-grid: #d5e1e9;
@@ -248,6 +249,11 @@
   height: 2px;
   background: var(--edge-line);
   opacity: var(--edge-opacity);
+}
+
+/* The staff sidebar's own dark ground, the same in the light and the dark look. */
+.sidebar-surface {
+  background: var(--sidebar-surface);
 }
 
 .site-header {

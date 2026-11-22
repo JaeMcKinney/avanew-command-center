@@ -13,11 +13,11 @@
     />
     <title>Avalytics by Divigner</title>
     <script>
-      // Follow the device's light or dark setting before first paint.
+      // Before first paint: the look chosen in this browser, or else the device's setting.
       try {
-        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-          document.documentElement.classList.add("dark")
-        }
+        var chosen = window.localStorage.getItem("avalytics-theme")
+        var dark = chosen ? chosen === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches
+        if (dark) document.documentElement.classList.add("dark")
       } catch (e) {}
     </script>
   </head>

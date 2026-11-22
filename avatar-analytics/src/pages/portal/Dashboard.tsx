@@ -13,6 +13,7 @@ import { formatDay, formatRange, presetRange, startOfMonth, startOfQuarter, toda
 import { count, duration, minutes, percent } from "@/lib/format"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
+import { COMPANY } from "@/lib/edition"
 
 /** Shown in the client's portal, and inside the client's file for Divigner staff (pass `client` and `embedded`). */
 export default function Dashboard({ client: given, embedded = false }: { client?: Client; embedded?: boolean } = {}) {
@@ -67,7 +68,7 @@ export default function Dashboard({ client: given, embedded = false }: { client?
 
       {list.length === 0 ? (
         <EmptyState title="Your Avatars Are Being Set Up">
-          Once Divigner links your avatars, you will see them here, with how much talk time each one has used.
+          Once {COMPANY} links your avatars, you will see them here, with how much talk time each one has used.
         </EmptyState>
       ) : (
         <section aria-labelledby="period-heading" className="flex flex-col gap-4">

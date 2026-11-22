@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { UsersPanel } from "@/components/UsersPanel"
 import { useAuth } from "@/hooks/useAuth"
 import { listPermissions, listRolePermissions, listRoles, setRolePermission } from "@/lib/api"
+import { COMPANY } from "@/lib/edition"
 
 /** Which role may do what. Tick or untick to change it. */
 function PermissionsMatrix({ editable }: { editable: boolean }) {
@@ -94,9 +95,9 @@ export default function Team() {
   const manage = can("team.manage")
   return (
     <>
-      <PageHeader title="Team" description="The Divigner people who can sign in, and what each role may do." />
+      <PageHeader title="Team" description={`The ${COMPANY} people who can sign in, and what each role may do.`} />
       <section aria-labelledby="people-heading" className="flex flex-col gap-3">
-        <h2 id="people-heading" className="text-xl font-semibold">Divigner Users</h2>
+        <h2 id="people-heading" className="text-xl font-semibold">{COMPANY} Users</h2>
         <UsersPanel scope={{ side: "divigner" }} canManage={manage} />
       </section>
       <section aria-labelledby="roles-heading" className="flex flex-col gap-3">

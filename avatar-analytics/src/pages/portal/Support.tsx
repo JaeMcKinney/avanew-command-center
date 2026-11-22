@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
 import { getTicket, listTickets } from "@/lib/api"
 import { usePortalClient } from "@/pages/portal/PortalLayout"
+import { COMPANY } from "@/lib/edition"
 
 /** The client's side of the support desk: their tickets, and a way to open one. */
 export default function Support() {
@@ -26,7 +27,7 @@ export default function Support() {
     <>
       <PageHeader
         title="Support"
-        description="Ask the Divigner team for help, report a problem or request a change to your avatar. Every reply is kept here, so nothing gets lost in email."
+        description={`Ask the ${COMPANY} team for help, report a problem or request a change to your avatar. Every reply is kept here, so nothing gets lost in email.`}
         actions={canOpen && <Button className="min-h-10" onClick={() => setOpening(true)}><LifeBuoy aria-hidden="true" />New ticket</Button>}
       />
       {tickets.isPending ? (

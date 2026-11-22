@@ -1,14 +1,14 @@
 // Page frames. On a phone the navigation is a tab bar at the bottom of the
 // screen; on a wider screen it is a sidebar (staff) or a row of tabs (clients).
 
-import { Ellipsis, LogOut, type LucideIcon } from "lucide-react"
-import { useState, type ReactNode } from "react"
+import { Ellipsis, LogOut, Moon, Sun, type LucideIcon } from "lucide-react"
+import { useEffect, useState, type ReactNode } from "react"
 import { NavLink, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/hooks/useAuth"
-import logoOnDark from "@/assets/divigner-logo-on-dark.webp"
-import logoOnLight from "@/assets/divigner-logo-on-light.webp"
+import { COMPANY, EDITION } from "@/lib/edition"
+import { currentTheme, setTheme, type Theme } from "@/lib/theme"
 import { cn } from "@/lib/utils"
 
 export type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean }
@@ -21,14 +21,38 @@ function SkipLink() {
   )
 }
 
-/** The Divigner Group logo, in the version that suits the surface it sits on. */
-export function DivignerLogo({ on = "auto", className }: { on?: "dark" | "auto"; className?: string }) {
-  if (on === "dark") return <img src={logoOnDark} alt="Divigner Group" width={626} height={200} className={cn("h-12 w-auto", className)} />
+/** The company's logo, in the version that suits the surface it sits on. */
+export function BrandLogo({ on = "auto", className }: { on?: "dark" | "auto"; className?: string }) {
+  const { onDark, onLight, width, height } = EDITION.logo
+  if (on === "dark") return <img src={onDark} alt={EDITION.companyFull} width={width} height={height} className={cn("h-12 w-auto", className)} />
   return (
     <>
-      <img src={logoOnLight} alt="Divigner Group" width={626} height={200} className={cn("h-12 w-auto dark:hidden", className)} />
-      <img src={logoOnDark} alt="Divigner Group" width={626} height={200} className={cn("hidden h-12 w-auto dark:block", className)} />
+      <img src={onLight} alt={EDITION.companyFull} width={width} height={height} className={cn("h-12 w-auto dark:hidden", className)} />
+      <img src={onDark} alt={EDITION.companyFull} width={width} height={height} className={cn("hidden h-12 w-auto dark:block", className)} />
     </>
+  )
+}
+
+/** Switches between the light and the dark look, and remembers the choice in this browser. */
+export function ThemeSwitch({ tone = "plain" }: { tone?: "sidebar" | "plain" }) {
+  const [theme, setCurrent] = useState<Theme>(currentTheme)
+  useEffect(() => {
+    const sync = () => setCurrent(currentTheme())
+    window.addEventListener("avalytics:theme", sync)
+    return () => window.removeEventListener("avalytics:theme", sync)
+  }, [])
+  const next: Theme = theme === "dark" ? "light" : "dark"
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label={`Switch to the ${next} look`}
+      title={`Switch to the ${next} look`}
+      onClick={() => setTheme(next)}
+      className={cn("size-10 shrink-0", tone === "sidebar" && "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground")}
+    >
+      {theme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+    </Button>
   )
 }
 
@@ -90,8 +114,8 @@ function UserBlock({ tone }: { tone: "sidebar" | "plain" }) {
   const { access, signOut } = useAuth()
   if (!access) return null
   return (
-    <div className="flex items-center gap-3">
-      <div className="hidden min-w-0 text-right sm:block md:text-left">
+    <div className={cn("flex items-center gap-2", tone === "sidebar" && "flex-wrap justify-between")}>
+      <div className={cn("hidden min-w-0 text-right sm:block md:text-left", tone === "sidebar" && "basis-full")}>
         <p className="truncate text-sm font-medium">{access.full_name || access.email}</p>
         <p className={cn("truncate text-xs", tone === "sidebar" ? "text-sidebar-muted" : "text-muted-foreground")}>{access.role.name}</p>
       </div>
@@ -104,6 +128,7 @@ function UserBlock({ tone }: { tone: "sidebar" | "plain" }) {
         <LogOut aria-hidden="true" />
         Sign out
       </Button>
+      <ThemeSwitch tone={tone} />
     </div>
   )
 }
@@ -112,12 +137,12 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_minmax(0,1fr)]">
       <SkipLink />
-      <aside className="hidden border-r border-sidebar-border bg-linear-to-b from-[#081521] via-[#0b1c2b] to-[#14374b] text-sidebar-foreground md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:gap-6 md:p-4">
+      <aside className="hidden border-r border-sidebar-border sidebar-surface text-sidebar-foreground md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:gap-6 md:p-4">
         <div className="flex flex-col items-center gap-2 pt-2 text-center">
-          <DivignerLogo on="dark" className="h-14" />
+          <BrandLogo on="dark" className="h-14" />
           {/* Letter spacing trails each letter, so the same indent in front keeps the word optically centred. */}
           <p className="indent-[0.18em] text-xs font-medium tracking-[0.18em] text-balance text-sidebar-muted uppercase">Avalytics</p>
-          <p className="rounded-sm bg-sidebar-accent px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">Divigner Admin</p>
+          <p className="rounded-sm bg-sidebar-accent px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">{COMPANY} Admin</p>
         </div>
         <nav aria-label="Main" className="flex-1">
           <ul className="flex flex-col gap-1">
@@ -147,9 +172,9 @@ export function StaffShell({ items, children }: { items: NavItem[]; children: Re
         <header className="site-header md:hidden">
           <div className="flex items-center justify-between gap-3 px-4 py-2">
             <div className="flex items-center gap-3">
-              <DivignerLogo className="h-9" />
+              <BrandLogo className="h-9" />
               <span className="sr-only">Avalytics</span>
-              <span className="rounded-sm bg-sidebar px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">Divigner Admin</span>
+              <span className="rounded-sm bg-sidebar px-2 py-1 text-[0.7rem] font-semibold tracking-wide text-sidebar-foreground uppercase">{COMPANY} Admin</span>
             </div>
             <UserBlock tone="plain" />
           </div>
@@ -224,8 +249,8 @@ export function PortalShell({
       <footer className="mb-16 md:mb-0">
         <div aria-hidden="true" className="edge-line" />
         <div className="flex flex-col items-center gap-1.5 px-4 py-5 text-xs text-muted-foreground">
-          <DivignerLogo className="h-11" />
-          <p className="indent-[0.14em] text-center tracking-[0.14em] text-balance uppercase">Avalytics by Divigner Group</p>
+          <BrandLogo className="h-11" />
+          <p className="indent-[0.14em] text-center tracking-[0.14em] text-balance uppercase">Avalytics by {EDITION.companyFull}</p>
         </div>
       </footer>
       <BottomTabs items={items} label="Main" />

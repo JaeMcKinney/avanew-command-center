@@ -5,6 +5,7 @@ import { type SupabaseClient, writeAudit } from "./clients.ts"
 import { notify } from "./notify.ts"
 import { periodOf, type StripeSubscription } from "./stripe.ts"
 import { setDeploymentStatus } from "./tavus.ts"
+import { brandName } from "./brand.ts"
 
 const appUrl = () => (Deno.env.get("APP_URL") ?? "").replace(/\/+$/, "")
 const billingLink = (slug: string) => `${appUrl()}/c/${slug}/billing`
@@ -88,9 +89,9 @@ export async function checkUsage(admin: SupabaseClient, onlyClientId?: string): 
       await notify(admin, {
         clientId: s.client_id, kind: "usage_resumed", periodStart: s.period_start,
         subject: `Your avatars are back on (${s.client_name})`,
-        text: `Good news: your avatars are taking calls again.\n\nYou have used ${used} of ${included} minutes in the current period.\n\n${billingLink(s.slug)}\n\nDivigner`,
+        text: `Good news: your avatars are taking calls again.\n\nYou have used ${used} of ${included} minutes in the current period.\n\n${billingLink(s.slug)}\n\n${brandName()}`,
         staffText: `${s.client_name}'s avatars have been turned back on. They have used ${used} of ${included} minutes in the current period.`,
-        sms: `Divigner: your avatars are taking calls again.`,
+        sms: `${brandName()}: your avatars are taking calls again.`,
       })
       result.resumed++
     } else if (over && !s.paused_for_usage && s.client_status === "active") {
@@ -101,18 +102,18 @@ export async function checkUsage(admin: SupabaseClient, onlyClientId?: string): 
       await notify(admin, {
         clientId: s.client_id, kind: "usage_paused", periodStart: s.period_start,
         subject: `Your avatars are paused: this period's minutes are used up (${s.client_name})`,
-        text: `You have used all ${included} minutes included in your ${s.plan?.name ?? ""} package for this period, so your avatars have stopped taking new calls.\n\nThey start again automatically on ${day(s.period_end)}, when your next period begins. To turn them back on now, add extra minutes or choose a larger package:\n\n${billingLink(s.slug)}\n\nDivigner`,
+        text: `You have used all ${included} minutes included in your ${s.plan?.name ?? ""} package for this period, so your avatars have stopped taking new calls.\n\nThey start again automatically on ${day(s.period_end)}, when your next period begins. To turn them back on now, add extra minutes or choose a larger package:\n\n${billingLink(s.slug)}\n\n${brandName()}`,
         staffText: `${s.client_name} has used ${used} of ${included} minutes (${s.used_percent}%) and their avatars have been paused.${failed.length ? ` ${failed.length} deployment(s) could not be paused in Tavus and need a look.` : ""}`,
-        sms: `Divigner: your included minutes are used up and your avatars are paused. Add minutes or choose a larger package to turn them back on: ${billingLink(s.slug)}`,
+        sms: `${brandName()}: your included minutes are used up and your avatars are paused. Add minutes or choose a larger package to turn them back on: ${billingLink(s.slug)}`,
       })
       result.paused++
     } else if (!over && !s.paused_for_usage && s.used_percent >= alertAt) {
       const tally = await notify(admin, {
         clientId: s.client_id, kind: "usage_alert", periodStart: s.period_start,
         subject: `You have used ${Math.floor(s.used_percent)}% of this period's minutes (${s.client_name})`,
-        text: `You have used ${used} of the ${included} minutes included in your ${s.plan?.name ?? ""} package for this period.\n\n${pauseEnabled ? `When the included minutes are used up, your avatars pause until your next period begins on ${day(s.period_end)}. ` : ""}To get more minutes now, add extra minutes or choose a larger package:\n\n${billingLink(s.slug)}\n\nThis is the only reminder you will get this period.\n\nDivigner`,
+        text: `You have used ${used} of the ${included} minutes included in your ${s.plan?.name ?? ""} package for this period.\n\n${pauseEnabled ? `When the included minutes are used up, your avatars pause until your next period begins on ${day(s.period_end)}. ` : ""}To get more minutes now, add extra minutes or choose a larger package:\n\n${billingLink(s.slug)}\n\nThis is the only reminder you will get this period.\n\n${brandName()}`,
         staffText: `${s.client_name} has used ${used} of ${included} minutes (${s.used_percent}%) this period.`,
-        sms: `Divigner: you have used ${Math.floor(s.used_percent)}% of this period's minutes. Details: ${billingLink(s.slug)}`,
+        sms: `${brandName()}: you have used ${Math.floor(s.used_percent)}% of this period's minutes. Details: ${billingLink(s.slug)}`,
       })
       if (tally.sent + tally.failed + tally.skipped > 0) result.alerted++
     }
@@ -158,9 +159,9 @@ export async function syncSubscription(admin: SupabaseClient, sub: StripeSubscri
     await notify(admin, {
       clientId, kind: "subscription_ended", periodStart: new Date().toISOString().slice(0, 10),
       subject: `Your subscription has ended (${client?.name})`,
-      text: `Your subscription has ended and your avatars have stopped taking calls. Your past conversations and transcripts are still available to download.\n\nTo start again, choose a package:\n\n${billingLink(client?.slug ?? "")}\n\nDivigner`,
+      text: `Your subscription has ended and your avatars have stopped taking calls. Your past conversations and transcripts are still available to download.\n\nTo start again, choose a package:\n\n${billingLink(client?.slug ?? "")}\n\n${brandName()}`,
       staffText: `${client?.name}'s subscription has ended. Their avatars have been turned off.`,
-      sms: `Divigner: your subscription has ended and your avatars are off.`,
+      sms: `${brandName()}: your subscription has ended and your avatars are off.`,
     })
   } else if ((status === "active" || status === "trialing") && client && ["onboarding", "cancelled"].includes(client.status)) {
     const { data: row } = await admin.from("client_billing").select("paused_deployments").eq("client_id", clientId).single()

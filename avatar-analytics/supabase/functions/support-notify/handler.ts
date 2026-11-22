@@ -12,6 +12,7 @@ import { isScheduledCall, requireUser, serviceClient } from "../_shared/clients.
 import { sendEmail } from "../_shared/email.ts"
 import { endpoint, HttpError, json } from "../_shared/http.ts"
 import { replyAddress, REPLY_MARKER } from "../_shared/support.ts"
+import { brandName } from "../_shared/brand.ts"
 
 type Pending = {
   message_id: string
@@ -43,7 +44,7 @@ export const handler = endpoint(async (req) => {
     const toStaff = item.author_side === "client"
     const link = toStaff ? `${appUrl}/admin/support/${item.ticket_number}` : `${appUrl}/c/${item.client_slug}/support/${item.ticket_number}`
     const replyTo = inbox ? replyAddress(inbox, item.ticket_number, item.reply_token) : null
-    const who = toStaff ? `${item.author_name || "Someone"} at ${item.client_name}` : `${item.author_name || "Divigner"} at Divigner`
+    const who = toStaff ? `${item.author_name || "Someone"} at ${item.client_name}` : `${item.author_name || brandName()} at ${brandName()}`
     const files = item.attachment_count > 0 ? `\n\n${item.attachment_count} file${item.attachment_count === 1 ? " is" : "s are"} attached to this reply in Avalytics.` : ""
     const text = [
       ...(replyTo ? [`— ${REPLY_MARKER} —`] : []),

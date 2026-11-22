@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { getTicket, listClients, listTickets, type Client } from "@/lib/api"
 import { count } from "@/lib/format"
 import { cn } from "@/lib/utils"
+import { COMPANY } from "@/lib/edition"
 
 const VIEWS = [
   { key: "open", label: "Needs Reply" },
@@ -73,7 +74,7 @@ export default function SupportDesk({ client, embedded = false }: { client?: Cli
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Stat label="Needs Reply" value={count(live.filter((t) => t.status === "open").length)} note="Waiting on Divigner" />
+            <Stat label="Needs Reply" value={count(live.filter((t) => t.status === "open").length)} note={`Waiting on ${COMPANY}`} />
             <Stat label="Urgent" value={count(live.filter((t) => t.priority === "urgent").length)} note="Open and marked urgent" />
             <Stat label="Unassigned" value={count(live.filter((t) => !t.assignee_id).length)} note="Open with nobody on it" />
           </div>
