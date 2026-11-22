@@ -204,7 +204,6 @@ export function PortalShell({
   banner?: ReactNode
   children: ReactNode
 }) {
-  const brand = useBrand()
   return (
     <div className="flex min-h-dvh flex-col">
       <SkipLink />
@@ -251,10 +250,7 @@ export function PortalShell({
       </main>
       <footer className="mb-16 md:mb-0">
         <div aria-hidden="true" className="edge-line" />
-        <div className="flex flex-col items-center gap-1.5 px-4 py-5 text-xs text-muted-foreground">
-          <BrandLogo className="h-11" />
-          <p className="indent-[0.14em] text-center tracking-[0.14em] text-balance uppercase">Avalytics by {brand.companyFull}</p>
-        </div>
+        <p className="indent-[0.14em] px-4 py-5 text-center text-xs tracking-[0.14em] text-muted-foreground uppercase">Avalytics</p>
       </footer>
       <BottomTabs items={items} label="Main" />
     </div>

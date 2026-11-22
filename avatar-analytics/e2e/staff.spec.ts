@@ -123,7 +123,9 @@ test("staff see revenue, what recurs monthly and profit after costs", async ({ p
   await expect(page.getByRole("heading", { name: "Finance", level: 1 })).toBeVisible()
   // Sample data: one client on $199 a month with three paid invoices this year ($597).
   // Extra minutes bought in other tests add to that, so check against the database.
-  const query = "select (select coalesce(sum(amount_paid_cents),0) from public.invoices where status='paid') + (select coalesce(sum(amount_cents),0) from public.usage_topups where status='paid')"
+  // Only Divigner's own clients count here: what an agency's clients pay the agency is the agency's.
+  const own = "client_id in (select id from public.clients where agency_id is null)"
+  const query = `select (select coalesce(sum(amount_paid_cents),0) from public.invoices where status='paid' and ${own}) + (select coalesce(sum(amount_cents),0) from public.usage_topups where status='paid' and ${own})`
   const paid = Number(execFileSync("docker", ["exec", "-i", "supabase_db_avatar-analytics", "psql", "-U", "postgres", "-Atq", "-c", query]).toString().trim()) / 100
   const total = "$" + paid.toLocaleString("en-US")
   expect(paid).toBeGreaterThanOrEqual(597)

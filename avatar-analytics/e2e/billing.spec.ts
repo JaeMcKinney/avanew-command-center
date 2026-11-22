@@ -45,7 +45,7 @@ test("a client sees their package, price, usage and invoices", async ({ page }) 
   await expect(pkg).toContainText(/Your next payment of \$199 is on \w+ \d+, \d{4}/)
 
   // Usage matches the database, in words and on the bar.
-  const usedSeconds = Number(sql("select (public.usage_standings()->>'used_seconds') from public.usage_standings() limit 1"))
+  const usedSeconds = Number(sql("select (s->>'used_seconds') from public.usage_standings() s where s->>'slug' = 'northline'"))
   const usage = page.getByRole("region", { name: "Talk time this period" })
   await expect(usage).toContainText(`${Math.round(usedSeconds / 60)}`)
   await expect(usage).toContainText("of 300 minutes used")

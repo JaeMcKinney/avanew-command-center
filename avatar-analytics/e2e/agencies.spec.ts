@@ -65,7 +65,7 @@ test("an agency's team works under its own name and look, with its own clients",
   // The sign-in page wears the agency's look when opened for that agency.
   await page.goto("/login?agency=avanew")
   await expect(page.getByRole("img", { name: "Avanew" })).toBeVisible()
-  await expect(page).toHaveTitle("Sign In · Avalytics by Avanew")
+  await expect(page).toHaveTitle("Sign In · Avalytics")
   await expectAccessible(page)
 
   await page.getByLabel("Email").fill(AGENCY_OWNER)
@@ -73,7 +73,7 @@ test("an agency's team works under its own name and look, with its own clients",
   await page.getByRole("button", { name: "Sign in" }).click()
   await expect(page.getByRole("heading", { level: 1, name: "Overview" })).toBeVisible()
   await expect(page.getByRole("complementary").getByText("Avanew Admin")).toBeVisible()
-  await expect(page).toHaveTitle("Overview · Avalytics by Avanew")
+  await expect(page).toHaveTitle("Overview · Avalytics")
   expect(await page.evaluate(() => document.documentElement.dataset.brand)).toBe("agency")
 
   // The same pages Divigner's staff have, for the agency's clients only. No Agencies page.
@@ -111,7 +111,8 @@ test("an agency's team works under its own name and look, with its own clients",
   const client = await context.newPage()
   await signIn(client, AGENCY_CLIENT)
   await expect(client.getByRole("heading", { level: 1 })).toBeVisible()
-  await expect(client.getByRole("contentinfo")).toContainText("Avalytics by Avanew")
+  // The foot of every page names the app, and nothing else.
+  await expect(client.getByRole("contentinfo")).toHaveText("Avalytics")
   await expect(client.getByText("Divigner")).toHaveCount(0)
   expect(await client.evaluate(() => document.documentElement.dataset.brand)).toBe("agency")
   await expectAccessible(client)
